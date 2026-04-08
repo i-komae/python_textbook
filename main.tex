@@ -1,0 +1,54 @@
+\documentclass[book,paper=a4,fontsize=11pt]{jlreq}
+\usepackage[top=25mm,bottom=25mm,left=25mm,right=25mm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+
+\lstset{
+    backgroundcolor={\color[gray]{.95}},
+    basicstyle={\small\ttfamily},
+    commentstyle={\small\ttfamily \color[rgb]{0,0.45,0}},
+    keywordstyle={\small\bfseries \color{blue}},
+    stringstyle={\small\ttfamily \color[rgb]{0.75,0,0.2}},
+    frame={tb},
+    breaklines=true,
+    columns=[l]{fullflexible},
+    numbers=left,
+    xrightmargin=0\zw,
+    xleftmargin=3\zw,
+    numberstyle={\scriptsize},
+    stepnumber=1,
+    numbersep=1\zw
+}
+\renewcommand{\lstlistingname}{リスト}
+\newcommand{\code}[1]{\texttt{#1}}
+\graphicspath{{assets/figures/}}
+
+\title{Pythonによるデータ解析と高速化}
+\author{Ichiro KOMAE}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\input{chapters/00_intro.tex}
+\input{chapters/01_usage.tex}
+\input{chapters/02_shell.tex}
+\input{chapters/02_setup.tex}
+\input{chapters/03_basics.tex}
+\input{chapters/04_io.tex}
+\input{chapters/05_numpy.tex}
+\input{chapters/06_pandas.tex}
+\input{chapters/07_matplotlib.tex}
+\input{chapters/08_scipy.tex}
+\input{chapters/09_performance.tex}
+\input{chapters/10_assignment.tex}
+
+\appendix
+\input{chapters/90_ssh.tex}
+\input{chapters/91_git.tex}
+
+\end{document}

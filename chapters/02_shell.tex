@@ -1,0 +1,332 @@
+\chapter{シェルとファイル操作}
+
+\section{ターミナルとシェル}
+
+本書では、ファイル操作やスクリプト実行をターミナルから行う。まず言葉を分けておく。
+
+\begin{itemize}
+\item ターミナル: 文字で命令を入力するためのアプリケーション
+\item シェル: ターミナルの中で動き、入力されたコマンドを解釈して実行するプログラム
+\end{itemize}
+
+macOS では \code{zsh}、Linux や WSL では \code{bash} を使うことが多い。\code{zsh} と \code{bash} はどちらもシェルであり、本書の基本コマンドはほぼ同じように使える。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={どのシェルを使っているか調べる}]
+$ echo $SHELL
+\end{lstlisting}
+
+本書では、シェルで入力するコマンド例の先頭に \code{\$} を付ける。\code{\$} 自体は「ここから先が入力するコマンドである」という印であり、読者が実際に打ち込むのはその後ろの部分である。これに対して、出力結果やファイル内容の例には \code{\$} を付けない。
+
+\section{Windows では WSL を使う}
+
+本書のコマンド例は macOS や Linux のシェルを前提にしている。そのため、Windows で読み進める場合は、コマンドプロンプトや PowerShell をそのまま使うより、WSL (Windows Subsystem for Linux) を入れて Ubuntu などの Linux 環境を使う方が混乱しにくい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={WSL の導入例}]
+$ wsl --install
+\end{lstlisting}
+
+WSL を使う利点は、単にコマンド名がそろうことだけではない。後半で扱う並列処理や周辺ツールの中には、Linux 系環境での利用を前提としているものがある。OS ごとの差でつまずくより、最初から UNIX 系の作法へ寄せた方が、解析そのものに集中しやすい。
+
+\section{コマンド、オプション、引数}
+
+シェルで打つ 1 行は、多くの場合「コマンド本体」「オプション」「引数」から成る。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={コマンドの形}]
+$ ls -l results
+$ cp data/raw.txt backup/raw.txt
+\end{lstlisting}
+
+1 行目では、\code{ls} がコマンド本体、\code{-l} がオプション、\code{results} が引数である。2 行目では、\code{cp} がコマンド本体で、\code{data/raw.txt} と \code{backup/raw.txt} が引数である。一般に、オプションは動作を変え、引数は対象のファイル名やディレクトリ名を与える。
+
+\section{困ったときは説明を読む}
+
+コマンドを丸暗記する必要はない。忘れたときは、その場で説明を読む方が正確である。短い使い方を知りたいときは \code{-h} や \code{--help}、より詳しい説明を読みたいときは \code{man} を使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={説明を調べる基本}]
+$ python3 -h
+$ python3 --help
+$ man rsync
+\end{lstlisting}
+
+\code{--help} や \code{-h} は、そのコマンドが受け付けるオプションや引数の書式を短く表示することが多い。ただし、すべてのコマンドが両方を実装しているわけではない。macOS の \code{ls} のように \code{--help} を受け付けないコマンドもあるので、その場合は \code{man ls}、\code{man ssh}、\code{man rsync} のように \code{man} を引く方が確実である。
+
+\code{man} を開いたあとは、上下キーや \code{Space} で移動し、\code{/pattern} で検索できる。\code{q} を押せば終了する。最初のうちは「使い方を忘れたら検索エンジン」ではなく、「まず \code{--help} か \code{man}」という順序にした方が、手元の環境に合った説明へすぐたどり着ける。
+
+\section{今どこにいるかを確認する}
+
+シェルでは、いま作業しているディレクトリが常に基準になる。これをカレントディレクトリという。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={現在位置と一覧を確認する}]
+$ pwd
+$ ls
+$ ls -l
+$ ls -a
+\end{lstlisting}
+
+\code{pwd} は現在位置を表示する。\code{ls} は一覧を表示する。\code{ls -l} は詳細表示、\code{ls -a} は隠しファイルも含めて表示する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={表示例}]
+/Users/ikomae/analysis
+\end{lstlisting}
+
+もし \code{pwd} が上のように表示されていれば、今いる場所は \code{/Users/ikomae/analysis} である。その状態で \code{ls} を実行すると、そのディレクトリの中身が表示される。
+
+\section{移動する}
+
+\code{cd} はディレクトリを移動するためのコマンドである。次のようなディレクトリ構成を例にする。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={例に使うディレクトリ構成}]
+analysis/
+|-- data/
+|   `-- events.txt
+`-- scripts/
+    `-- plot.py
+\end{lstlisting}
+
+いま \code{/Users/ikomae/analysis} にいるとする。このとき、次のコマンドの意味はそれぞれ違う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={cd の例}]
+$ cd data
+$ cd ..
+$ cd ~/analysis/scripts
+$ cd -
+\end{lstlisting}
+
+\code{cd data} は \code{analysis/data} へ入る。\code{cd ..} は 1 つ上のディレクトリへ戻る。\code{cd \textasciitilde/analysis/scripts} はホームディレクトリを基準に \code{scripts} へ移動する。\code{cd -} は 1 つ前にいた場所へ戻る。
+
+\section{パスを読む}
+
+ファイルやディレクトリの場所は、パスで表す。パスには絶対パスと相対パスがある。
+
+\begin{table}[hbtp]
+\centering
+\caption{よく出てくるパス表記}
+\begin{tabular}{ll}
+\toprule
+表記 & 意味 \\
+\midrule
+\code{/abs/data.txt} & 絶対パス。どこにいても同じ場所を指す \\
+\code{data.txt} & 相対パス。今いるディレクトリを基準に解釈される \\
+\code{./x.txt} & \code{.} は現在のディレクトリ \\
+\code{../x.txt} & \code{..} は 1 つ上のディレクトリ \\
+\code{\textasciitilde/analysis} & \code{\textasciitilde} はホームディレクトリ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+たとえば、現在位置が \code{/abs/analysis} なら、次の 2 つは同じファイルを指す。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={同じファイルを指す 2 通りの書き方}]
+$ cat data/events.txt
+$ cat /abs/analysis/data/events.txt
+\end{lstlisting}
+
+一方で、現在位置が \code{/abs} なら、\code{cat data/events.txt} は別の意味になる。したがって、コマンドを読むときは「今どこにいるか」と「そのパスが絶対か相対か」を必ずセットで考える必要がある。
+
+\section{ディレクトリを作る}
+
+\code{mkdir} はディレクトリを作る。\code{-p} を付けると、親ディレクトリがなくてもまとめて作れる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={mkdir の例}]
+$ mkdir output
+$ mkdir -p output/2026/04
+\end{lstlisting}
+
+1 行目は \code{output} だけを作る。2 行目は \code{output} や \code{output/2026} がまだ無くても、必要な親ディレクトリごと作る。解析では日付ごとの出力先を作ることが多いので、\code{mkdir -p} はよく使う。
+
+\section{ファイルの中身を見る}
+
+解析では、データを読む前にまず中身を確認する。そのための基本コマンドを表にまとめる。
+
+\begin{table}[hbtp]
+\centering
+\caption{中身確認でよく使うコマンド}
+\begin{tabular}{lll}
+\toprule
+コマンド & 役割 & 例 \\
+\midrule
+\code{cat} & 全体をそのまま表示する & \code{cat data/events.txt} \\
+\code{less} & スクロールしながら読む & \code{less data/events.txt} \\
+\code{head} & 先頭だけを見る & \code{head data/events.txt} \\
+\code{tail} & 末尾だけを見る & \code{tail data/events.txt} \\
+\code{wc -l} & 行数を数える & \code{wc -l data/events.txt} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+巨大なファイルに対して \code{cat} を使うと画面が流れてしまうので、その場合は \code{head}、\code{tail}、\code{less} を使う方が自然である。データ解析では、まず数行だけ見て形式を確認する癖を付けた方がよい。
+
+\section{コピーする: \code{cp}}
+
+\code{cp} は元のファイルやディレクトリを残したまま複製を作る。文章だけで覚えると混乱しやすいので、前後の状態を見た方がよい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={コピー前の状態}]
+work/
+|-- backup/
+`-- raw/
+    `-- events.txt
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ファイルをコピーする}]
+$ cp raw/events.txt backup/events.txt
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={コピー後の状態}]
+work/
+|-- backup/
+|   `-- events.txt
+`-- raw/
+    `-- events.txt
+\end{lstlisting}
+
+コピー後も \code{raw/events.txt} は残る。\code{backup/events.txt} が新しく増えるだけである。これが \code{cp} の基本である。
+
+ディレクトリごと複製したい場合は \code{-r} を付ける。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ディレクトリごとコピーする}]
+$ cp -r raw raw_backup
+\end{lstlisting}
+
+\section{移動する、名前を変える: \code{mv}}
+
+\code{mv} は「移動」と「改名」の両方に使う。どちらになるかは、最後の引数が何を指しているかで決まる。
+
+\subsection{改名の例}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={改名前の状態}]
+work/
+`-- result.txt
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ファイル名を変更する}]
+$ mv result.txt result_old.txt
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={改名後の状態}]
+work/
+`-- result_old.txt
+\end{lstlisting}
+
+この場合は、同じディレクトリの中で名前だけが変わる。
+
+\subsection{移動の例}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={移動前の状態}]
+work/
+|-- output/
+`-- result.txt
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={別ディレクトリへ移動する}]
+$ mv result.txt output/
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={移動後の状態}]
+work/
+`-- output/
+    `-- result.txt
+\end{lstlisting}
+
+この場合は、\code{result.txt} が \code{output/} の中へ移る。元の場所からは消える。\code{cp} と違って元ファイルは残らない。
+
+\section{削除する: \code{rm}}
+
+\code{rm} はファイルを削除する。重要なのは、通常の \code{rm} はゴミ箱へ移すのではなく、その場で削除するという点である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={削除の例}]
+$ rm result_old.txt
+$ rm -i result_old.txt
+$ rm -r old_output
+\end{lstlisting}
+
+\code{rm result\_old.txt} はファイルを削除する。\code{rm -i result\_old.txt} は削除前に確認を出す。\code{rm -r old\_output} はディレクトリを中身ごと再帰的に削除する。
+
+特に \code{rm -r} は強力である。対象のパスを誤ると大きな被害になるので、削除前に \code{pwd} と \code{ls} で場所を確かめる習慣を持った方がよい。
+
+\section{環境変数を使う}
+
+シェルやプログラムには、「名前」と「値」の組として渡される設定がある。これが環境変数である。環境変数は、シェルの中だけで完結するものではなく、そこから起動した Python や各種コマンドにも引き継がれる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={よく使う環境変数を見る}]
+$ echo $HOME
+$ echo $SHELL
+$ echo $PATH
+\end{lstlisting}
+
+\code{HOME} はホームディレクトリ、\code{SHELL} は使っているシェル、\code{PATH} は実行ファイルを探すディレクトリの並びを表す。後で出てくる \code{PYENV\_ROOT} や \code{DATA\_ROOT} も同じ仲間であり、「プログラムへ外から値を渡す仕組み」と考えると分かりやすい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={環境変数を設定する}]
+$ export DATA_ROOT="$HOME/data/events"
+$ echo $DATA_ROOT
+\end{lstlisting}
+
+\code{export} すると、そのシェルから起動する後続のコマンドにも値が渡る。たとえば Python スクリプト側で \code{DATA\_ROOT} を読めば、データ置き場をコードへ埋め込まずに済む。
+
+ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値なら、\code{\textasciitilde/.zshrc} や \code{\textasciitilde/.bashrc} に \code{export ...} を書いておく。
+
+\section{PATH と実行ファイル}
+
+シェルが \code{python3} や \code{ls} を実行できるのは、それらが実行ファイルとして保存されており、しかもシェルがその場所を知っているからである。その探索に使う環境変数が \code{\$PATH} である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={実行ファイルを探す}]
+$ which python3
+$ which ls
+$ echo $PATH
+\end{lstlisting}
+
+\code{which python3} を実行すると、たとえば \code{/opt/homebrew/bin/python3} や \code{.venv/bin/python} のような場所が表示される。シェルは \code{\$PATH} に並んだディレクトリを左から順に調べ、最初に見つかった実行ファイルを使う。
+
+\code{bin} という名前は、実行ファイルを置くディレクトリによく使われる。後で出てくる \code{.venv/bin/python} や \code{.venv/bin/pip} の \code{bin} も、この慣習に従っている。
+
+\section{権限を読む}
+
+ファイルには権限がある。読み取れるか、書き込めるか、実行できるかを \code{rwx} で表す。\code{ls -l} を使うと確認しやすい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={権限表示の例}]
+-rwxr-xr-x  1 user  staff  1234 Apr  8 10:00 run_analysis.sh
+-rw-r--r--  1 user  staff   411 Apr  8 10:05 notes.txt
+-rw-------  1 user  staff   411 Apr  8 10:05 id_ed25519
+\end{lstlisting}
+
+最初の 10 文字のうち、先頭 1 文字はファイル種別であり、残り 9 文字が権限である。3 文字ずつに区切って、所有者、グループ、その他の利用者に対する権限を表す。
+
+\begin{table}[hbtp]
+\centering
+\caption{権限の記号と数字}
+\begin{tabular}{lll}
+\toprule
+記号 & 数字 & 意味 \\
+\midrule
+\code{r} & 4 & 読み取り \\
+\code{w} & 2 & 書き込み \\
+\code{x} & 1 & 実行 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+数字指定では足し算で表す。たとえば \code{7} は \code{rwx}、\code{6} は \code{rw-}、\code{5} は \code{r-x} である。したがって \code{755} は所有者が \code{rwx}、それ以外が \code{r-x} を意味し、\code{644} は所有者が \code{rw-}、それ以外が \code{r--} を意味する。秘密鍵のように本人だけが読めればよいものには \code{600} がよく使われる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={権限を変更する例}]
+$ chmod 755 run_analysis.sh
+$ chmod 644 notes.txt
+$ chmod 600 ~/.ssh/id_ed25519
+\end{lstlisting}
+
+\section{スクリプトを直接実行する}
+
+Python スクリプトは \code{python3 hello.py} の形で実行するなら、実行権限がなくてもよい。これに対して \code{./hello.py} のように直接実行する場合には、どのプログラムで解釈するかをファイル先頭に書いておく必要がある。
+
+その先頭行の \code{\#!} で始まる記法を、シバン (shebang) という。
+
+\begin{lstlisting}[language=Python, caption={シバン付きの Python スクリプト}]
+#!/usr/bin/env python3
+
+print("hello")
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={直接実行できるようにする}]
+$ chmod +x hello.py
+$ ./hello.py
+\end{lstlisting}
+
+\code{\#!/usr/bin/env python3} は、「\code{python3} を見つけてこのファイルを実行せよ」という意味である。いきなり言葉だけで覚える必要はないが、「直接実行にはシバンと実行権限の両方が必要だ」という構造だけは理解しておいた方がよい。

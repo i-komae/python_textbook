@@ -1,0 +1,196 @@
+\chapter{入出力とファイル}
+
+この章では、Python でファイルを開き、複数のファイルを集め、1 行ずつ読みながら値へ変換する基本を扱う。ここで重要なのは、特定のデータ形式に慣れることではなく、入力を見て必要な情報を取り出す流れを理解することである。
+
+\section{\code{open} と \code{with}}
+
+Python でテキストファイルを読むときの基本は \code{open} である。さらに \code{with} を組み合わせると、読み終えた後に自動でファイルが閉じられる。
+
+\begin{lstlisting}[language=Python, caption={テキストファイルを 1 行ずつ読む基本形}]
+with open(path, "r", encoding="utf-8") as f:
+    for line in f:
+        print(line.rstrip())
+\end{lstlisting}
+
+\code{read} でまとめて読む方法もあるが、大きなファイルでは 1 行ずつ読む方が安全である。まずはこの形に慣れておくとよい。
+
+このとき、\code{line} には改行文字が含まれている点にも注意したい。表示だけなら \code{rstrip} で末尾を落とせば十分だが、区切り文字を扱うときには改行の有無が結果に影響することがある。テキスト処理では、見えていない文字を意識することが重要である。
+
+\section{\code{pathlib} でパスを扱う}
+
+ファイルパスを単なる文字列として扱うこともできるが、Python では \code{pathlib.Path} を使うと見通しが良くなる。
+
+\begin{lstlisting}[language=Python, caption={pathlib の例}]
+from pathlib import Path
+
+root = Path("data")
+path = root / "2026" / "04" / "sample.txt"
+
+print(path.exists())
+print(path.name)
+\end{lstlisting}
+
+\code{/} 演算子でパスをつなげられるため、文字列連結より読みやすい。ファイル名だけ取りたい、親ディレクトリへ戻りたい、拡張子を変えたい、といった操作も自然に書ける。解析コードでは、パス操作を文字列で済ませるより安全なことが多い。
+
+\begin{lstlisting}[language=Python, caption={pathlib で出力先を作る例}]
+outdir = Path("output")
+outdir.mkdir(parents=True, exist_ok=True)
+outfile = outdir / "summary.txt"
+\end{lstlisting}
+
+ディレクトリがなければ作る、すでにあってもエラーにしない、という処理は解析コードで非常によく使う。こうした定型操作を安全に書ける点でも \code{pathlib} は便利である。
+
+\section{ファイルオブジェクトのメソッド}
+
+ファイルを開いた後には、\code{read}、\code{readline}、\code{write} などのメソッドが使える。Python 公式チュートリアルでも強調されているように、何をどの粒度で読むかでコードの性格が変わる。
+
+\begin{lstlisting}[language=Python, caption={file object の基本操作}]
+with open(path, "r", encoding="utf-8") as f:
+    first_line = f.readline()
+
+with open("out.txt", "w", encoding="utf-8") as f:
+    f.write("hello\n")
+\end{lstlisting}
+
+\code{readline} は 1 行だけ確認したいとき、\code{write} は整形済み文字列をそのまま出したいときに便利である。大きな入力全体を一気に読む前に、最初の数行だけ確認するという使い方もよく行う。
+
+\section{複数のファイルを集める}
+
+ログや測定結果が複数ファイルに分かれている場合は、まず対象ファイルの一覧を作る必要がある。Python では \code{glob.glob} がよく使われる。
+
+\begin{lstlisting}[language=Python, caption={glob によるファイル探索}]
+import glob
+
+paths = sorted(glob.glob("data/**/*.txt", recursive=True))
+\end{lstlisting}
+
+\code{glob.glob} はシェルのワイルドカードに近い感覚で使える。複数ファイルを扱う処理では、最初に見つかった件数や先頭数件のパスを表示して確認する習慣を付けておくとよい。
+
+また、順序が重要な処理では \code{sorted} を付ける意味も大きい。ファイル探索の結果が環境依存の順序で返ると、処理結果やログの見え方が毎回変わり、デバッグしにくくなる。時系列や連番を扱う場面では、最初に順序を固定する方が安全である。
+
+\section{1 行の文字列を値へ変換する}
+
+多くの表形式データは、1 行の中に複数の列が並ぶ形で保存されている。テキストとして読んだだけでは、まだ単なる文字列である。そこから列に分け、整数や浮動小数点数へ変換して初めて解析に使える。
+
+\begin{lstlisting}[language=Python, caption={空白区切りの 1 行を分解する例}]
+line = "17 2026-04-04 12:34:56 15.2 OK"
+columns = line.split()
+
+record_id = int(columns[0])
+date_text = columns[1]
+time_text = columns[2]
+value = float(columns[3])
+status = columns[4]
+\end{lstlisting}
+
+ここで重要なのは、どの列をどの型で持つかを自分で決めることである。後で pandas を使う場合でも、この感覚を持っていると列の意味を見失いにくい。
+
+文字列をどの段階で数値へ変換するかも設計の一部である。すぐ数値化してよい列もあれば、元の文字列表現を残しておいた方が確認しやすい列もある。読みやすい解析コードでは、どこでどの変換を行ったかが追えるようになっている。
+
+\section{ファイルへ書き出す}
+
+解析では、読むだけでなく結果を書き出す場面も多い。最も単純には、テキストとして 1 行ずつ書いていけばよい。
+
+\begin{lstlisting}[language=Python, caption={テキストを書き出す最小例}]
+lines = ["run_id count mean", "1 120 3.42", "2 118 3.37"]
+
+with open("summary.txt", "w", encoding="utf-8") as f:
+    for line in lines:
+        f.write(line + "\n")
+\end{lstlisting}
+
+\code{"w"} は新しく書くモード、\code{"a"} は追記モードである。既存ファイルを上書きしてよいのか、別名で保存すべきかは、実験ノートやレポート再現性にも関わる。出力ファイル名の設計は、解析の一部として考えるべきである。
+
+\section{文字列整形}
+
+結果を画面やファイルへ出すときには、数値を読みやすく整えることも大切である。Python では、f-string が最もよく使われる。
+
+\begin{lstlisting}[language=Python, caption={f-string の例}]
+mean = 3.14159
+sigma = 0.27182
+
+text = f"mean = {mean:.3f}, sigma = {sigma:.3f}"
+print(text)
+\end{lstlisting}
+
+\code{:.3f} は小数点以下 3 桁で表示するという意味である。解析結果をレポートへ貼る前に、このような整形で見やすくしておくと、図や本文との対応が取りやすい。
+
+Python 公式チュートリアルでは、f-string のほかに \code{str.format} や手動整形も紹介されている。現在の実務では f-string が最も使いやすいが、古いコードを読むと別の書き方が出てくることもある。複数の流儀があることは知っておきたい。
+
+\section{JSON}
+
+結果や設定を構造化して保存したいときは、JSON が便利である。テキストとして読めて、Python では標準ライブラリ \code{json} ですぐ扱える。
+
+\begin{lstlisting}[language=Python, caption={JSON の保存と読込み}]
+import json
+
+config = {"threshold": 3.5, "bins": 40}
+
+with open("config.json", "w", encoding="utf-8") as f:
+    json.dump(config, f, indent=2)
+
+with open("config.json", "r", encoding="utf-8") as f:
+    loaded_config = json.load(f)
+\end{lstlisting}
+
+大きな表形式データの本体を JSON で持つのは効率が悪いことも多いが、設定や要約結果を保存するには便利である。人間が読める形式と、Python が簡単に読める形式を両立しやすい。
+
+\section{Pickle / PKL}
+
+Python オブジェクトをそのまま保存したいときは、\code{pickle} もよく使われる。拡張子は慣習的に \code{.pkl} を使うことが多い。辞書、リスト、NumPy 配列、学習済みモデル、中間集計結果などを素早く退避するには便利である。
+
+\begin{lstlisting}[language=Python, caption={pickle の保存と読込み}]
+import pickle
+
+result = {"mean": 3.14, "sigma": 0.27, "values": [1.0, 2.0, 3.0]}
+
+with open("result.pkl", "wb") as f:
+    pickle.dump(result, f)
+
+with open("result.pkl", "rb") as f:
+    loaded_result = pickle.load(f)
+\end{lstlisting}
+
+\code{"wb"} と \code{"rb"} の \code{b} はバイナリモードを意味する。JSON と違って人間には読めないが、Python では構造を保ったまま簡単に保存できる。ただし、\code{pickle} は Python 専用であり、他言語との受け渡しには向かない。また、信頼できない \code{.pkl} ファイルを \code{load} してはならない。共有用の正式な保存形式というより、自分の解析途中結果を手早く再利用するためのローカル形式と考える方が安全である。
+
+\section{日付と時刻を文字列のままにしない}
+
+日付や時刻を含むデータでは、文字列のまま扱うより、比較や計算がしやすい形へ変換した方がよい。標準ライブラリの \code{datetime} は、そのための基本的な道具である。
+
+\begin{lstlisting}[language=Python, caption={datetime を使って時刻を扱う例}]
+from datetime import datetime
+
+text = "2026-04-04 12:34:56.123456"
+dt = datetime.strptime(text, "%Y-%m-%d %H:%M:%S.%f")
+unix_time = dt.timestamp()
+\end{lstlisting}
+
+秒単位の差を見たいのか、より細かい時間差を見たいのかによって、どの単位で値を持つかは変わる。ただし、どの表現を選んでも、一貫して使うことが大切である。
+
+\code{datetime} は便利だが、何でも \code{datetime} オブジェクトのまま持てばよいわけではない。差分計算を大量に繰り返すなら、途中で秒やナノ秒の数値へ変換した方が扱いやすいことも多い。人間に読みやすい表現と計算しやすい表現を分けて考えることが重要である。
+
+さらに、タイムゾーンが関わるデータでは、見かけの時刻だけを比較すると誤解が生じる。研究用のログや観測データでは UTC を使うことが多いが、どの基準時刻を採用しているかを最初に確認する習慣を付けたい。
+
+
+\section{保存形式について: ベストプラクティスへのステップ}
+
+データをファイルに保存・読み出しする際、多くの初学者は何も考えずに \code{.csv} (CSV形式) を使い続ける。しかし、データが数百万行に達すると、処理時間の大半が「ファイルの準備」に消えるようになる。
+
+\subsection{Step 1: テキスト形式 (CSV, JSON) の限界}
+テキスト形式は文字コード（例: UTF-8）を使って人間がそのまま読める形で保存する。CSV/TSV は非常に汎用性が高く、C++ や R、Excel など、どの言語でも読めるのが強みである。
+
+\textbf{問題点}: コンピュータはディスク上の文字列（例：「1.2345」という 6 文字の羅列）を、計算に使える実数値にいちいち変換（パース）しなければならない。データ量が数GBに及ぶと、この「文字列から実数への変換処理」だけで何十分も待たされることになる。
+
+\subsection{Step 2: バイナリ形式への移行と、どれを選ぶかの判断基準}
+メモリ上の数値を人間には読めない生のバイト列としてそのままファイルに記録する「バイナリ形式」を使えば、読み込み時間は一瞬（ディスクの転送速度の限界）になる。
+
+しかし、バイナリ形式にはいくつかデファクトスタンダードがあり、目的に合わせて選ばなければならない。
+
+\begin{itemize}
+    \item \textbf{NPY / NPZ (NumPy標準)}: NumPyだけで完結する小さな解析なら最も手軽。ただし、Python・NumPy 以外（C++やRなど）からは読みづらく使い捨てになりがちである。
+    \item \textbf{Pickle / PKL}: Python オブジェクトをそのまま保存できるため、中間結果や学習済みモデルの一時保存に便利である。ただし、Python 以外ではほぼ使えず、信頼できないファイルを読み込んではならない。共同研究の交換形式というより、ローカルな作業用キャッシュとして使うべき形式である。
+    \item \textbf{HDF5}: 大規模な数値データをディレクトリの階層構造のように管理する形式。C/C++（Geant4など）、Fortran、R 等さまざまな言語の公式ライブラリが存在する。他のグループや別言語のプログラムにデータを渡す場合は、HDF5 を選ぶのが最も安全で汎用性が高い。
+    \item \textbf{Parquet}: 列指向のバイナリフォーマット。後述する Pandas や Polars などの DataFrame をそのまま保存でき、特定の列だけを高速に読み込むことが得意。Hadoop や Spark などのビッグデータエコシステムでも標準的である。分析チーム内での巨大データのやり取りにはこれが現在の最強の選択肢である。
+\end{itemize}
+
+解析の初期段階ではデータの中身を目視確認するために CSV を使うことが多いが、大量のイベントデータを何回も読み直す段階になったら、\textbf{必ず最初に Parquet や HDF5 への変換スクリプトを書いてバイナリ化する}ことが全体を高速化する第一歩である。\code{.pkl} はその補助として、途中結果や作業用キャッシュを手元で素早く保存する用途に向いている。

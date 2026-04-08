@@ -1,0 +1,220 @@
+\chapter{pandas による大規模データ解析}
+
+\section{DataFrame とは何か}
+
+pandas の中心にある DataFrame は、列名付きの表である。観測ログや測定結果のように「行が記録、列が属性」という形のデータには特に向いている。
+
+\begin{lstlisting}[language=Python, caption={pandas の最小例}]
+import pandas as pd
+
+df = pd.read_csv(path, sep=r"\s+", comment="#", header=None)
+\end{lstlisting}
+
+DataFrame の利点は、列ごとに意味を持たせながら、まとめて処理を書けることにある。
+
+DataFrame を使うと、「何列目か」を覚える必要が減り、列名を通して処理の意味が見えやすくなる。特に、ファイル読込み、列変換、フィルタ、集計、書き出しまでを一つの流れで扱える点は大きい。解析の途中で確認用の表を少し表示したいときにも便利である。
+
+DataFrame の基本操作は、Python 公式チュートリアルの「データ構造」章に相当する考え方を、表形式へ拡張したものだと考えると理解しやすい。リストや辞書を知っていると、列名によるアクセスや行集合に対するフィルタの意味が見えやすい。
+
+\begin{lstlisting}[language=Python, caption={DataFrame の中身を確認する例}]
+print(df.head())
+print(df.dtypes)
+\end{lstlisting}
+
+大きなデータを読むときほど、最初に \code{head()} と \code{dtypes} を確認する価値がある。列名は正しいか、型は意図通りか、欠損はないかを早い段階で見るだけで、多くのバグを防げる。
+
+\section{列選択、並べ替え、集約}
+
+pandas を使い始めたら、まず列選択と並べ替えを自然に書けるようになりたい。
+
+\begin{lstlisting}[language=Python, caption={列選択と並べ替えの例}]
+selected = df[["date", "value"]]
+sorted_df = df.sort_values("value")
+top10 = sorted_df.tail(10)
+\end{lstlisting}
+
+ここで重要なのは、行ごとの処理より先に、表全体の形を整えることである。必要列だけを取り出し、順序をそろえ、不要な行を除く。この前処理がきれいだと、その後の集計も読みやすくなる。
+
+\begin{lstlisting}[language=Python, caption={groupby の例}]
+summary = df.groupby("category")["value"].mean()
+\end{lstlisting}
+
+\code{groupby} は、カテゴリごとに平均や件数を出したいときの基本である。研究データでは、検出器ごと、条件ごと、日ごとのように、同じ操作を複数群へ適用したい場面が多い。手書きのループよりも、列の意味を保ったまま集約できる点が pandas の強みである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={groupby 集約結果の例}]
+category
+A    3.41
+B    3.08
+C    2.95
+Name: value, dtype: float64
+\end{lstlisting}
+
+この結果例では、カテゴリごとの平均値をすぐ比較できる。必要に応じて件数や標準偏差も一緒に出せば、単に平均が違うのか、ばらつきやサンプル数も違うのかを確認できる。
+
+\section{pandas が速くなりやすい理由}
+
+pandas が速くなりやすいのは、列単位でデータを処理し、内部でベクトル化された操作を使えるからである。Python の辞書リストを 1 行ずつ回して書くより、列としてまとめて扱う方が速く、コードも短くなりやすい。
+
+ただし、すべての場面で pandas が最適とは限らない。行ごとに複雑な条件分岐を大量に行う場合や、データ構造自体を細かく制御したい場合には、NumPy や自作構造の方が向くこともある。
+
+したがって、「とりあえず pandas を使う」よりも、「列として扱える問題かどうか」を考える方が重要である。表として整理できるなら pandas は強力だが、近傍探索や状態遷移のように行どうしの関係が複雑になると、別の設計の方が自然なこともある。
+
+\section{大きなテキストを読む工夫}
+
+\code{read\_csv} を使うときは、必要な列だけ読む、型を指定する、コメント行を飛ばす、といった工夫が重要である。
+
+\begin{lstlisting}[language=Python, caption={必要な列だけを読む例}]
+df = pd.read_csv(
+    path,
+    compression="gzip",
+    sep=r"\s+",
+    comment="#",
+    header=None,
+    usecols=[0, 1, 2, 3],
+    names=["id", "date", "time", "value"],
+)
+\end{lstlisting}
+
+このように列を絞るだけでも、読込み時間とメモリ消費はかなり変わる。
+
+さらに、\code{dtype} を指定しておくと、読込み後の型変換を減らせる。列数や行数が大きいデータでは、どの列が本当に必要かを考えるだけで、後続の処理全体が軽くなる。読込みは解析の最初の一歩だが、同時に最適化の出発点でもある。
+
+\section{CSV を毎回読み直さず Parquet へ変換する}
+
+前章で述べたように、巨大なテキストファイルを何度も \code{read\_csv} するのは無駄が大きい。列構造が固まったら、一度だけ CSV から DataFrame を作り、その後は Parquet として保存して再利用する方が実務的である。
+
+\begin{lstlisting}[language=Python, caption={CSV から Parquet へ一度だけ変換する例}]
+raw_df = pd.read_csv(
+    "events.csv.gz",
+    sep=r"\s+",
+    comment="#",
+    header=None,
+    names=["id", "date", "time", "value"],
+)
+raw_df.to_parquet("events.parquet")
+
+df = pd.read_parquet("events.parquet", columns=["id", "time", "value"])
+\end{lstlisting}
+
+\code{read\_parquet} なら、文字列のパースを毎回やり直さずに済み、必要列だけを読むこともできる。日々の解析では、この「最初に 1 回だけテキストを整理して、以後は Parquet を読む」という流れを作るだけで、待ち時間が大きく減る。なお、Parquet の入出力には \code{pyarrow} などのバックエンドが必要なことが多い。
+
+\begin{lstlisting}[language=Python, caption={列演算とフィルタの例}]
+df["ratio"] = df["value"] / df["value"].mean()
+selected = df[df["ratio"] > 1.5]
+\end{lstlisting}
+
+このように、列同士の演算をそのまま式として書ける点が pandas の強みである。行ごとの \code{for} ループを書く前に、列単位で表現できないかを考える習慣を持つとよい。
+
+\section{欠損値と型の扱い}
+
+現実のデータでは、すべての行がきれいに埋まっているとは限らない。空欄や壊れた値が混ざると、pandas では \code{NaN} として表現されることが多い。
+
+\begin{lstlisting}[language=Python, caption={欠損値の確認と除外}]
+missing_mask = df["value"].isna()
+clean_df = df.dropna(subset=["value"])
+\end{lstlisting}
+
+欠損値をどう扱うかは、単なる実装問題ではなく解析方針そのものである。除外してよいのか、別扱いすべきか、補完してよいのかを、物理的な意味と合わせて考える必要がある。型の自動推定に任せきりにせず、重要な列の型は自分で確認したい。
+
+\section{結合と時系列処理}
+
+複数の表をまとめたり、時刻順に並べ替えたりする処理も pandas の重要な役割である。
+
+\begin{lstlisting}[language=Python, caption={連結と並べ替えの例}]
+combined = pd.concat([df1, df2], ignore_index=True)
+combined = combined.sort_values("time")
+\end{lstlisting}
+
+複数ファイルを月単位や日単位で読んで、最後にまとめるという流れは現実の解析でよく現れる。どの段階で結合するか、結合後にどの列で並べ替えるかを明確にしておくと、ファイルまたぎの不具合を減らしやすい。
+
+\begin{lstlisting}[language=Python, caption={時刻列を datetime へ変換する例}]
+combined["time"] = pd.to_datetime(combined["date"] + " " + combined["time"])
+combined = combined.sort_values("time")
+\end{lstlisting}
+
+文字列のままでは、見た目には時刻に見えても、差分計算や順序比較には向かないことがある。早い段階で型を変えておくと、その後の処理が自然になる。
+
+\section{DataFrame を TeX で出力する}
+
+解析結果として集約した表などを LaTeX のレポートに直接貼り付けたい場合は、手作業で打ち直すのではなく \code{to\_latex()} を用いると便利である。
+
+\begin{lstlisting}[language=Python, caption={DataFrame の TeX 形式出力}]
+# pandas のバージョンにより引数の推奨が変わる場合があるが、一般的な利用法
+tex_table = summary.to_latex(
+    caption="カテゴリごとの平均値",
+    label="tab:category_mean",
+    float_format="%.3f" # 小数点以下3桁に整える
+)
+print(tex_table)
+\end{lstlisting}
+これを出力したテキストファイルに保存し、本ドキュメント側で \code{\input} することで、解析スクリプトからレポートまでのパイプラインが完成する。
+
+\section{Pandasの行処理と並列化：論理的改善ステップ}
+
+Pandas の DataFrame は数百万行のデータを保持できるが、各行に対して複雑な文字列処理や条件判定を加えようとした時、コードの書き方一つで実行時間が数百分から数秒へと劇的に変わる。
+
+\subsection{Step 1: 絶対に避けるべき for ループ (iterrows の限界)}
+
+Python 初学者が最も陥りやすい罠が、「DataFrame の行を1つずつ取り出して処理する」という直感的な書き方である。
+
+\begin{lstlisting}[language=Python, caption={[Bad Example] iterrows による行単位のループ処理}]
+def heavy_computation(val):
+    return val ** 2
+
+# 絶望的に遅い：1行ずつPython空間でオブジェクトが作られ、評価される
+results = []
+for index, row in df.iterrows():
+    results.append(heavy_computation(row["value"]))
+df["value_sq"] = results
+\end{lstlisting}
+
+このコードは10万行を超えたあたりから全く終わらなくなる。Pandas がデータフレームとしてデータを一括管理している利点を全て打ち消し、Pythonの重い関数呼び出しを数百万回繰り返しているからである。
+
+\subsection{Step 2: Pandas ネイティブな apply() への移行}
+
+行ごとに処理を適用したい場合、Pandas が用意している \code{apply()} メソッドを使うのが正しい作法である。内部のループ処理がC言語ベースで最適化されているため、for ループより劇的に高速になる。
+
+\begin{lstlisting}[language=Python, caption={apply を用いた行単位処理}]
+# for 文を書かずに、関数そのものを列に適用（マッピング）する
+df["value_sq"] = df.apply(lambda row: heavy_computation(row["value"]), axis=1)
+\end{lstlisting}
+
+ただし、\code{axis=1} を付けた \code{apply()} も各行に対して Python 関数を呼ぶため、列演算ほど速いわけではない。上の例のように単に二乗したいだけなら、実際には次のように列演算で書く方が自然で速い。
+
+\begin{lstlisting}[language=Python, numbers=none]
+df["value_sq"] = df["value"] ** 2
+\end{lstlisting}
+
+\code{apply()} は「列演算だけでは書きにくいが、まだ pandas の文脈の中で処理したい」場合の中間手段として理解する方が正確である。まず列演算、次に \code{apply()}、それでも重ければ並列化、という順で判断すると迷いにくい。
+
+\subsection{Step 3: 並列化とボトルネックの判断 (Pandarallel)}
+
+しかし、\code{apply()} はどれだけ行数があっても「CPUの1つのコア」しか使わない（シングルスレッド）。本当に計算が重い処理の場合、\code{apply} を使っても処理が長引いてしまう。ここで初めて、マルチコアを用いた「並列化（マルチプロセッシング）」が選択肢に入る。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.7\linewidth]{pandas_benchmark.pdf}
+\caption{同じ重い計算処理を、Pythonのループ、apply関数、Pandarallel で行った際の処理時間の激変の様子。}
+\label{fig:pandas-benchmark}
+\end{figure}
+
+\begin{lstlisting}[language=Python, caption={Pandarallel を用いた最強の並列化}]
+from pandarallel import pandarallel
+
+# 並列環境の初期化。プログレスバーを表示する設定をオンにしている
+pandarallel.initialize(progress_bar=True)
+
+# apply を parallel\_apply に置き換えるだけで、全CPUコアに処理が分散される
+df["value_sq"] = df.parallel_apply(lambda row: heavy_computation(row["value"]), axis=1)
+\end{lstlisting}
+
+図~\ref{fig:pandas-benchmark} を見ると明らかなように、手段の選定によって処理時間は2桁変わる。
+
+\code{pandarallel} は Linux 系環境での利用が比較的安定している一方で、ネイティブの Windows 環境では設定や挙動で悩みやすいことがある。Windows で本書の流れを再現するなら、前章で触れた WSL を使う方が混乱しにくい。
+
+\textbf{並列化の罠（判断基準）}:
+並列化は魔法の杖ではない。\code{pandarallel} は背後で「データを複数のプロセス（別のメモリ空間）にコピーして分配する」ため、通信オーバーヘッド（コピーの手間）がかかる。「単純な足し算」などのすぐに終わる軽い処理を \code{parallel\_apply} にかけると、計算時間よりもコピー時間の方が長くなり、かえって遅くなる。\textbf{「CPU1コアでは計算に時間がかかりすぎる重い処理」}でのみ並列化を採用するという見極めが必要である。
+
+\section{さらに大規模なデータへの対応 (Polars など)}
+
+pandas は強力だが、全データを一度にメモリ（RAM）に載せる必要がある設計上、マシンのメモリを超えるようなテラバイト級のデータを処理させるとクラッシュしてしまう。また、内部的なループの非効率さも残っている。近年では、言語の内部実装に Rust を用いるなどで劇的な高速化とメモリ効率の改善を図った \code{Polars} 等のライブラリの利用も急速に広がっている。もし数千万行に及ぶ処理で pandas の限界を感じた場合は、Polars への移行を検討するのも有効なアプローチである。

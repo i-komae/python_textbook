@@ -1,0 +1,331 @@
+\chapter{Python の基本}
+
+\section{変数と基本型}
+
+Python では、値に名前を付けて使う。たとえば次のように書く。
+
+\begin{lstlisting}[language=Python, caption={変数と基本型}]
+n_rows = 12
+threshold = 3600.0
+label = "A"
+use_log = True
+\end{lstlisting}
+
+\code{n\_rows} は整数、\code{threshold} は浮動小数点数、\code{label} は文字列、\code{use\_log} は真偽値である。解析では、整数と浮動小数点数を区別して扱う感覚が重要になる。たとえば、件数は整数だが、フィットで得られるパラメータは浮動小数点数であることが多い。
+
+Python は変数宣言を先に書かなくてよいが、その代わり自分で型を意識して読む必要がある。特に \code{1} と \code{1.0} の違い、文字列としての \code{'12'} と整数としての \code{12} の違いは、ファイル読込みや数値計算で頻繁に問題になる。
+
+\section{数値と演算子}
+
+Python は、対話的な計算機として使い始めるのが理解しやすい。四則演算、べき乗、剰余、整数除算など、基本的な演算子はすぐに試せる。
+
+\begin{lstlisting}[language=Python, caption={数値計算の基本}]
+2 + 3
+7 / 3
+7 // 3
+7 % 3
+2 ** 10
+\end{lstlisting}
+
+\code{/} は浮動小数点数として割り算を行い、\code{//} は整数部分を返す。観測時間を秒へ直す、ビン番号を求める、インデックスを分ける、といった処理では、この違いが重要になる。特に \code{//} と \code{\%} は、周期的な区切りやグループ分けでよく現れる。
+
+浮動小数点数の計算では、表示された値が見た目通りに内部で表現されているとは限らない。これは Python 特有の問題ではなく、一般的な計算機の表現上の性質である。後半でフィットや統計量を扱うときにも、この前提を意識しておきたい。
+
+\section{文字列}
+
+ファイル名、日付時刻、ヘッダ、ラベルなど、解析コードでは文字列を扱う場面が多い。文字列は単なる表示用のデータではなく、分割、検索、整形の対象でもある。
+
+\begin{lstlisting}[language=Python, caption={文字列の基本操作}]
+name = "detector_A"
+date = "2026-04-04"
+
+print(name.upper())
+print(date.replace("-", "/"))
+print(name.split("_"))
+\end{lstlisting}
+
+\code{split}、\code{replace}、\code{strip} のような操作は、ファイル読込みの前処理で頻繁に使う。特に \code{split} は、空白区切りやカンマ区切りの 1 行を各列へ分ける最初の道具である。NumPy や pandas を使う前に、この感覚を持っておくとデータ形式の理解が速い。
+
+\section{リスト、タプル、辞書}
+
+複数の値をまとめたいときには、いくつかの基本的な入れ物がある。
+
+\begin{lstlisting}[language=Python, caption={基本的なデータ構造}]
+labels = ["A", "B", "C", "D"]
+point = (12, 18)
+row = {"id": 42, "value": 3.5, "flag": True}
+\end{lstlisting}
+
+リストは順序付きで変更可能、タプルは順序付きで変更不可、辞書は名前付きの値を持つ。最初のうちは辞書が読みやすいが、大きなデータを大量に処理するときはオーバーヘッドが大きくなることもある。この違いは後の高速化章で再び出てくる。
+
+どの入れ物を選ぶかは、見た目の好みではなく、何をしたいかで決まる。位置でアクセスするならリストやタプル、名前でアクセスするなら辞書が自然である。小さなコードでは差が見えにくいが、処理量が増えると選択の重みが増してくる。
+
+\section{リストのメソッド}
+
+Python 公式チュートリアルでも詳しく扱われているように、リストにはいくつかの基本メソッドがある。これらを知っていると、簡単な前処理や集約を自然に書ける。
+
+\begin{lstlisting}[language=Python, caption={リストメソッドの例}]
+values = [3, 1, 4]
+values.append(1)
+values.sort()
+last = values.pop()
+\end{lstlisting}
+
+\code{append} は末尾へ追加し、\code{sort} はその場で並べ替え、\code{pop} は末尾要素を取り出して削除する。リストメソッドの多くは「その場で変更する」点に注意が必要である。新しいリストを返すのではなく、元のリスト自体を書き換える操作が多いので、どこで状態が変わるかを意識して読む必要がある。
+
+解析コードでは、ファイル一覧の作成、簡単なバッファ、途中結果の蓄積などにリストを使うことが多い。ただし、大量の数値そのものを主役として扱う段階では、後で NumPy 配列へ移った方が自然になることが多い。
+
+\section{インデックスとスライス}
+
+解析では、配列や文字列の一部だけを取り出したい場面が非常に多い。Python では、\code{[]} の中に位置を書くことで要素を取り出し、\code{:} を使うことで範囲を切り出せる。
+
+\begin{lstlisting}[language=Python, caption={インデックスとスライスの例}]
+values = [10, 20, 30, 40, 50]
+
+first = values[0]
+last = values[-1]
+middle = values[1:4]
+\end{lstlisting}
+
+最初の要素が \code{0} 番目であること、終点の添字は含まれないこと、負の添字で末尾から数えられることは、最初にしっかり覚えておきたい。時刻列や列名の一部を取り出すとき、この基本がそのまま使われる。
+
+文字列に対しても同じ考え方が使える。例えば \code{hhmmss[0:2]} で時、\code{hhmmss[2:4]} で分を取り出せる。この一貫性が Python の扱いやすさの一つである。
+
+\section{条件分岐}
+
+条件によって処理を変えるには \code{if} を使う。
+
+\begin{lstlisting}[language=Python, caption={条件分岐}]
+if value <= threshold:
+    print("small")
+else:
+    print("large")
+\end{lstlisting}
+
+解析コードでは、閾値判定、ファイル名の選別、欠損値の除外など、条件分岐が頻繁に現れる。重要なのは、「なぜその条件で分けているのか」を自分で説明できることだ。
+
+条件分岐が増えて読みにくくなったときは、条件式そのものを変数へ切り出すと分かりやすくなる。たとえば \code{is\_valid\_row = value <= threshold} のように一度名前を付けるだけでも、後で読むときの負担がかなり減る。
+
+条件は左から右へ読んで意味が分かる形に書く方がよい。否定が重なる条件や、複数の \code{and} と \code{or} が混ざる条件は、括弧や一時変数で整理した方が安全である。解析コードでは、条件の誤読がそのままバグになる。
+
+\section{反復処理}
+
+複数の値を順に調べるには \code{for} を使う。
+
+\begin{lstlisting}[language=Python, caption={for 文の例}]
+for label in labels:
+    print(label)
+\end{lstlisting}
+
+添字も必要なら \code{enumerate} が便利である。
+
+\begin{lstlisting}[language=Python, caption={enumerate の例}]
+for i, value in enumerate(labels):
+    print(i, value)
+\end{lstlisting}
+
+一方で、データ点が非常に多いとき、Python レベルの \code{for} ループが速度の瓶頸になることがある。本書では後半で、その回避方法を詳しく扱う。
+
+初学者の段階では、まず正しく読める \code{for} 文を書くことが先である。速く書くことを意識するのは、その後でよい。読みやすい基本形を知っているからこそ、後で NumPy や pandas へ置き換えたときに、何を省略しているかが分かる。
+
+\section{\code{range} と \code{while}}
+
+\code{for} 文と並んで、反復処理でよく使うのが \code{range} と \code{while} である。\code{range} は連続した整数を順に生成し、\code{while} は条件が成り立つ間くり返す。
+
+\begin{lstlisting}[language=Python, caption={range と while の例}]
+for i in range(5):
+    print(i)
+
+count = 0
+while count < 3:
+    print(count)
+    count += 1
+\end{lstlisting}
+
+\code{range(5)} は \code{0} から \code{4} までを返す。ファイル番号やビン番号のような添字処理では便利である。一方、\code{while} は終了条件を自分で管理する必要があるので、無限ループにしないよう注意が必要である。時刻順に読み進めて、条件を満たす間だけ比較するような処理では \code{while} が自然な場合もある。
+
+\section{\code{break}, \code{continue}, \code{else}}
+
+反復処理では、途中で打ち切ったり、ある条件だけ飛ばしたりしたくなる。Python では \code{break} と \code{continue} がそのために使える。
+
+\begin{lstlisting}[language=Python, caption={break と continue の例}]
+for value in values:
+    if value < 0:
+        continue
+    if value > threshold:
+        break
+    print(value)
+\end{lstlisting}
+
+\code{continue} はその回だけを飛ばし、\code{break} はループ全体を終了する。探索範囲を打ち切る処理では特に重要である。さらに Python には \code{for ... else} という構文もあり、\code{break} せずに最後まで回り切ったときだけ \code{else} 節が実行される。頻出ではないが、見かけても驚かないようにしておくとよい。
+
+\section{内包表記}
+
+短い変換や簡単なフィルタであれば、内包表記を使うとすっきり書ける。
+
+\begin{lstlisting}[language=Python, caption={リスト内包表記の例}]
+values = [1, 2, 3, 4, 5]
+squares = [x * x for x in values]
+large_values = [x for x in values if x >= 3]
+\end{lstlisting}
+
+内包表記は便利だが、何段階もの条件や複雑な変換を 1 行に押し込むと読みにくくなる。初学者のうちは、読みやすさを失わない範囲で使う方がよい。長くなりそうなら、普通の \code{for} 文や補助関数へ戻した方が親切である。
+
+\section{関数を分ける理由}
+
+同じ処理を何度も書かないためだけでなく、処理の意味を分けるためにも関数は重要である。
+
+\begin{lstlisting}[language=Python, caption={関数の例}]
+def hhmmss_to_seconds(hhmmss):
+    hour = int(hhmmss[0:2])
+    minute = int(hhmmss[2:4])
+    second = int(hhmmss[4:6])
+    return hour * 3600 + minute * 60 + second
+\end{lstlisting}
+
+この関数は短いが、「文字列で与えられた時刻を秒へ変換する」という役割が明確である。解析コードでは、このような小さな関数が積み重なって全体の読みやすさを作る。
+
+関数を切り出す利点は再利用だけではない。入力が何で、出力が何かをはっきりさせることで、テストしやすくなる。短い補助関数ほど後回しにされがちだが、解析の正しさはこうした小さな部品の積み重ねで決まることが多い。
+
+\section{関数の引数}
+
+関数を書くときは、引数の意味をはっきりさせることが重要である。Python では位置引数だけでなく、デフォルト値付き引数やキーワード引数も使える。
+
+\begin{lstlisting}[language=Python, caption={デフォルト引数の例}]
+def histogram_path(name, suffix=".pdf"):
+    return f"{name}{suffix}"
+
+print(histogram_path("value_hist"))
+print(histogram_path("value_hist", suffix=".png"))
+\end{lstlisting}
+
+デフォルト引数を使うと、よく使う設定を省略できる一方で、必要なら上書きできる。コマンドライン引数と同じで、解析コードの柔軟性は「固定値をどこに置くか」で決まることが多い。関数でも同じ発想が使える。
+
+ただし、可変オブジェクトをデフォルト引数に置くと予想外の共有が起きる。この罠は Python 公式チュートリアルでも強調されている典型例である。初学者の段階では、リストや辞書をデフォルトにしたくなったら一度立ち止まった方がよい。
+
+\begin{lstlisting}[language=Python, caption={避けた方がよいデフォルト引数}]
+def bad_append(value, buffer=[]):
+    buffer.append(value)
+    return buffer
+\end{lstlisting}
+
+この例では、\code{buffer} が呼び出しのたびに新しく作られるわけではない。そのため、前回の状態が次回にも残る。安全に書くなら \code{None} を使って関数内部で初期化する方がよい。初学者がつまずきやすいので、早めに知っておく価値が高い。
+
+\section{モジュールと \code{import}}
+
+別ファイルに書かれた関数を使うには \code{import} する。
+
+\begin{lstlisting}[language=Python, caption={import の例}]
+import math
+import glob
+import argparse
+\end{lstlisting}
+
+Python の解析では、標準ライブラリと外部ライブラリを自然に組み合わせる。どの名前がどこから来たものかを意識して読む習慣を付けておくと、大きなコードも追いやすくなる。
+
+特に、同じ名前に見えても標準ライブラリと外部ライブラリで役割が大きく異なることがある。インポート文は単なるおまじないではなく、そのファイルが何に依存しているかを示す地図でもある。
+
+\section{自作モジュールへ分ける}
+
+解析が少し大きくなると、1 つのファイルへ全部を書くのはすぐに苦しくなる。よく使う関数や定数は別ファイルへ分け、モジュールとして読み込む方が見通しが良い。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={モジュール分割のイメージ}]
+analysis_project/
+|-- constants.py
+|-- physics.py
+`-- main.py
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={別ファイルへ分けた関数を使う例}]
+# physics.py
+import numpy as np
+
+def deg_to_rad(degrees):
+    return degrees * np.pi / 180.0
+
+
+# main.py
+import physics
+
+theta = physics.deg_to_rad(45.0)
+\end{lstlisting}
+
+この形にしておくと、座標変換、時刻変換、定数定義のような再利用しやすい処理を 1 か所へまとめられる。後半で大きめの課題に進むと、コードを速くすることと同じくらい、どこに何を書くかを整理することが重要になる。
+
+\section{スクリプトとして実行する}
+
+Python ファイルは、他のファイルから読み込まれることもあれば、直接実行されることもある。その違いを区別する基本形が次である。
+
+\begin{lstlisting}[language=Python, caption={main 関数の基本形}]
+def main():
+    print("run")
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+この形にしておくと、モジュールとして読み込んだときには関数だけを使え、直接実行したときだけ本体が動く。後半の解析スクリプトでも、この形を基本として採用すると整理しやすい。
+
+\section{エラーは失敗ではなく情報である}
+
+初心者のうちは、エラーメッセージが出るとそこで止まってしまいがちである。しかし、トレースバックは「どこで何が起きたか」を教えてくれる重要な情報である。
+
+たとえば \code{FileNotFoundError} ならファイルパスが違うかもしれないし、\code{ValueError} なら想定した形式でデータを読めていないかもしれない。大切なのは、英語の文章全体を恐れるのではなく、例外名と最後の数行を見ることである。
+
+解析では、最初から一度もエラーを出さずに進む方が珍しい。問題はエラーが出ることではなく、エラーを無視したり、意味を確かめずに場当たり的に直したりすることである。例外名、発生行、直前に読んでいたデータの形を確認する習慣を付けておくと、修正の質が安定する。
+
+\section{docstring とヘルプ}
+
+関数やモジュールの役割を後から思い出せるようにするには、短い説明を書いておくとよい。Python では、関数定義の直後に文字列を書くと \code{docstring} になる。
+
+\begin{lstlisting}[language=Python, caption={docstring の例}]
+def read_table(path):
+    """空白区切りの表を読み、各行を辞書として返す。"""
+    ...
+\end{lstlisting}
+
+\code{help(read\_table)} を実行すると、この説明を後から確認できる。コメントと同じように見えるが、実行時にも参照できる点が異なる。解析コードが増えてくると、どの関数が何を返すのかを書いておくことの価値が大きくなる。
+
+\section{名前付けと PEP 8}
+
+Python には PEP 8 という代表的なスタイルガイドがある。すべてを最初から覚える必要はないが、少なくとも変数名、関数名、空白の入れ方をそろえるだけでコードはかなり読みやすくなる。
+
+\begin{lstlisting}[language=Python, caption={PEP 8 を意識した名前付けの例}]
+MAX_EVENTS = 1000
+
+def read_event_table(path):
+    total_count = 0
+    ...
+\end{lstlisting}
+
+一般には、変数名や関数名は \code{snake\_case}、定数は大文字の \code{UPPER\_CASE} にすることが多い。さらに、演算子の前後に空白を入れる、1 行を詰め込みすぎない、といった基本だけでも効果は大きい。スタイルの統一は飾りではなく、バグを見つけやすくするための道具だと考える方が実践的である。
+
+\section{マジックナンバーを避ける}
+\label{sec:magic-number}
+
+コード中に \code{250} や \code{3600} のような数値が突然現れると、その値が何を表すのかを読む側が推測しなければならない。このような、説明なしに裸で現れる数値をマジックナンバーと呼ぶ。
+
+\begin{lstlisting}[language=Python, caption={マジックナンバーを避ける例}]
+NS_PER_SECOND = 1_000_000_000
+COINCIDENCE_WINDOW_NS = 250
+
+dt_ns = second_diff * NS_PER_SECOND + ns_diff
+is_coincident = abs(dt_ns) <= COINCIDENCE_WINDOW_NS
+\end{lstlisting}
+
+\code{250} をそのまま書くより、\code{COINCIDENCE\_WINDOW\_NS} と書いた方が意味が明確である。\code{3600} なら \code{SECONDS\_PER\_HOUR}、\code{86400} なら \code{SECONDS\_PER\_DAY} といった具合に、意味を名前へ出した方が読みやすい。
+
+ただし、どんな値でもコード内定数にすればよいわけではない。物理定数や単位換算のように定義として固定したい値はコード内の定数に向いている。一方で、入力パス、出力先、閾値、利用する検出器番号のように実行条件として変わり得る値は、コマンドライン引数や設定ファイルへ出した方がよい。値の置き場所そのものが設計である、という意識を持つことが重要である。
+
+\section{例外処理}
+
+エラーは読むべき情報だが、予想される失敗を自分で受け止めたい場面もある。例えば、1 行だけ形式が壊れているデータを見つけて記録し、解析全体は続けたいことがある。そのときに使うのが \code{try} と \code{except} である。
+
+\begin{lstlisting}[language=Python, caption={try と except の例}]
+try:
+    value = float(text)
+except ValueError:
+    print("数値へ変換できませんでした")
+\end{lstlisting}
+
+ただし、何でも \code{except:} で受けてしまうと、本来止まるべきバグまで隠してしまう。どの例外を受けるのかを明示し、何を記録して、何を諦めて、何を継続するのかを自分で決めることが重要である。

@@ -1,0 +1,153 @@
+\chapter{NumPy による数値計算}
+
+\section{なぜ NumPy を使うのか}
+
+Python のリストは柔軟だが、数値配列として大量の値を処理するには向いていないことがある。NumPy は、同じ型の数値を連続した配列として持ち、まとめて計算できるようにするライブラリである。
+
+\begin{lstlisting}[language=Python, caption={NumPy 配列の例}]
+import numpy as np
+
+times = np.array([10, 15, 23, 41], dtype=np.int64)
+deltas = times[1:] - times[:-1]
+\end{lstlisting}
+
+このような差分計算は、Python の \code{for} ループでも書けるが、NumPy では配列全体に対してまとめて書ける。後の図~\ref{fig:vectorization-benchmark} に示すように、この差は速度にも大きく効く。
+
+ここで重要なのは、NumPy が単に「速いリスト」ではないという点である。NumPy 配列は、同じ型の数値をまとめて持ち、一つの式で大量の要素を処理するための道具である。したがって、設計の発想も「1 要素ずつ何をするか」から「配列全体にどの変換をかけるか」へ変わる。
+
+\section{NumPy が速くなりやすい理由}
+
+NumPy が速くなりやすい理由は、単に「ライブラリだから」ではない。主な理由は三つある。
+
+\begin{enumerate}
+\item 数値を連続したメモリにまとめて持てること
+\item Python レベルのループを減らせること
+\item 内部で低レベルに最適化された処理を使えること
+\end{enumerate}
+
+特に重要なのは、Python で 1 要素ずつ処理する回数が減ることである。大きなデータでは、この差がそのまま処理時間の差になる。
+
+もう一つの利点は、式がそのまま数学的な記述に近づくことである。たとえば差分、閾値判定、正規化、平均、分散といった操作は、配列演算で書いた方が意図が明確になることが多い。読みやすさと速度が同時に改善する場面は少なくない。
+
+\section{よく使う操作}
+
+解析でよく使う NumPy の操作には、次のようなものがある。
+
+\begin{itemize}
+\item フィルタ: 条件に合う要素だけを取り出す
+\item 差分: 隣り合う要素の差を取る
+\item ソート: 時刻順に並べる
+\item ヒストグラム: 分布を数える
+\end{itemize}
+
+\begin{lstlisting}[language=Python, caption={条件抽出と差分}]
+selected = times[times > 20]
+deltas = np.diff(times)
+\end{lstlisting}
+
+ブール配列によるフィルタは NumPy の基本である。条件式の結果が \code{True} と \code{False} の配列になり、それをそのまま添字として使える。最初は不思議に見えるが、この書き方に慣れると、複数条件の組合せも簡潔に書けるようになる。
+
+\section{形とブロードキャスト}
+
+NumPy では、配列の \code{shape} を意識することが重要である。1 次元配列なのか、行列なのか、列ベクトルとして扱いたいのかで、同じ演算でも結果が変わる。
+
+\begin{lstlisting}[language=Python, caption={shape とブロードキャストの例}]
+x = np.array([1.0, 2.0, 3.0])
+y = np.array([10.0, 20.0, 30.0])
+
+z = x + y
+matrix = x[:, None] + y[None, :]
+\end{lstlisting}
+
+後半の \code{matrix} では、1 次元配列を軸付きで広げることで、3 行 3 列の和の表を作っている。こうした自動拡張の規則をブロードキャストという。最初は少し難しいが、二つの配列の全組合せを調べるような場面で非常に強力である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={shape とブロードキャストの結果例}]
+z =
+[11. 22. 33.]
+
+matrix =
+[[11. 21. 31.]
+ [12. 22. 32.]
+ [13. 23. 33.]]
+\end{lstlisting}
+
+この結果から、\code{z} は要素ごとの和、\code{matrix} は全組合せの表であることが分かる。便利ではあるが、配列サイズが大きいと一気にメモリを消費するので、実データでは常に形と大きさを見積もる必要がある。
+
+\section{統計量とヒストグラム}
+
+NumPy には、平均、分散、最小値、最大値、ヒストグラムなど、解析の基本となる集計関数がそろっている。
+
+\begin{lstlisting}[language=Python, caption={統計量とヒストグラムの例}]
+mean = values.mean()
+std = values.std(ddof=0)
+hist, edges = np.histogram(values, bins=50)
+\end{lstlisting}
+
+\code{np.histogram} は図を描かずに分布だけを数えたいときに便利である。ビン境界 \code{edges} も同時に返るため、後で自分で曲線を重ねたり、複数データを比較したりしやすい。可視化と数え上げを分けて考えると、処理の見通しが良くなる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={統計量の出力例}]
+mean = 2.31
+std = 0.84
+hist.shape = (50,)
+edges.shape = (51,)
+\end{lstlisting}
+
+平均や標準偏差だけでは分布の形は分からず、ヒストグラムだけでは条件間比較がしにくい。数値要約と分布表示を組み合わせて読むことが、データ解析では基本になる。
+
+\section{配列処理の注意}
+
+NumPy は便利だが、配列をむやみにコピーすると逆に重くなることがある。さらに、型を適切に選ばないとメモリを無駄に使う。
+
+たとえば、識別子や時刻差なら \code{int64} が自然だが、カテゴリ番号が小さい範囲なら \code{int16} や \code{int32} でも十分なことがある。大規模データでは、この積み重ねが効いてくる。
+
+また、配列の一部を取り出したつもりでも、実際には元配列の参照になっている場合とコピーになっている場合がある。この違いを理解せずに値を書き換えると、意図しない副作用や余分なメモリ使用を招く。NumPy を使い始めたら、\code{view} と \code{copy} の違いも徐々に意識したい。
+
+浮動小数点数の丸め誤差にも注意が必要である。理論上は等しいはずの値でも、計算手順によって最後の数桁がずれることがある。そのため、\code{a == b} のような直接比較より、許容誤差を設けた比較を使う方が安全なことが多い。
+
+
+\section{なぜ NumPy を使うのか：リストの限界}
+
+Python の標準リストは非常に柔軟であり、どんな型のものでも放り込める。しかしいざ大量の数値を計算しようとすると、この「なんでも入る」という性質が最大のネックとなる。
+
+\subsection{Step 1: Python リストの素朴なアプローチ}
+\begin{lstlisting}[language=Python, caption={[Bad Example] リストを用いた数値計算の遅さ}]
+# 100万個のリストを作る
+py_list = list(range(1000000))
+
+# すべての要素を2倍にする。forループと内包表記が必要
+doubled_list = [x * 2 for x in py_list]
+\end{lstlisting}
+
+一見普通に動くが、Pythonのリストは「あちこちに散らばっている多様なサイズの箱へのポインタ（地図）」の集まりである。CPU は一つの値を計算するたびに「この値は何型か？」「どこに置かれているか？」を確認しなければならず、絶望的に遅い。
+
+\subsection{Step 2: NumPy のベクタライズ化}
+これに対し NumPy ディメンショナル配列（\code{ndarray}）は、同じ型の数値（\code{int64} や \code{float64} など）をメモリ上に「すき間なく一列に並べた団地」として構成される。型確認が不要で、C言語レベルの一括演算回路が直結する。
+
+\begin{lstlisting}[language=Python, caption={NumPy への変換と一括計算}]
+import numpy as np
+
+# 1. リストから NumPy アレイへの変換（メモリ上にきれいに並べ直す）
+np_array = np.array(py_list)
+
+# 2. アレイはベクトル演算が可能（for文を書かなくても全要素を一気に計算できる）
+doubled_array = np_array * 2
+
+# 3. アレイからリストへ戻すことも可能だが、重いので通常は最後だけにする
+back_to_list = doubled_array.tolist()
+\end{lstlisting}
+
+\section{Pandas DataFrame との変換}
+
+後述する Pandas DataFrame は、この NumPy 配列を「列」として束ねた拡張版である。分析の途中で NumPy 独自の計算関数を使いたい場合、DataFrame を NumPy に戻すことができる。
+
+\begin{lstlisting}[language=Python, caption={Pandas の DataFrame・Series と NumPy アレイの相互変換}]
+import pandas as pd
+
+# NumPy アレイから pandas の DataFrame （二次元）に変換
+df = pd.DataFrame(np_array, columns=["Value"])
+
+# Pandas のデータから NumPy アレイに戻す
+# \code{.to_numpy()} は背後で持っているC言語配列を直接取り出すため一瞬で終わる
+values_array = df["Value"].to_numpy()
+\end{lstlisting}
+

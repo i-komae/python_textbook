@@ -1,0 +1,348 @@
+\chapter{Python 環境を整える}
+
+\section{何を分けて考えるべきか}
+
+Python を使い始めるときは、次の 3 つを混同しない方がよい。
+
+\begin{enumerate}
+\item Python 本体を入れること
+\item 複数版の Python を切り替えること
+\item プロジェクトごとの仮想環境を作ること
+\end{enumerate}
+
+まず Python 本体が必要であり、そのうえで Python 3.11 と 3.12 を切り替えたいなら版管理ツールが必要になる。さらに、同じ Python 3.12 でもプロジェクト A と B で依存ライブラリが違うなら、仮想環境で分ける必要がある。この 3 段階を分けて理解した方が、あとで混乱しにくい。
+
+\section{今の Python を確認する}
+
+macOS でも WSL でも、最初にいま見えている Python を調べておく方がよい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={Python の確認}]
+$ python3 --version
+$ which python3
+$ python3 -c "import sys; print(sys.executable)"
+\end{lstlisting}
+
+\code{python3 --version} で版を確認し、\code{which python3} と \code{sys.executable} で実体の場所を確認する。複数版を切り替えるようになると、この確認は非常に重要になる。
+
+\section{\code{pyenv} で複数版の Python を管理する}
+
+Python 本体の導入と切り替えには \code{pyenv} が分かりやすい。\code{pyenv} は、シェルから見える \code{python} をディレクトリ単位で切り替えるための道具であり、複数版の Python を使い分けるときの基準として扱いやすい。
+
+\subsection{macOS での準備}
+
+\code{pyenv} は Python 本体をビルドして入れるので、macOS では Xcode Command Line Tools が必要になる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={Command Line Tools があるか確認する}]
+$ xcode-select -p
+\end{lstlisting}
+
+すでに Homebrew が正常に動いているなら、Command Line Tools は入っていることが多い。上のコマンドでパスが表示されれば、そのまま進んでよい。表示されない場合は次を実行する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={Command Line Tools を入れる}]
+$ xcode-select --install
+\end{lstlisting}
+
+\subsection{WSL / Ubuntu での準備}
+
+WSL の Ubuntu では、ビルドに必要なライブラリを先に入れておく。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={Ubuntu での準備}]
+$ sudo apt update
+$ sudo apt install -y build-essential curl git libssl-dev zlib1g-dev \
+  libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev tk-dev
+\end{lstlisting}
+
+\subsection{\code{pyenv} を入れる}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={pyenv の導入}]
+$ curl -fsSL https://pyenv.run | bash
+\end{lstlisting}
+
+\subsection{どの設定ファイルを編集するか決める}
+
+\code{pyenv} を使うには、シェルの設定ファイルへ初期化コードを書く必要がある。どのファイルを編集するかは、いま使っているシェルで決まる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={シェルを調べる}]
+$ echo $SHELL
+\end{lstlisting}
+
+\code{/bin/zsh} と出たら \code{\textasciitilde/.zshrc}、\code{/bin/bash} と出たら \code{\textasciitilde/.bashrc} を編集する。これで、\code{zsh} や \code{bash} が唐突に出てくる状態は避けられる。
+
+\subsection{\code{pyenv} をシェルへ組み込む}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={zsh での設定}]
+$ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
+$ echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
+$ echo 'eval "$(pyenv init - zsh)"' >> ~/.zshrc
+$ exec "$SHELL"
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={bash での設定}]
+$ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+$ echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+$ echo 'eval "$(pyenv init - bash)"' >> ~/.bashrc
+$ exec "$SHELL"
+\end{lstlisting}
+
+\subsection{版を入れて切り替える}
+
+\code{pyenv} を使う場合は、\code{pyenv install} で版を追加し、\code{pyenv global}、\code{pyenv local}、\code{pyenv shell} で切り替える。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={版を追加して確認する}]
+$ pyenv install 3.11.11
+$ pyenv install 3.12.10
+$ pyenv versions
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={普段使う版を決める}]
+$ pyenv global 3.12.10
+$ python --version
+$ which python
+\end{lstlisting}
+
+\code{pyenv global} は普段使う版を決める。これに対して \code{pyenv local} は、そのディレクトリだけ別の版を使いたいときに使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={プロジェクト単位で版を固定する}]
+$ mkdir analysis311
+$ cd analysis311
+$ pyenv local 3.11.11
+$ python --version
+$ cat .python-version
+\end{lstlisting}
+
+\code{pyenv local} を実行すると \code{.python-version} が作られ、そのディレクトリでは指定した版が優先される。これによって、同じマシンの中でプロジェクト A は 3.11、プロジェクト B は 3.12 という使い分けができる。
+
+\code{pyenv shell 3.11.11} は、そのターミナルを閉じるまでの一時的な切り替えである。検証用に 1 回だけ古い版で動かしたいときに便利である。
+
+\section{\code{venv} でプロジェクトごとの仮想環境を作る}
+
+Python 本体の版を決めたら、その版の上にプロジェクト専用の仮想環境を作る。依存ライブラリの衝突を避けるためである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={venv の基本}]
+$ python -m venv .venv
+$ source .venv/bin/activate
+$ which python
+$ which pip
+$ python --version
+$ pip --version
+\end{lstlisting}
+
+仮想環境へ入ると、プロンプトの先頭に \code{(.venv)} が付くことが多い。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={プロンプトの例}]
+(.venv) ikomae@macbook analysis $
+\end{lstlisting}
+
+\code{which python} と \code{which pip} を見ると、\code{.venv/bin/python} と \code{.venv/bin/pip} が使われていることが分かる。これは、\code{source .venv/bin/activate} が \code{\$PATH} の先頭に \code{.venv/bin} を追加しているからである。
+
+\subsection{\code{pip} と \code{python -m pip}}
+
+仮想環境へ入っているなら、通常は \code{pip} と \code{python -m pip} は同じ環境の \code{pip} を指す。したがって、作業中は \code{pip install numpy} と書いてよい。
+
+一方で、いまどの Python が有効か不安なときや、スクリプトや文書の中で「この Python に対応する \code{pip} を使う」と明示したいときは、\code{python -m pip} の方が誤解が少ない。実務では両方見るが、意味の違いを分かって使うことが重要である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={仮想環境での導入例}]
+$ pip install --upgrade pip
+$ pip install numpy pandas matplotlib scipy astropy tqdm
+\end{lstlisting}
+
+作業を終えたら \code{deactivate} で仮想環境から抜けられる。
+
+\section{JupyterLab を併用する}
+
+対話的に試しながら解析したいときは、JupyterLab も便利である。小さなコード片をその場で動かし、数値や図をすぐ確認できるため、探索的な作業では特に役立つ。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={JupyterLab の導入と起動}]
+$ pip install jupyterlab
+$ jupyter lab
+\end{lstlisting}
+
+JupyterLab の利点は、コードを実行できるだけでなく、その前後に説明文、数式、図の読み方を書き添えられる点にある。解析の途中経過を他人へ見せるときも、自分で後から読み返すときも、コードと説明が同じノートブックに並んでいる方が理解しやすい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={Markdown セルの例}]
+# 解析メモ
+
+- 入力ファイル: `events_2024_01_01.txt.gz`
+- 閾値: `signal > 5.0`
+
+$\Delta t$ の分布を確認する
+\end{lstlisting}
+
+ただし、JupyterLab は最終成果物の置き場所ではなく、試行錯誤の場として使う方が整理しやすい。解析手順を再現したい段階では、ノートブック中で固めた処理を Python スクリプトへ戻し、入力や出力を明示した方が後で困りにくい。
+
+\section{\code{uv} はプロジェクト管理に使う}
+
+\code{uv} は Python 本体の導入もできるが、本書ではそれよりも「プロジェクト単位の管理」に使う道具として位置付ける方が自然である。特に、依存関係、ロックファイル、\code{.python-version}、Git 管理、パッケージ化、ワークスペース管理といった、プロジェクト全体の整理で力を発揮する。
+
+\subsection{まずは既定の \code{uv init} を使う}
+
+多くの人は、まずシンプルに \code{uv init} を使えばよい。オプションは後から必要になったときに足せばよい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={uv で新しいプロジェクトを始める}]
+$ mkdir analysis_uv
+$ cd analysis_uv
+$ uv init
+\end{lstlisting}
+
+既定の \code{uv init} では、少なくとも次のようなファイルやディレクトリが作られる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={既定の uv init が作るもの}]
+.git/
+.gitignore
+.python-version
+README.md
+main.py
+pyproject.toml
+\end{lstlisting}
+
+つまり、\code{uv init} は単に Python ファイルを 1 つ置くだけではなく、Git 管理の土台までまとめて用意する。この点が \code{venv} 単体との大きな違いである。
+
+\subsection{必要ならオプションを使う}
+
+既定動作を変えたいときだけオプションを使えばよい。
+
+\begin{itemize}
+\item \code{uv init --bare}: \code{pyproject.toml} だけを作る
+\item \code{uv init --vcs none}: Git 初期化をしない
+\item \code{uv init --no-pin-python}: \code{.python-version} を作らない
+\item \code{uv init --package} や \code{uv init --lib}: スクリプトではなくパッケージやライブラリとして始める
+\end{itemize}
+
+特に、コードを再利用可能なモジュールやライブラリとして育てたいなら、\code{--package} や \code{--lib} を意識した方がよい。単発スクリプトで終わるのか、将来 \code{import} される部品になるのかで、適切な初期構成は変わる。
+
+\subsection{依存関係を追加する}
+
+\code{uv add} は依存ライブラリを追加し、\code{pyproject.toml} とロック情報を更新する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={依存関係を追加する}]
+$ uv add numpy pandas matplotlib scipy astropy tqdm
+\end{lstlisting}
+
+\subsection{環境をそろえる}
+
+\code{uv sync} は、\code{pyproject.toml} とロックファイルに基づいて環境をそろえる。ここで初めて \code{.venv} が作られることもある。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={環境を同期する}]
+$ uv sync
+\end{lstlisting}
+
+過去の自分の解析や、他人から受け取ったプロジェクトを再現するときは、この \code{uv sync} が重要になる。リポジトリを取得して \code{uv sync} すれば、必要な依存関係をまとめてそろえやすい。ここで Git の基本が必要になるので、付録~\ref{app:git} もあわせて読むとよい。
+
+\subsection{コマンドを実行する}
+
+\code{uv run} は、そのプロジェクトの環境でコマンドを実行する。スクリプトを直接走らせるときと、Python 本体を起動したいときとで書き分ける。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={uv run の例}]
+$ uv run main.py
+$ uv run python --version
+$ uv run python -m pytest
+\end{lstlisting}
+
+実行対象が Python スクリプトそのものであるなら、\code{uv run main.py} と書けばよい。わざわざ \code{python} を挟む必要はない。一方で、\code{-m} を使いたいときや、Python 本体へオプションを渡したいときは \code{uv run python ...} と書く。
+
+\subsection{Python 版の固定にも使える}
+
+\code{uv} もプロジェクト単位で Python 版を固定できる。\code{pyenv} がシェル全体の切り替えを担当し、\code{uv} がプロジェクト側の固定を担当する、と分けて考えると整理しやすい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={uv で Python 版を固定する}]
+$ uv python pin 3.12
+$ uv run python --version
+$ uv run --python 3.11 python --version
+\end{lstlisting}
+
+\section{標準ライブラリと外部ライブラリ}
+
+Python には、最初から使える標準ライブラリと、自分で追加する外部ライブラリがある。
+
+\begin{itemize}
+\item 標準ライブラリの例: \code{math}, \code{pathlib}, \code{glob}, \code{argparse}
+\item 外部ライブラリの例: \code{numpy}, \code{pandas}, \code{matplotlib}, \code{scipy}, \code{astropy}
+\end{itemize}
+
+標準ライブラリは Python 本体に含まれている。外部ライブラリは、目的に応じて自分で追加する。解析では外部ライブラリが非常に重要だが、まずは「何が標準で、何が追加なのか」を意識しておくと整理しやすい。
+
+\section{解析用のライブラリを入れる}
+
+本書の後半で使う主なライブラリを表~\ref{tab:packages} に示す。
+
+\begin{table}[hbtp]
+\centering
+\caption{本書で使う主なライブラリと役割}
+\label{tab:packages}
+\begin{tabular}{ll}
+\toprule
+ライブラリ & 主な役割 \\
+\midrule
+NumPy & 数値配列の高速処理 \\
+pandas & 表形式データの読込みと加工 \\
+Matplotlib & 図の作成 \\
+SciPy & フィットと数値計算 \\
+Astropy & 時刻・単位・座標の扱い \\
+tqdm & 進捗表示 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\code{venv} を使うなら \code{pip install}、\code{uv} を使うなら \code{uv add} と書けばよい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={venv を使う場合}]
+$ pip install numpy pandas matplotlib scipy astropy tqdm
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={uv を使う場合}]
+$ uv add numpy pandas matplotlib scipy astropy tqdm
+\end{lstlisting}
+
+\section{コマンドライン引数と設定ファイルを使い分ける}
+
+同じ解析スクリプトを何度も使うなら、入力ディレクトリや出力先をコードに埋め込むより、コマンドライン引数で渡す方がよい。Python では \code{argparse} が標準で使える。
+
+\begin{lstlisting}[language=Python, caption={argparse の最小例}]
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("input_dir")
+parser.add_argument("--outdir", default="output")
+args = parser.parse_args()
+
+print(args.input_dir, args.outdir)
+\end{lstlisting}
+
+ただし、何でも引数にすればよいわけではない。毎回ほぼ同じ値まで毎回書かせると、使いにくいスクリプトになる。
+
+値の置き場所は、表で機械的に覚えるより、用途ごとに言葉で整理した方が分かりやすい。
+
+\begin{description}
+\item[コマンドライン引数] 実行ごとに変わる値を置く。入力ディレクトリ、出力先、日付範囲、並列数などが典型である。
+\item[設定ファイル] プロジェクト単位では固定だが、将来変更し得る値を置く。較正ファイルのパス、検出器 ID、閾値、図の保存形式などが当てはまる。
+\item[環境変数] マシン依存の値や秘密情報を置く。\code{DATA\_ROOT}、API トークン、認証情報などが典型である。
+\item[コード内の定数] 定義として固定したい値や単位変換を書く。\code{NS\_PER\_SECOND} や物理定数のように、意味が仕様として決まっているものを置く。
+\end{description}
+
+入力ファイルのパス、出力先、しきい値、作業ディレクトリのように「実行条件」であるものは、原則としてハードコーディングしない方がよい。コードを書き換えずに切り替えられるようにしておくと、再利用と再現が楽になる。
+
+\subsection{設定ファイルを読む}
+
+めったに変わらない値は、設定ファイルへまとめる方が使いやすい。形式は JSON でも TOML でもよい。ここでは標準ライブラリだけで扱える JSON の例を示す。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={設定ファイルの例}]
+{
+  "calibration_path": "calib/detector_a.csv",
+  "coincidence_window_ns": 250,
+  "figure_format": "pdf"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={JSON 設定を読み込む例}]
+import json
+from pathlib import Path
+
+config = json.loads(Path("config.json").read_text())
+window_ns = config["coincidence_window_ns"]
+\end{lstlisting}
+
+このようにしておけば、同じコードを保ったまま設定だけを差し替えられる。Python 3.11 以降なら \code{tomllib} を使って TOML を読むこともできる。どの形式を選ぶにしても、「たまに変わるがコード本体ではない値」を分離することが大切である。
+
+\subsection{マジックナンバーを避ける}
+
+\code{250} や \code{3600} のような数値が説明なしにコードへ裸で出てくると、後から読んだ人は意味を判断しにくい。このような数値はマジックナンバーと呼ばれる。詳しくは \ref{sec:magic-number} 節で述べるが、意味のある数値には名前を付け、実行条件なら引数や設定ファイルへ出す、という整理を早い段階で身に付けた方がよい。

@@ -1,0 +1,9 @@
+font.family: serif
+mathtext.fontset: cm
+font.size: 12
+axes.grid: True
+grid.linestyle: --
+xtick.direction: in
+ytick.direction: in
+axes.linewidth: 1.2
+legend.frameon: False

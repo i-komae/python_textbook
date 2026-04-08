@@ -1,0 +1,244 @@
+\chapter{Git と GitHub の基本}
+\label{app:git}
+
+\section{Git と GitHub は別物である}
+
+Git は、手元のファイルの変更履歴を記録するためのソフトウェアである。これに対して GitHub は、Git リポジトリを置いて共有するためのサービスである。
+
+\begin{itemize}
+\item Git: ローカルマシンでも単独で使える版管理システム
+\item GitHub: Git リポジトリをホストし、共有、Issue、Pull Request などを提供するサービス
+\end{itemize}
+
+したがって、\code{git init}、\code{git add}、\code{git commit} は Git の話であり、\code{git push} で GitHub へ送る段階になって初めて GitHub が関係してくる。
+
+\section{リポジトリと公開範囲}
+
+リポジトリは、コード、データ、履歴をまとめて管理する単位である。GitHub へ置く場合は、公開範囲も意識する必要がある。
+
+\begin{itemize}
+\item public: 誰でも見られる
+\item private: 明示的に許可した人だけが見られる
+\item internal: 組織内だけで見られる。主に GitHub Enterprise の文脈で使う
+\end{itemize}
+
+授業用の配布物、研究中のコード、機密データを含むリポジトリでは、公開範囲の設定を誤ると問題になる。GitHub で新しいリポジトリを作るときは、まず visibility を確認した方がよい。
+
+\section{Git で何をしているのか}
+
+Git は、ファイルを 1 回で全部自動保存してくれるわけではない。ふつうは次の 3 段階で進む。
+
+\begin{enumerate}
+\item 作業中のファイルを編集する
+\item 記録したい変更を \code{git add} で選ぶ
+\item \code{git commit} で履歴として確定する
+\end{enumerate}
+
+この 2 段階目の「いったん選ぶ場所」をステージングエリアという。\code{git add} と \code{git commit} の違いを理解するには、ここが重要である。
+
+\section{最初の設定}
+
+最初に、自分の名前とメールアドレスを設定しておく。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={Git の初期設定}]
+$ git config --global user.name "Your Name"
+$ git config --global user.email "your_email@example.com"
+\end{lstlisting}
+
+これをしておかないと、コミット時に誰の変更なのかが分からなくなる。
+
+\section{新しいリポジトリを作る}
+
+まだ Git 管理されていないディレクトリなら、\code{git init} で始める。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={新しいリポジトリを作る}]
+$ mkdir analysis_work
+$ cd analysis_work
+$ git init
+$ git status
+\end{lstlisting}
+
+\code{git status} は最重要コマンドである。今どのファイルが未追跡か、どれが変更済みか、何がコミット待ちかを確認できる。迷ったらまず \code{git status} を見る、という習慣を付けるとよい。
+
+\section{編集、確認、記録の流れ}
+
+日常的な流れは、編集して、差分を確認して、必要なものだけをコミットする、である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ローカル作業の基本}]
+$ git status
+$ git diff
+$ git add analyze.py
+$ git diff --cached
+$ git commit -m "Add first analysis script"
+$ git log --oneline
+\end{lstlisting}
+
+\code{git diff} は、まだ \code{add} していない変更を見る。\code{git diff --cached} は、\code{add} 済みで次のコミットへ入る変更を見る。\code{git log --oneline} は、これまでのコミット履歴を短く確認する。
+
+\subsection{\code{git status} の読み方}
+
+\code{git status} は、少なくとも次の 3 種類を見分けられるようになるとよい。
+
+\begin{itemize}
+\item untracked: まだ Git が追跡していない新規ファイル
+\item modified: 追跡中だが、まだ \code{add} していない変更
+\item changes to be committed: \code{add} 済みで、次のコミットへ入る変更
+\end{itemize}
+
+つまり、\code{git status} は「いま何がどの段階にあるか」を示す画面である。
+
+\subsection{\code{git add} は何をしているのか}
+
+\code{git add} は「変更を次のコミット候補として選ぶ」コマンドである。保存ではない。したがって、\code{git add} した後でも、コミット前にさらに編集すれば、その追加分はまだコミット対象へ入っていない。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={複数段階で確認する例}]
+$ git diff
+$ git add analyze.py
+$ git diff --cached
+\end{lstlisting}
+
+この 2 回の \code{diff} を見分けられるようになると、Git の挙動がかなり分かりやすくなる。
+
+\section{\code{.gitignore} を使って除外する}
+
+生成物まで毎回コミットすると、履歴が見にくくなる。Python 解析なら、仮想環境、キャッシュ、ビルド成果物などは除外することが多い。
+
+\subsection{\code{.gitignore} を書く}
+
+\code{.gitignore} は、Git に「このパターンのファイルは追跡しなくてよい」と教えるためのファイルである。リポジトリのルートに置くことが多い。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={.gitignore の例}]
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+.pytest_cache/
+\end{lstlisting}
+
+このファイルを作ると、まだ追跡されていない \code{.venv/} や \code{build/} は \code{git status} に出にくくなり、誤ってコミットしにくくなる。
+
+\subsection{すでに追跡済みなら \code{git rm --cached} が必要}
+
+\code{.gitignore} は「これから追跡しない」ための設定である。すでに一度コミットしたファイルには、そのままでは効かない。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={追跡済みの生成物を外す}]
+$ git rm --cached -r .venv __pycache__ build
+$ git commit -m "Stop tracking generated files"
+\end{lstlisting}
+
+\code{git rm --cached} は、作業ディレクトリの実ファイルを消さずに、インデックスからだけ外す。そのため、「手元には残したまま Git の追跡対象から外す」という目的に向いている。
+
+\subsection{\code{uv} プロジェクトで何をコミットするか}
+
+\code{uv} を使うプロジェクトでは、通常 \code{.venv/} はコミットしない。一方で、\code{pyproject.toml}、\code{uv.lock}、\code{.gitignore}、そしてプロジェクト単位で版を固定したいなら \code{.python-version} はコミット候補になる。
+
+\section{既存のリポジトリを持ってくる}
+
+他人のプロジェクトや GitHub 上の教材は、\code{git clone} で手元へコピーする。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={リポジトリを複製する}]
+$ git clone https://github.com/example/project.git
+$ cd project
+$ git remote -v
+\end{lstlisting}
+
+\code{git clone} は、履歴も含めて手元へ持ってくる。\code{git remote -v} は、どの URL が接続先として設定されているかを確認する。
+
+\section{手元のリポジトリを GitHub へ初めて載せる}
+
+ここまでは「GitHub 上にあるものを取得する」話だったが、逆に、手元で \code{git init} して育てたプロジェクトを自分の GitHub へ載せたい場面も多い。その場合は、まず GitHub 側で空のリポジトリを作り、次に手元のリポジトリから接続先を登録して push する。
+
+\subsection{GitHub 側で空のリポジトリを作る}
+
+GitHub の Web 画面で \code{New repository} を開き、リポジトリ名と公開範囲を決める。このとき、手元にすでに履歴があるなら、最初は空のリポジトリとして作る方が簡単である。つまり、\code{Add a README file}、\code{Add .gitignore}、\code{Choose a license} には最初は触れない方がよい。
+
+最初から README や \code{.gitignore} を GitHub 側で作ると、リモート側に 1 個目のコミットができる。その状態で手元の履歴をそのまま push すると、履歴の始点が一致しないため、初心者には扱いにくい状況になりやすい。したがって、既存のローカルリポジトリを載せるときは「空の GitHub リポジトリ」を作る、という方針で覚えた方が安全である。
+
+\subsection{接続先を登録して最初の push を行う}
+
+GitHub が表示する URL を確認し、手元のリポジトリで \code{origin} として登録する。多くの場合、次の流れで足りる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={既存のローカルリポジトリを GitHub へ載せる}]
+$ git status
+$ git branch --show-current
+$ git branch -M main
+$ git remote add origin git@github.com:owner/project.git
+$ git remote -v
+$ git push -u origin main
+\end{lstlisting}
+
+\code{git branch --show-current} は、いま自分がどのブランチにいるかを確認する。\code{git branch -M main} は、既定ブランチ名を \code{main} へそろえるための書き方である。\code{main} ではなく既存のブランチ名をそのまま使いたいなら、その名前で push してよい。
+
+\code{git remote add origin ...} は、GitHub の URL を \code{origin} という別名で登録する。\code{git remote -v} を見れば、正しい URL が設定されたかを確認できる。\code{git push -u origin main} の \code{-u} は、以後このローカルブランチが \code{origin/main} を追跡する、という設定である。初回にこれを付けておけば、次回以降は \code{git push} や \code{git pull} を短く書きやすい。
+
+\subsection{\code{origin} がすでにある場合}
+
+すでに \code{origin} が登録されている状態で \code{git remote add origin ...} を実行すると、エラーになる。その場合は、いま何が設定されているかを確認してから、必要なら URL を差し替える。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={origin を確認し、必要なら差し替える}]
+$ git remote -v
+$ git remote set-url origin git@github.com:owner/project.git
+$ git remote -v
+\end{lstlisting}
+
+教材を別のリポジトリから複製して流用した場合や、HTTPS から SSH へ切り替えたい場合に、この操作が必要になることがある。
+
+\section{GitHub と同期する}
+
+ローカルでコミットしただけでは、まだ GitHub には反映されない。GitHub 側から最新を取り込むのが \code{pull}、手元のコミットを送るのが \code{push} である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={基本的な同期}]
+$ git pull --ff-only
+$ git push origin main
+\end{lstlisting}
+
+\code{git pull --ff-only} は、自分がまだ追加のコミットを持っていないときだけ安全に進める書き方である。履歴が分岐している場合は止まるので、意図しないマージを避けやすい。
+
+\section{GitHub で使う URL には HTTPS と SSH がある}
+
+GitHub のリポジトリ URL には、少なくとも HTTPS と SSH の 2 通りがある。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={HTTPS と SSH の例}]
+https://github.com/owner/repo.git
+git@github.com:owner/repo.git
+\end{lstlisting}
+
+HTTPS は見慣れた URL で扱いやすい。一方 SSH は、公開鍵認証を済ませておけばパスワードやトークン入力を減らしやすい。どちらを使ってもよいが、混在させると混乱しやすいので、最初に方針を決めた方がよい。
+
+\section{GitHub の認証: PAT と SSH 鍵}
+
+GitHub では、HTTPS 経由の Git 操作で通常のアカウントパスワードは使えない。現在は、個人用アクセストークン (PAT) を使うか、SSH 鍵を登録して使うのが基本である。
+
+\subsection{PAT を使う}
+
+HTTPS を使う場合、プライベートリポジトリへの push や pull では PAT を使う。
+
+\begin{enumerate}
+\item GitHub の \code{Settings} を開く
+\item \code{Developer settings} から \code{Personal access tokens} へ進む
+\item fine-grained token か classic token を作る
+\item 対象リポジトリと必要最小限の権限を選ぶ
+\item 発行したトークンを安全に保管する
+\end{enumerate}
+
+認証時には、ユーザー名は GitHub のアカウント名、パスワード欄には通常のパスワードではなく PAT を入れる。組織アカウントでは、SAML SSO の承認が別に必要なこともある。その場合は、発行したトークンをその組織用に追加承認しないと使えない。
+
+\subsection{SSH 鍵を使う}
+
+SSH を使う場合は、付録~\ref{app:ssh} で作った公開鍵を GitHub の \code{SSH and GPG keys} へ登録する。GitHub CLI \code{gh auth login --git-protocol ssh --web} を使うと、その作業を対話的に進めやすい。
+
+\section{初心者が押さえるべき最小ワークフロー}
+
+最初のうちは、次の順序だけ守れば十分である。
+
+\begin{enumerate}
+\item \code{git status} で状況を見る
+\item \code{git diff} で変更内容を読む
+\item \code{git add} で記録したいファイルを選ぶ
+\item \code{git diff --cached} でコミット内容を再確認する
+\item \code{git commit -m "..."} で記録する
+\item GitHub とやり取りするなら \code{git pull --ff-only} と \code{git push} を使う
+\end{enumerate}
+
+この流れを身に付ければ、教材の取得、\code{uv} プロジェクトの再現、共同研究でのコード共有まで一通り対応できる。最初からブランチ運用や複雑な履歴操作まで覚える必要はないが、\code{status} と \code{diff} を読まずに \code{add} や \code{commit} をする癖だけは避けた方がよい。

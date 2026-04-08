@@ -1,0 +1,208 @@
+\chapter{SciPy とフィット}
+
+\section{フィットとは何か}
+
+ヒストグラムを描いただけでは、分布の特徴を定量化できないことがある。そこで、ある関数形を仮定してパラメータを求める。これがフィットである。
+
+フィットは万能ではない。まず、なぜその関数形を選ぶのかという物理的、統計的な理由が必要である。さらに、ヒストグラムの範囲、ビン幅、外れ値処理によって見え方が変わるため、「フィット結果が出た」ことと「解釈してよい」ことは別である。
+
+フィットの目的は、曲線をきれいに重ねることではない。分布の中心、幅、時定数などを、比較可能な量として取り出すことが目的である。したがって、フィット前に図を見ておくこと、フィット後に残差やずれを確認することが重要になる。
+
+\section{この本でよく使う分布}
+
+データ解析では、ガウシアンと指数分布がよく現れる。
+
+\begin{itemize}
+\item ガウシアン: 時刻差のばらつき
+\item 指数分布: 待ち時間や発生間隔
+\end{itemize}
+
+もちろん、実際のデータがいつもきれいな理想分布になるとは限らない。重要なのは「なぜその関数を当てようとしたのか」を説明することである。
+
+分布の名前を覚えるだけでなく、どの量に対して自然に現れるかを知ることも重要である。ガウシアンは独立なばらつきの和として、指数分布はランダムな待ち時間として現れやすい。こうした背景を知っていると、単なる形合わせで終わらない。
+
+\section{SciPy の使い方}
+
+SciPy には、分布やフィットのための道具が複数ある。代表的なのは \code{scipy.stats} と \code{scipy.optimize.curve\_fit} である。図~\ref{fig:distribution-examples} のような曲線を重ねると、単に形を見るだけでなく、平均や幅、時定数を数値として比較しやすくなる。
+
+単純な場合は、自分で平均や分散を計算するだけでも十分なことがある。一方で、より一般的なモデルや誤差評価をしたいなら SciPy が役立つ。
+
+\code{scipy.optimize.curve\_fit} を使うと、モデル関数を自分で定義してパラメータを推定できる。最初は少し抽象的に見えるが、関数形を明示してデータへ当てるという流れを一度理解すると、応用範囲は広い。
+
+\begin{lstlisting}[language=Python, caption={ガウシアンの平均と幅を求める最小例}]
+import numpy as np
+
+values = np.array([1.2, 0.9, 1.5, 1.1, 0.8])
+mean = values.mean()
+sigma = values.std(ddof=0)
+print(mean, sigma)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={curve\_fit の最小例}]
+from scipy.optimize import curve_fit
+
+def linear_model(x, a, b):
+    return a * x + b
+
+params, cov = curve_fit(linear_model, xdata, ydata)
+\end{lstlisting}
+
+\code{params} には推定パラメータが入り、\code{cov} には共分散行列が入る。後者まで見る習慣を付けておくと、推定値の不確かさをどう扱うかという次の段階につながる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={フィット結果の出力例}]
+mean = 3.02
+sigma = 0.79
+tau = 2.47
+\end{lstlisting}
+
+こうした数値が得られたら、次に考えるべきは「図の見た目と整合するか」「別条件のデータと比較して意味があるか」「単位は妥当か」である。数値が出たこと自体より、どう読むかの方が重要である。
+
+SciPy を使うときも、ライブラリ名だけを覚えるのではなく、「どの関数が何を入力として何を返すか」を確認する読み方が重要である。これは Python 公式チュートリアルの標準ライブラリ章を読むときと同じ姿勢である。
+
+\section{Astropy で時刻を扱う}
+
+宇宙線や天体観測の解析では、単なる文字列や \code{datetime} だけでは扱いにくい時刻表現がよく現れる。例えば UTC を前提にした観測時刻、MJD (Modified Julian Date)、Unix time の相互変換である。こうした場面では \code{astropy.time.Time} が便利である。
+
+\begin{lstlisting}[language=Python, caption={Astropy の Time を使う例}]
+from astropy.time import Time
+
+t_event = Time("2026-04-04 12:34:56.123", format="iso", scale="utc")
+print(t_event.mjd)
+print(t_event.unix)
+\end{lstlisting}
+
+\code{datetime} が不足しているわけではないが、観測データの時刻系をまたいで扱うなら Astropy の方が自然なことが多い。特に、MJD や JD を使うデータを手で換算すると誤差や解釈のずれが入りやすい。時刻表現の変換は、自前で式を書かずに専用ライブラリへ任せた方が安全である。
+
+さらに、\code{astropy.coordinates} を使うと、赤道座標、銀河座標、地平座標などの変換も行える。座標変換そのものを本書で詳しく扱うわけではないが、宇宙物理の解析では Astropy がその入口になることを知っておく価値がある。
+
+\section{Astropy で単位を扱う}
+
+物理量を扱うときは、数値だけでなく単位も一緒に管理した方が安全である。エネルギー、時間、距離を別々の単位系で持っていると、換算漏れがそのままバグになる。Astropy の \code{units} を使うと、値に単位を持たせたまま計算できる。
+
+\begin{lstlisting}[language=Python, caption={Astropy の units を使う例}]
+import astropy.units as u
+
+speed = 100 * u.km / u.s
+time = 5 * u.min
+distance = speed * time
+print(distance.to(u.km))
+\end{lstlisting}
+
+単位付き計算は一見まわりくどく見えるが、研究ノートの段階ではむしろ安心である。最終的に高速化や大量処理のために単位を外すことはあっても、まず式の意味を確認する段階では、単位を持たせておく方が解釈ミスを減らせる。
+
+\section{フィットの実務的な流れ}
+
+実際の解析では、次の順で進めると混乱しにくい。
+
+\begin{enumerate}
+\item まず図を描き、どの関数形が候補かを考える
+\item フィット範囲を決める
+\item 初期値が必要なら妥当な値を与える
+\item フィット曲線を図へ重ねる
+\item 推定値と残差を確認する
+\end{enumerate}
+
+この順序を踏まずにいきなり \code{curve\_fit} を呼ぶと、得られた数値が妥当なのか判断しにくい。フィットは関数呼び出しではなく、仮説と検証の手続きとして理解した方がよい。
+
+\section{初期値と制約}
+
+モデルによっては、初期値の与え方で収束先が変わることがある。また、明らかに負になってほしくないパラメータなどには制約を入れた方が自然なこともある。
+
+\begin{lstlisting}[language=Python, caption={初期値と bounds の例}]
+params, cov = curve_fit(
+    model,
+    xdata,
+    ydata,
+    p0=[1.0, 0.5],
+    bounds=([0.0, 0.0], [np.inf, np.inf]),
+)
+\end{lstlisting}
+
+\code{p0} は初期値、\code{bounds} はパラメータ範囲である。どちらも乱用すべきではないが、物理的にあり得る範囲が分かっているなら、フィットの安定化に役立つ。
+
+フィット結果を図へ重ねるときは、関数形と推定パラメータを凡例に書く方が見やすいことが多い。図の上に直接テキストを置くと、データや曲線と重なって読みにくくなりやすい。特に、比較する図が複数ある場合は、凡例の書式をそろえると見通しが良くなる。
+
+\begin{lstlisting}[language=Python, caption={フィット結果を凡例へ書く例}]
+fig, ax = plt.subplots()
+ax.hist(values, bins=40, density=True, alpha=0.7, label="sample")
+ax.plot(
+    x,
+    gaussian_pdf(x, mean, sigma),
+    linewidth=2.0,
+    label=(
+        "fit: "
+        r"$f(x)=\frac{1}{\sqrt{2\pi}\sigma}"
+        r"\exp\!\left[-\frac{(x-\mu)^2}{2\sigma^2}\right]$"
+        "\n"
+        + fr"$\mu={mean:.2f},\ \sigma={sigma:.2f}$"
+    ),
+)
+ax.legend(loc="upper right")
+\end{lstlisting}
+
+図~\ref{fig:distribution-examples} でも、フィット曲線の式と推定パラメータは凡例へ入れている。本文、キャプション、凡例の役割を分けると、図全体が読みやすくなる。
+
+\section{残差とフィット範囲}
+
+フィットが見た目に良さそうでも、特定の範囲だけ大きくずれていることがある。そのため、可能なら残差も確認したい。
+
+\begin{lstlisting}[language=Python, caption={残差を調べる考え方}]
+model_y = gaussian_pdf(x, mean, sigma)
+residual = y - model_y
+\end{lstlisting}
+
+また、外れ値や非物理的な領域を含めると、パラメータが不安定になることがある。どの範囲でフィットしたかを書き残すことは、再現性のためにも解釈のためにも重要である。
+
+\begin{lstlisting}[language=Python, caption={フィット範囲を制限する例}]
+mask = (xdata >= 0.0) & (xdata <= 10.0)
+params, cov = curve_fit(model, xdata[mask], ydata[mask])
+\end{lstlisting}
+
+フィット範囲を切るという行為は、都合の悪い部分を隠すことではなく、どの領域でそのモデルが有効だと考えるかを明示することである。したがって、結果を報告するときは範囲も本文に書くべきである。
+
+
+\section{フィット時の sigma(重み) の重要性}
+
+物理の実データでは、各データポイントが常に同じ信頼度を持つとは限らない。カウント数が少ない点は誤差（ポワソン誤差）が大きく、カウント数が多い点は誤差が小さい。この情報を無視してフィットを行うと、信頼性の全くない外れ値に引っ張られて誤った結果を生む。
+
+\subsection{Step 1: 誤差を無視した素朴なフィットの限界}
+
+まずは、各データ点が持つエラーバー（誤差）を全て同じとみなしてフィットしてみよう。
+
+\begin{lstlisting}[language=Python, caption={[Bad Example] 誤差の大きさを考慮しないフィット}]
+from scipy.optimize import curve_fit
+
+def linear_model(x, a, b):
+    return a * x + b
+
+# sigma を指定せず、単に点と点の距離だけで合わせようとする
+popt_bad, cov = curve_fit(linear_model, xdata, ydata)
+\end{lstlisting}
+
+\subsection{Step 2: sigma による適切な重み付け}
+
+正しいアプローチは、「誤差が大きい（不確かな）点には合わせに行かず、誤差が小さい（確かな）点に重みをおいて」フィットすることである。これを \code{curve\_fit} における \code{sigma} 引数で指定する。
+
+\begin{lstlisting}[language=Python, caption={sigmaを用いた適切な重み付きフィット}]
+# sigma=y_err で各点の重みを伝える。
+# absolute_sigma=True にすることで、誤差が物理的な絶対値であることを教える（共分散の計算に影響）
+popt_good, cov = curve_fit(
+    linear_model, 
+    xdata, 
+    ydata, 
+    sigma=y_err, 
+    absolute_sigma=True
+)
+
+# パラメータの誤差は共分散行列の対角成分の平方根から算出される
+errors = np.sqrt(np.diag(cov))
+\end{lstlisting}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.7\linewidth]{fit_sigma_comparison.pdf}
+\caption{\code{sigma} の有無によるフィット結果の激変。中央の点に極端に大きなエラーバー（不確かな値）がある場合、\code{sigma} を無視したフィット（赤点線）はこれに引っ張られて真の傾きから大きく外れるが、\code{sigma} を指定したフィット（青実線）は不確かな点を無視して正しい傾向を掴んでいる。}
+\label{fig:fit-sigma}
+\end{figure}
+
+図~\ref{fig:fit-sigma} から明らかなように、`sigma` の指定を怠ると結果全体が台無しになる。
