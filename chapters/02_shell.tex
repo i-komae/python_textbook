@@ -146,7 +146,7 @@ $ mkdir -p output/2026/04
 コマンド & 役割 & 例 \\
 \midrule
 \code{cat} & 全体をそのまま表示する & \code{cat data/events.txt} \\
-\code{less} & スクロールしながら読む & \code{less data/events.txt} \\
+\code{less} & スクロールしながら読む。終了は \code{q} & \code{less data/events.txt} \\
 \code{head} & 先頭だけを見る & \code{head data/events.txt} \\
 \code{tail} & 末尾だけを見る & \code{tail data/events.txt} \\
 \code{wc -l} & 行数を数える & \code{wc -l data/events.txt} \\
@@ -154,7 +154,7 @@ $ mkdir -p output/2026/04
 \end{tabular}
 \end{table}
 
-巨大なファイルに対して \code{cat} を使うと画面が流れてしまうので、その場合は \code{head}、\code{tail}、\code{less} を使う方が自然である。データ解析では、まず数行だけ見て形式を確認する癖を付けた方がよい。
+巨大なファイルに対して \code{cat} を使うと画面が流れてしまうので、その場合は \code{head}、\code{tail}、\code{less} を使う方が自然である。\code{less} を開いたあとに元のシェルへ戻りたいときは \code{q} を押す。データ解析では、まず数行だけ見て形式を確認する癖を付けた方がよい。
 
 \section{コピーする: \code{cp}}
 

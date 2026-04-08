@@ -155,6 +155,21 @@ GitHub の Web 画面で \code{New repository} を開き、リポジトリ名と
 
 最初から README や \code{.gitignore} を GitHub 側で作ると、リモート側に 1 個目のコミットができる。その状態で手元の履歴をそのまま push すると、履歴の始点が一致しないため、初心者には扱いにくい状況になりやすい。したがって、既存のローカルリポジトリを載せるときは「空の GitHub リポジトリ」を作る、という方針で覚えた方が安全である。
 
+\subsection{README や LICENSE を先に作っていた場合}
+
+すでに GitHub 側で README や LICENSE を作ってしまったなら、リモート側には先にコミットが 1 つ以上存在する。その場合は、いきなり \code{git push} するのではなく、まずリモート側の履歴を取り込んでから push しなければならない。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={GitHub 側に初期コミットがある場合}]
+$ git branch -M main
+$ git remote add origin git@github.com:owner/project.git
+$ git pull origin main --allow-unrelated-histories
+$ git push -u origin main
+\end{lstlisting}
+
+\code{--allow-unrelated-histories} が必要なのは、手元のリポジトリと GitHub 側のリポジトリが別々に作られており、履歴の出発点が一致していないからである。この \code{pull} によって、GitHub 側の README や LICENSE のコミットを自分の履歴へ取り込んでから、その続きとして push できるようになる。
+
+もし手元にも README や LICENSE があり、同じ名前のファイルを両側で作っていたなら、\code{git pull} の途中で競合が起こることがある。その場合は、どちらの内容を残すかを自分で決めて修正し、\code{git add} と \code{git commit} で競合解消を確定してから、あらためて \code{git push -u origin main} を実行する。
+
 \subsection{接続先を登録して最初の push を行う}
 
 GitHub が表示する URL を確認し、手元のリポジトリで \code{origin} として登録する。多くの場合、次の流れで足りる。
