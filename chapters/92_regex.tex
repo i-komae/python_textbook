@@ -1,0 +1,191 @@
+\chapter{正規表現の基本}
+\label{app:regex}
+
+正規表現は、文字列の集合を短く記述するための書き方である。\code{grep}、\code{awk}、Python の \code{re} モジュールなどで共通して使われ、ログの抽出、ファイル名の検査、検出器 ID の選別、時刻文字列の確認といった場面で役に立つ。ここでは、本文で触れた \code{grep} や \code{awk} の延長として、解析で本当に必要になる範囲をまとめる。
+
+\section{正規表現とは何か}
+
+\subsection{文字どおりの一致とメタ文字}
+
+最初の一歩は、普通の文字列検索と正規表現の違いを区別することである。\code{det\_A} という文字列だけを探したいなら、文字をそのまま並べればよい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ grep "det_A" events.txt
+\end{lstlisting}
+
+これに対して、\code{.} や \code{*} のような特別な意味を持つ記号を使うと、「どの文字でもよい」「0 回以上くり返す」といった条件を書けるようになる。こうした特別な意味を持つ文字をメタ文字という。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+.
+*
++
+?
+^
+$
+[]
+()
+|
+\end{lstlisting}
+
+たとえば \code{det\_.} は \code{det\_A} にも \code{det\_B} にも一致する。\code{.} は「任意の 1 文字」を表すからである。逆に、ピリオドそのものを探したいなら、前にバックスラッシュを付けて \texttt{\textbackslash.} のようにエスケープしなければならない。これは \code{+} や \code{?} でも同じである。
+
+\subsection{ワイルドカードとの違い}
+
+シェルのワイルドカードと正規表現は似て見えるが、同じものではない。\code{ls *.txt} の \code{*} は「任意の文字列」を表すが、正規表現の \code{*} は「直前の要素の 0 回以上のくり返し」を表す。したがって、正規表現で「任意の文字列」を書きたいときは \code{.*} と書く。
+
+\begin{table}[hbtp]
+\centering
+\caption{ワイルドカードと正規表現の違い}
+\begin{tabular}{lll}
+\toprule
+場面 & 記法 & 意味 \\
+\midrule
+シェル & \code{*.txt} & 任意の名前で \code{.txt} で終わるファイル \\
+正規表現 & \texttt{.*\textbackslash.txt\$} & 任意の文字列で始まり \code{.txt} で終わる文字列 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+この違いを混同すると、\code{grep "*.txt"} のように書いて期待通りに動かない。シェルが展開する記法なのか、正規表現エンジンが読む記法なのかを意識することが重要である。
+
+\section{よく使う部品}
+
+\subsection{アンカー（行頭と行末）}
+
+\code{\textasciicircum} は行頭、\code{\$} は行末を表す。したがって、文字列の一部ではなく「行全体がその形である」ことを確かめたいときに使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ grep '^ERROR' run.log
+$ grep 'txt$' filelist.txt
+$ grep '^det_A$' detectors.txt
+\end{lstlisting}
+
+1 行目は \code{ERROR} で始まる行、2 行目は \code{txt} で終わる行、3 行目は行全体がちょうど \code{det\_A} である行だけを取る。特に 3 行目のように両端をアンカーで挟むと、\code{det\_AB} や \code{xdet\_A} が紛れ込むのを防げる。
+
+\subsection{文字クラス \code{[...]} と代表的な省略記法}
+
+\code{[abc]} は \code{a} か \code{b} か \code{c} の 1 文字、\code{[A-Z]} は英大文字 1 文字を表す。検出器名やセンサー番号のように、限られた候補から 1 文字だけ変わる文字列を扱うときに便利である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+^det_[AB]$
+^run_[0-9][0-9][0-9]$
+^[A-Za-z_][A-Za-z0-9_]*$
+\end{lstlisting}
+
+1 行目は \code{det\_A} または \code{det\_B}、2 行目は \code{run\_001} のような 3 桁番号付きの名前、3 行目は Python 風の識別子に近い形を表す。範囲指定の \code{[0-9]} は非常によく使う。
+
+Python の \code{re} では、数字 1 文字を \code{\textbackslash d}、空白 1 文字を \code{\textbackslash s} と書ける。
+
+\begin{lstlisting}[language=Python]
+import re
+
+re.fullmatch(r"det_[AB]", "det_A")
+re.fullmatch(r"\d\d:\d\d:\d\d", "12:34:56")
+re.search(r"\s+", "det_A   15.2")
+\end{lstlisting}
+
+ただし、\code{grep} や \code{awk} では \code{\textbackslash d} や \code{\textbackslash s} がそのまま使えないことがある。コマンドラインでは \code{[0-9]} や \code{[[:space:]]} を使う方が移植性が高い。
+
+\subsection{量指定子 \code{*}, \code{+}, \code{?}}
+
+量指定子は、直前の要素が何回くり返されるかを表す。\code{*} は 0 回以上、\code{+} は 1 回以上、\code{?} は 0 回または 1 回である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+ab*c
+ab+c
+colou?r
+\end{lstlisting}
+
+\code{ab*c} は \code{ac}、\code{abc}、\code{abbbc} に一致する。\code{ab+c} は少なくとも 1 個の \code{b} が必要なので \code{ac} には一致しない。\code{colou?r} は \code{color} と \code{colour} の両方に一致する。
+
+解析では、「空白が 1 個以上続く」「符号が付くかもしれない」「小数点以下があるかもしれない」といった曖昧さを扱うときに量指定子が役立つ。
+
+\begin{lstlisting}[language=Python]
+pattern = re.compile(r"^[+-]?\d+(\.\d+)?$")
+
+for text in ["12", "-3.5", "+0.25", "1.2.3"]:
+    print(text, bool(pattern.fullmatch(text)))
+\end{lstlisting}
+
+このパターンは、符号付き整数や小数を表し、\code{1.2.3} のような壊れた文字列は弾く。
+
+\section{物理・データ解析での具体例}
+
+\subsection{ログから必要な行だけを探す}
+
+実験ログやジョブログでは、まず異常行や特定の run だけを抜き出したい。アンカーと文字クラスを組み合わせると、かなり具体的な条件を書ける。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ grep '^ERROR' run.log
+$ grep '^2026-04-04 .* det_[AB] ' run.log
+$ grep -E '^(WARN|ERROR)' run.log
+\end{lstlisting}
+
+3 行目では \code{grep -E} を使って \code{|} による選択を書いている。拡張正規表現を使うと括弧や \code{+} を素直に書けるので、条件が少し複雑になったらこちらの方が読みやすい。
+
+\subsection{検出器 ID やセンサー名を選別する}
+
+検出器名が \code{det\_A}, \code{det\_B}, \code{det\_C} のように並んでいるなら、文字クラスや選択を使って対象を絞れる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ grep '^det_[AB]$' detector_ids.txt
+$ awk '$1 ~ /^det_[AB]$/ {print $1, $3}' summary.txt
+\end{lstlisting}
+
+\code{awk} では \code{\$1 ~ /.../} の形で、1 列目がその正規表現に一致するかどうかを判定できる。列を見ながら条件を書くときは \code{grep} より \code{awk} の方が自然なことが多い。
+
+\subsection{Python で抽出と変換を同時に行う}
+
+正規表現は「一致したかどうか」だけでなく、「どの部分が一致したか」を取り出すのにも向いている。Python では \code{re.search} や \code{re.fullmatch} の戻り値から、必要部分を取り出せる。
+
+\begin{lstlisting}[language=Python]
+import re
+
+line = "2026-04-04 12:34:56 det_A signal=15.2"
+match = re.search(r"signal=(\d+\.\d+)", line)
+
+if match:
+    signal = float(match.group(1))
+    print(signal)
+\end{lstlisting}
+
+括弧 \code{(...)} で囲んだ部分はキャプチャされ、\code{group(1)}、\code{group(2)} のように取り出せる。ログ 1 行から run 番号、検出器名、信号値を抜き出して数値へ変換するような処理では、この形が便利である。
+
+\section{Python の \code{re} と \code{grep}/\code{awk} の使い分け}
+
+\subsection{Python では raw string を使う}
+
+Python の文字列中で \code{\textbackslash} を多用すると読みにくくなる。そのため、正規表現を書くときは \code{r"..."} のような raw string を使うのが基本である。
+
+\begin{lstlisting}[language=Python]
+import re
+
+pattern = re.compile(r"^det_[A-Z]\d+$")
+print(bool(pattern.fullmatch("det_A12")))
+\end{lstlisting}
+
+raw string を使わないと、\texttt{"\textbackslash\textbackslash d+"} のようにバックスラッシュを二重に書かなければならない。正規表現の意図が見えにくくなるので、特別な事情がなければ raw string を選ぶ方がよい。
+
+\subsection{\code{search}, \code{match}, \code{fullmatch} を使い分ける}
+
+\code{re.search} は文字列のどこかに一致があればよいとき、\code{re.match} は先頭から一致していればよいとき、\code{re.fullmatch} は文字列全体がその形かを確かめたいときに使う。ファイル名や識別子を検証するときは、意図せず余分な文字が混ざらないよう \code{fullmatch} を使う方が安全である。
+
+\begin{lstlisting}[language=Python]
+import re
+
+print(re.search(r"\d+", "run_42").group())
+print(bool(re.match(r"run", "run_42")))
+print(bool(re.fullmatch(r"run_\d+", "run_42")))
+\end{lstlisting}
+
+\subsection{コマンドラインで十分な場面と、Python に移すべき場面}
+
+単に条件に合う行を見つけたい、件数を数えたい、特定列だけを抜きたい、といった用途なら \code{grep} や \code{awk} が速い。逆に、一致した部分を数値へ変換して次の計算へ渡したい、複数の条件分岐を組み合わせたい、抽出結果を DataFrame にしたい、といった場合は Python へ移した方が自然である。
+
+\begin{itemize}
+\item \code{grep}: 行全体の抽出や件数確認をすばやく行いたいとき
+\item \code{awk}: 列条件と正規表現を組み合わせたいとき
+\item Python \code{re}: 抽出した結果をそのまま解析処理へつなげたいとき
+\end{itemize}
+
+正規表現は強力だが、複雑な 1 行を無理に作ると自分でも読めなくなる。まずはアンカー、文字クラス、量指定子の 3 つで書けないかを考え、それでも足りないときに括弧や選択を足す方が安全である。解析コードと同じく、「まず読めること」を優先した方が長く使える。

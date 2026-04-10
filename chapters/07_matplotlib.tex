@@ -1,14 +1,14 @@
 \chapter{Matplotlib による可視化}
 
-\section{図は結果そのものである}
+\section{可視化の基本}
 
 図はレポートの飾りではない。ヒストグラムや散布図は、計算結果の妥当性を自分で確かめるための道具でもある。数値だけを並べるより、まず図にした方が異常に気付きやすいことは多い。
 
 例えば、平均値や標準偏差が妥当に見えても、分布の裾が長い、二峰性がある、外れ値が混ざっている、といった特徴は図にしないと分かりにくい。可視化は最後の仕上げではなく、途中の確認作業としても重要である。
 
-\section{最小限のヒストグラム}
+\subsection{最小限のヒストグラム}
 
-\begin{lstlisting}[language=Python, caption={ヒストグラムの最小例}]
+\begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
 
 plt.hist(values, bins=40)
@@ -21,11 +21,11 @@ plt.savefig("histogram.pdf")
 
 \code{plt.show} による対話的な確認は便利だが、再現可能な解析では \code{savefig} でファイルへ残す方が重要になる。図を保存するたびに同じファイル名へ上書きするのか、条件ごとに別名で保存するのかも、早い段階で決めておくと混乱しにくい。
 
-\section{オブジェクト指向 API で描く}
+\subsection{オブジェクト指向 API で描く}
 
 Matplotlib には \code{plt.hist(...)} のような簡単な書き方と、\code{Figure} と \code{Axes} を明示的に扱う書き方がある。図が複雑になるほど、後者の方が整理しやすい。
 
-\begin{lstlisting}[language=Python, caption={Axes を使う描画の例}]
+\begin{lstlisting}[language=Python]
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.hist(values, bins=40)
 ax.set_xlabel("value")
@@ -37,7 +37,7 @@ fig.savefig("histogram.pdf")
 
 また、\code{Figure} と \code{Axes} を区別して考えると、図全体に効く設定と各パネルにだけ効く設定を整理しやすい。タイトルや余白は図全体、軸ラベルや凡例は各パネル、というように役割を分けて考えると見通しが良い。
 
-\section{見た目を整える}
+\section{見た目とスタイルの管理}
 
 図を読みやすくするには、少なくとも次の点を意識する。
 
@@ -51,11 +51,11 @@ fig.savefig("histogram.pdf")
 
 色やフォント、線幅をばらばらにすると、個々の図は読めてもレポート全体として落ち着かない。逆に、軸ラベルの位置、単位の書き方、凡例のスタイルをそろえるだけで、見た目の質は大きく上がる。可視化では、派手さより統一感の方が効くことが多い。
 
-\section{\code{rcParams} で見た目をそろえる}
+\subsection{\code{rcParams} で見た目をそろえる}
 
 Matplotlib では、図のフォントや線幅などの既定値の多くを \code{rcParams} という辞書オブジェクトで一元管理している。図を描くたびに同じ設定を繰り返すより、作図スクリプトの冒頭で一度だけこの辞書を更新するのが基本である。
 
-\begin{lstlisting}[language=Python, caption={rcParams をまとめて設定する基本例}]
+\begin{lstlisting}[language=Python]
 import matplotlib as mpl
 
 mpl.rcParams.update(
@@ -73,13 +73,13 @@ mpl.rcParams.update(
 )
 \end{lstlisting}
 
-\section{設定ファイル (.mplstyle) で見た目を共通化する}
+\subsection{設定ファイル (.mplstyle) で見た目を共通化する}
 
 しかし、解析テーマごとに作図スクリプトが何個も増えていくと、すべての Python ファイルの先頭に上記の長い辞書をコピーして回るのは非常に冗長である。Matplotlib には、この設定内容を一つのプレーンテキストに切り出して一括で読み込む、よりスマートな仕組みが存在する。
 
 ご自身の Python スクリプトを置いている作業ディレクトリに \code{my\_style.mplstyle} という名前で以下のようなテキストファイルを作成する。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={my\_style.mplstyle の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 font.family: serif
 mathtext.fontset: cm
 font.size: 12
@@ -93,7 +93,7 @@ legend.frameon: False
 
 そして、各解析スクリプトの先頭でこれを一度だけ呼び出せばよい。本テキストに含まれる図も、すべてこの設定ファイル（スタイルシート）を読み込んで生成されている。
 
-\begin{lstlisting}[language=Python, caption={作成したスタイルファイルの使い方}]
+\begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
 
 # スクリプトの冒頭で自分のスタイルシートを読み込む
@@ -105,7 +105,7 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 このように設定をファイルに分離しておくことで、新しい解析スクリプトを書くたびにフォントやグリッドの有無がバラバラになる事態を防ぐことができる。また、学会発表用の大きなフォント設定といった別のファイルを容易に切り替えることも可能になる。
 
-\section{共通スタイルの一部だけを上書きする}
+\subsection{共通スタイルの一部だけを上書きする}
 
 共通スタイルを決めておくと便利だが、発表スライド用に文字だけ大きくしたい、下書きではグリッドだけ消したい、といった局所的な変更もよく起こる。そのたびに元の \code{my\_style.mplstyle} を書き換えると、別の図まで見た目が変わってしまう。こういう場合は、基準となるスタイルを読み込んだ後に、必要な項目だけを重ねる方が管理しやすい。
 
@@ -131,26 +131,30 @@ ax.grid(False)  # この Axes だけグリッドを消す
 
 二つの \code{.mplstyle} を配列で渡すと、後ろに書いたファイルの設定が優先される。したがって、基準となる \code{my\_style.mplstyle} を保ったまま、文字サイズやグリッドの有無だけを差し替えられる。さらに、\code{mpl.rcParams} を直接書き換えれば、そのスクリプト以降の図だけを変更でき、\code{ax.grid(False)} のような Axes メソッドを使えば、単一のパネルにだけ適用できる。設定の効く範囲が、スタイルファイル、スクリプト全体、個別の Axes の三段階に分かれると理解しておくと混乱しにくい。
 
-\section{Matplotlib の数式表記を使う}
+\section{比較しやすい図を作る}
+
+\subsection{Matplotlib の数式表記を使う}
 
 Matplotlib では、軸ラベルや凡例に数式風の表記を書ける。既定では LaTeX そのものではなく、TeX に似た \code{MathText} という仕組みが使われる。
 
-\begin{lstlisting}[language=Python, caption={数式を含むラベル}]
+\begin{lstlisting}[language=Python]
 plt.xlabel(r"$\Delta t\,[\mathrm{ns}]$")
 plt.ylabel(r"$N$")
 \end{lstlisting}
 
 単位まで数式の中へ入れるなら、上の例のように \code{\\mathrm} を使って立体で書く方が自然である。レポートを LaTeX で書くなら、図中の記号も本文と整合するようにそろえると見通しがよい。
 
+MathText は便利だが、LaTeX そのものではない。よく使う分数、上付き・下付き、ギリシャ文字、\code{\\mathrm} などは扱える一方で、複雑なマクロや一部のパッケージ依存の記法は使えない。通常は追加の LaTeX 環境なしで動くのが利点であり、本文と完全に同じ組版結果まで求めるときだけ \code{text.usetex=True} のような設定を検討する。
+
 また、図中で使う記号は本文での定義と一致させるべきである。本文で $\tau$ を時定数として定義したなら、図の凡例やキャプションでも同じ記号を使う方が親切である。解析内容と図の表現が食い違うと、読者は不要なところで迷う。
 
-\section{凡例、余白、複数パネル}
+\subsection{凡例とレイアウト}
 
 複数の系列やフィット曲線を同じ図へ重ねるなら、凡例は不可欠である。凡例をどこへ置くか、枠を付けるか、何をどの順に書くかで、読みやすさは大きく変わる。
 
 ここでいう \code{values1} と \code{values2} は、同じ物理量を別条件で測った 1 次元配列だと考えればよい。例えば、温度条件 A と B で得た信号振幅を左右のパネルへ並べ、同じビン数でヒストグラムを描いて分布形状を比較する場面である。単にコードの書式を見るのではなく、同じ量を別条件で見比べるための雛形だと捉えると、このリストの意図が分かりやすい。
 
-\begin{lstlisting}[language=Python, caption={凡例とレイアウトの例}]
+\begin{lstlisting}[language=Python]
 fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
 axes[0].hist(values1, bins=40, alpha=0.7, label="sample A")
 axes[0].set_title("sample A")
@@ -175,7 +179,7 @@ fig.savefig("comparison.pdf")
 
 凡例がデータを隠すなら、\code{loc="best"} で自動配置に任せるか、\code{bbox\_to\_anchor} を使って枠の外へ逃がす。レイアウト調整は「自動で整うかどうか」ではなく、「比較したい情報が隠れていないかどうか」で判断する方が実践的である。
 
-\section{結果例の読み方}
+\subsection{結果例の読み方}
 
 図を読めるようになるには、単に描けるだけでは足りない。まず軸と単位を確認し、次に分布の中心と幅、最後に裾や外れ値を見る、という順で眺めると整理しやすい。
 
@@ -189,7 +193,7 @@ fig.savefig("comparison.pdf")
 \end{figure}
 
 
-\section{画像フォーマットの選択：ラスタとベクタ}
+\subsection{画像フォーマットの選択：ラスタとベクタ}
 
 解析図を保存する際、適切な画像フォーマットを選ぶことは極めて重要である。
 
@@ -198,15 +202,15 @@ fig.savefig("comparison.pdf")
     \item \textbf{ラスタ形式 (\code{.png}, \code{.jpg})}：ピクセル（点）の集まりで画像を描画する。拡大するとジャギ（ピクセルのギザギザ）が見える。ただし、例えば数十万点に及ぶ密集した散布図や、ヒートマップのような巨大な2次元データをベクタ形式で保存すると、点の一つ一つがファイルに記録されるためファイルサイズがギガバイトを超え、PDFビューアがフリーズする原因になる。そのような複雑な図の場合は、\code{savefig("plot.png", dpi=150)} のように解像度（dpi）を指定して PNG で出力する方が適切である。
 \end{itemize}
 
-\section{相関の可視化：論理的改善ステップ}
+\subsection{相関の可視化：論理的改善ステップ}
 
 データ解析において、2つの変数の相関関係を見ることは非常に多い。しかし、これを「とりあえず」描画関数にかけるだけでは、重要な特徴を見落とす。データ量に応じた適切な図の選択プロセスを順番に見ていく。
 
-\subsection{Step 1: 直感的な散布図 (Scatter) の限界}
+\subsubsection{Step 1: 直感的な散布図 (Scatter) の限界}
 
 2変数の相関を見るのに最も基本となるのが散布図（\code{scatter}）である。しかし、データ点が数十万規模になると、これはすぐに「役に立たない図」と化す。
 
-\begin{lstlisting}[language=Python, caption={[Bad Example] 大量データにおける散布図}]
+\begin{lstlisting}[language=Python]
 # s=10 で大量の点（約60万点）をそのまま描画すると...
 fig, ax = plt.subplots(figsize=(6, 5))
 ax.scatter(x, y, s=10, c='black')
@@ -222,11 +226,11 @@ fig.savefig("scatter_bad.png", dpi=150)
 
 図~\ref{fig:scatter-bad}のような図を作ってしまってはならない。データがどこにどれだけ集中しているのか（密度）が全く分からないからである。
 
-\subsection{Step 2: 2次元ヒストグラムの導入と、線形スケールの限界}
+\subsubsection{Step 2: 2次元ヒストグラムの導入と、線形スケールの限界}
 
 点が潰れるなら、「その領域にいくつ点があるか」を色で表現する2次元ヒストグラム（\code{hist2d}）が有効である。
 
-\begin{lstlisting}[language=Python, caption={[Bad Example] 線形カラーバーを用いた2次元ヒストグラム}]
+\begin{lstlisting}[language=Python]
 fig, ax = plt.subplots(figsize=(6, 5))
 h_lin = ax.hist2d(x, y, bins=50, cmap='viridis')
 cbar = fig.colorbar(h_lin[3], ax=ax, label="Counts (Linear)")
@@ -242,11 +246,11 @@ fig.savefig("hist2d_linear_bad.pdf")
 
 図~\ref{fig:hist2d-linear}は中心部が明るくなっているため、散布図よりはマシに見える。しかし、極端に集中している一部（例: 2万カウント）の色に引っ張られ、10カウント、100カウントといった周囲のノイズや裾野の広がりがすべて濃紺に塗りつぶされてしまっている。
 
-\subsection{Step 3: 大規模データに必須となる LogNorm (対数カラースケール)}
+\subsubsection{Step 3: 大規模データに必須となる LogNorm (対数カラースケール)}
 
 現実の物理イベントは、頻度が「1, 10, 100, 1000」のように桁単位で変化することが多い。この何桁にもまたがる広がりを一つの図に収めるための判断基準が\textbf{「カウントのカラーバーを対数（log）にするべきか否か」}である。
 
-\begin{lstlisting}[language=Python, caption={LogNormを用いた適切な2次元ヒストグラム}]
+\begin{lstlisting}[language=Python]
 import matplotlib.colors as mcolors
 
 fig, ax = plt.subplots(figsize=(6, 5))
@@ -265,11 +269,11 @@ fig.savefig("hist2d_lognorm_good.pdf")
 
 図~\ref{fig:hist2d-lognorm}を見れば、単一のピークの周りに広く緩やかなイベントの相関層が広がっていることが一目で分かる。これが「なぜ LogNorm を知っていなければならないか」の強力な理由である。
 
-\section{複数の図を並べる (subplots)}
+\subsection{複数の図を並べる (subplots)}
 
 レポートや論文では、関連する分布を左右や上下に並べて比較することが多い。この場合、1枚のキャンバス（\code{Figure}）の中に複数のパネル（\code{Axes}）を配置する機能を利用する。
 
-\begin{lstlisting}[language=Python, caption={複数のパネルを並べる方法}]
+\begin{lstlisting}[language=Python]
 # 1行2列（左右に2つ）のパネルを作成する。
 # fig はキャンバス全体、axes は2つのパネル（配列）を表す。
 fig, axes = plt.subplots(1, 2, figsize=(10, 4))
@@ -290,7 +294,7 @@ fig.savefig("comparison.pdf")
 
 単純な \code{plt.plot()} ばかり使っていると、この「特定のパネル（\code{axes[0]}）に対して描画を命令する」という書き方に慣れるのに少し時間がかかるが、複雑な比較図を作る上では避けて通れない技法である。
 
-\section{エラーバーと対数軸（log-logプロット）}
+\subsection{エラーバーと対数軸（log-logプロット）}
 
 実際の物理データの多くは測定誤差を伴うため、単なる散布図ではなくエラーバー付きのプロットが必要になる。また、横軸や縦軸のスケールが指数関数的に落ち幅を変える場合、対数（log）のグラフでプロットしなければ分布の様子が潰れてしまうことが多い。
 
@@ -303,7 +307,7 @@ fig.savefig("comparison.pdf")
 \label{fig:errorbar-example}
 \end{figure}
 
-\begin{lstlisting}[language=Python, caption={エラーバーと対数軸プロットの詳細解説}]
+\begin{lstlisting}[language=Python]
 fig, axes = plt.subplots(1, 2, figsize=(10, 4)) # 横10インチ、縦4インチで 1行2列のパネルを作成
 
 # 左のパネル (axes[0]) へのプロット

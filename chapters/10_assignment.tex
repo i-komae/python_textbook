@@ -1,6 +1,6 @@
 \chapter{課題: 同時観測イベントの探索}
 
-\section{配布ファイル}
+\section{課題の準備}
 
 この課題では、次のファイルを配布する。
 
@@ -12,17 +12,17 @@
 
 \code{events\_data.zip} を展開すると、\code{events\_data/} というディレクトリが得られる。日ごとに gzip 圧縮されたイベントファイルがあり、年・月ごとのディレクトリに分かれている。
 
-課題のスクリプトやデータは、Google Drive
-（\url{https://drive.google.com/drive/folders/19RWzbiXUkj5Dgbv0wiu0I-bvEsW8nRmz?usp=drive_link}）
-から入手できる。手元に配布物がそろっていない場合は、まずここから取得して配置を確認する。
+課題のスクリプトやデータは、GitHub リポジトリ
+（\url{https://github.com/i-komae/python_textbook}）
+から入手できる。手元に配布物がそろっていない場合は、まずリポジトリを取得し、リポジトリ直下にある \code{slow\_event\_analysis.py} と \code{events\_data.zip} の配置を確認する。\code{events\_data.zip} を展開すると \code{events\_data/} が得られ、これを入力ディレクトリとして使う。
 
 配布物は意図的に最小限にしてある。したがって、何を入力とし、どのファイルが正解判定の対象で、どこからどこまでを自分で実装するのかを最初に整理してから着手した方がよい。
 
-\section{まず配布コードを動かす}
+\subsection{まず配布コードを動かす}
 
 まずは、配布された遅いコードをそのまま動かす。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={配布コードの実行}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python3 slow_event_analysis.py events_data --outdir slow_output
 \end{lstlisting}
 
@@ -30,11 +30,11 @@ $ python3 slow_event_analysis.py events_data --outdir slow_output
 
 重要なのは、最初から完成版を書こうとしないことである。まず配布コードが本当に遅いことを自分の環境で確認し、どの出力が得られるかを見てから変更を始める方が、修正の意味が分かりやすい。
 
-\section{gzip ファイルの中身を見る}
+\subsection{gzip ファイルの中身を見る}
 
 データの中身を見ずに解析を始めてはいけない。まずは 1 ファイルを開き、列の意味を確認する。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={中身の確認}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ gzip -cd events_data/2024/01/events_2024_01_01.txt.gz | head
 \end{lstlisting}
 
@@ -48,11 +48,11 @@ event_id year month day hhmmss ns detector_id signal
 
 この課題では、2 事象の時刻差を ns 単位まで含めて評価し、\(\lvert \Delta t \rvert \le 250\,\mathrm{ns}\) を満たすものを「同時観測」と定義する。したがって、\code{hhmmss} 列だけを見ればよいわけではなく、\code{ns} 列も含めて時刻を一つの量として組み立てる必要がある。秒境界や日付境界をまたぐ場合にどう振る舞うかも、この定義を満たす形で確認しなければならない。
 
-\section{小さいデータで確認する}
+\subsection{小さいデータで確認する}
 
 いきなり 500 日分全体に対して試すのではなく、まずは数日分を別ディレクトリにコピーして試すとよい。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={数日分だけを取り出す例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p events_data_small/2024/01
 $ cp events_data/2024/01/events_2024_01_01.txt.gz events_data_small/2024/01/
 $ cp events_data/2024/01/events_2024_01_02.txt.gz events_data_small/2024/01/
@@ -61,14 +61,14 @@ $ cp events_data/2024/01/events_2024_01_03.txt.gz events_data_small/2024/01/
 
 小さい入力での確認は、速度のためではなく、正しさを素早く確かめるためである。数十秒で終わる条件を作っておけば、修正してすぐ再実行できる。大きなデータを回すのは、その後で十分である。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={小さいデータでの確認結果の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 n_pairs_total = 241
 analysis_sec = 18.4
 \end{lstlisting}
 
 この段階では、数値そのものよりも、修正のたびに一貫した結果が出るかが大切である。件数が毎回変わる、出力ファイルの形式が揺れる、といった状態では、その先の高速化に進むべきではない。
 
-\section{課題でやってほしいこと}
+\section{課題で求めること}
 
 最低限、次の内容に取り組むこと。
 
@@ -82,7 +82,7 @@ analysis_sec = 18.4
 
 この並びにも意味がある。いきなり高速化から始めるのではなく、まず元のコードの振る舞いを把握し、次に正しさを確認し、その後で改善する。間違ったコードを高速化しても、間違いが速くなるだけである。
 
-\section{出力としてほしいもの}
+\subsection{出力としてほしいもの}
 
 最低限ほしい出力は次の三つである。
 
@@ -96,7 +96,7 @@ analysis_sec = 18.4
 
 分布を描くときは、ビン幅、横軸の範囲、単位も明記すること。図は出しただけでは不十分で、どの量をどう定義して数えたのかが分からなければ、他人は解釈できない。フィットを行うなら、どの範囲を使ったかも書くべきである。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={出力ファイル名の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 coincidence_pairs.csv
 pair_dt_hist.pdf
 pair_mean_gap_hist.pdf
@@ -105,7 +105,7 @@ summary.txt
 
 ファイル名の流儀を最初に決めておくと、後で解析を繰り返したときにも混乱しにくい。どのファイルが一覧で、どれが図で、どれが数値要約なのかが名前から分かるようにしておくとよい。
 
-\section{正しさ確認の目安}
+\subsection{正しさ確認の目安}
 
 今回の配布データは 500 日分であり、正しく同時観測イベントを拾えていれば、全期間で得られる同時観測イベント数は
 
@@ -117,7 +117,7 @@ n_pairs_total = 12033
 
 ただし、この値に合ったからといって、それだけで実装が正しいとは限らない。偶然件数だけ一致している可能性もある。可能なら、個々のイベント対の内容や、ファイル境界付近の振る舞いも確認した方がよい。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={summary.txt の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 n_pairs_total = 12033
 analysis_sec = 248.6
 plot_sec = 1.8
@@ -125,7 +125,7 @@ plot_sec = 1.8
 
 このような要約ファイルを出しておくと、コード変更のたびに結果を比較しやすい。件数だけでなく処理時間も同じ場所へ残すと、正しさと速度を一緒に追える。
 
-\section{提出物}
+\section{提出物と発展課題}
 
 提出物は次の二つである。
 
@@ -148,7 +148,7 @@ plot_sec = 1.8
 
 レポートを書くときは、変更点の羅列よりも、問題の発見、原因の切り分け、修正方針、検証方法、結果、考察の順で並べると読みやすい。図や表を入れるときは、本文の中で参照しながら説明すること。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={レポート構成の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 1. 元のコードの観察
 2. バグの特定
 3. 修正内容
@@ -159,7 +159,7 @@ plot_sec = 1.8
 
 この順序で書けば、読者は「何が問題で、どう直して、何が改善したのか」を追いやすい。レポートは成果物であると同時に、思考過程の記録でもある。
 
-\section{発展課題}
+\subsection{発展課題}
 
 余裕があれば、図の作成やフィットまで含めた全体処理をさらに高速化してよい。さらに、NumPy や pandas を使うだけでなく、自分でアルゴリズムを設計し直したり、C や C++ で計算コアを実装したりしてもよい。
 

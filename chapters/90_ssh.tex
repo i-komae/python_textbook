@@ -1,88 +1,90 @@
 \chapter{SSH, 鍵認証, ファイル転送}
 \label{app:ssh}
 
-\section{SSH とは何か}
+\section{SSH の基本}
 
 SSH は、離れたマシンへ安全に接続してコマンドを実行するための仕組みである。研究室や計算サーバーへ入り、大きなデータ処理や長時間ジョブを回すときによく使う。GitHub へ SSH で接続するときにも同じ仕組みを使うが、GitHub はシェルへログインする相手ではなく、Git 操作の認証先である点は区別しておいた方がよい。
 
-\section{サーバーへ接続する}
+\subsection{サーバーへ接続する}
 
 最も基本的な形は次である。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={SSH 接続の基本}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh user@server.example.jp
 \end{lstlisting}
 
 \code{user} はサーバー上の自分のユーザー名、\code{server.example.jp} はホスト名である。ポート番号が既定の 22 でないなら \code{-p} を付ける。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ポート番号を指定する}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh -p 2222 user@server.example.jp
 \end{lstlisting}
 
 接続後は、ローカルのターミナルと似た形でコマンドを打てる。ただし、そこで見えているファイルは自分の手元ではなく、サーバー側のファイルである。この区別が曖昧になると事故の原因になるので、\code{hostname}、\code{whoami}、\code{pwd} を見て今どこにいるかを確かめる習慣を持った方がよい。
 
-\section{SSH 鍵を作る}
+\subsection{SSH 鍵を作る}
 
 毎回パスワードを打つ代わりに、SSH 鍵を使うことが多い。鍵は公開鍵と秘密鍵の 2 つ 1 組であり、公開鍵をサーバーへ登録し、秘密鍵は自分だけが持つ。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={SSH 鍵を作る}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh-keygen -t ed25519 -C "your_email@example.com"
 \end{lstlisting}
 
 既定値のまま進めると、多くの場合は \code{\textasciitilde/.ssh/id\_ed25519} が秘密鍵、\code{\textasciitilde/.ssh/id\_ed25519.pub} が公開鍵になる。\code{.pub} が付いている方だけを相手へ渡す。\code{.pub} が付いていない方は秘密鍵なので、決して共有してはいけない。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={鍵ファイルを確認する}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -l ~/.ssh
 \end{lstlisting}
 
 秘密鍵の権限が緩いと SSH が拒否することがある。その場合は次のように直す。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={権限を整える}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod 700 ~/.ssh
 $ chmod 600 ~/.ssh/id_ed25519
 $ chmod 644 ~/.ssh/id_ed25519.pub
 \end{lstlisting}
 
-\section{公開鍵をサーバーへ登録する}
+\subsection{公開鍵をサーバーへ登録する}
 
 公開鍵をサーバーへ登録する最も簡単な方法は \code{ssh-copy-id} である。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ssh-copy-id の基本}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh-copy-id user@server.example.jp
 \end{lstlisting}
 
 特定の公開鍵を使いたいなら \code{-i} で指定できる。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={使う公開鍵を明示する}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh-copy-id -i ~/.ssh/id_ed25519.pub user@server.example.jp
 \end{lstlisting}
 
 \code{ssh-copy-id} は、指定した公開鍵をサーバー側の \code{\textasciitilde/.ssh/authorized\_keys} へ追加する。つまり、「手元の公開鍵を安全に送り、向こうで追記する」という面倒な作業を代わりにやってくれる。
 
-\subsection{\code{ssh-copy-id} が使えない場合}
+\subsubsection{\code{ssh-copy-id} が使えない場合}
 
 \code{ssh-copy-id} が使えない環境では、公開鍵の中身を手で登録する。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={公開鍵の中身を表示する}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cat ~/.ssh/id_ed25519.pub
 \end{lstlisting}
 
 表示された 1 行全体を、サーバー側の \code{\textasciitilde/.ssh/authorized\_keys} へ追記する。サーバーへ通常のパスワードログインができるなら、自分でログインして追記してもよい。
 
-\section{ssh-agent を使う}
+\subsection{ssh-agent を使う}
 
 パスフレーズ付きの鍵を使う場合は、\code{ssh-agent} に読み込ませておくと毎回の入力を減らせる。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ssh-agent を使う}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ eval "$(ssh-agent -s)"
 $ ssh-add ~/.ssh/id_ed25519
 \end{lstlisting}
 
-\section{\code{\textasciitilde/.ssh/config} を書く}
+\section{接続設定と GitHub 連携}
+
+\subsection{\code{\textasciitilde/.ssh/config} を書く}
 
 接続先が増えると、毎回長いホスト名やポート番号や鍵ファイル名を書くのは面倒になる。そこで \code{\textasciitilde/.ssh/config} を使う。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={SSH 設定ファイルの例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Host labserver
     HostName server.example.jp
     User ikomae
@@ -92,31 +94,31 @@ Host labserver
 
 これを書いておけば、以後は次のように短く書ける。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={別名で接続する}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh labserver
 \end{lstlisting}
 
 \code{config} ファイル自体も秘密情報に近いので、\code{chmod 600 \textasciitilde/.ssh/config} としておく方が安全である。
 
-\section{GitHub に SSH 鍵を登録する}
+\subsection{GitHub に SSH 鍵を登録する}
 
 通常のサーバーとは違って、GitHub には \code{ssh-copy-id} を使わない。GitHub はシェル接続先ではなく、アカウント設定に公開鍵を登録する相手だからである。
 
 最も確実なのは、GitHub の設定画面の \code{SSH and GPG keys} へ公開鍵を登録する方法である。もし GitHub CLI \code{gh} を使うなら、認証時に SSH 鍵の作成や登録を案内させることもできる。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={GitHub CLI で SSH を選ぶ例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ gh auth login --git-protocol ssh --web
 \end{lstlisting}
 
 GitHub CLI を使う場合は、既存の鍵を検出してアップロードするか、新しい鍵を作るかを対話的に選べる。GitHub CLI を使わない場合は、\code{cat ~/.ssh/id\_ed25519.pub} で表示した公開鍵を Web 画面へ貼り付ければよい。
 
-\section{ファイル転送は \code{rsync} を基本にする}
+\section{ファイル転送}
 
 小さなファイルを 1 回だけ送るなら \code{scp} でもよいが、解析ではディレクトリ全体を何度も同期することが多い。その場合は \code{rsync} を使う方が自然である。
 
 \subsection{\code{scp} の最小例}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={scp の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ scp result.csv user@server.example.jp:~/work/
 $ scp user@server.example.jp:~/work/result.csv .
 \end{lstlisting}
@@ -127,7 +129,7 @@ $ scp user@server.example.jp:~/work/result.csv .
 
 \code{rsync} は、差分だけを転送し、途中で止まっても再開しやすく、除外パターンも柔軟に書ける。そのため、解析用ディレクトリやコード一式をサーバーへ送る用途では \code{scp} より向いている。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={rsync の基本例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rsync -aP ./analysis/ user@server.example.jp:~/work/analysis/
 \end{lstlisting}
 
@@ -141,7 +143,7 @@ $ rsync -aP ./analysis/ user@server.example.jp:~/work/analysis/
 \item[\code{--exclude}] 特定のファイルやディレクトリを転送対象から除外する。
 \end{description}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={除外指定付きの例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rsync -aPv \
   --exclude='.venv/' \
   --exclude='__pycache__/' \
@@ -152,11 +154,11 @@ $ rsync -aPv \
 
 仮想環境、キャッシュ、ビルド成果物はサーバー側で作り直せることが多いので、転送から外した方が軽くなる。
 
-\subsection{末尾のスラッシュに注意する}
+\subsubsection{末尾のスラッシュに注意する}
 
 \code{rsync} では、送信元パスの末尾に \code{/} を付けるかどうかで意味が変わる。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={末尾スラッシュの違い}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rsync -aP analysis user@server:~/work/
 $ rsync -aP analysis/ user@server:~/work/analysis/
 \end{lstlisting}

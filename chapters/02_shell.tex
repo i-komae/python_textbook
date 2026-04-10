@@ -1,6 +1,6 @@
 \chapter{シェルとファイル操作}
 
-\section{ターミナルとシェル}
+\section{シェルの基本と環境}
 
 本書では、ファイル操作やスクリプト実行をターミナルから行う。まず言葉を分けておく。
 
@@ -9,40 +9,44 @@
 \item シェル: ターミナルの中で動き、入力されたコマンドを解釈して実行するプログラム
 \end{itemize}
 
-macOS では \code{zsh}、Linux や WSL では \code{bash} を使うことが多い。\code{zsh} と \code{bash} はどちらもシェルであり、本書の基本コマンドはほぼ同じように使える。
+macOS では \code{zsh}、Linux や WSL では \code{bash} を使うことが多い。\code{zsh} と \code{bash} はどちらもシェルであり、本書の基本コマンドはほぼ同じように使える。自分がどのシェルを使っているかを調べるには、次のように実行する。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={どのシェルを使っているか調べる}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo $SHELL
 \end{lstlisting}
 
 本書では、シェルで入力するコマンド例の先頭に \code{\$} を付ける。\code{\$} 自体は「ここから先が入力するコマンドである」という印であり、読者が実際に打ち込むのはその後ろの部分である。これに対して、出力結果やファイル内容の例には \code{\$} を付けない。
 
-\section{Windows では WSL を使う}
+\subsection{Windows では WSL を使う}
 
-本書のコマンド例は macOS や Linux のシェルを前提にしている。そのため、Windows で読み進める場合は、コマンドプロンプトや PowerShell をそのまま使うより、WSL (Windows Subsystem for Linux) を入れて Ubuntu などの Linux 環境を使う方が混乱しにくい。
+本書のコマンド例は macOS や Linux のシェルを前提にしている。そのため、Windows で読み進める場合は、コマンドプロンプトや PowerShell をそのまま使うより、WSL (Windows Subsystem for Linux) を入れて Ubuntu などの Linux 環境を使う方が混乱しにくい。導入の際は次のように実行する。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={WSL の導入例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ wsl --install
 \end{lstlisting}
 
 WSL を使う利点は、単にコマンド名がそろうことだけではない。後半で扱う並列処理や周辺ツールの中には、Linux 系環境での利用を前提としているものがある。OS ごとの差でつまずくより、最初から UNIX 系の作法へ寄せた方が、解析そのものに集中しやすい。
 
-\section{コマンド、オプション、引数}
+\section{コマンドの基本と使い方}
 
-シェルで打つ 1 行は、多くの場合「コマンド本体」「オプション」「引数」から成る。
+\subsection{コマンド、オプション、引数}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={コマンドの形}]
+シェルで打つ 1 行は、多くの場合「コマンド本体」「オプション」「引数」から成る。たとえば次のような形である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -l results
 $ cp data/raw.txt backup/raw.txt
 \end{lstlisting}
 
 1 行目では、\code{ls} がコマンド本体、\code{-l} がオプション、\code{results} が引数である。2 行目では、\code{cp} がコマンド本体で、\code{data/raw.txt} と \code{backup/raw.txt} が引数である。一般に、オプションは動作を変え、引数は対象のファイル名やディレクトリ名を与える。
 
-\section{困ったときは説明を読む}
+オプションには短い書き方（\code{-} の後に1文字）と、長い書き方（\code{--} の後に英単語）が用意されていることが多い。たとえば、使い方を表示するオプションとしては \code{-h} と \code{--help} の両方がサポートされていることが多い。
 
-コマンドを丸暗記する必要はない。忘れたときは、その場で説明を読む方が正確である。短い使い方を知りたいときは \code{-h} や \code{--help}、より詳しい説明を読みたいときは \code{man} を使う。
+\subsection{困ったときは説明を読む}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={説明を調べる基本}]
+コマンドを丸暗記する必要はない。忘れたときは、その場で説明を読む方が正確である。短い使い方を知りたいときは \code{-h} や \code{--help}、より詳しい説明を読みたいときは \code{man} を使う。実際の調べ方は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python3 -h
 $ python3 --help
 $ man rsync
@@ -52,30 +56,32 @@ $ man rsync
 
 \code{man} を開いたあとは、上下キーや \code{Space} で移動し、\code{/pattern} で検索できる。\code{q} を押せば終了する。最初のうちは「使い方を忘れたら検索エンジン」ではなく、「まず \code{--help} か \code{man}」という順序にした方が、手元の環境に合った説明へすぐたどり着ける。
 
-\section{今どこにいるかを確認する}
+\section{ファイルとディレクトリの操作}
 
-シェルでは、いま作業しているディレクトリが常に基準になる。これをカレントディレクトリという。
+\subsection{今どこにいるかを確認する}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={現在位置と一覧を確認する}]
+シェルでは、いま作業しているディレクトリが常に基準になる。これをカレントディレクトリという。現在の位置（パス）やそこにあるファイルの一覧を確認するには、次のように打つ。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pwd
 $ ls
 $ ls -l
 $ ls -a
 \end{lstlisting}
 
-\code{pwd} は現在位置を表示する。\code{ls} は一覧を表示する。\code{ls -l} は詳細表示、\code{ls -a} は隠しファイルも含めて表示する。
+\code{pwd} は現在位置を表示する。\code{ls} は一覧を表示する。\code{ls -l} は詳細表示、\code{ls -a} は隠しファイルも含めて表示する。ファイル名やディレクトリ名が \code{.}（ドット）で始まるものは隠しファイルとして扱われ、通常の \code{ls} では表示されない。\code{.gitignore} や \code{.bashrc} などがこれに該当する。ここで \code{pwd} の結果として、次のように表示されたとしよう。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={表示例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /Users/ikomae/analysis
 \end{lstlisting}
 
 もし \code{pwd} が上のように表示されていれば、今いる場所は \code{/Users/ikomae/analysis} である。その状態で \code{ls} を実行すると、そのディレクトリの中身が表示される。
 
-\section{移動する}
+\subsection{移動する}
 
-\code{cd} はディレクトリを移動するためのコマンドである。次のようなディレクトリ構成を例にする。
+\code{cd} はディレクトリを移動するためのコマンドである。次のようなディレクトリ構成を例に考える。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={例に使うディレクトリ構成}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 analysis/
 |-- data/
 |   `-- events.txt
@@ -83,9 +89,9 @@ analysis/
     `-- plot.py
 \end{lstlisting}
 
-いま \code{/Users/ikomae/analysis} にいるとする。このとき、次のコマンドの意味はそれぞれ違う。
+いま \code{/Users/ikomae/analysis} にいるとする。このとき、次の 4 つの \code{cd} の意味はそれぞれ違う。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={cd の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd data
 $ cd ..
 $ cd ~/analysis/scripts
@@ -94,7 +100,7 @@ $ cd -
 
 \code{cd data} は \code{analysis/data} へ入る。\code{cd ..} は 1 つ上のディレクトリへ戻る。\code{cd \textasciitilde/analysis/scripts} はホームディレクトリを基準に \code{scripts} へ移動する。\code{cd -} は 1 つ前にいた場所へ戻る。
 
-\section{パスを読む}
+\subsection{パスを読む}
 
 ファイルやディレクトリの場所は、パスで表す。パスには絶対パスと相対パスがある。
 
@@ -114,33 +120,35 @@ $ cd -
 \end{tabular}
 \end{table}
 
-たとえば、現在位置が \code{/abs/analysis} なら、次の 2 つは同じファイルを指す。
+たとえば、現在位置が \code{/abs/analysis} なら、次の 2 つのコマンドは同じファイルを指している。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={同じファイルを指す 2 通りの書き方}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cat data/events.txt
 $ cat /abs/analysis/data/events.txt
 \end{lstlisting}
 
 一方で、現在位置が \code{/abs} なら、\code{cat data/events.txt} は別の意味になる。したがって、コマンドを読むときは「今どこにいるか」と「そのパスが絶対か相対か」を必ずセットで考える必要がある。
 
-\section{ディレクトリを作る}
+\subsection{ディレクトリを作る}
 
 \code{mkdir} はディレクトリを作る。\code{-p} を付けると、親ディレクトリがなくてもまとめて作れる。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={mkdir の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir output
 $ mkdir -p output/2026/04
 \end{lstlisting}
 
 1 行目は \code{output} だけを作る。2 行目は \code{output} や \code{output/2026} がまだ無くても、必要な親ディレクトリごと作る。解析では日付ごとの出力先を作ることが多いので、\code{mkdir -p} はよく使う。
 
-\section{ファイルの中身を見る}
+なお、複数のファイルを一度に指定したいときは、ワイルドカード（\code{*} など）が役に立つ。\code{*} は「0文字以上の任意の文字列」を表す。たとえば \code{ls *.txt} と書けば、拡張子が \code{.txt} のすべてのファイルを一覧表示でき、\code{rm test\_*.csv} と書けば該当するファイルをまとめて削除できる。
+
+\section{ファイルの内容確認とデータ抽出}
 
 解析では、データを読む前にまず中身を確認する。そのための基本コマンドを表にまとめる。
 
 \begin{table}[hbtp]
 \centering
-\caption{中身確認でよく使うコマンド}
+\caption{中身確認と抽出でよく使うコマンド}
 \begin{tabular}{lll}
 \toprule
 コマンド & 役割 & 例 \\
@@ -150,28 +158,54 @@ $ mkdir -p output/2026/04
 \code{head} & 先頭だけを見る & \code{head data/events.txt} \\
 \code{tail} & 末尾だけを見る & \code{tail data/events.txt} \\
 \code{wc -l} & 行数を数える & \code{wc -l data/events.txt} \\
+\code{grep} & 特定の文字列を含む行を抽出する & \code{grep "ERROR" log.txt} \\
+\code{awk} & 空白等で区切られた特定列を取り出す & \code{awk '\{print \$1\}' data.txt} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-巨大なファイルに対して \code{cat} を使うと画面が流れてしまうので、その場合は \code{head}、\code{tail}、\code{less} を使う方が自然である。\code{less} を開いたあとに元のシェルへ戻りたいときは \code{q} を押す。データ解析では、まず数行だけ見て形式を確認する癖を付けた方がよい。
+各コマンドの主な機能と使い方は次の通りである。
 
-\section{コピーする: \code{cp}}
+\begin{description}
+\item[\code{cat}] 指定したファイルの中身をすべて画面（標準出力）へ流し込む。短い設定ファイルやログを一気に読みたいときに使う。ただし、巨大なファイルに対して実行すると画面がとてつもない勢いで流れてしまうので注意が必要である。
+\item[\code{less}] 長いファイルの一部を画面に表示し、上下キーでスクロールしながら読めるようにする機能を持つ。読み終わって元のターミナルへ戻るには \code{q} を押す。
+\item[\code{head} / \code{tail}] それぞれファイルの先頭、あるいは末尾の数行だけを切り出して表示する。どのような形式のデータが入っているか「ヘッダーだけ確認したい」ときや、「ログの最新の数行（一番下）だけ見たい」ときに多用される。オプションで \code{-n 20} のように行数を指定することもできる。
+\item[\code{wc}] ファイルの行数や単語数、文字数を数えるコマンドである。\code{-l} オプションを付けることで、行数だけを数えることができる。
+\item[\code{grep}] ファイルの中から特定の文字列を含む行だけを抽出するコマンドである。\code{grep "ERROR" log.txt} のように使う。\code{-i} オプションで大文字・小文字を区別せずに検索し、\code{-v} オプションで「その文字列を含まない行」を抽出できるため、ログや結果データの絞り込みに大変よく使われる。
+\item[\code{awk}] テキストデータを「リストや表のような列」として扱い、特定の列だけを取り出したり計算したりするコマンドである。\code{awk '\{print \$1, \$3\}' data.txt} と書けば、スペース区切りの1列目と3列目だけを抽出して表示できる。
+\end{description}
 
-\code{cp} は元のファイルやディレクトリを残したまま複製を作る。文章だけで覚えると混乱しやすいので、前後の状態を見た方がよい。
+さらに、強力な手段として「パイプ（\code{|}）」がある。パイプは、あるコマンドの出力を次のコマンドの入力へとそのまま流し込む機能である。前述のコマンド群と組み合わせることで真価を発揮する。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={コピー前の状態}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cat log.txt | grep "ERROR"
+$ grep "ERROR" log.txt | wc -l
+$ cat events.txt | grep -v "noise" | awk '{print $2}'
+\end{lstlisting}
+
+1 行目は、\code{log.txt} の内容を読み出し、その中から "ERROR" という文字列を含む行だけを絞り込んで表示する。2 行目では、抽出された結果がさらに \code{wc -l} に渡され、エラーの発生件数を数えることができる。3 行目では、複数段のパイプを用いて「ノイズ行を除外したデータの 2 列目だけを取り出す」という高度な抽出を 1 行で行っている。このように、単機能のコマンドを組み合わせて欲しい結果を得るのが UNIX 環境の流儀である。
+
+なお、\code{grep} や \code{awk} では、より高度な検索条件として正規表現を用いることもできるが、正規表現を深追いするとややこしくなるためここでは触れない。詳細については付録~\ref{app:regex} を参照されたい。
+\subsection{コピーする: \code{cp}}
+
+\code{cp} は元のファイルやディレクトリを残したまま複製を作る。文章だけで覚えると混乱しやすいので、前後の状態を見た方がよい。たとえば次のようなディレクトリ構造があるとする。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- backup/
 `-- raw/
     `-- events.txt
 \end{lstlisting}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ファイルをコピーする}]
+ここで、\code{raw} ディレクトリ内のファイルを \code{backup} へコピーするには次のように実行する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cp raw/events.txt backup/events.txt
 \end{lstlisting}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={コピー後の状態}]
+実行すると、ディレクトリ構造は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- backup/
 |   `-- events.txt
@@ -183,45 +217,53 @@ work/
 
 ディレクトリごと複製したい場合は \code{-r} を付ける。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ディレクトリごとコピーする}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cp -r raw raw_backup
 \end{lstlisting}
 
-\section{移動する、名前を変える: \code{mv}}
+\subsection{移動する、名前を変える: \code{mv}}
 
 \code{mv} は「移動」と「改名」の両方に使う。どちらになるかは、最後の引数が何を指しているかで決まる。
 
-\subsection{改名の例}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={改名前の状態}]
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- result.txt
 \end{lstlisting}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={ファイル名を変更する}]
+この状態から、ファイル名を変更するには次のように実行する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mv result.txt result_old.txt
 \end{lstlisting}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={改名後の状態}]
+実行後、ディレクトリ内は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- result_old.txt
 \end{lstlisting}
 
 この場合は、同じディレクトリの中で名前だけが変わる。
 
-\subsection{移動の例}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={移動前の状態}]
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- output/
 `-- result.txt
 \end{lstlisting}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={別ディレクトリへ移動する}]
+ここで、ファイルを別ディレクトリへ移動するには次のように実行する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mv result.txt output/
 \end{lstlisting}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={移動後の状態}]
+実行後、ディレクトリ構成は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- output/
     `-- result.txt
@@ -229,11 +271,11 @@ work/
 
 この場合は、\code{result.txt} が \code{output/} の中へ移る。元の場所からは消える。\code{cp} と違って元ファイルは残らない。
 
-\section{削除する: \code{rm}}
+\subsection{削除する: \code{rm}}
 
-\code{rm} はファイルを削除する。重要なのは、通常の \code{rm} はゴミ箱へ移すのではなく、その場で削除するという点である。
+\code{rm} はファイルを削除する。重要なのは、通常の \code{rm} はゴミ箱へ移すのではなく、その場で完全に削除するという点である。いくつか例を挙げる。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={削除の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rm result_old.txt
 $ rm -i result_old.txt
 $ rm -r old_output
@@ -243,32 +285,34 @@ $ rm -r old_output
 
 特に \code{rm -r} は強力である。対象のパスを誤ると大きな被害になるので、削除前に \code{pwd} と \code{ls} で場所を確かめる習慣を持った方がよい。
 
-\section{環境変数を使う}
+\section{環境変数と PATH}
 
-シェルやプログラムには、「名前」と「値」の組として渡される設定がある。これが環境変数である。環境変数は、シェルの中だけで完結するものではなく、そこから起動した Python や各種コマンドにも引き継がれる。
+\subsection{環境変数を使う}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={よく使う環境変数を見る}]
+シェルやプログラムには、「名前」と「値」の組として渡される設定がある。これが環境変数である。環境変数は、シェルの中だけで完結するものではなく、そこから起動した Python や各種コマンドにも引き継がれる。現在設定されているよく使う環境変数の値を見るには、次のように打つ。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo $HOME
 $ echo $SHELL
 $ echo $PATH
 \end{lstlisting}
 
-\code{HOME} はホームディレクトリ、\code{SHELL} は使っているシェル、\code{PATH} は実行ファイルを探すディレクトリの並びを表す。後で出てくる \code{PYENV\_ROOT} や \code{DATA\_ROOT} も同じ仲間であり、「プログラムへ外から値を渡す仕組み」と考えると分かりやすい。
+\code{HOME} はホームディレクトリ、\code{SHELL} は使っているシェル、\code{PATH} は実行ファイルを探すディレクトリの並びを表す。後で出てくる \code{PYENV\_ROOT} や \code{DATA\_ROOT} も同じ仲間であり、「プログラムへ外から値を渡す仕組み」と考えると分かりやすい。新たに環境変数を設定するには次のようにする。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={環境変数を設定する}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ export DATA_ROOT="$HOME/data/events"
 $ echo $DATA_ROOT
 \end{lstlisting}
 
 \code{export} すると、そのシェルから起動する後続のコマンドにも値が渡る。たとえば Python スクリプト側で \code{DATA\_ROOT} を読めば、データ置き場をコードへ埋め込まずに済む。
 
-ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値なら、\code{\textasciitilde/.zshrc} や \code{\textasciitilde/.bashrc} に \code{export ...} を書いておく。
+ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値ならシェルの設定ファイルに \code{export ...} を書いておく。どのファイルを編集するかは今使っているシェルで決まる。本章の冒頭で \code{echo \$SHELL} を実行して \code{/bin/zsh} と出た場合は \code{\textasciitilde/.zshrc}、\code{/bin/bash} と出た場合は \code{\textasciitilde/.bashrc} を編集する。
 
-\section{PATH と実行ファイル}
+\subsection{PATH と実行ファイル}
 
-シェルが \code{python3} や \code{ls} を実行できるのは、それらが実行ファイルとして保存されており、しかもシェルがその場所を知っているからである。その探索に使う環境変数が \code{\$PATH} である。
+シェルが \code{python3} や \code{ls} を実行できるのは、それらが実行ファイルとして保存されており、しかもシェルがその場所を知っているからである。その探索に使う環境変数が \code{\$PATH} である。実際に実行ファイルがどこから使われているかを探すには、次のコマンドを用いる。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={実行ファイルを探す}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ which python3
 $ which ls
 $ echo $PATH
@@ -278,11 +322,19 @@ $ echo $PATH
 
 \code{bin} という名前は、実行ファイルを置くディレクトリによく使われる。後で出てくる \code{.venv/bin/python} や \code{.venv/bin/pip} の \code{bin} も、この慣習に従っている。
 
-\section{権限を読む}
+自分が作ったシェルスクリプトや実行ファイルを別のディレクトリ（例えば \code{\textasciitilde/my\_scripts}）に置き、どこからでもコマンド名だけで呼び出したい場合は、次のように現在の \code{\$PATH} の先頭に自分のディレクトリを追加して上書きすればよい。これもシェル起動時に毎回行う必要があるなら、\code{\textasciitilde/.zshrc} などに記載しておく。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ export PATH="$HOME/my_scripts:$PATH"
+\end{lstlisting}
+
+\section{権限とスクリプトの実行}
+
+\subsection{権限を読む}
 
 ファイルには権限がある。読み取れるか、書き込めるか、実行できるかを \code{rwx} で表す。\code{ls -l} を使うと確認しやすい。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={権限表示の例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 -rwxr-xr-x  1 user  staff  1234 Apr  8 10:00 run_analysis.sh
 -rw-r--r--  1 user  staff   411 Apr  8 10:05 notes.txt
 -rw-------  1 user  staff   411 Apr  8 10:05 id_ed25519
@@ -304,27 +356,29 @@ $ echo $PATH
 \end{tabular}
 \end{table}
 
-数字指定では足し算で表す。たとえば \code{7} は \code{rwx}、\code{6} は \code{rw-}、\code{5} は \code{r-x} である。したがって \code{755} は所有者が \code{rwx}、それ以外が \code{r-x} を意味し、\code{644} は所有者が \code{rw-}、それ以外が \code{r--} を意味する。秘密鍵のように本人だけが読めればよいものには \code{600} がよく使われる。
+数字指定では足し算で表す。たとえば \code{7} は \code{rwx}、\code{6} は \code{rw-}、\code{5} は \code{r-x} である。したがって \code{755} は所有者が \code{rwx}、それ以外が \code{r-x} を意味し、\code{644} は所有者が \code{rw-}、それ以外が \code{r--} を意味する。秘密鍵のように本人だけが読めればよいものには \code{600} がよく使われる。設定を変更する例を下に示す。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={権限を変更する例}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod 755 run_analysis.sh
 $ chmod 644 notes.txt
 $ chmod 600 ~/.ssh/id_ed25519
 \end{lstlisting}
 
-\section{スクリプトを直接実行する}
+\subsection{スクリプトを直接実行する}
 
 Python スクリプトは \code{python3 hello.py} の形で実行するなら、実行権限がなくてもよい。これに対して \code{./hello.py} のように直接実行する場合には、どのプログラムで解釈するかをファイル先頭に書いておく必要がある。
 
 その先頭行の \code{\#!} で始まる記法を、シバン (shebang) という。
 
-\begin{lstlisting}[language=Python, caption={シバン付きの Python スクリプト}]
+\begin{lstlisting}[language=Python]
 #!/usr/bin/env python3
 
 print("hello")
 \end{lstlisting}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, caption={直接実行できるようにする}]
+このように記述した上で、ファイルそのものに対して直接実行できるようにするため、権限を付与して呼び出す。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod +x hello.py
 $ ./hello.py
 \end{lstlisting}
