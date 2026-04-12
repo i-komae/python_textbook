@@ -67,6 +67,14 @@ python_textbook/
 make
 ```
 
+`make` は差分があるときだけビルドし、目次や相互参照のために追加のコンパイルが必要な場合は `latexmk` が自動的に必要回数だけ再実行します。ビルド後は、Skim が入っていれば Skim で、入っていなければ既定の PDF アプリで `main.pdf` を開きます。
+
+強制的に全体を作り直したいときは、次を使います。
+
+```sh
+make all
+```
+
 補助ファイルと生成された PDF を消して作り直したいときは、次を使います。
 
 ```sh
@@ -74,13 +82,15 @@ make distclean
 make
 ```
 
-内部では、次の `latexmk` コマンドを使っています。
+通常の `make` では、内部で次の `latexmk` コマンドを使っています。
 
 ```sh
 TEXMFCACHE=build/texmf-cache TEXMFVAR=build/texmf-var \
-latexmk -f -gg -pv -lualatex -synctex=1 -interaction=nonstopmode \
+latexmk -f -lualatex -synctex=1 -interaction=nonstopmode \
   -file-line-error -output-directory=build main.tex
 ```
+
+`make all` では、これに `-gg` を付けて強制再コンパイルします。
 
 ## 補足
 
