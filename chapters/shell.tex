@@ -44,7 +44,7 @@ $ cp data/raw.txt backup/raw.txt
 
 \subsection{困ったときは説明を読む}
 
-コマンドを丸暗記する必要はない。忘れたときは、その場で説明を読む方が正確である。短い使い方を知りたいときは \code{-h} や \code{--help}、より詳しい説明を読みたいときは \code{man} を使う。実際の調べ方は次のようになる。
+コマンドの使い方を丸暗記する必要はない。忘れたときは、その場で説明を読む方が正確である。短い使い方を知りたいときは \code{-h} や \code{--help}、より詳しい説明を読みたいときは \code{man} を使う。実際の調べ方は次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python3 -h
@@ -53,29 +53,110 @@ $ man rsync
 \end{lstlisting}
 
 \code{--help} や \code{-h} は、そのコマンドが受け付けるオプションや引数の書式を短く表示することが多い。ただし、すべてのコマンドが両方を実装しているわけではない。macOS の \code{ls} のように \code{--help} を受け付けないコマンドもあるので、その場合は \code{man ls}、\code{man ssh}、\code{man rsync} のように \code{man} を引く方が確実である。
+\code{man} を開いたあとは、上下キーや \code{Space} で移動し、\code{/pattern} で検索できる。\code{q} を押せば終了する。
 
-\code{man} を開いたあとは、上下キーや \code{Space} で移動し、\code{/pattern} で検索できる。\code{q} を押せば終了する。最初のうちは「使い方を忘れたら検索エンジン」ではなく、「まず \code{--help} か \code{man}」という順序にした方が、手元の環境に合った説明へすぐたどり着ける。
+検索エンジンやAIを用いてコマンドの使い方を調べることもできるが、同じ名前のコマンドでもバージョンやOSによって使い方が異なることもあるため注意が必要である。
+検索しても問題が解決しない場合は \code{--help} や \code{man}を確認し、手元の環境にあった正しい情報を確認しよう。
 
 \section{ファイルとディレクトリの操作}
 
 \subsection{今どこにいるかを確認する}
 
-シェルでは、いま作業しているディレクトリが常に基準になる。これをカレントディレクトリという。現在の位置（パス）やそこにあるファイルの一覧を確認するには、次のように打つ。
+シェルでは、いま作業しているディレクトリが基準になる。この基準となるディレクトリをカレントディレクトリという。まずは、現在どこで作業しているのか、そしてその場所に何があるのかを確認できるようになろう。そのためによく使うのが、次の \code{pwd} と \code{ls} である。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pwd
 $ ls
 $ ls -l
+$ ls -lh
 $ ls -a
+$ ls -lah
 \end{lstlisting}
 
-\code{pwd} は現在位置を表示する。\code{ls} は一覧を表示する。\code{ls -l} は詳細表示、\code{ls -a} は隠しファイルも含めて表示する。ファイル名やディレクトリ名が \code{.}（ドット）で始まるものは隠しファイルとして扱われ、通常の \code{ls} では表示されない。\code{.gitignore} や \code{.bashrc} などがこれに該当する。ここで \code{pwd} の結果として、次のように表示されたとしよう。
+\code{pwd} は、現在のカレントディレクトリの絶対パスを表示する。\code{ls} は、そのディレクトリにあるファイルやディレクトリの一覧を表示する。たとえば \code{pwd} の結果が次のようであれば、
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /Users/ikomae/analysis
 \end{lstlisting}
 
-もし \code{pwd} が上のように表示されていれば、今いる場所は \code{/Users/ikomae/analysis} である。その状態で \code{ls} を実行すると、そのディレクトリの中身が表示される。
+現在の作業場所は \code{/Users/ikomae/analysis} である。この状態で \code{ls} を実行すると、その中にある項目が表示される。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ ls
+data	scripts
+\end{lstlisting}
+
+この結果から、\code{/Users/ikomae/analysis} の中には \code{data} と \code{scripts} という2つのディレクトリがあることが分かる。
+
+\code{ls} にはさまざまなオプションがあり、表示内容を切り替えられる。まず、\code{-l} オプションを付けると、一覧を詳細表示にできる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ ls -l
+total 0
+drwxr-xr-x  3 ikomae  staff  96  4月 12 23:19 data
+drwxr-xr-x  3 ikomae  staff  96  4月 12 23:19 scripts
+\end{lstlisting}
+
+\code{ls -l} の最初の行に表示される \code{total 0} は、この一覧に表示されている項目が使用しているブロック数の合計を表している。\code{total} の単位は環境によって見え方が分かりにくいため、ここでは「一覧に表示されている項目全体についての使用量をまとめて示したもの」と理解しておけばよい。
+
+\code{ls -l} の出力では、その下の各行が1つのファイルまたはディレクトリに対応しており、左から順に次の情報が表示される。
+
+\begin{itemize}
+  \item \code{drwxr-xr-x}：ファイル種別とアクセス権
+  \item \code{3}：リンク数
+  \item \code{ikomae}：所有者
+  \item \code{staff}：グループ
+  \item \code{96}：サイズ
+  \item \code{4月 12 23:19}：最終更新日時
+  \item \code{data}：名前
+\end{itemize}
+
+先頭の1文字は種別を表し、\code{d} ならディレクトリ、\code{-} なら通常のファイルである。続く \code{rwxr-xr-x} はアクセス権を表している。アクセス権の詳しい意味は\ref{subsec:mod}~節で説明する。
+
+ここで「リンク数」は、ファイルやディレクトリに対して、ファイルシステムの中でいくつ参照があるかを表す値である。通常のファイルでは、ふつうに作成したものであれば多くの場合は \code{1} であり、入門の段階ではあまり深く気にしなくてよい。
+
+一方、ディレクトリでは意味が少し異なる。 ディレクトリ構造により値が変化するが、その定義は環境によって異なるため、通常のファイルのように単純には読めない。
+したがって、リンク数については、通常のファイルでは多くの場合 \code{1} であり、ディレクトリでは構造に関係する値が表示される、と理解しておけば十分である。
+
+\code{ls -l} で表示されるサイズの欄は、通常はバイト単位で表示される。したがって、ファイルが大きくなると数値も大きくなり、ぱっと見ただけでは大きさをつかみにくいことがある。そこで、サイズを見やすく表示したいときには \code{-h} オプションを併用する。\code{h} は human-readable の略で、サイズを \code{K}、\code{M}、\code{G} などの読みやすい単位で表示する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ ls -lh
+total 0
+drwxr-xr-x  3 ikomae  staff    96B  4月 12 23:19 data
+drwxr-xr-x  3 ikomae  staff    96B  4月 12 23:19 scripts
+\end{lstlisting}
+
+この例ではサイズが \code{96B} と表示されているが、これはディレクトリ項目そのものの大きさであって、その中に入っているファイル全体の容量を表しているわけではない。ディレクトリのサイズ欄は、通常のファイルのサイズ欄とは同じ感覚では読めない点に注意が必要である。
+
+通常のファイルに対して \code{ls -lh} を使うと、サイズは \code{12K} や \code{3.4M} のように読みやすい単位で表示される。そのため、特にファイルの大きさを確認したいときには \code{ls -lh} を使うことが多い。
+
+一方、\code{-a} オプションを付けると、隠しファイルも含めて表示できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ ls -a
+.	..	.config	data	scripts
+\end{lstlisting}
+
+ファイル名やディレクトリ名が \code{.}（ドット）で始まるものは隠しファイルとして扱われ、通常の \code{ls} では表示されない。たとえば \code{.config}、\code{.gitignore}、\code{.bashrc} などがこれにあたる。設定ファイルのように、ふだんは一覧に見えなくてよいものを隠しファイルにしておくことが多い。
+
+上の \code{ls -a} に現れる \code{.} と \code{..} にも意味がある。\code{.} は現在のディレクトリ自身を表し、\code{..} は1つ上の親ディレクトリを表す。これらは後でディレクトリ移動をするときにも重要になる。
+
+詳細表示、隠しファイル表示、読みやすいサイズ表示をまとめて使うこともできる。たとえば \code{-lah} を指定すると、詳細情報を隠しファイル込みで、人が読みやすい単位で表示できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ ls -lah
+total 96
+drwxr-xr-x  5 ikomae  staff   160B  4月 12 23:20 .
+drwxr-xr-x  5 ikomae  staff   160B  4月 12 23:18 ..
+-rw-r--r--  1 ikomae  staff    47K  4月 12 23:22 .config
+drwxr-xr-x  3 ikomae  staff    96B  4月 12 23:19 data
+drwxr-xr-x  3 ikomae  staff    96B  4月 12 23:19 scripts
+\end{lstlisting}
+
+この例では \code{.config} という通常のファイルも表示されており、\code{ls -l} のときとは \code{total} の値が異なっている。\code{total} は各行の「サイズ」欄を単純に足したものではなく、表示対象が使用しているブロック数に基づいて表示される点に注意したい。
+
+このように、\code{ls} はオプションを組み合わせることで、必要な情報を見やすく確認できる。まずは、現在位置を確認する \code{pwd}、項目を一覧する \code{ls}、詳細を見る \code{ls -l}、隠しファイルも含めて確認する \code{ls -a}、サイズを読みやすく表示する \code{ls -lh} や \code{ls -lah} を使い分けられるようになるとよい。
 
 \subsection{移動する}
 
@@ -584,7 +665,7 @@ $ python analyze.py 2>&1 | tee -a run.log
 \section{権限とスクリプトの実行}
 
 \subsection{権限を読む}
-
+\label{subsec:mod}
 ファイルには権限がある。読み取れるか、書き込めるか、実行できるかを \code{rwx} で表す。\code{ls -l} を使うと確認しやすい。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
