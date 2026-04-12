@@ -1,69 +1,342 @@
-\chapter{pandas による大規模データ解析}
+\chapter{pandas による表形式データ解析}
+\label{chap:pandas}
 
-\section{DataFrame の考え方}
+pandas は、行と列からなる表形式データを扱うための代表的なライブラリである。観測ログ、イベント一覧、較正表、集計結果のように「1 行が 1 件の記録」であるデータは、まず pandas の \code{DataFrame} として読むのが自然である。本章では、DataFrame の意味、最小限の操作、落とし穴、解析へのつながりを順に整理する。
 
-pandas の中心にある DataFrame は、列名付きの表である。観測ログや測定結果のように「行が記録、列が属性」という形のデータには特に向いている。
+\section{pandas の考え方}
+
+\subsection{Series と DataFrame}
+
+pandas の基本構造は \code{Series} と \code{DataFrame} である。\code{Series} はラベル付き 1 次元配列、\code{DataFrame} は列名付き 2 次元表である。NumPy の配列が「同じ型の値を高速に並べる道具」だとすれば、pandas は「列ごとに意味を持つデータをまとめて扱う道具」である。
 
 \begin{lstlisting}[language=Python]
 import pandas as pd
 
-df = pd.read_csv(path, sep=r"\s+", comment="#", header=None)
+events = pd.DataFrame(
+    {
+        "detector": ["A", "A", "B", "B"],
+        "time_ns": [1032, 1188, 1055, 1244],
+        "signal": [12.4, 10.1, 14.8, 9.7],
+        "valid": [True, True, False, True],
+    }
+)
+
+print(type(events).__name__)
+print(events)
 \end{lstlisting}
 
-DataFrame の利点は、列ごとに意味を持たせながら、まとめて処理を書けることにある。
+このコードを実行すると、次のような DataFrame が表示される。
 
-DataFrame を使うと、「何列目か」を覚える必要が減り、列名を通して処理の意味が見えやすくなる。特に、ファイル読込み、列変換、フィルタ、集計、書き出しまでを一つの流れで扱える点は大きい。解析の途中で確認用の表を少し表示したいときにも便利である。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+DataFrame
+  detector  time_ns  signal  valid
+0        A     1032    12.4   True
+1        A     1188    10.1   True
+2        B     1055    14.8  False
+3        B     1244     9.7   True
+\end{lstlisting}
+
+この表では、行番号 0, 1, 2, 3 は index、\code{"detector"} や \code{"signal"} は列名である。index は「行を識別する補助ラベル」であり、列名は「何の量なのか」を示す。初学者は中身の数値ばかり見がちだが、実際には列名と型を確認した方が理解は速い。
+
+DataFrame の利点は、列ごとに意味を持たせながら、まとめて処理を書けることにある。「何列目か」を覚える必要が減り、列名を通して処理の意味が見えやすくなる。特に、ファイル読込み、列変換、フィルタ、集計、書き出しまでを一つの流れで扱える点は大きい。解析の途中で確認用の表を少し表示したいときにも便利である。
 
 DataFrame の基本操作は、Python 公式チュートリアルの「データ構造」章に相当する考え方を、表形式へ拡張したものだと考えると理解しやすい。リストや辞書を知っていると、列名によるアクセスや行集合に対するフィルタの意味が見えやすい。
 
-\begin{lstlisting}[language=Python]
-print(df.head())
-print(df.dtypes)
-\end{lstlisting}
+\subsection{最初に見るべき情報}
 
-大きなデータを読むときほど、最初に \code{head()} と \code{dtypes} を確認する価値がある。列名は正しいか、型は意図通りか、欠損はないかを早い段階で見るだけで、多くのバグを防げる。
-
-\code{dtypes} に現れる \code{int64} は整数、\code{float64} は浮動小数点数、\code{object} は文字列や混在型として扱われていることが多い。さらに、時刻へ変換した列は \code{datetime64[ns]} のような表示になる。ここで重要なのは、「数値に見えるから数値型だろう」と決めつけず、実際の型を確認することである。特に欠損値が混ざると整数列が浮動小数点数へ変わったり、pandas の nullable 型である \code{Int64} を使った方が自然になったりする。
-
-\subsection{列選択、並べ替え、集約}
-
-pandas を使い始めたら、まず列選択と並べ替えを自然に書けるようになりたい。
+DataFrame を作ったり読んだりした直後は、まず \code{head()}、\code{shape}、\code{dtypes}、\code{info()} を見る癖を付けるとよい。
 
 \begin{lstlisting}[language=Python]
-selected = df[["date", "value"]]
-sorted_df = df.sort_values("value")
-top10 = sorted_df.tail(10)
+print(events.head())
+print(events.shape)
+print(events.dtypes)
 \end{lstlisting}
 
-ここで重要なのは、行ごとの処理より先に、表全体の形を整えることである。必要列だけを取り出し、順序をそろえ、不要な行を除く。この前処理がきれいだと、その後の集計も読みやすくなる。
-
-\begin{lstlisting}[language=Python]
-summary = df.groupby("category")["value"].mean()
-\end{lstlisting}
-
-\code{groupby} は、カテゴリごとに平均や件数を出したいときの基本である。研究データでは、検出器ごと、条件ごと、日ごとのように、同じ操作を複数群へ適用したい場面が多い。手書きのループよりも、列の意味を保ったまま集約できる点が pandas の強みである。
+この確認では、先頭数行、形、各列の型がまとめて分かる。出力は次の通りである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-category
-A    3.41
-B    3.08
-C    2.95
-Name: value, dtype: float64
+  detector  time_ns  signal  valid
+0        A     1032    12.4   True
+1        A     1188    10.1   True
+2        B     1055    14.8  False
+3        B     1244     9.7   True
+(4, 4)
+detector     object
+time_ns       int64
+signal      float64
+valid          bool
+dtype: object
 \end{lstlisting}
 
-この結果例では、カテゴリごとの平均値をすぐ比較できる。必要に応じて件数や標準偏差も一緒に出せば、単に平均が違うのか、ばらつきやサンプル数も違うのかを確認できる。
+\code{shape} は行数と列数、\code{dtypes} は各列の型である。ここで \code{signal} が \code{float64} なのか、\code{detector} が文字列列として読まれているのかを確かめるだけで、多くの不具合を早い段階で防げる。特に \code{object} は「文字列かもしれないし、型が混ざっているかもしれない」という合図なので、数値に見える列が \code{object} になっていたら注意が必要である。
+
+\subsection{index と列名の役割}
+
+pandas の操作は、整数位置だけでなくラベルでも書ける。これが NumPy との大きな違いである。
+
+\begin{lstlisting}[language=Python]
+print(events["signal"])
+print(events.loc[1:2, ["detector", "signal"]])
+print(events.iloc[1:3, 0:2])
+\end{lstlisting}
+
+\code{events["signal"]} は列名による選択、\code{loc} はラベルによる選択、\code{iloc} は整数位置による選択である。公式ドキュメントでも、対話的な試行錯誤では \code{[]} が便利だが、整理されたコードでは \code{loc}、\code{iloc}、\code{at}、\code{iat} を意識することが勧められている。解析コードでは「列名で取りたいのか」「何行目を取りたいのか」を曖昧にしない方が安全である。
 
 \subsection{pandas が速くなりやすい理由}
 
 pandas が速くなりやすいのは、列単位でデータを処理し、内部でベクトル化された操作を使えるからである。Python の辞書リストを 1 行ずつ回して書くより、列としてまとめて扱う方が速く、コードも短くなりやすい。
 
-ただし、すべての場面で pandas が最適とは限らない。行ごとに複雑な条件分岐を大量に行う場合や、データ構造自体を細かく制御したい場合には、NumPy や自作構造の方が向くこともある。
+ただし、すべての場面で pandas が最適とは限らない。行ごとに複雑な条件分岐を大量に行う場合や、データ構造自体を細かく制御したい場合には、NumPy や自作構造の方が向くこともある。したがって、「とりあえず pandas を使う」よりも、「列として扱える問題かどうか」を考える方が重要である。表として整理できるなら pandas は強力だが、近傍探索や状態遷移のように行どうしの関係が複雑になると、別の設計の方が自然なこともある。
 
-したがって、「とりあえず pandas を使う」よりも、「列として扱える問題かどうか」を考える方が重要である。表として整理できるなら pandas は強力だが、近傍探索や状態遷移のように行どうしの関係が複雑になると、別の設計の方が自然なこともある。
+\section{最小限のコード例}
 
-\section{読込みから書き出しまでの基本操作}
+\subsection{列選択と行抽出}
 
-\code{read\_csv} を使うときは、必要な列だけ読む、型を指定する、コメント行を飛ばす、といった工夫が重要である。
+最初に身に付けたいのは、必要な列だけを残し、条件に合う行だけを取り出す操作である。
+
+\begin{lstlisting}[language=Python]
+selected = events[["detector", "signal"]]
+valid_events = events.loc[events["valid"], :]
+strong = events.loc[events["signal"] > 11.0, ["detector", "signal"]]
+
+print(selected)
+print(valid_events)
+print(strong)
+\end{lstlisting}
+
+それぞれの変数にどの行と列が残ったかは、実際の出力を見ると追いやすい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+  detector  signal
+0        A    12.4
+1        A    10.1
+2        B    14.8
+3        B     9.7
+  detector  time_ns  signal  valid
+0        A     1032    12.4   True
+1        A     1188    10.1   True
+3        B     1244     9.7   True
+  detector  signal
+0        A    12.4
+2        B    14.8
+\end{lstlisting}
+
+ブール配列で行を絞る操作は NumPy と似ているが、pandas では列名を介して意味を保ったまま書ける。\code{events["signal"] > 11.0} の結果は行ごとの真偽値であり、それを \code{loc} に渡すと条件に合う行だけが残る。
+
+\subsection{列を追加する}
+
+解析では、元の列から比や差、フラグ列を作ることが多い。pandas では列全体に対する式として書くのが自然である。
+
+\begin{lstlisting}[language=Python]
+events["signal_ratio"] = events["signal"] / events["signal"].mean()
+events["is_late"] = events["time_ns"] > 1100
+
+print(events)
+\end{lstlisting}
+
+列を追加すると、元の表へ新しい列が右側へ増える。出力は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+  detector  time_ns  signal  valid  signal_ratio  is_late
+0        A     1032    12.4   True      1.058874    False
+1        A     1188    10.1   True      0.862202     True
+2        B     1055    14.8  False      1.263652    False
+3        B     1244     9.7   True      0.827111     True
+\end{lstlisting}
+
+\code{assign()} を使うと、途中の DataFrame を明示しながら複数列をまとめて追加できる。
+
+\begin{lstlisting}[language=Python]
+derived = (
+    events
+    .assign(
+        dt_ns=lambda df: df["time_ns"] - df["time_ns"].min(),
+        quality=lambda df: pd.Series(["high", "mid", "low", "mid"])
+    )
+)
+\end{lstlisting}
+
+\code{assign()} は処理をパイプラインの形で並べたいときに読みやすい。一方で、単に 1 列だけ追加するなら \code{events["new\_col"] = ...} の方が直感的である。
+
+\subsection{欠損値と型}
+
+現実のデータでは、空欄や壊れた値が入り込む。pandas ではこれを \code{NaN} や \code{NA} として扱うことが多い。
+
+\begin{lstlisting}[language=Python]
+df = pd.DataFrame(
+    {
+        "id": [1, 2, 3, 4],
+        "signal": [12.4, None, 14.8, 9.7],
+        "comment": ["ok", "bad", None, "ok"],
+    }
+)
+
+print(df.isna())
+print(df.dropna(subset=["signal"]))
+print(df["signal"].fillna(df["signal"].mean()))
+\end{lstlisting}
+
+\code{isna()} の真偽表、\code{dropna()} の結果、\code{fillna()} 後の列を順に表示すると、欠損処理の違いが見えやすい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+      id  signal  comment
+0  False   False    False
+1  False    True    False
+2  False   False     True
+3  False   False    False
+   id  signal comment
+0   1    12.4      ok
+2   3    14.8    None
+3   4     9.7      ok
+0    12.400000
+1    12.300000
+2    14.800000
+3     9.700000
+Name: signal, dtype: float64
+\end{lstlisting}
+
+欠損値は \code{==} で判定しない。\code{isna()}、\code{notna()}、\code{dropna()}、\code{fillna()} を使う。また、整数列に欠損が入ると \code{float64} に変わることがあるので、必要なら pandas の nullable integer 型である \code{Int64} を使う。
+
+\begin{lstlisting}[language=Python]
+df["id"] = df["id"].astype("Int64")
+\end{lstlisting}
+
+\subsection{要約統計と \code{groupby}}
+
+\code{describe()} は列の全体像を手早く見るのに便利であり、\code{groupby()} はカテゴリごとの集計で中心になる。
+
+\begin{lstlisting}[language=Python]
+print(events.describe())
+
+summary = (
+    events
+    .groupby("detector")
+    .agg(
+        count=("signal", "size"),
+        mean_signal=("signal", "mean"),
+        std_signal=("signal", "std"),
+        late_fraction=("is_late", "mean"),
+    )
+)
+
+print(summary)
+\end{lstlisting}
+
+\code{describe()} は全体の要約、\code{groupby()} の結果は検出器ごとの集計である。出力は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+           time_ns     signal  signal_ratio
+count     4.000000   4.000000      4.000000
+mean   1129.750000  11.750000      1.002960
+std      99.494975   2.306513      0.196299
+min    1032.000000   9.700000      0.827111
+25%    1049.250000  10.000000      0.853429
+50%    1121.500000  11.250000      0.960538
+75%    1202.000000  13.000000      1.110069
+max    1244.000000  14.800000      1.263652
+          count  mean_signal  std_signal  late_fraction
+detector
+A             2        11.25    1.626346            0.5
+B             2        12.25    3.606245            0.5
+\end{lstlisting}
+
+\code{groupby()} は「検出器ごと」「日ごと」「run ごと」に同じ集計を繰り返したいときの基本である。\code{agg()} に名前付き集計を書くと、列名が分かりやすくなる。
+
+\subsection{表の形を変える}
+
+公式チュートリアルでも、表を縦長から横長へ変える操作、複数表を結合する操作が重視されている。解析でも、観測値と較正値を結び付けたり、日別表をまとめたりする場面で必ず使う。
+
+\begin{lstlisting}[language=Python]
+gain = pd.DataFrame(
+    {
+        "detector": ["A", "B"],
+        "gain": [1.02, 0.97],
+    }
+)
+
+merged = events.merge(gain, on="detector", how="left")
+stacked = pd.concat([events.iloc[:2], events.iloc[2:]], ignore_index=True)
+
+long_df = pd.DataFrame(
+    {
+        "detector": ["A", "A", "B", "B"],
+        "kind": ["raw", "cal", "raw", "cal"],
+        "value": [12.4, 12.7, 14.8, 14.4],
+    }
+)
+wide = long_df.pivot(index="detector", columns="kind", values="value")
+
+print(merged[["detector", "signal", "gain"]])
+print(wide)
+\end{lstlisting}
+
+\code{merge()} で較正係数が付き、\code{pivot()} で縦長の表が横長に変わる様子は、出力を並べると分かりやすい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+  detector  signal  gain
+0        A    12.4  1.02
+1        A    10.1  1.02
+2        B    14.8  0.97
+3        B     9.7  0.97
+kind       cal   raw
+detector
+A         12.7  12.4
+B         14.4  14.8
+\end{lstlisting}
+
+\code{merge()} は SQL の join に近い。\code{concat()} は同じ形の表を縦や横につなぐ。\code{pivot()} や \code{pivot\_table()} は、縦長データを比較しやすい横長形式へ変えるときに使う。逆に横長から縦長へ戻すなら \code{melt()} が便利である。
+
+\subsection{時刻、文字列、カテゴリ}
+
+時刻や文字列は、そのままでは解析しにくい。pandas には時刻用の \code{dt} アクセサ、文字列用の \code{str} アクセサ、カテゴリ型がある。
+
+\begin{lstlisting}[language=Python]
+log = pd.DataFrame(
+    {
+        "timestamp": ["2026-04-01 12:00:00", "2026-04-01 12:00:05", "2026-04-02 09:30:00"],
+        "run_name": ["run_A_001", "run_A_002", "test_B_001"],
+        "detector": ["A", "A", "B"],
+    }
+)
+
+log["timestamp"] = pd.to_datetime(log["timestamp"], utc=True)
+log["date"] = log["timestamp"].dt.date
+log["prefix"] = log["run_name"].str.extract(r"^(run_[A-Z])")
+log["detector"] = log["detector"].astype("category")
+
+print(log[["timestamp", "date", "prefix", "detector"]])
+\end{lstlisting}
+
+時刻列と文字列列を分解すると、日付や接頭辞を独立した列として扱える。出力は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+                  timestamp        date prefix detector
+0 2026-04-01 12:00:00+00:00  2026-04-01  run_A        A
+1 2026-04-01 12:00:05+00:00  2026-04-01  run_A        A
+2 2026-04-02 09:30:00+00:00  2026-04-02   None        B
+\end{lstlisting}
+
+\code{to\_datetime()} を早めに使うと、差分計算、日付抽出、時刻順ソートが自然に書ける。文字列列には \code{str.contains()}、\code{str.extract()}、\code{str.strip()} などのベクトル化メソッドがある。カテゴリ型は、取り得る値が少ない列のメモリ削減や並び順の明示に役立つ。
+
+\subsection{入出力}
+
+公式チュートリアルでも、入出力は最初期の重要項目である。本書では特に CSV、Parquet、圧縮テキストを意識する。
+
+\begin{lstlisting}[language=Python]
+df = pd.read_csv(
+    "events.csv.gz",
+    compression="gzip",
+    sep=r"\s+",
+    comment="#",
+    names=["detector", "date", "time", "signal"],
+    usecols=[0, 1, 2, 3],
+)
+
+df.to_parquet("events.parquet")
+small = pd.read_parquet("events.parquet", columns=["detector", "signal"])
+\end{lstlisting}
+
+\code{read\_csv()} を使うときは、必要な列だけ読む、型を指定する、コメント行を飛ばす、といった工夫が重要である。たとえば次のように書くと、圧縮付きの空白区切りファイルから必要列だけを型付きで読める。
 
 \begin{lstlisting}[language=Python]
 df = pd.read_csv(
@@ -74,165 +347,163 @@ df = pd.read_csv(
     header=None,
     usecols=[0, 1, 2, 3],
     names=["id", "date", "time", "value"],
+    dtype={"id": "int64", "value": "float64"},
 )
 \end{lstlisting}
 
-このように列を絞るだけでも、読込み時間とメモリ消費はかなり変わる。
+このように列を絞るだけでも、読込み時間とメモリ消費はかなり変わる。さらに \code{dtype=} を指定しておくと、読込み後の型変換を減らせる。列数や行数が大きいデータでは、どの列が本当に必要かを考えるだけで、後続の処理全体が軽くなる。読込みは解析の最初の一歩だが、同時に最適化の出発点でもある。
 
-さらに、\code{dtype} を指定しておくと、読込み後の型変換を減らせる。列数や行数が大きいデータでは、どの列が本当に必要かを考えるだけで、後続の処理全体が軽くなる。読込みは解析の最初の一歩だが、同時に最適化の出発点でもある。
-
-たとえば \code{dtype=\{"id": "int64", "value": "float64"\}} のように書けば、列ごとの型を明示できる。型を固定しておくと、読み込むたびに推定結果が揺れるのを防げるだけでなく、メモリ消費の見積もりもしやすくなる。
-
-\subsection{CSV を毎回読み直さず Parquet へ変換する}
-
-前章で述べたように、巨大なテキストファイルを何度も \code{read\_csv} するのは無駄が大きい。列構造が固まったら、一度だけ CSV から DataFrame を作り、その後は Parquet として保存して再利用する方が実務的である。
-
-\begin{lstlisting}[language=Python]
-raw_df = pd.read_csv(
-    "events.csv.gz",
-    sep=r"\s+",
-    comment="#",
-    header=None,
-    names=["id", "date", "time", "value"],
-)
-raw_df.to_parquet("events.parquet")
-
-df = pd.read_parquet("events.parquet", columns=["id", "time", "value"])
-\end{lstlisting}
-
-\code{read\_parquet} なら、文字列のパースを毎回やり直さずに済み、必要列だけを読むこともできる。日々の解析では、この「最初に 1 回だけテキストを整理して、以後は Parquet を読む」という流れを作るだけで、待ち時間が大きく減る。なお、Parquet の入出力には \code{pyarrow} などのバックエンドが必要なことが多い。
+巨大なテキストファイルを何度も読むより、一度整形したら Parquet にして再利用する方がよい。特に \code{read\_parquet()} は列選択と相性が良く、反復的な解析で待ち時間を減らせる。日々の解析では、この「最初に 1 回だけテキストを整理して、以後は Parquet を読む」という流れを作るだけで、待ち時間が大きく減る。
 
 ここで区別したいのは、Parquet がファイル形式の名前であり、\code{pyarrow} はその読み書きを実装するライブラリだという点である。したがって、\code{to\_parquet()} や \code{read\_parquet()} が失敗したときは、「Parquet が壊れている」のではなく、「必要な実装がまだ入っていない」ことがある。
+
+列同士の演算をそのまま式として書ける点も pandas の強みである。
 
 \begin{lstlisting}[language=Python]
 df["ratio"] = df["value"] / df["value"].mean()
 selected = df[df["ratio"] > 1.5]
 \end{lstlisting}
 
-このように、列同士の演算をそのまま式として書ける点が pandas の強みである。行ごとの \code{for} ループを書く前に、列単位で表現できないかを考える習慣を持つとよい。
+行ごとの \code{for} ループを書く前に、列単位で表現できないかを考える習慣を持つとよい。
 
-\subsection{欠損値と型の扱い}
+\subsection{表を LaTeX へ出力する}
 
-現実のデータでは、すべての行がきれいに埋まっているとは限らない。空欄や壊れた値が混ざると、pandas では \code{NaN} として表現されることが多い。
-
-\begin{lstlisting}[language=Python]
-missing_mask = df["value"].isna()
-clean_df = df.dropna(subset=["value"])
-\end{lstlisting}
-
-欠損値をどう扱うかは、単なる実装問題ではなく解析方針そのものである。除外してよいのか、別扱いすべきか、補完してよいのかを、物理的な意味と合わせて考える必要がある。型の自動推定に任せきりにせず、重要な列の型は自分で確認したい。
-
-\code{NaN} は「数値ではない」という意味だが、pandas では実質的に「欠損」を表す印としてよく使われる。注意すべきなのは、\code{NaN == NaN} が \code{False} になることである。したがって、欠損判定には \code{==} ではなく \code{isna()} や \code{notna()} を使う。また、整数列へ \code{NaN} が入ると浮動小数点数へ変わることがあるので、列型が意図せず変わっていないかも確認する必要がある。
-
-\subsection{結合と時系列処理}
-
-複数の表をまとめたり、時刻順に並べ替えたりする処理も pandas の重要な役割である。
+集計結果をレポートへ貼るときは、手で打ち直さずに \code{to\_latex()} を使う方が再現性が高い。
 
 \begin{lstlisting}[language=Python]
-combined = pd.concat([df1, df2], ignore_index=True)
-combined = combined.sort_values("time")
-\end{lstlisting}
-
-複数ファイルを月単位や日単位で読んで、最後にまとめるという流れは現実の解析でよく現れる。どの段階で結合するか、結合後にどの列で並べ替えるかを明確にしておくと、ファイルまたぎの不具合を減らしやすい。
-
-\begin{lstlisting}[language=Python]
-combined["time"] = pd.to_datetime(combined["date"] + " " + combined["time"])
-combined = combined.sort_values("time")
-\end{lstlisting}
-
-文字列のままでは、見た目には時刻に見えても、差分計算や順序比較には向かないことがある。早い段階で型を変えておくと、その後の処理が自然になる。
-
-\subsection{DataFrame を TeX で出力する}
-
-解析結果として集約した表などを LaTeX のレポートに直接貼り付けたい場合は、手作業で打ち直すのではなく \code{to\_latex()} を用いると便利である。
-
-\begin{lstlisting}[language=Python]
-# pandas のバージョンにより引数の推奨が変わる場合があるが、一般的な利用法
 tex_table = summary.reset_index().to_latex(
     index=False,
-    caption="カテゴリごとの平均値",
-    label="tab:category_mean",
-    float_format="%.3f",  # 小数点以下3桁に整える
+    caption="検出器ごとの平均信号",
+    label="tab:detector-summary",
+    float_format="%.3f",
     escape=False,
 )
 
-with open("tables/category_mean.tex", "w", encoding="utf-8") as f:
+with open("tables/detector_summary.tex", "w", encoding="utf-8") as f:
     f.write(tex_table)
 \end{lstlisting}
+
 ここで \code{index=False} は左端の連番インデックスを出力しないための指定であり、\code{reset\_index()} は groupby 結果の添字を普通の列へ戻すための操作である。さらに \code{escape=False} は、セル中にすでに TeX 記法が入っている場合にそのまま通したいときだけ使う。通常の文字列だけなら既定値のままエスケープさせた方が安全である。
 
-これをテキストファイルへ保存し、本ドキュメント側でそのファイルを \verb|\input| して読み込めば、解析スクリプトからレポートまでのパイプラインが完成する。表を手で打ち直さないことは、再現性の面でも大きい。
+\code{groupby()}、\code{agg()}、\code{to\_latex()} をつなぎ、最後にファイルへ保存して本ドキュメント側で \verb|\input| すれば、解析スクリプトからレポート用表までを自動化できる。表を手で打ち直さないことは、再現性の面でも大きい。
 
-\section{行処理と並列化の判断}
+\subsection{\code{plot()} は確認用として使う}
 
-Pandas の DataFrame は数百万行のデータを保持できるが、各行に対して複雑な文字列処理や条件判定を加えようとした時、コードの書き方一つで実行時間が数百分から数秒へと劇的に変わる。
+pandas にも \code{plot()} があるが、これは Matplotlib の薄いラッパである。
 
-\subsection{改善ステップ}
+\begin{lstlisting}[language=Python]
+summary.plot(kind="bar", y="mean_signal")
+\end{lstlisting}
 
-\subsubsection{Step 1: 絶対に避けるべき for ループ (iterrows の限界)}
+手早い確認には便利だが、最終的な提出図や論文用図では、Matplotlib の \code{Figure} と \code{Axes} を明示して描く方が制御しやすい。本書でも最終的な作図は第\ref{sec:matplotlob-object} 節以降の方法を基準とする。
 
-Python 初学者が最も陥りやすい罠が、「DataFrame の行を1つずつ取り出して処理する」という直感的な書き方である。
+\section{よくある落とし穴}
+
+\subsection{\code{SettingWithCopy} と \code{loc}}
+
+pandas 初学者がよく踏むのが、切り出した表へ代入したつもりで元の DataFrame を安全に更新できていない問題である。
+
+\begin{lstlisting}[language=Python]
+subset = events[events["signal"] > 11.0]
+subset["flag"] = True
+\end{lstlisting}
+
+この書き方では \code{SettingWithCopyWarning} が出ることがある。意図が「元の表の条件に合う行へ代入する」であるなら、次のように \code{loc} で書く方が明確である。
+
+\begin{lstlisting}[language=Python]
+events.loc[events["signal"] > 11.0, "flag"] = True
+\end{lstlisting}
+
+\subsection{\code{object} 型のまま計算しない}
+
+見た目が数値でも、空白や記号が混ざると \code{object} 型で読まれることがある。そのまま足し算や比較をすると、文字列連結や例外が起きる。大きなファイルでは \code{read\_csv()} の \code{dtype=} を使い、読込み直後に \code{dtypes} を確かめる方が安全である。
+
+\subsection{行ループは最後の手段である}
+
+Pandas の DataFrame は数百万行のデータを保持できるが、各行に対して複雑な文字列処理や条件判定を加えようとした時、コードの書き方一つで実行時間が数十分から数秒へと劇的に変わる。特に、\code{iterrows()}、\code{apply(axis=1)}、並列化の使い分けは初心者がつまずきやすい。
+
+\subsubsection{Step 1: \code{iterrows()} の限界}
+
+Python 初学者が最も陥りやすい罠が、「DataFrame の行を 1 つずつ取り出して処理する」という直感的な書き方である。
 
 \begin{lstlisting}[language=Python]
 def heavy_computation(val):
     return val ** 2
 
-# 絶望的に遅い：1行ずつPython空間でオブジェクトが作られ、評価される
 results = []
 for index, row in df.iterrows():
     results.append(heavy_computation(row["value"]))
 df["value_sq"] = results
 \end{lstlisting}
 
-このコードは10万行を超えたあたりから全く終わらなくなる。Pandas がデータフレームとしてデータを一括管理している利点を全て打ち消し、Python の重い関数呼び出しを数百万回繰り返しているからである。さらに \code{iterrows()} は各行を毎回 \code{Series} として作り直すため、列ごとの型情報が崩れやすく、オブジェクト生成コストも大きい。どうしても行ループが必要なら \code{itertuples()} の方が軽いことが多いが、基本方針は「まず行ループ自体を避ける」である。
+この書き方は、Pandas がデータフレームとしてデータを一括管理している利点をほぼ打ち消す。さらに \code{iterrows()} は各行を毎回 \code{Series} として作り直すため、列ごとの型情報が崩れやすく、オブジェクト生成コストも大きい。どうしても行ループが必要なら \code{itertuples()} の方が軽いことが多いが、基本方針は「まず行ループ自体を避ける」である。
 
-\subsubsection{Step 2: Pandas ネイティブな apply() への移行}
+\subsubsection{Step 2: \code{apply(axis=1)} と列演算}
 
-行ごとに処理を適用したい場合、Pandas が用意している \code{apply()} メソッドを使うと、少なくともコードを pandas の文脈に保ったまま書ける。\code{axis=1} は「列方向に見て、各行へ関数を適用する」という意味であり、\code{axis=0} なら各列に適用する。ここを取り違えると、意図しない単位で計算してしまう。
+行ごとに処理を適用したい場合、Pandas が用意している \code{apply()} メソッドを使うと、少なくともコードを pandas の文脈に保ったまま書ける。\code{axis=1} は「各行へ関数を適用する」という意味であり、\code{axis=0} なら各列に適用する。
 
 \begin{lstlisting}[language=Python]
-# for 文を書かずに、関数そのものを列に適用（マッピング）する
 df["value_sq"] = df.apply(lambda row: heavy_computation(row["value"]), axis=1)
 \end{lstlisting}
 
-ただし、\code{axis=1} を付けた \code{apply()} も各行に対して Python 関数を呼ぶため、列演算ほど速いわけではない。つまり、\code{apply()} は「for 文を隠した便利関数」であって、万能の高速化ではない。上の例のように単に二乗したいだけなら、実際には次のように列演算で書く方が自然で速い。
+ただし、\code{axis=1} を付けた \code{apply()} も各行に対して Python 関数を呼ぶため、列演算ほど速いわけではない。つまり、\code{apply()} は「for 文を隠した便利関数」であって、万能の高速化ではない。単に二乗したいだけなら、次のように列演算で書く方が自然で速い。
 
-\begin{lstlisting}[language=Python, numbers=none]
+\begin{lstlisting}[language=Python]
 df["value_sq"] = df["value"] ** 2
 \end{lstlisting}
 
 \code{apply()} は「列演算だけでは書きにくいが、まだ pandas の文脈の中で処理したい」場合の中間手段として理解する方が正確である。まず列演算、次に \code{apply()}、それでも重ければ並列化、という順で判断すると迷いにくい。
 
-\subsubsection{Step 3: 並列化とボトルネックの判断 (Pandarallel)}
+\subsubsection{Step 3: 並列化と \code{pandarallel}}
 
-しかし、\code{apply()} はどれだけ行数があっても「CPUの1つのコア」しか使わない（シングルスレッド）。本当に計算が重い処理の場合、\code{apply} を使っても処理が長引いてしまう。ここで初めて、マルチコアを用いた「並列化（マルチプロセッシング）」が選択肢に入る。
+しかし、\code{apply()} はどれだけ行数があっても CPU の 1 コアしか使わない。本当に計算が重い処理の場合、ここで初めてマルチコアを用いた並列化が選択肢に入る。
 
 \begin{lstlisting}[language=Python]
 from pandarallel import pandarallel
 
-# 並列環境の初期化。プログレスバーを表示する設定をオンにしている
 pandarallel.initialize(progress_bar=True)
-
-# apply を parallel\_apply に置き換えるだけで、全CPUコアに処理が分散される
-df["value_sq"] = df.parallel_apply(lambda row: heavy_computation(row["value"]), axis=1)
+df["value_sq"] = df.parallel_apply(
+    lambda row: heavy_computation(row["value"]),
+    axis=1,
+)
 \end{lstlisting}
+
+図~\ref{fig:pandas-benchmark} は、同じ種類の処理でも \code{iterrows()}、\code{apply()}、\code{pandarallel} で待ち時間がどう変わるかを模式的に示している。特に、「まず列演算を疑い、その後で \code{apply()} や並列化を考える」という順序の重要性を読み取ってほしい。
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.7\linewidth]{pandas_benchmark.pdf}
-\caption{同じ重い計算処理を、Pythonのループ、apply関数、Pandarallel で行った際の処理時間の激変の様子。}
+\caption{同じ重い計算処理を、Python のループ、\code{apply()}、\code{pandarallel} で行ったときの模式的な比較。手段の選び方で処理時間が大きく変わる。}
 \label{fig:pandas-benchmark}
 \end{figure}
-
-図~\ref{fig:pandas-benchmark} を見ると明らかなように、手段の選定によって処理時間は2桁変わる。
 
 \code{pandarallel} は、DataFrame を複数プロセスへ分割して送り、\code{apply()} に近い書き方のまま並列化するためのライブラリである。つまり、「既存の pandas コードを大きく壊さずに、\code{parallel\_apply()} へ置き換えて試せる」ことが利点である。一方で、背後ではプロセス生成やデータコピーが起きるため、軽い処理ではほとんど得をしない。
 
 \code{pandarallel} は Linux 系環境での利用が比較的安定している一方で、ネイティブの Windows 環境では設定や挙動で悩みやすいことがある。Windows で本書の流れを再現するなら、前章で触れた WSL を使う方が混乱しにくい。
 
-\textbf{並列化の罠（判断基準）}:
-並列化は魔法の杖ではない。\code{pandarallel} は背後で「データを複数のプロセス（別のメモリ空間）にコピーして分配する」ため、通信オーバーヘッド（コピーの手間）がかかる。「単純な足し算」などのすぐに終わる軽い処理を \code{parallel\_apply} にかけると、計算時間よりもコピー時間の方が長くなり、かえって遅くなる。\textbf{「CPU1コアでは計算に時間がかかりすぎる重い処理」}でのみ並列化を採用するという見極めが必要である。
+並列化は魔法の杖ではない。\code{pandarallel} は背後で「データを複数のプロセスにコピーして分配する」ため、通信オーバーヘッドがかかる。「単純な足し算」などのすぐに終わる軽い処理を \code{parallel\_apply()} にかけると、計算時間よりもコピー時間の方が長くなり、かえって遅くなる。\textbf{CPU 1 コアでは時間がかかりすぎる重い処理}でのみ並列化を採用するという見極めが必要である。
 
-\section{さらに大規模なデータへの対応}
+\subsection{欠損値と比較演算を混同しない}
 
-pandas は強力だが、全データを一度にメモリ（RAM）に載せる必要がある設計上、マシンのメモリを超えるようなテラバイト級のデータを処理させるとクラッシュしてしまう。また、内部的なループの非効率さも残っている。近年では、言語の内部実装に Rust を用いるなどで劇的な高速化とメモリ効率の改善を図った \code{Polars} 等のライブラリの利用も急速に広がっている。もし数千万行に及ぶ処理で pandas の限界を感じた場合は、Polars への移行を検討するのも有効なアプローチである。
+\code{NaN == NaN} は \code{False} である。欠損判定に \code{==} を使わず、\code{isna()} を使う。また、\code{None}、\code{NaN}、\code{NA} の違いは列型によって見え方が変わるので、「欠損をどう表現しているのか」を確認した方がよい。
+
+\section{解析へのつながり}
+
+観測データの解析では、pandas はしばしば次の流れの中心になる。
+
+\begin{enumerate}
+\item テキストや CSV を \code{read\_csv()} で読む
+\item \code{head()} と \code{dtypes} で構造を確認する
+\item 必要な列だけを残し、欠損や異常値を整理する
+\item \code{groupby()} や \code{merge()} で集計・結合する
+\item Matplotlib へ渡して図を描く
+\item 集計表を \code{to\_latex()} で書き出す
+\end{enumerate}
+
+この流れが成立するのは、pandas が「列名と型を保ったまま処理を書ける」からである。NumPy だけで済む問題もあるが、観測条件、検出器 ID、run 名、欠損フラグのような異種の列が混ざると、DataFrame の方が自然である。
+
+一方で、数千万行規模になり、CSV 読込みや集計が待ち時間の支配項になってきたら、次章で扱う Polars を検討する価値がある。pandas は基準になる道具であり、その上で「どこから別の道具へ切り替えるべきか」を判断できるようになることが重要である。
+
+また、pandas は全データを一度にメモリへ載せる必要がある設計なので、マシンのメモリを超えるようなテラバイト級データをそのまま処理させると破綻する。もし数千万行規模で pandas の限界を感じた場合は、次章の Polars への移行を検討するのが自然である。
+
+本章の内容は、pandas 公式ドキュメントの \href{https://pandas.pydata.org/docs/getting_started/intro_tutorials/}{Getting started tutorials} と \href{https://pandas.pydata.org/pandas-docs/stable/user_guide/10min.html}{10 minutes to pandas} を土台に、本書の解析向けの流れへ並べ直したものである。さらに細かい仕様は、\href{https://pandas.pydata.org/docs/user_guide/indexing.html}{Indexing}、\href{https://pandas.pydata.org/docs/user_guide/missing_data.html}{Missing data}、\href{https://pandas.pydata.org/docs/user_guide/merging.html}{Merge, join, concatenate and compare}、\href{https://pandas.pydata.org/docs/user_guide/timeseries.html}{Time series / date functionality} を併用して確認するとよい。

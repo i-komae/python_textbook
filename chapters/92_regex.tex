@@ -36,6 +36,7 @@ $
 \begin{table}[hbtp]
 \centering
 \caption{ワイルドカードと正規表現の違い}
+\label{tab:wildcard-vs-regex}
 \begin{tabular}{lll}
 \toprule
 場面 & 記法 & 意味 \\
@@ -46,7 +47,7 @@ $
 \end{tabular}
 \end{table}
 
-この違いを混同すると、\code{grep "*.txt"} のように書いて期待通りに動かない。シェルが展開する記法なのか、正規表現エンジンが読む記法なのかを意識することが重要である。
+表~\ref{tab:wildcard-vs-regex} は、見た目が似ていて混同しやすい 2 つの記法を並べたものである。この違いを混同すると、\code{grep "*.txt"} のように書いて期待通りに動かない。シェルが展開する記法なのか、正規表現エンジンが読む記法なのかを意識することが重要である。
 
 \section{よく使う部品}
 

@@ -107,6 +107,7 @@ $ cd -
 \begin{table}[hbtp]
 \centering
 \caption{よく出てくるパス表記}
+\label{tab:path-notation}
 \begin{tabular}{ll}
 \toprule
 表記 & 意味 \\
@@ -120,7 +121,7 @@ $ cd -
 \end{tabular}
 \end{table}
 
-たとえば、現在位置が \code{/abs/analysis} なら、次の 2 つのコマンドは同じファイルを指している。
+表~\ref{tab:path-notation} は、シェルを読み始めた直後に最低限区別したい表記をまとめたものである。たとえば、現在位置が \code{/abs/analysis} なら、次の 2 つのコマンドは同じファイルを指している。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cat data/events.txt
@@ -260,6 +261,7 @@ $ rm test_*.csv
 \begin{table}[hbtp]
 \centering
 \caption{中身確認と抽出でよく使うコマンドと主要オプション}
+\label{tab:file-inspection-commands}
 \begin{tabular}{p{0.14\linewidth}p{0.28\linewidth}p{0.44\linewidth}}
 \toprule
 コマンド & 主なオプションや書式 & 主な用途 \\
@@ -275,7 +277,7 @@ $ rm test_*.csv
 \end{tabular}
 \end{table}
 
-ここからは、各コマンドの役割と主要なオプションを順に説明する。
+表~\ref{tab:file-inspection-commands} は、ファイルの確認と抽出で頻繁に使うコマンドを一望するためのものである。最初は全てを暗記する必要はないが、「中身を見る」「条件で抜く」「列ごとに整形する」という役割の違いは押さえたい。ここからは、各コマンドの役割と主要なオプションを順に説明する。
 
 \subsection{\code{cat}}
 

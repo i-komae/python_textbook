@@ -1,0 +1,276 @@
+\chapter{Astropy による時刻・単位・天体データ処理}
+\label{chap:astropy}
+
+Astropy は、天文学や宇宙物理の解析で頻出する「単位付き物理量」「時刻系」「座標系」「FITS」「天文向け表」を安全に扱うためのライブラリである。NumPy や SciPy だけでも数値計算はできるが、単位や時刻系を自前で文字列管理すると、解釈違いや換算ミスが入りやすい。本章では、Astropy の考え方、最小限のコード例、落とし穴、解析へのつながりを整理する。
+
+\section{Astropy の考え方}
+
+\subsection{数値だけでなく意味も持たせる}
+
+Astropy の中心的な発想は、「数値そのもの」ではなく「何の単位で、どの時刻系で、どの座標系なのか」までオブジェクトへ持たせることである。例えば 100 という値だけでは、100 ns なのか 100 ms なのか分からない。Astropy の \code{Quantity} を使えば、この曖昧さを減らせる。
+
+\begin{lstlisting}[language=Python]
+import astropy.units as u
+
+time_window = 250 * u.ns
+speed = 299792458 * u.m / u.s
+distance = speed * time_window
+
+print(distance)
+print(distance.to(u.m))
+\end{lstlisting}
+
+この計算では、単位付きのまま距離が評価され、次のように表示される。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+74.9481145 m
+74.9481145 m
+\end{lstlisting}
+
+この例では、\code{250 * u.ns} という時点で「250 ns」という意味が値に埋め込まれている。式の途中で単位を落とさない限り、単位換算はライブラリが引き受ける。
+
+\subsection{時刻系と座標系を自前で持たない}
+
+観測データでは、UTC、TAI、TT、MJD、JD、Unix time が混在することがある。これを自前の文字列処理でつなぐと、秒境界やうるう秒で破綻しやすい。Astropy の \code{Time} と \code{SkyCoord} は、こうした表現を専用オブジェクトとして扱う。
+
+\section{最小限のコード例}
+
+\subsection{\code{units} と \code{Quantity}}
+
+単位付き計算の基本は \code{Quantity} である。
+
+\begin{lstlisting}[language=Python]
+import astropy.units as u
+
+length = 3.2 * u.m
+time = 12.5 * u.ns
+velocity = length / time
+
+print(velocity)
+print(velocity.to(u.m / u.s))
+\end{lstlisting}
+
+単位変換の結果は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+0.256 m / ns
+256000000.0 m / s
+\end{lstlisting}
+
+\code{to()} を使えば単位変換を明示できる。解析メモの段階では、いきなり \code{.value} で生の数値へ落とさず、できるだけ単位付きのまま式を組んだ方が安全である。
+
+\subsection{物理定数}
+
+Astropy には物理定数も入っている。SciPy の \code{constants} と似ているが、こちらは単位付きで返る点が大きい。
+
+\begin{lstlisting}[language=Python]
+from astropy.constants import c, k_B
+
+print(c)
+print(k_B)
+\end{lstlisting}
+
+Astropy の定数オブジェクトを表示すると、値だけでなく単位と参照元も確認できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+  Name   = Speed of light in vacuum
+  Value  = 299792458.0
+  Uncertainty  = 0.0
+  Unit  = m / s
+  Reference = CODATA 2018
+  Name   = Boltzmann constant
+  Value  = 1.380649e-23
+  Uncertainty  = 0.0
+  Unit  = J / K
+  Reference = CODATA 2018
+\end{lstlisting}
+
+数値と単位が一緒に出るので、式の中で何を使っているかを見失いにくい。
+
+\subsection{\code{Time} による時刻表現}
+
+Astropy の \code{Time} は、複数のフォーマットと複数の時刻系をまたいで扱える。
+
+\begin{lstlisting}[language=Python]
+from astropy.time import Time
+
+t = Time("2026-04-12 12:34:56.123456789", format="iso", scale="utc")
+
+print(t.mjd)
+print(t.unix)
+print(t.tai.iso)
+\end{lstlisting}
+
+同じ時刻を複数の表現へ変換すると、次の値が得られる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+61142.52426068816
+1775997296.1234567
+2026-04-12 12:35:33.123
+\end{lstlisting}
+
+\code{format="iso"} は入力形式、\code{scale="utc"} は時刻系を表す。\code{mjd}、\code{unix}、\code{tai.iso} のように別形式・別時刻系へ変換できる。重要なのは、\code{datetime} の代替品というより、「観測時刻を正しい時刻系のまま持つ道具」として捉えることである。
+
+\subsection{時刻差と \code{TimeDelta}}
+
+差分計算も \code{Time} のまま行える。
+
+\begin{lstlisting}[language=Python]
+from astropy.time import Time
+
+t1 = Time("2026-04-12T12:00:00.000000100", format="isot", scale="utc")
+t2 = Time("2026-04-12T12:00:00.000000320", format="isot", scale="utc")
+dt = t2 - t1
+
+print(dt)
+print(dt.to_value("ns"))
+\end{lstlisting}
+
+時刻差をそのまま表示した結果と、ns へ変換した結果は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+2.2e-07
+220.0
+\end{lstlisting}
+
+このように書くと、秒境界や日付境界をまたいでも同じ考え方で差分が取れる。課題のように 250 ns の窓を扱うときも、自前で桁を切り貼りするより安全である。
+
+\subsection{\code{SkyCoord} による座標変換}
+
+Astropy の \code{coordinates} は、天球上の座標系を変換する。
+
+\begin{lstlisting}[language=Python]
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+
+coord = SkyCoord(ra=150.0 * u.deg, dec=20.0 * u.deg, frame="icrs")
+gal = coord.galactic
+
+print(gal.l.deg)
+print(gal.b.deg)
+\end{lstlisting}
+
+座標変換後の銀河経度と銀河緯度は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+213.80097741291977
+50.26374216488792
+\end{lstlisting}
+
+重要なのは、\code{ra} と \code{dec} に単位を付けている点である。度なのかラジアンなのかを曖昧にしない方が安全である。
+
+\subsection{\code{Table} と \code{QTable}}
+
+Astropy には表処理のために \code{Table} と \code{QTable} がある。\code{QTable} は列へ単位を保持できる。
+
+\begin{lstlisting}[language=Python]
+from astropy.table import QTable
+import astropy.units as u
+
+table = QTable()
+table["time"] = [0.0, 1.0, 2.0] * u.s
+table["signal"] = [12.4, 10.1, 14.8] * u.mV
+table["detector"] = ["A", "A", "B"]
+
+print(table)
+\end{lstlisting}
+
+\code{QTable} を表示すると、列名だけでなく単位も一緒に確認できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+time signal detector
+ s    mV
+---- ------ --------
+0.0   12.4        A
+1.0   10.1        A
+2.0   14.8        B
+\end{lstlisting}
+
+\code{QTable} は pandas の DataFrame より単位との相性がよい。一方で、複雑な groupby や join、列演算の豊富さでは pandas や Polars の方が便利なことも多い。どちらを中心にするかは、何を守りたいかで決まる。
+
+\subsection{Astropy Table と pandas の行き来}
+
+Astropy の表と pandas の DataFrame は相互変換できるが、単位や時刻の情報が完全には残らないことがある。
+
+\begin{lstlisting}[language=Python]
+df = table.to_pandas()
+print(df)
+\end{lstlisting}
+
+\code{to\_pandas()} は便利だが、どの情報が失われるかを理解してから使う方がよい。特に単位やマスク情報を持つ列は、変換後の解釈を確認した方が安全である。
+
+\subsection{\code{astropy.io.fits} による FITS の読み書き}
+
+天文データでは FITS が標準的である。Astropy なら NumPy 配列やヘッダをそのまま扱える。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+from astropy.io import fits
+
+image = np.arange(9).reshape(3, 3)
+hdu = fits.PrimaryHDU(image)
+hdu.header["OBJECT"] = "test"
+hdu.writeto("image.fits", overwrite=True)
+
+with fits.open("image.fits") as hdul:
+    data = hdul[0].data
+    header = hdul[0].header
+
+print(data.shape)
+print(header["OBJECT"])
+\end{lstlisting}
+
+FITS を書いてから読み直すと、配列形状とヘッダ値は次のように確認できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+(3, 3)
+test
+\end{lstlisting}
+
+\code{fits.open()} は HDU のリストを返す。画像なら \code{PrimaryHDU}、表なら \code{BinTableHDU} である。最初は「どの HDU に何が入っているか」を確認し、その後で必要なデータだけ読む方が混乱しにくい。
+
+\subsection{ASCII や ECSV も読める}
+
+Astropy の表入出力は FITS だけではない。\code{Table.read()} は ASCII、CSV、ECSV などにも対応している。
+
+\begin{lstlisting}[language=Python]
+from astropy.table import Table
+
+tbl = Table.read("events.ecsv", format="ascii.ecsv")
+\end{lstlisting}
+
+ECSV は単位やメタデータを持たせやすいので、テキスト形式のまま情報を落としにくい。共同研究や中間生成物の受け渡しでは便利である。
+
+\section{よくある落とし穴}
+
+\subsection{\code{.value} を早く使い過ぎない}
+
+\code{Quantity.value} を使うと、生の NumPy 配列やスカラーへ戻る。これは便利だが、その瞬間に単位情報は消える。式の早い段階で \code{.value} を多用すると、「何 ns のつもりだったか」「何 mV のつもりだったか」が見えなくなる。
+
+\subsection{時刻系を省略しない}
+
+\code{Time("2026-04-12 12:00:00")} とだけ書くと、どの format と scale を想定しているのかが曖昧になる。特に UTC、TAI、TT をまたぐときは、\code{format=} と \code{scale=} を明示した方が安全である。
+
+\subsection{座標変換には観測条件が必要なことがある}
+
+赤道座標から銀河座標への変換だけなら比較的単純だが、地平座標へ変換するには観測地点や観測時刻が必要になる。座標系だけを変えているつもりでも、背後では時刻と場所が意味を持つことがある。
+
+\subsection{DataFrame への変換で情報が落ちる}
+
+Astropy Table を pandas や Polars へ変換すると、単位、マスク、時刻系、メタデータが薄まることがある。逆に pandas の強い groupby や join を使いたいからといって、何でも最初から DataFrame にするべきではない。まず何を保存したいのかを決める方がよい。
+
+\section{解析へのつながり}
+
+Astropy は、次のような場面で特に有効である。
+
+\begin{itemize}
+\item 観測時刻を UTC、MJD、JD、Unix time の間で変換したいとき
+\item ns、\(\mu\)s、mV、MeV などの単位を混ぜて計算したいとき
+\item 天球座標を別の座標系へ変換したいとき
+\item FITS 画像や FITS テーブルを直接読み書きしたいとき
+\item 表データに単位やメタデータを持たせたまま運びたいとき
+\end{itemize}
+
+一方で、巨大な表の集計や複雑な join を高速に回すなら、pandas や Polars の方が便利である。実務では、Astropy で単位と時刻を正しく解釈し、必要に応じて pandas や Polars へ渡し、最後に Matplotlib や SciPy へつなぐ、という流れが自然である。
+
+本章の内容は、Astropy 公式の \href{https://docs.astropy.org/en/stable/index_getting_started.html}{Getting Started} と \href{https://docs.astropy.org/en/stable/index_user_docs.html}{User Guide} を軸に、\href{https://docs.astropy.org/en/stable/units/index.html}{Units and Quantities}、\href{https://docs.astropy.org/en/stable/time/index.html}{Time and Dates}、\href{https://docs.astropy.org/en/stable/coordinates/index.html}{Coordinates}、\href{https://docs.astropy.org/en/stable/table/index.html}{Tables}、\href{https://docs.astropy.org/en/stable/io/fits/index.html}{FITS File Handling} の内容を本書向けに整理したものである。

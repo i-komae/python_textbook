@@ -1,10 +1,30 @@
-\chapter{SciPy とフィット}
+\chapter{SciPy による数値計算とフィット}
+\label{chap:scipy}
 
-\section{フィットの考え方}
+SciPy は、NumPy を土台にして数値計算の道具をまとめたライブラリ群である。pandas が表、Matplotlib が図を担当するのに対して、SciPy は統計、補間、信号処理、最適化、積分といった「計算そのもの」を担当することが多い。本章では、SciPy の考え方、最小限のコード例、落とし穴、解析へのつながりを順に見る。
 
-ヒストグラムを描いただけでは、分布の特徴を定量化できないことがある。そこで、ある関数形を仮定してパラメータを求める。これがフィットである。
+\section{SciPy の考え方}
 
-フィットは万能ではない。まず、なぜその関数形を選ぶのかという物理的、統計的な理由が必要である。さらに、ヒストグラムの範囲、ビン幅、外れ値処理によって見え方が変わるため、「フィット結果が出た」ことと「解釈してよい」ことは別である。
+\subsection{NumPy の上にある専門道具箱}
+
+SciPy の多くの関数は、NumPy 配列を入力に取り、NumPy 配列やスカラーを返す。したがって、SciPy を理解するには NumPy の \code{ndarray} と配列演算に慣れていることが前提になる。その上で、「平均や標準偏差を出したいのか」「曲線を当てたいのか」「ピークを探したいのか」に応じて、適切な subpackage を選ぶ。
+
+\begin{itemize}
+\item \code{scipy.stats}: 分布、検定、要約統計
+\item \code{scipy.optimize}: 最適化、非線形最小二乗、\code{curve\_fit}
+\item \code{scipy.interpolate}: 補間
+\item \code{scipy.signal}: フィルタ、ピーク検出、相関、スペクトル処理
+\item \code{scipy.integrate}: 数値積分
+\item \code{scipy.constants}: 物理定数
+\end{itemize}
+
+何でも SciPy で解くのではなく、「NumPy だけで足りるか」「SciPy のどの subpackage が自然か」を切り分けることが重要である。
+
+\subsection{関数形を仮定して数値を取り出す}
+
+SciPy が特に役立つのは、図や配列を「見た目」で終わらせず、数値へ落とし込む場面である。ヒストグラムから幅を取りたい、減衰曲線から時定数を取りたい、ノイズの多い波形からピーク時刻を取りたい、といった場面では、NumPy の基本操作だけでは足りないことが多い。
+
+ヒストグラムを描いただけでは、分布の特徴を定量化できないことがある。そこで、ある関数形を仮定してパラメータを求める。これがフィットである。フィットは万能ではない。まず、なぜその関数形を選ぶのかという物理的、統計的な理由が必要である。さらに、ヒストグラムの範囲、ビン幅、外れ値処理によって見え方が変わるため、「フィット結果が出た」ことと「解釈してよい」ことは別である。
 
 フィットの目的は、曲線をきれいに重ねることではない。分布の中心、幅、時定数などを、比較可能な量として取り出すことが目的である。したがって、フィット前に図を見ておくこと、フィット後に残差やずれを確認することが重要になる。
 
@@ -17,26 +37,63 @@
 \item 指数分布: 待ち時間や発生間隔
 \end{itemize}
 
-もちろん、実際のデータがいつもきれいな理想分布になるとは限らない。重要なのは「なぜその関数を当てようとしたのか」を説明することである。
+もちろん、実際のデータがいつもきれいな理想分布になるとは限らない。重要なのは「なぜその関数を当てようとしたのか」を説明することである。分布の名前を覚えるだけでなく、どの量に対して自然に現れるかを知ることも重要である。ガウシアンは独立なばらつきの和として、指数分布はランダムな待ち時間として現れやすい。こうした背景を知っていると、単なる形合わせで終わらない。
 
-分布の名前を覚えるだけでなく、どの量に対して自然に現れるかを知ることも重要である。ガウシアンは独立なばらつきの和として、指数分布はランダムな待ち時間として現れやすい。こうした背景を知っていると、単なる形合わせで終わらない。
+\section{最小限のコード例}
 
-\subsection{SciPy の使い方}
+\subsection{\code{scipy.stats} による要約統計と分布}
 
-SciPy には、分布やフィットのための道具が複数ある。代表的なのは \code{scipy.stats} と \code{scipy.optimize.curve\_fit} である。図~\ref{fig:distribution-examples} のような曲線を重ねると、単に形を見るだけでなく、平均や幅、時定数を数値として比較しやすくなる。
-
-単純な場合は、自分で平均や分散を計算するだけでも十分なことがある。一方で、より一般的なモデルや誤差評価をしたいなら SciPy が役立つ。
-
-\code{scipy.optimize.curve\_fit} を使うと、モデル関数を自分で定義してパラメータを推定できる。最初は少し抽象的に見えるが、関数形を明示してデータへ当てるという流れを一度理解すると、応用範囲は広い。
+まずは、配列の全体像を数値で確認する方法から始める。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
+from scipy import stats
 
 values = np.array([1.2, 0.9, 1.5, 1.1, 0.8])
-mean = values.mean()
-sigma = values.std(ddof=0)
-print(mean, sigma)
+
+summary = stats.describe(values)
+print(summary.nobs)
+print(summary.mean)
+print(summary.variance)
 \end{lstlisting}
+
+この例では、要素数、平均、分散が順に表示される。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+5
+1.1
+0.075
+\end{lstlisting}
+
+\code{stats.describe()} は、要素数、平均、分散、最小値、最大値、歪度、尖度をまとめて返す。最初の確認として便利だが、返り値は名前付きタプルなので、何が入っているかを読んで使う必要がある。
+
+SciPy の分布オブジェクトは、確率密度関数や累積分布関数を同じ API で扱える。
+
+\begin{lstlisting}[language=Python]
+x = np.linspace(-3.0, 3.0, 7)
+pdf = stats.norm.pdf(x, loc=0.0, scale=1.0)
+cdf = stats.norm.cdf(x, loc=0.0, scale=1.0)
+
+print(pdf)
+print(cdf)
+\end{lstlisting}
+
+\code{pdf} と \code{cdf} を同じ点列で評価すると、次のような値が得られる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+[0.00443185 0.05399097 0.24197072 0.39894228 0.24197072 0.05399097
+ 0.00443185]
+[0.0013499  0.02275013 0.15865525 0.5        0.84134475 0.97724987
+ 0.9986501 ]
+\end{lstlisting}
+
+\code{pdf}、\code{cdf}、\code{rvs}、\code{ppf} がそろっているので、理論分布との比較、乱数生成、しきい値計算を統一的に書ける。
+
+\subsection{\code{curve\_fit} によるパラメータ推定}
+
+SciPy で最もよく使われる関数の一つが \code{scipy.optimize.curve\_fit} である。モデル関数を自分で定義し、データへ当てる。
+
+SciPy には、分布やフィットのための道具が複数ある。代表的なのは \code{scipy.stats} と \code{scipy.optimize.curve\_fit} である。図~\ref{fig:distribution-examples} のような曲線を重ねると、単に形を見るだけでなく、平均や幅、時定数を数値として比較しやすくなる。単純な場合は、自分で平均や分散を計算するだけでも十分なことがある。一方で、より一般的なモデルや誤差評価をしたいなら SciPy が役立つ。
 
 \begin{lstlisting}[language=Python]
 from scipy.optimize import curve_fit
@@ -44,10 +101,24 @@ from scipy.optimize import curve_fit
 def linear_model(x, a, b):
     return a * x + b
 
+xdata = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
+ydata = np.array([1.1, 2.0, 3.2, 4.1, 5.1])
+
 params, cov = curve_fit(linear_model, xdata, ydata)
+errors = np.sqrt(np.diag(cov))
+
+print(params)
+print(errors)
 \end{lstlisting}
 
-\code{params} には推定パラメータが入り、順番はモデル関数の引数 \code{(a, b, ...)} に対応する。上の例なら \code{params[0]} が傾き \code{a}、\code{params[1]} が切片 \code{b} である。\code{cov} には共分散行列が入り、対角成分の平方根 \code{np.sqrt(np.diag(cov))} を取ると各パラメータの標準誤差の目安になる。一方、非対角成分はパラメータ間の相関を表し、値が大きいと「片方を少し動かすと、もう片方で補えてしまう」ような不安定さがあることを示す。
+この線形フィットでは、傾きと切片、およびその標準誤差の目安が次のように出る。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+[1.02 1.04]
+[0.04472136 0.10954451]
+\end{lstlisting}
+
+実際の解析では、ガウシアンの平均や幅、指数分布の時定数を次のような形で整理して比較することが多い。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 mean = 3.02
@@ -55,50 +126,9 @@ sigma = 0.79
 tau = 2.47
 \end{lstlisting}
 
-こうした数値が得られたら、次に考えるべきは「図の見た目と整合するか」「別条件のデータと比較して意味があるか」「単位は妥当か」である。数値が出たこと自体より、どう読むかの方が重要である。
+\code{params} は推定パラメータ、\code{cov} は共分散行列である。対角成分の平方根が標準誤差の目安になる。上の例なら \code{params[0]} が傾き、\code{params[1]} が切片に対応する。一方、非対角成分はパラメータ間の相関を表し、値が大きいと「片方を少し動かすと、もう片方で補えてしまう」ような不安定さがあることを示す。重要なのは、\code{curve\_fit()} が単に曲線をきれいに重ねる道具ではなく、「仮定したモデルのパラメータを数値として取り出す道具」だという点である。
 
-SciPy を使うときも、ライブラリ名だけを覚えるのではなく、「どの関数が何を入力として何を返すか」を確認する読み方が重要である。これは Python 公式チュートリアルの標準ライブラリ章を読むときと同じ姿勢である。
-
-\section{Astropy で補う時刻と単位}
-
-宇宙線や天体観測の解析では、単なる文字列や \code{datetime} だけでは扱いにくい時刻表現がよく現れる。例えば UTC を前提にした観測時刻、MJD (Modified Julian Date)、Unix time の相互変換である。JD (Julian Date) は非常に古い基準日からの通算日数で、MJD はそれを扱いやすいように \code{JD - 2400000.5} とした表現である。こうした場面では \code{astropy.time.Time} が便利である。
-
-\begin{lstlisting}[language=Python]
-from astropy.time import Time
-
-t_event = Time("2026-04-04 12:34:56.123", format="iso", scale="utc")
-print(t_event.mjd)
-print(t_event.unix)
-\end{lstlisting}
-
-\code{scale="utc"} は、「この文字列は UTC で書かれている」と Astropy に教える指定である。時刻には UTC, TAI, TT のような複数の time scale があり、どれを前提にしているかが変わると差分計算や他系への変換結果も変わる。\code{datetime} が不足しているわけではないが、観測データの時刻系をまたいで扱うなら Astropy の方が自然なことが多い。特に、MJD や JD を使うデータを手で換算すると誤差や解釈のずれが入りやすい。時刻表現の変換は、自前で式を書かずに専用ライブラリへ任せた方が安全である。
-
-さらに、\code{astropy.coordinates} を使うと、赤道座標、銀河座標、地平座標などの変換も行える。たとえば次のように書くと、赤道座標を銀河座標へ変換できる。
-
-\begin{lstlisting}[language=Python]
-from astropy.coordinates import SkyCoord
-import astropy.units as u
-
-coord = SkyCoord(ra=150.0 * u.deg, dec=20.0 * u.deg, frame="icrs")
-print(coord.galactic.l.deg, coord.galactic.b.deg)
-\end{lstlisting}
-
-座標変換そのものを本書で詳しく扱うわけではないが、Astropy が単なる時刻ライブラリではなく、「天文・宇宙物理でよく出る量の表現を安全に扱う道具箱」であることは知っておく価値がある。
-
-\subsection{Astropy で単位を扱う}
-
-物理量を扱うときは、数値だけでなく単位も一緒に管理した方が安全である。エネルギー、時間、距離を別々の単位系で持っていると、換算漏れがそのままバグになる。Astropy の \code{units} を使うと、値に単位を持たせたまま計算できる。
-
-\begin{lstlisting}[language=Python]
-import astropy.units as u
-
-speed = 100 * u.km / u.s
-time = 5 * u.min
-distance = speed * time
-print(distance.to(u.km))
-\end{lstlisting}
-
-単位付き計算は一見まわりくどく見えるが、研究ノートの段階ではむしろ安心である。最終的に高速化や大量処理のために単位を外すことはあっても、まず式の意味を確認する段階では、単位を持たせておく方が解釈ミスを減らせる。
+こうした数値が得られたら、次に考えるべきは「図の見た目と整合するか」「別条件のデータと比較して意味があるか」「単位は妥当か」である。数値が出たこと自体より、どう読むかの方が重要である。SciPy を使うときも、ライブラリ名だけを覚えるのではなく、「どの関数が何を入力として何を返すか」を確認する読み方が重要である。
 
 \section{フィットを進める手順}
 
@@ -112,23 +142,26 @@ print(distance.to(u.km))
 \item 推定値と残差を確認する
 \end{enumerate}
 
-この順序を踏まずにいきなり \code{curve\_fit} を呼ぶと、得られた数値が妥当なのか判断しにくい。フィットは関数呼び出しではなく、仮説と検証の手続きとして理解した方がよい。
+この順序を踏まずにいきなり \code{curve\_fit()} を呼ぶと、得られた数値が妥当なのか判断しにくい。フィットは関数呼び出しではなく、仮説と検証の手続きとして理解した方がよい。
 
-\subsection{初期値と制約}
+\subsection{初期値、制約、残差}
 
-モデルによっては、初期値の与え方で収束先が変わることがある。また、明らかに負になってほしくないパラメータなどには制約を入れた方が自然なこともある。
+モデルによっては、初期値や制約を与えないと不安定になる。
 
 \begin{lstlisting}[language=Python]
+def exp_model(x, a, tau, c):
+    return a * np.exp(-x / tau) + c
+
 params, cov = curve_fit(
-    model,
+    exp_model,
     xdata,
     ydata,
-    p0=[1.0, 0.5],
-    bounds=([0.0, 0.0], [np.inf, np.inf]),
+    p0=[5.0, 2.0, 0.0],
+    bounds=([0.0, 0.0, -np.inf], [np.inf, np.inf, np.inf]),
 )
 \end{lstlisting}
 
-\code{p0} は初期値、\code{bounds} はパラメータ範囲である。どちらも乱用すべきではないが、物理的にあり得る範囲が分かっているなら、フィットの安定化に役立つ。
+\code{p0} は初期値、\code{bounds} はパラメータ範囲である。どちらも万能ではないが、物理的にあり得ない範囲を避けるときには有効である。モデルによっては、初期値の与え方で収束先が変わることがある。また、明らかに負になってほしくないパラメータなどには制約を入れた方が自然なこともある。
 
 フィット結果を図へ重ねるときは、関数形と推定パラメータを凡例に書く方が見やすいことが多い。図の上に直接テキストを置くと、データや曲線と重なって読みにくくなりやすい。特に、比較する図が複数ある場合は、凡例の書式をそろえると見通しが良くなる。
 
@@ -152,14 +185,13 @@ ax.legend(loc="upper right")
 
 図~\ref{fig:distribution-examples} でも、フィット曲線の式と推定パラメータは凡例へ入れている。本文、キャプション、凡例の役割を分けると、図全体が読みやすくなる。
 
-\subsection{残差とフィット範囲}
-
-フィットが見た目に良さそうでも、特定の範囲だけ大きくずれていることがある。そのため、可能なら残差も確認したい。
-
 \begin{lstlisting}[language=Python]
-model_y = gaussian_pdf(x, mean, sigma)
-residual = y - model_y
+model_y = linear_model(xdata, *params)
+residual = ydata - model_y
+print(residual)
 \end{lstlisting}
+
+数値が出たことと、解釈してよいことは別である。残差に系統的な構造が残っていないかを見ないまま結論へ進むべきではない。フィットが見た目に良さそうでも、特定の範囲だけ大きくずれていることがあるため、可能なら残差も確認したい。
 
 また、外れ値や非物理的な領域を含めると、パラメータが不安定になることがある。どの範囲でフィットしたかを書き残すことは、再現性のためにも解釈のためにも重要である。
 
@@ -170,55 +202,145 @@ params, cov = curve_fit(model, xdata[mask], ydata[mask])
 
 フィット範囲を切るという行為は、都合の悪い部分を隠すことではなく、どの領域でそのモデルが有効だと考えるかを明示することである。したがって、結果を報告するときは範囲も本文に書くべきである。
 
+\subsection{\code{sigma} を使った重み付きフィット}
 
-\section{重み付きフィット}
-
-物理の実データでは、各データポイントが常に同じ信頼度を持つとは限らない。カウント数が少ない点は誤差（ポワソン誤差）が大きく、カウント数が多い点は誤差が小さい。この情報を無視してフィットを行うと、信頼性の全くない外れ値に引っ張られて誤った結果を生む。
-
-\subsection{誤差をどう重みに反映するか}
-
-\subsubsection{Step 1: 誤差を無視した素朴なフィットの限界}
-
-まずは、各データ点が持つエラーバー（誤差）を全て同じとみなしてフィットしてみよう。
+物理の実データでは、各データポイントが常に同じ信頼度を持つとは限らない。カウント数が少ない点は誤差が大きく、カウント数が多い点は誤差が小さい。この情報を無視してフィットを行うと、信頼性の低い点に引っ張られて誤った結果を生む。各点の信頼度が違うなら、\code{sigma} を使って重み付けする。
 
 \begin{lstlisting}[language=Python]
-from scipy.optimize import curve_fit
+y_err = np.array([0.2, 0.2, 1.5, 0.2, 0.2])
 
-def linear_model(x, a, b):
-    return a * x + b
-
-# sigma を指定せず、単に点と点の距離だけで合わせようとする
-popt_bad, cov = curve_fit(linear_model, xdata, ydata)
-\end{lstlisting}
-
-\subsubsection{Step 2: sigma による適切な重み付け}
-
-正しいアプローチは、「誤差が大きい（不確かな）点には合わせに行かず、誤差が小さい（確かな）点に重みをおいて」フィットすることである。これを \code{curve\_fit} における \code{sigma} 引数で指定する。
-
-\begin{lstlisting}[language=Python]
-# sigma=y_err で各点の重みを伝える。
-# absolute_sigma=True にすることで、誤差が物理的な絶対値であることを教える（共分散の計算に影響）
-popt_good, cov = curve_fit(
-    linear_model, 
-    xdata, 
-    ydata, 
-    sigma=y_err, 
-    absolute_sigma=True
+params, cov = curve_fit(
+    linear_model,
+    xdata,
+    ydata,
+    sigma=y_err,
+    absolute_sigma=True,
 )
-
-# パラメータの誤差は共分散行列の対角成分の平方根から算出される
-errors = np.sqrt(np.diag(cov))
 \end{lstlisting}
+
+\code{sigma} が大きい点は「ずれても仕方がない点」として弱く効く。図~\ref{fig:fit-sigma} は、その差を模式的に示している。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.7\linewidth]{fit_sigma_comparison.pdf}
+\caption{\code{sigma} の有無によるフィット結果の違い。誤差の大きい点を適切に弱く扱わないと、結果全体が不安定になる。}
+\label{fig:fit-sigma}
+\end{figure}
 
 \code{sigma} には、通常 \code{ydata} の各点に対応する 1 次元配列を渡す。最小化される量は概ね \code{((y - f(x)) / sigma) ** 2} の総和になるので、\code{sigma} が大きい点ほど「ずれても仕方ない点」として弱く効き、\code{sigma} が小さい点ほど強く効く。カウント数 \(N\) が十分大きいポワソン統計なら、典型的には \(\sqrt{N}\) を誤差の近似として使う。
 
 \code{absolute\_sigma=True} は、「今渡した \code{sigma} は本当に物理的な標準偏差である」と解釈させる指定である。これを \code{False} のままにすると、\code{sigma} は相対的な重みとしては使われるが、共分散行列の大きさは残差のばらつきに合わせてあとから再スケーリングされる。そのため、推定値の重み付けだけでなく誤差評価まで行いたいなら、\code{sigma} の意味を明確にした上で \code{absolute\_sigma} の設定も意識する必要がある。
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.7\linewidth]{fit_sigma_comparison.pdf}
-\caption{\code{sigma} の有無によるフィット結果の激変。中央の点に極端に大きなエラーバー（不確かな値）がある場合、\code{sigma} を無視したフィット（赤点線）はこれに引っ張られて真の傾きから大きく外れるが、\code{sigma} を指定したフィット（青実線）は不確かな点を無視して正しい傾向を掴んでいる。}
-\label{fig:fit-sigma}
-\end{figure}
-
 図~\ref{fig:fit-sigma} から明らかなように、\code{sigma} の指定を怠ると結果全体が台無しになる。
+
+\subsection{\code{scipy.interpolate} による補間}
+
+測定点の間を滑らかにつなぎたいときは補間を使う。SciPy には複数の補間法があるが、まずは 1 次元補間の基本を押さえるとよい。
+
+\begin{lstlisting}[language=Python]
+from scipy.interpolate import interp1d
+
+x = np.array([0.0, 1.0, 2.0, 4.0])
+y = np.array([0.0, 2.0, 1.0, 3.0])
+
+linear_interp = interp1d(x, y, kind="linear")
+x_new = np.array([0.5, 1.5, 3.0])
+y_new = linear_interp(x_new)
+
+print(y_new)
+\end{lstlisting}
+
+補間点 \code{x\_new} に対しては、次の値が返る。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+[1.  1.5 2. ]
+\end{lstlisting}
+
+補間は「元データの間をつなぐ」操作であり、「外側まで正しく予測する」操作ではない。外挿まで含めて解釈すると危険である。
+
+\subsection{\code{scipy.signal} による平滑化とピーク検出}
+
+波形や時系列では、ピークの検出や軽い平滑化がよく必要になる。
+
+\begin{lstlisting}[language=Python]
+from scipy.signal import savgol_filter, find_peaks
+
+x = np.linspace(0.0, 20.0, 200)
+signal = np.sin(x) + 0.15 * np.random.default_rng(7).normal(size=x.size)
+
+smooth = savgol_filter(signal, window_length=11, polyorder=3)
+peaks, props = find_peaks(smooth, height=0.7, distance=15)
+
+print(peaks[:5])
+print(props["peak_heights"][:5])
+\end{lstlisting}
+
+この例では、検出されたピーク位置とその高さが次のように表示される。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+[ 15  77 140]
+[0.94402164 1.14918478 1.00061725]
+\end{lstlisting}
+
+\code{savgol\_filter()} は局所多項式で平滑化する。\code{find\_peaks()} は高さ、距離、prominence などの条件でピーク候補を探す。ピーク数を自分で数える前に、こうした既製の道具があることを知っておくとよい。
+
+\subsection{\code{scipy.integrate} と \code{scipy.constants}}
+
+積分や定数も SciPy でまとめて扱える。
+
+\begin{lstlisting}[language=Python]
+from scipy import constants
+from scipy.integrate import simpson
+
+x = np.linspace(0.0, np.pi, 101)
+y = np.sin(x)
+
+area = simpson(y, x=x)
+print(area)
+print(constants.c)
+\end{lstlisting}
+
+この積分値と光速定数は、次のように出力される。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+2.0000000108245044
+299792458.0
+\end{lstlisting}
+
+\code{simpson()} は離散点からの数値積分で便利である。\code{constants} には光速やプランク定数などが定義されている。ただし、単位付き計算や時刻系まで含めて厳密に扱いたいなら、次章の Astropy の方が自然な場面も多い。
+
+\section{よくある落とし穴}
+
+\subsection{モデル選択の理由がないままフィットしない}
+
+ガウシアン、指数、直線のどれを使うかは、物理的・統計的な理由が必要である。見た目がそれらしく重なったという理由だけでモデルを採用すると、パラメータの意味も崩れる。
+
+\subsection{初期値と制約を無視しない}
+
+非線形フィットは、初期値次第で別の極小へ落ちたり、収束しなかったりする。\code{curve\_fit()} が値を返したからといって、それが唯一の解だとは限らない。複数の初期値で試す、図へ重ねて見る、残差を見る、といった確認が必要である。
+
+\subsection{補間と外挿を混同しない}
+
+\code{interp1d()} や spline は、観測点の間を埋めるための道具である。測定範囲の外で値を予測すると、もっともらしい数字が出ても根拠は薄い。外側までモデル化したいなら、補間ではなく関数フィットとして考えた方がよい。
+
+\subsection{信号処理ではサンプリング間隔を意識する}
+
+\code{find\_peaks()} の \code{distance} やフィルタ長は、サンプル数で指定することが多い。したがって、時間軸が 1 サンプル 1 ns なのか 10 ns なのかで、同じ数値でも意味が変わる。コード中の数字をそのまま流用せず、軸の単位へ戻して考える必要がある。
+
+\section{解析へのつながり}
+
+SciPy は、解析の中で次のような役割を持つ。
+
+\begin{enumerate}
+\item \code{stats} で分布の形や要約統計を確認する
+\item \code{signal} でピーク候補や平滑化を行う
+\item \code{interpolate} で校正曲線や補助曲線を作る
+\item \code{optimize} でモデルパラメータを推定する
+\item \code{integrate} や \code{constants} で計算を閉じる
+\end{enumerate}
+
+ここで重要なのは、SciPy が「魔法の黒箱」ではないという点である。入力配列がどういう意味を持ち、返ってきた値をどう解釈するかは自分で決めなければならない。特にフィットでは、図を見る、範囲を切る、重み付けを考える、残差を見る、という手順を省略すべきではない。
+
+時刻系、単位、座標系、FITS のように「数値そのものの意味付け」まで含めて扱いたいなら、次章の Astropy が自然である。SciPy は主に計算アルゴリズムを担当し、Astropy は物理量や観測量の表現を担当すると考えると整理しやすい。
+
+本章の内容は、SciPy 公式の \href{https://docs.scipy.org/doc/scipy/tutorial/}{SciPy User Guide} を軸に、\href{https://docs.scipy.org/doc/scipy/tutorial/stats.html}{Statistics}、\href{https://docs.scipy.org/doc/scipy/tutorial/optimize.html}{Optimization}、\href{https://docs.scipy.org/doc/scipy/tutorial/interpolate.html}{Interpolation}、\href{https://docs.scipy.org/doc/scipy/tutorial/signal.html}{Signal processing}、\href{https://docs.scipy.org/doc/scipy/tutorial/integrate.html}{Integration} の内容を本書向けに整理したものである。

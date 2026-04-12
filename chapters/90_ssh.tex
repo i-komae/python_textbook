@@ -82,9 +82,9 @@ $ ssh-add ~/.ssh/id_ed25519
 
 \subsection{\code{\textasciitilde/.ssh/config} を書く}
 
-接続先が増えると、毎回長いホスト名やポート番号や鍵ファイル名を書くのは面倒になる。そこで \code{\textasciitilde/.ssh/config} を使う。
+接続先が増えると、毎回長いホスト名やポート番号や鍵ファイル名を書くのは面倒になる。そこで \code{\textasciitilde/.ssh/config} を使う。設定ファイルの中身は次のようになる。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={\textasciitilde/.ssh/config}]
 Host labserver
     HostName server.example.jp
     User ikomae

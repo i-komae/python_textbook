@@ -1,0 +1,302 @@
+\chapter{Polars による高速な表処理}
+\label{chap:polars}
+
+Polars は、列指向の DataFrame 処理を高速に行うためのライブラリである。pandas と同じく表形式データを扱うが、発想はかなり違う。Polars では index を持たず、式を組み合わせて列変換を書く。さらに、\code{LazyFrame} によってクエリ全体を最適化できる。本章では、Polars の考え方、最小限の書き方、落とし穴、解析で使う場面を整理する。
+
+\section{Polars の考え方}
+
+\subsection{index を持たない DataFrame}
+
+Polars の DataFrame は、常に「行番号は整数位置でだけ参照する 2 次元表」である。pandas のような index に意味を持たせないため、\code{reset\_index()} や \code{loc} を前提にした設計にはならない。
+
+\begin{lstlisting}[language=Python]
+import polars as pl
+
+df = pl.DataFrame(
+    {
+        "detector": ["A", "A", "B", "B"],
+        "time_ns": [1032, 1188, 1055, 1244],
+        "signal": [12.4, 10.1, 14.8, 9.7],
+    }
+)
+
+print(df)
+\end{lstlisting}
+
+このコードを実行すると、Polars の表は次のように表示される。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+shape: (4, 3)
++----------+---------+--------+
+| detector | time_ns | signal |
++==========+=========+========+
+| A        | 1032    | 12.4   |
+| A        | 1188    | 10.1   |
+| B        | 1055    | 14.8   |
+| B        | 1244    | 9.7    |
++----------+---------+--------+
+\end{lstlisting}
+
+この出力でも、重要なのは \code{shape: (4, 3)} と列名である。Polars は「何行目を label で指すか」よりも、「どの列にどの式を適用するか」を中心に据えている。
+
+\subsection{式で列変換を書く}
+
+Polars の中心概念は expression である。\code{pl.col("signal")} は「signal 列を参照する式」であり、これを四則演算や比較で組み合わせる。
+
+\begin{lstlisting}[language=Python]
+expr = pl.col("signal") / pl.col("signal").mean()
+print(expr)
+\end{lstlisting}
+
+この段階では、まだ計算結果ではなく「どう計算するか」という式を表している。Polars の公式ドキュメントでも、まず expression を理解することが最重要とされている。実際、\code{select()}、\code{with\_columns()}、\code{filter()}、\code{group\_by()} の多くは、最終的に式を受け取る API で統一されている。
+
+\subsection{eager と lazy}
+
+Polars には、すぐ実行する eager API と、最後まで式をためて最適化してから実行する lazy API がある。
+
+\begin{lstlisting}[language=Python]
+eager_df = pl.read_csv("events.csv")
+lazy_df = pl.scan_csv("events.csv")
+\end{lstlisting}
+
+\code{read\_csv()} はすぐに DataFrame を作るが、\code{scan\_csv()} は \code{LazyFrame} を返す。lazy API を使うと、必要な列だけ読む、不要な行を早い段階で落とす、といった最適化が入りやすい。巨大なログを扱うときは、この違いがそのまま待ち時間の差になる。
+
+\section{最小限のコード例}
+
+\subsection{\code{select()} と \code{filter()}}
+
+Polars では、列選択は \code{select()}、行抽出は \code{filter()} が基本である。
+
+\begin{lstlisting}[language=Python]
+selected = df.select("detector", "signal")
+strong = df.filter(pl.col("signal") > 11.0)
+
+print(selected)
+print(strong)
+\end{lstlisting}
+
+\code{select()} で列が減り、\code{filter()} で条件に合う行だけが残る。出力は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+shape: (4, 2)
++----------+--------+
+| detector | signal |
++==========+========+
+| A        | 12.4   |
+| A        | 10.1   |
+| B        | 14.8   |
+| B        | 9.7    |
++----------+--------+
+shape: (2, 3)
++----------+---------+--------+
+| detector | time_ns | signal |
++==========+=========+========+
+| A        | 1032    | 12.4   |
+| B        | 1055    | 14.8   |
++----------+---------+--------+
+\end{lstlisting}
+
+\code{df["signal"]} のような書き方もできるが、Polars では「表に対する操作」を \code{select()} や \code{filter()} の文脈で書く方が自然である。特に複数列をまとめて変換したいときは、この違いが大きく効く。
+
+\subsection{\code{with\_columns()} で列を増やす}
+
+新しい列は \code{with\_columns()} で追加する。複数列を同時に書けるので、Polars の式ベース設計と相性が良い。
+
+\begin{lstlisting}[language=Python]
+derived = df.with_columns(
+    (pl.col("signal") / pl.col("signal").mean()).alias("signal_ratio"),
+    (pl.col("time_ns") > 1100).alias("is_late"),
+)
+
+print(derived)
+\end{lstlisting}
+
+列追加後の表を見ると、式で作った列がどの位置へ入るかを確認できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+shape: (4, 5)
++----------+---------+--------+--------------+---------+
+| detector | time_ns | signal | signal_ratio | is_late |
++==========+=========+========+==============+=========+
+| A        | 1032    | 12.4   | 1.055319     | false   |
+| A        | 1188    | 10.1   | 0.859574     | true    |
+| B        | 1055    | 14.8   | 1.259574     | false   |
+| B        | 1244    | 9.7    | 0.825532     | true    |
++----------+---------+--------+--------------+---------+
+\end{lstlisting}
+
+\code{alias()} は列名を付ける操作である。Polars では式の結果へ名前を付けるという発想が頻繁に現れるので、早めに慣れておく方がよい。
+
+\subsection{\code{group\_by()} と集計}
+
+集計も式として書く。\code{group\_by()} と \code{agg()} は、pandas の \code{groupby()} に対応する中心的な道具である。
+
+\begin{lstlisting}[language=Python]
+summary = (
+    derived
+    .group_by("detector")
+    .agg(
+        pl.len().alias("count"),
+        pl.col("signal").mean().alias("mean_signal"),
+        pl.col("signal").std().alias("std_signal"),
+        pl.col("is_late").mean().alias("late_fraction"),
+    )
+    .sort("detector")
+)
+
+print(summary)
+\end{lstlisting}
+
+集計後は、検出器ごとに 1 行ずつの表へまとまる。出力は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+shape: (2, 5)
++----------+-------+-------------+------------+---------------+
+| detector | count | mean_signal | std_signal | late_fraction |
++==========+=======+=============+============+===============+
+| A        | 2     | 11.25       | 1.626346   | 0.5           |
+| B        | 2     | 12.25       | 3.606245   | 0.5           |
++----------+-------+-------------+------------+---------------+
+\end{lstlisting}
+
+Polars の \code{group\_by()} は、集計対象が expression なので、同じ書き方のまま統計量を増やしやすい。\code{count}、\code{mean}、\code{std} のような基本操作は、式の名前を見れば意味を追いやすい。
+
+\subsection{join と表の変形}
+
+別表の較正係数や run 情報を結び付けるなら \code{join()} を使う。縦長と横長の変換も行える。
+
+\begin{lstlisting}[language=Python]
+gain = pl.DataFrame(
+    {
+        "detector": ["A", "B"],
+        "gain": [1.02, 0.97],
+    }
+)
+
+merged = derived.join(gain, on="detector", how="left")
+wide = (
+    pl.DataFrame(
+        {
+            "detector": ["A", "A", "B", "B"],
+            "kind": ["raw", "cal", "raw", "cal"],
+            "value": [12.4, 12.7, 14.8, 14.4],
+        }
+    )
+    .pivot(index="detector", on="kind", values="value")
+    .sort("detector")
+)
+
+print(merged.select("detector", "signal", "gain"))
+print(wide)
+\end{lstlisting}
+
+\code{join()} はキー列を明示する点が重要である。Polars には index がないので、何をキーに結合するかが曖昧になりにくい。
+
+\subsection{欠損値、\code{null}、\code{NaN}}
+
+Polars は欠損値の扱いが比較的厳密である。\code{null} と \code{NaN} を区別して考える。
+
+\begin{lstlisting}[language=Python]
+missing = pl.DataFrame(
+    {
+        "signal": [12.4, None, 14.8, float("nan")],
+    }
+)
+
+print(missing.with_columns(
+    pl.col("signal").is_null().alias("is_null"),
+    pl.col("signal").is_nan().alias("is_nan"),
+))
+\end{lstlisting}
+
+\code{null} は値が存在しないこと、\code{NaN} は浮動小数点の特殊値である。解析では両者を同じ「欠損」と見なしたくなるが、Polars はここを明確に分ける。どちらを落とすかで使うメソッドも変わる。
+
+\subsection{文字列と条件分岐}
+
+式ベースの API では、文字列処理や条件分岐も列全体に対する式として書く。
+
+\begin{lstlisting}[language=Python]
+names = pl.DataFrame(
+    {
+        "run_name": ["run_A_001", "run_A_002", "test_B_001"],
+        "signal": [12.4, 10.1, 14.8],
+    }
+)
+
+classified = names.with_columns(
+    pl.col("run_name").str.extract(r"^(run_[A-Z])", 1).alias("prefix"),
+    pl.when(pl.col("signal") > 12.0)
+      .then(pl.lit("high"))
+      .otherwise(pl.lit("normal"))
+      .alias("quality"),
+)
+\end{lstlisting}
+
+\code{when}、\code{then}、\code{otherwise} は、pandas の \code{apply()} に頼りがちな条件分岐を Polars の式として書くための基本形である。
+
+\subsection{lazy API と \code{scan\_parquet()}}
+
+大きなデータでは、eager API より lazy API の方が自然である。
+
+\begin{lstlisting}[language=Python]
+lf = (
+    pl.scan_parquet("events/*.parquet")
+    .filter(pl.col("signal") > 0.0)
+    .select("detector", "signal", "time_ns")
+    .with_columns((pl.col("time_ns") - pl.col("time_ns").min()).alias("dt_ns"))
+    .group_by("detector")
+    .agg(pl.col("signal").mean().alias("mean_signal"))
+)
+
+result = lf.collect()
+print(result)
+\end{lstlisting}
+
+\code{scan\_parquet()} はまだデータを実体化しない。\code{collect()} を呼んだ時点で、必要列と必要行だけを読む最適化が入りやすい。巨大ファイルを条件付きで読むなら、この書き方が有利である。
+
+\subsection{CSV と Parquet の入出力}
+
+Polars でも CSV と Parquet は基本である。
+
+\begin{lstlisting}[language=Python]
+df = pl.read_csv("events.csv")
+df.write_parquet("events.parquet")
+
+lf = pl.scan_csv("events.csv")
+result = lf.filter(pl.col("signal") > 0).collect()
+\end{lstlisting}
+
+\code{read\_csv()} と \code{write\_parquet()} は eager API、\code{scan\_csv()} は lazy API の入口である。pandas と同じ名前の関数も多いが、設計思想はかなり異なる。
+
+\section{よくある落とし穴}
+
+\subsection{pandas の書き方をそのまま持ち込まない}
+
+Polars 公式の migration guide でも強調されているが、\textbf{Polars は pandas ではない}。pandas に似た書き方が一部動いても、それが最も自然な書き方とは限らない。特に、index 前提の考え方、\code{loc}、\code{apply(axis=1)} へ寄った設計は Polars では合わない。
+
+\subsection{\code{map\_elements()} や Python の \code{lambda} を多用しない}
+
+Polars の利点は、式が query optimizer に見えることにある。Python の \code{lambda} や \code{map\_elements()} へ逃げると、その最適化が効きにくくなる。まずは \code{pl.col()}、\code{when}、\code{str}、\code{dt}、\code{over} などの組み込み式で書けないかを考える方がよい。
+
+\subsection{lazy API では \code{collect()} を忘れない}
+
+\code{scan\_csv()} や \code{scan\_parquet()} は \code{LazyFrame} を返す。ここで \code{print(lf)} としても、実データではなく計画しか見えない。結果が欲しいなら \code{collect()} が必要である。
+
+\subsection{欠損値は \code{null} と \code{NaN} を区別する}
+
+Polars は型に厳密である。欠損をまとめて扱っているつもりでも、実際には \code{null} と \code{NaN} が混ざっていることがある。フィルタや集計の前に、どちらが入っているかを確認した方が安全である。
+
+\section{解析へのつながり}
+
+Polars が特に有効なのは、次のような場面である。
+
+\begin{itemize}
+\item 数千万行の CSV や Parquet を条件付きで読みたいとき
+\item 同じ表に対する列変換と集計を一つの query としてまとめたいとき
+\item pandas では待ち時間が長く、入出力と集計が支配的になっているとき
+\item 複数ファイルをまとめて scan し、必要な列だけを残したいとき
+\end{itemize}
+
+一方で、小規模データで index を活かした対話的操作や、既存の pandas ベース資産をそのまま流用したいなら、pandas の方が自然なことも多い。大切なのは「pandas を捨てる」ことではなく、「どの規模、どの処理で Polars へ切り替えるべきか」を判断できるようになることである。
+
+本章の内容は、Polars 公式の \href{https://docs.pola.rs/user-guide/concepts/}{Concepts}、\href{https://docs.pola.rs/user-guide/concepts/expressions-and-contexts/}{Expressions and contexts}、\href{https://docs.pola.rs/user-guide/concepts/lazy-api/}{Lazy API}、\href{https://docs.pola.rs/user-guide/io/}{IO}、\href{https://docs.pola.rs/user-guide/migration/pandas/}{Coming from Pandas} を土台に、本書向けに解析寄りへ並べ直したものである。作りたい変換が明確なら、まず expression で書けないかを確認し、その後で lazy API を選ぶと整理しやすい。
