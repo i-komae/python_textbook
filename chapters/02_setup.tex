@@ -4,15 +4,15 @@
 
 \subsection{何を分けて考えるべきか}
 
-Python を使い始めるときは、次の 3 つを混同しない方がよい。
+Python を使い始めるときは、次の 3 つを分けて考える必要がある。
 
 \begin{enumerate}
 \item Python 本体を入れること
-\item 複数版の Python を切り替えること
+\item 複数バージョンの Python を切り替えること
 \item プロジェクトごとの仮想環境を作ること
 \end{enumerate}
 
-まず Python 本体が必要であり、そのうえで Python 3.11 と 3.12 を切り替えたいなら版管理ツールが必要になる。さらに、同じ Python 3.12 でもプロジェクト A と B で依存ライブラリが違うなら、仮想環境で分ける必要がある。この 3 段階を分けて理解した方が、あとで混乱しにくい。
+まず Python 本体が必要であり、そのうえで Python 3.11 と 3.12 を切り替えたいならバージョン管理ツールが必要になる。さらに、同じ Python 3.12 でもプロジェクト A と B で依存ライブラリが違うなら、仮想環境で分ける必要がある。この 3 段階を分けて理解した方が、あとで混乱しにくい。
 
 \subsection{今の Python を確認する}
 
@@ -24,11 +24,11 @@ $ which python3
 $ python3 -c "import sys; print(sys.executable)"
 \end{lstlisting}
 
-\code{python3 --version} で版を確認し、\code{which python3} と \code{sys.executable} で実体の場所を確認する。複数版を切り替えるようになると、この確認は非常に重要になる。
+\code{python3 --version} でバージョンを確認し、\code{which python3} と \code{sys.executable} で実体の場所を確認する。複数バージョンを切り替えるようになると、この確認は非常に重要になる。
 
 \section{\code{pyenv} による複数バージョンの管理}
 
-Python 本体の導入と切り替えには \code{pyenv} が分かりやすい。\code{pyenv} は、シェルから見える \code{python} をディレクトリ単位で切り替えるための道具であり、複数版の Python を使い分けるときの基準として扱いやすい。
+Python 本体の導入と切り替えには \code{pyenv} が分かりやすい。\code{pyenv} は、シェルから見える \code{python} をディレクトリ単位で切り替えるための道具であり、複数バージョンの Python を使い分けるときの基準として扱いやすい。
 
 \subsection{macOS での準備}
 
@@ -63,13 +63,16 @@ $ curl -fsSL https://pyenv.run | bash
 \subsection{\code{pyenv} をシェルへ組み込む}
 
 前章で確認したように、\code{pyenv} を使うには自身のシェルの種類に合わせた設定ファイル（\code{/bin/zsh}なら\code{\textasciitilde/.zshrc}、\code{/bin/bash}なら\code{\textasciitilde/.bashrc}）の末尾へ初期化コードを書く必要がある。
+以下では \code{>>} を使って設定ファイルの末尾へ 1 行ずつ追記している。\code{>} ではなく \code{>>} を使うのは、既存の設定を消さないためである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
 $ echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
 $ echo 'eval "$(pyenv init - zsh)"' >> ~/.zshrc
 $ exec "$SHELL"
-もちろん、使っているのが \code{bash} の場合は、次のように \code{\textasciitilde/.bashrc} に対して設定を追記する。
+\end{lstlisting}
+
+使っているシェルが \code{bash} の場合は、次のように \code{\textasciitilde/.bashrc} に対して設定を追記する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
@@ -78,15 +81,17 @@ $ echo 'eval "$(pyenv init - bash)"' >> ~/.bashrc
 $ exec "$SHELL"
 \end{lstlisting}
 
-\subsection{版を入れて切り替える}
+\subsection{バージョンを入れて切り替える}
 
-\code{pyenv} を使う場合は、\code{pyenv install} で版を追加し、\code{pyenv global}、\code{pyenv local}、\code{pyenv shell} で切り替える。たとえば新しい版を追加して確認するには次のように行う。
+\code{pyenv} を使う場合は、\code{pyenv install} でバージョンを追加し、\code{pyenv global}、\code{pyenv local}、\code{pyenv shell} で切り替える。たとえば新しいバージョンを追加して確認するには次のように行う。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pyenv install 3.11.11
 $ pyenv install 3.12.10
 $ pyenv versions
-その後、システム全体で普段使う標準の版を決めるなら、次のように \code{pyenv global} を実行する。
+\end{lstlisting}
+
+その後、システム全体で普段使う標準のバージョンを決めるなら、次のように \code{pyenv global} を実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pyenv global 3.12.10
@@ -94,7 +99,7 @@ $ python --version
 $ which python
 \end{lstlisting}
 
-\code{pyenv global} は普段使う版を決める。これに対して \code{pyenv local} は、そのディレクトリだけ別の版を使いたいときに使う。特定のプロジェクト用ディレクトリ内で版を固定するには、次のような手順を踏む。
+\code{pyenv global} は普段使うバージョンを決める。これに対して \code{pyenv local} は、そのディレクトリだけ別のバージョンを使いたいときに使う。特定のプロジェクト用ディレクトリ内でバージョンを固定するには、次のような手順を踏む。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir analysis311
@@ -104,13 +109,13 @@ $ python --version
 $ cat .python-version
 \end{lstlisting}
 
-\code{pyenv local} を実行すると \code{.python-version} が作られ、そのディレクトリでは指定した版が優先される。これによって、同じマシンの中でプロジェクト A は 3.11、プロジェクト B は 3.12 という使い分けができる。
+\code{pyenv local} を実行すると \code{.python-version} が作られ、そのディレクトリでは指定したバージョンが優先される。これによって、同じマシンの中でプロジェクト A は 3.11、プロジェクト B は 3.12 という使い分けができる。
 
-\code{pyenv shell 3.11.11} は、そのターミナルを閉じるまでの一時的な切り替えである。検証用に 1 回だけ古い版で動かしたいときに便利である。
+\code{pyenv shell 3.11.11} は、そのターミナルを閉じるまでの一時的な切り替えである。検証用に 1 回だけ古いバージョンで動かしたいときに便利である。
 
 \section{\code{venv} でプロジェクトごとの仮想環境を作る}
 
-Python 本体の版を決めたら、その版の上にプロジェクト専用の仮想環境を作る。依存ライブラリの衝突を避けるためである。仮想環境を作り、そこに入るための基本コマンドは次の通りである。
+Python 本体のバージョンを決めたら、そのバージョンの上にプロジェクト専用の仮想環境を作る。依存ライブラリの衝突を避けるためである。仮想環境を作り、そこに入るための基本コマンドは次の通りである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python -m venv .venv
@@ -238,7 +243,7 @@ $ uv run python -m pytest
 
 
 
-\code{uv} もプロジェクト単位で Python 版を固定できる。\code{pyenv} がシェル全体の切り替えを担当し、\code{uv} がプロジェクト側の固定を担当する、と分けて考えると整理しやすい。固定や一発実行のコマンド例は次の通りである。
+\code{uv} もプロジェクト単位で Python バージョンを固定できる。\code{pyenv} がシェル全体の切り替えを担当し、\code{uv} がプロジェクト側の固定を担当する、と分けて考えると整理しやすい。固定や一発実行のコマンド例は次の通りである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv python pin 3.12

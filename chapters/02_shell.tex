@@ -1,7 +1,7 @@
 \chapter{シェルとファイル操作}
 
 \section{シェルの基本と環境}
-
+\label{SEC:shell}
 本書では、ファイル操作やスクリプト実行をターミナルから行う。まず言葉を分けておく。
 
 \begin{itemize}
@@ -112,10 +112,10 @@ $ cd -
 表記 & 意味 \\
 \midrule
 \code{/abs/data.txt} & 絶対パス。どこにいても同じ場所を指す \\
+\code{\textasciitilde/analysis} & 絶対パス。\code{\textasciitilde} はホームディレクトリ \\
 \code{data.txt} & 相対パス。今いるディレクトリを基準に解釈される \\
-\code{./x.txt} & \code{.} は現在のディレクトリ \\
-\code{../x.txt} & \code{..} は 1 つ上のディレクトリ \\
-\code{\textasciitilde/analysis} & \code{\textasciitilde} はホームディレクトリ \\
+\code{./x.txt} & 相対パス。\code{.} は現在のディレクトリ \\
+\code{../x.txt} & 相対パス。\code{..} は 1 つ上のディレクトリ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -140,55 +140,11 @@ $ mkdir -p output/2026/04
 
 1 行目は \code{output} だけを作る。2 行目は \code{output} や \code{output/2026} がまだ無くても、必要な親ディレクトリごと作る。解析では日付ごとの出力先を作ることが多いので、\code{mkdir -p} はよく使う。
 
-なお、複数のファイルを一度に指定したいときは、ワイルドカード（\code{*} など）が役に立つ。\code{*} は「0文字以上の任意の文字列」を表す。たとえば \code{ls *.txt} と書けば、拡張子が \code{.txt} のすべてのファイルを一覧表示でき、\code{rm test\_*.csv} と書けば該当するファイルをまとめて削除できる。
+\section{コピー、移動、削除}
 
-\section{ファイルの内容確認とデータ抽出}
-
-解析では、データを読む前にまず中身を確認する。そのための基本コマンドを表にまとめる。
-
-\begin{table}[hbtp]
-\centering
-\caption{中身確認と抽出でよく使うコマンド}
-\begin{tabular}{lll}
-\toprule
-コマンド & 役割 & 例 \\
-\midrule
-\code{cat} & 全体をそのまま表示する & \code{cat data/events.txt} \\
-\code{less} & スクロールしながら読む。終了は \code{q} & \code{less data/events.txt} \\
-\code{head} & 先頭だけを見る & \code{head data/events.txt} \\
-\code{tail} & 末尾だけを見る & \code{tail data/events.txt} \\
-\code{wc -l} & 行数を数える & \code{wc -l data/events.txt} \\
-\code{grep} & 特定の文字列を含む行を抽出する & \code{grep "ERROR" log.txt} \\
-\code{awk} & 空白等で区切られた特定列を取り出す & \code{awk '\{print \$1\}' data.txt} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-各コマンドの主な機能と使い方は次の通りである。
-
-\begin{description}
-\item[\code{cat}] 指定したファイルの中身をすべて画面（標準出力）へ流し込む。短い設定ファイルやログを一気に読みたいときに使う。ただし、巨大なファイルに対して実行すると画面がとてつもない勢いで流れてしまうので注意が必要である。
-\item[\code{less}] 長いファイルの一部を画面に表示し、上下キーでスクロールしながら読めるようにする機能を持つ。読み終わって元のターミナルへ戻るには \code{q} を押す。
-\item[\code{head} / \code{tail}] それぞれファイルの先頭、あるいは末尾の数行だけを切り出して表示する。どのような形式のデータが入っているか「ヘッダーだけ確認したい」ときや、「ログの最新の数行（一番下）だけ見たい」ときに多用される。オプションで \code{-n 20} のように行数を指定することもできる。
-\item[\code{wc}] ファイルの行数や単語数、文字数を数えるコマンドである。\code{-l} オプションを付けることで、行数だけを数えることができる。
-\item[\code{grep}] ファイルの中から特定の文字列を含む行だけを抽出するコマンドである。\code{grep "ERROR" log.txt} のように使う。\code{-i} オプションで大文字・小文字を区別せずに検索し、\code{-v} オプションで「その文字列を含まない行」を抽出できるため、ログや結果データの絞り込みに大変よく使われる。
-\item[\code{awk}] テキストデータを「リストや表のような列」として扱い、特定の列だけを取り出したり計算したりするコマンドである。\code{awk '\{print \$1, \$3\}' data.txt} と書けば、スペース区切りの1列目と3列目だけを抽出して表示できる。
-\end{description}
-
-さらに、強力な手段として「パイプ（\code{|}）」がある。パイプは、あるコマンドの出力を次のコマンドの入力へとそのまま流し込む機能である。前述のコマンド群と組み合わせることで真価を発揮する。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ cat log.txt | grep "ERROR"
-$ grep "ERROR" log.txt | wc -l
-$ cat events.txt | grep -v "noise" | awk '{print $2}'
-\end{lstlisting}
-
-1 行目は、\code{log.txt} の内容を読み出し、その中から "ERROR" という文字列を含む行だけを絞り込んで表示する。2 行目では、抽出された結果がさらに \code{wc -l} に渡され、エラーの発生件数を数えることができる。3 行目では、複数段のパイプを用いて「ノイズ行を除外したデータの 2 列目だけを取り出す」という高度な抽出を 1 行で行っている。このように、単機能のコマンドを組み合わせて欲しい結果を得るのが UNIX 環境の流儀である。
-
-なお、\code{grep} や \code{awk} では、より高度な検索条件として正規表現を用いることもできるが、正規表現を深追いするとややこしくなるためここでは触れない。詳細については付録~\ref{app:regex} を参照されたい。
 \subsection{コピーする: \code{cp}}
 
-\code{cp} は元のファイルやディレクトリを残したまま複製を作る。文章だけで覚えると混乱しやすいので、前後の状態を見た方がよい。たとえば次のようなディレクトリ構造があるとする。
+\code{cp} は元のファイルやディレクトリを残したまま複製を作る。たとえば次のようなディレクトリ構造があるとする。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
@@ -225,8 +181,6 @@ $ cp -r raw raw_backup
 
 \code{mv} は「移動」と「改名」の両方に使う。どちらになるかは、最後の引数が何を指しているかで決まる。
 
-
-
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- result.txt
@@ -247,7 +201,7 @@ work/
 
 この場合は、同じディレクトリの中で名前だけが変わる。
 
-
+次に、ファイルを別のディレクトリへ移動することを考えよう。\code{work} ディレクトリの下に \code{output} ディレクトリと \code{result.txt} というファイルがあるとする。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
@@ -255,7 +209,7 @@ work/
 `-- result.txt
 \end{lstlisting}
 
-ここで、ファイルを別ディレクトリへ移動するには次のように実行する。
+ここで、\code{result.txt} を \code{output} ディレクトリへ移動するには次のようにすればよい。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mv result.txt output/
@@ -269,7 +223,7 @@ work/
     `-- result.txt
 \end{lstlisting}
 
-この場合は、\code{result.txt} が \code{output/} の中へ移る。元の場所からは消える。\code{cp} と違って元ファイルは残らない。
+この場合は、\code{result.txt} が \code{output/} の中へ移る。元の場所からは消える。\code{cp} とは異なり、元ファイルは残らない。
 
 \subsection{削除する: \code{rm}}
 
@@ -284,6 +238,185 @@ $ rm -r old_output
 \code{rm result\_old.txt} はファイルを削除する。\code{rm -i result\_old.txt} は削除前に確認を出す。\code{rm -r old\_output} はディレクトリを中身ごと再帰的に削除する。
 
 特に \code{rm -r} は強力である。対象のパスを誤ると大きな被害になるので、削除前に \code{pwd} と \code{ls} で場所を確かめる習慣を持った方がよい。
+
+\subsection{ワイルドカード}
+
+複数のファイルを一度に指定したいときは、ワイルドカードが役に立つ。よく使うのは \code{*} であり、これは「0 文字以上の任意の文字列」を表す。重要なのは、\code{cat} や \code{rm} が \code{*} を理解しているのではなく、シェルが先に展開してから各コマンドへ渡しているという点である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cp data/*.csv backup/
+$ rm test_*.csv
+\end{lstlisting}
+
+\code{cp data/*.csv backup/} とすると複数の CSV をまとめてコピーできる。\code{rm test\_*.csv} なら条件に合うファイルを一括削除できる。
+
+したがって、ワイルドカードを使うときは、実際に何が展開されるかを意識した方がよい。削除系のコマンドでは、先に \code{ls test\_*.csv} のように確認してから実行する方が安全である。
+
+
+\section{ファイルの内容確認とデータ抽出}
+
+解析では、データを読む前にまず中身を確認する。そのための基本コマンドと、最低限覚えておきたいオプションを最初に表へまとめる。
+
+\begin{table}[hbtp]
+\centering
+\caption{中身確認と抽出でよく使うコマンドと主要オプション}
+\begin{tabular}{p{0.14\linewidth}p{0.28\linewidth}p{0.44\linewidth}}
+\toprule
+コマンド & 主なオプションや書式 & 主な用途 \\
+\midrule
+\code{cat} & \code{-n} & 短いファイルをそのまま読む、複数ファイルを連結する \\
+\code{less} & \code{-N}, \code{/pattern}, \code{q} & 長いファイルをスクロールしながら読む \\
+\code{head} & \code{-n N} & 先頭の数行だけを見る \\
+\code{tail} & \code{-n N}, \code{-f} & 末尾の数行を見る、ログの追記を監視する \\
+\code{wc} & \code{-l}, \code{-w}, \code{-c} & 行数、単語数、バイト数を数える \\
+\code{grep} & \code{-i}, \code{-v}, \code{-n}, \code{-A N}, \code{-B N} & 条件に合う行だけを抽出する \\
+\code{awk} & \code{-F}, \code{if (...)}, \code{sum += ...} & 列単位で取り出す、簡単な整形や集計を行う \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+ここからは、各コマンドの役割と主要なオプションを順に説明する。
+
+\subsection{\code{cat}}
+
+\code{cat} はファイルの中身をそのまま標準出力へ流す。短い設定ファイルや、数行だけの確認用テキストを一気に見たいときに向く。複数のファイルを並べて渡すと、内容を順に連結して表示できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cat data/events.txt
+$ cat header.txt body.txt
+$ cat log/*.log
+$ cat -n config.txt
+\end{lstlisting}
+
+3 行目のように、前節のワイルドカードを使えば複数のログファイルをまとめて連結して表示できる。ただし、巨大なログや観測データへそのまま使うと画面が一気に流れて読めない。長いファイルは、次に述べる \code{less} や \code{head}、\code{tail} を使う方が自然である。
+
+\begin{description}
+\item[\code{-n}] 行番号を付けて表示する。設定ファイルやログの何行目に何があるかを確認したいときに便利である。
+\end{description}
+
+\subsection{\code{less}}
+
+\code{less} は長いファイルをスクロールしながら読むためのコマンドである。大きなデータを「まず中身だけ見たい」ときには、最初に \code{less} を使うことが多い。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ less data/events.txt
+$ less -N data/events.txt
+\end{lstlisting}
+
+\code{less} は単なる表示コマンドではなく、表示中に検索や移動ができる。ログや観測データの形式を確認するときは、次の操作を覚えておくとよい。
+
+\begin{description}
+\item[\code{-N}] 行番号を表示する。後で「どの行に何があったか」を参照しやすくなる。
+\item[\code{Space}] 1 画面ぶん先へ進む。
+\item[\code{b}] 1 画面ぶん戻る。
+\item[\code{/pattern}] 指定した文字列を前方検索する。たとえば \code{/ERROR} と打てば、\code{ERROR} を含む次の行へ飛べる。
+\item[\code{n}] 直前の検索条件の次の一致へ進む。
+\item[\code{q}] 表示を終了してターミナルへ戻る。
+\end{description}
+
+\subsection{\code{head}}
+
+\code{head} はファイルの先頭だけを見るためのコマンドである。どのような形式のデータが入っているか、ヘッダやコメント行はどのようになっているかを確認したいときに向く。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ head data/events.txt
+$ head -n 20 data/events.txt
+\end{lstlisting}
+
+\begin{description}
+\item[\code{-n N}] 先頭から N 行だけ表示する。既定では 10 行なので、少し長めに見たいときに使う。
+\end{description}
+
+\subsection{\code{tail}}
+
+\code{tail} はファイルの末尾だけを見るためのコマンドである。ログファイルの最新部分を確認したいときや、計算結果が末尾へ追記される形式のファイルを見るときに使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ tail log.txt
+$ tail -n 30 log.txt
+$ tail -f log.txt
+\end{lstlisting}
+
+\begin{description}
+\item[\code{-n N}] 末尾から N 行だけ表示する。直近 20 行や 30 行だけ見たいときに使う。
+\item[\code{-f}] ファイルの末尾を監視し、追記された内容を続けて表示する。実行中のジョブのログを見るときに有用である。
+\end{description}
+
+\subsection{\code{wc}}
+
+\code{wc} はファイルの行数、単語数、バイト数などを数えるコマンドである。特に \code{-l} は「何行あるか」を知るためによく使う。データ件数やログの大きさをざっと見積もるときの第一歩になる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ wc data/events.txt
+$ wc -l data/events.txt
+$ wc -w memo.txt
+$ wc -c output.bin
+\end{lstlisting}
+
+\begin{description}
+\item[\code{-l}] 行数を数える。最もよく使う。
+\item[\code{-w}] 単語数を数える。自然言語テキストの確認で使うことが多い。
+\item[\code{-c}] バイト数を数える。ファイルサイズを概算したいときに役立つ。
+\end{description}
+
+\subsection{\code{grep}}
+
+\code{grep} は、条件に合う行だけを抽出するためのコマンドである。ログからエラー行を探す、コメント行を除く、特定の測定条件を含む行だけ取り出す、といった用途で頻繁に使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ grep "ERROR" log.txt
+$ grep -n "ERROR" log.txt
+$ grep -A 2 -B 1 "ERROR" log.txt
+$ grep -i "warning" log.txt
+$ grep -v "^#" data.txt
+$ grep -rn "TODO" src/
+\end{lstlisting}
+
+\begin{description}
+\item[\code{-i}] 大文字と小文字を区別せずに検索する。\code{error} と \code{ERROR} を同じものとして扱いたいときに使う。
+\item[\code{-v}] 一致した行ではなく、一致しなかった行を出す。コメント行やノイズ行を除外したいときに便利である。
+\item[\code{-n}] 一致した行の行番号も表示する。後で元ファイルを見直すときに役立つ。
+\item[\code{-A N}] 一致した行の後ろを N 行ぶん追加で表示する。エラー行の直後にある補足メッセージも一緒に見たいときに便利である。
+\item[\code{-B N}] 一致した行の前を N 行ぶん追加で表示する。エラーの直前に何が起きていたかを見たいときに使う。
+\item[\code{-r}] ディレクトリの中を再帰的に検索する。複数ファイルにまたがって同じ文字列を探したいときに使う。たとえば \code{grep -rn "TODO" src/} と書けば、\code{src/} 以下のすべてのファイルをたどり、\code{TODO} を含む行を行番号付きで表示できる。日常的なログ確認では \code{-A} や \code{-B} の方を先に使うことが多いが、複数ファイル検索ではこちらも重要である。
+\end{description}
+
+\code{grep} では正規表現も使える。たとえば \verb|^| は行頭、\verb|$| は行末を表すので、\verb|grep "^#" data.txt| と書けば「\code{\#} で始まる行」だけを拾える。また、複数のログファイルをまとめて調べたいなら、\code{grep -r "ERROR" log/} のようにディレクトリごと渡せばよい。詳細は付録~\ref{app:regex} を参照されたい。
+
+\subsection{\code{awk}}
+
+\code{awk} は、テキストを列データとして扱って抽出や整形を行うコマンドである。空白区切りのログや表形式テキストを扱うときには非常に強力である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ awk '{print $1}' data.txt
+$ awk '{print $1, $3}' data.txt
+$ awk -F, '{print $2}' data.csv
+$ awk '{ if ($3 > 10) print $1, $3 }' data.txt
+$ awk '{ sum += $3 } END { print sum }' data.txt
+\end{lstlisting}
+
+既定では空白やタブが区切り文字として使われる。そのため、空白区切りの観測データなら \code{\$1} が 1 列目、\code{\$2} が 2 列目という意味になる。条件分岐は \code{if} を明示的に書くこともできるので、「3 列目が 10 より大きい行だけ表示する」といった処理の流れが読みやすい。また、各行で値を足し合わせて最後に合計や平均を出す、といった簡単な計算もそのまま書ける。
+
+\begin{description}
+\item[\code{-F}] 区切り文字を指定する。CSV のようにカンマ区切りなら \code{-F,} のように書く。
+\item[\code{\{print \$1\}}] 1 列目を表示する最も基本的な形である。\code{\{print \$1, \$3\}} のようにすれば複数列を並べて出せる。
+\item[\code{\{ if (\$3 > 10) print \$1, \$3 \}}] 条件分岐を明示的に書く形である。最初のうちは、このように \code{if} を書いた方が処理の意味を追いやすい。
+\item[\code{\{ sum += \$3 \} END \{ print sum \}}] 各行で 3 列目を足し上げ、最後に合計を表示する。簡単な集計や平均計算の出発点として便利である。
+\end{description}
+
+\subsection{パイプ \code{|}}
+
+さらに、強力な手段としてパイプ（\code{|}）がある。パイプは、あるコマンドの標準出力を次のコマンドの入力へそのまま流し込む機能である。単機能のコマンドを組み合わせて欲しい結果を得るのが UNIX 環境の流儀である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cat log.txt | grep "ERROR"
+$ grep "ERROR" log.txt | wc -l
+$ cat events.txt | grep -v "noise" | awk '{print $2}'
+\end{lstlisting}
+
+1 行目は \code{log.txt} の内容を読み出し、その中から \code{ERROR} を含む行だけを表示する。2 行目では、抽出結果をさらに \code{wc -l} へ渡し、エラー件数を数えている。3 行目では、ノイズ行を除外したうえで 2 列目だけを取り出している。
+
+このように、まず全体を見る、次に条件で絞る、最後に列を抜く、という手順を 1 行の中でつなげられる。後の章で \code{tee} やリダイレクトを学ぶと、ここへログ保存や標準エラー処理も組み合わせられるようになる。
 
 \section{環境変数と PATH}
 
@@ -306,7 +439,48 @@ $ echo $DATA_ROOT
 
 \code{export} すると、そのシェルから起動する後続のコマンドにも値が渡る。たとえば Python スクリプト側で \code{DATA\_ROOT} を読めば、データ置き場をコードへ埋め込まずに済む。
 
-ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値ならシェルの設定ファイルに \code{export ...} を書いておく。どのファイルを編集するかは今使っているシェルで決まる。本章の冒頭で \code{echo \$SHELL} を実行して \code{/bin/zsh} と出た場合は \code{\textasciitilde/.zshrc}、\code{/bin/bash} と出た場合は \code{\textasciitilde/.bashrc} を編集する。
+ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値ならシェルの設定ファイルに \code{export ...} を書いておく。
+どのファイルを編集するかは今使っているシェルで決まる。
+\ref{SEC:shell}~節で述べたように、 \code{echo \$SHELL} を実行することで使用しているシェルの種類を確認することができる。
+ \code{/bin/zsh} と出た場合は \code{\textasciitilde/.zshrc}、\code{/bin/bash} と出た場合は \code{\textasciitilde/.bashrc} に \code{export ...} を追記すればよい。
+
+\subsection{展開と引用}
+
+シェルでは、コマンドを実行する前に \code{\$HOME} のような変数展開や、\code{\$(pwd)} のようなコマンド置換が行われる。ここで重要なのは、引用符の種類によって展開の有無が変わることである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ echo $HOME
+$ echo "$HOME"
+$ echo '$HOME'
+$ name="analysis result"
+$ echo $name
+$ echo "$name"
+$ echo "$(pwd)"
+$ echo "`pwd`"
+\end{lstlisting}
+
+1 行目と 2 行目は、どちらも \code{\$HOME} を展開する。多くの場合、\code{HOME} には空白が入らないので、見た目の結果は同じになる。しかし、クォートなしの \code{\$HOME} は展開後に空白で分割されたり、ワイルドカードとして再解釈されたりする可能性がある。これに対して \code{"\$HOME"} は 1 つの引数として保たれるので、安全である。したがって、「変数は基本的にダブルクォートで囲む」と覚えた方がよい。
+
+3 行目のシングルクォート \code{'...'} は、中の文字列をほぼそのまま扱う。そのため \code{\$HOME} は展開されず、文字どおり \code{\$HOME} と表示される。4 行目と 5 行目の違いは、空白を含む値で見ると分かりやすい。 \code{name="analysis result"} のあとで \code{echo \$name} と書くと、シェルは \code{analysis} と \code{result} を別々の単語として扱う。これに対して \code{echo "\$name"} なら、空白を含んだまま 1 つの値として渡る。6 行目の \code{\$(pwd)} は \code{pwd} の出力で置き換える書き方であり、7 行目のバッククォート記法も同じ目的で使われる。ただし、新しく書くなら \code{\$(...)} の方が読みやすく、入れ子にもできるので自然である。
+
+この違いは、設定ファイルへ 1 行追記するときに特に重要である。たとえば \code{echo 'export PATH="\$HOME/bin:\$PATH"' >> \textasciitilde/.zshrc} のようにシングルクォートで囲むと、\code{\$HOME} や \code{\$PATH} を展開せず、その文字列をそのまま \code{\textasciitilde/.zshrc} へ追記できる。もしダブルクォートで囲むと、その場で現在の値へ展開されて書き込まれるので、意図とずれることがある。
+
+また、空白と改行の扱いにも注意が必要である。クォートの外では、空白やタブや改行が単語の区切りになる。そのため、空白を含むファイル名はクォートしないと壊れる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ mkdir "analysis result"
+$ cp "analysis result/data.txt" backup/
+\end{lstlisting}
+
+1 つの長いコマンドを複数行へ分けたいときは、行末に \code{\textbackslash} を置いて改行を継続する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python analyze.py \
+  --input data/events.txt \
+  --output result.txt
+\end{lstlisting}
+
+改行は通常その場でコマンドの終わりになるので、\code{\textbackslash} を付けずに改行すると別のコマンドとして解釈される。コマンド例を写すときは、空白、クォート、改行のどれが意味を持っているかを意識した方が安全である。
 
 \subsection{PATH と実行ファイル}
 
@@ -318,15 +492,92 @@ $ which ls
 $ echo $PATH
 \end{lstlisting}
 
-\code{which python3} を実行すると、たとえば \code{/opt/homebrew/bin/python3} や \code{.venv/bin/python} のような場所が表示される。シェルは \code{\$PATH} に並んだディレクトリを左から順に調べ、最初に見つかった実行ファイルを使う。
+\code{which python3} を実行すると、たとえば Homebrew の Python なら \code{/opt/homebrew/bin} の下、仮想環境なら \code{.venv/bin} の下の実行ファイルが表示される。シェルは \code{\$PATH} に並んだディレクトリを左から順に調べ、最初に見つかった実行ファイルを使う。
 
-\code{bin} という名前は、実行ファイルを置くディレクトリによく使われる。後で出てくる \code{.venv/bin/python} や \code{.venv/bin/pip} の \code{bin} も、この慣習に従っている。
+\code{bin} という名前は、実行ファイルを置くディレクトリによく使われる。後で出てくる \code{.venv/bin} の \code{bin} も、この慣習に従っている。
 
 自分が作ったシェルスクリプトや実行ファイルを別のディレクトリ（例えば \code{\textasciitilde/my\_scripts}）に置き、どこからでもコマンド名だけで呼び出したい場合は、次のように現在の \code{\$PATH} の先頭に自分のディレクトリを追加して上書きすればよい。これもシェル起動時に毎回行う必要があるなら、\code{\textasciitilde/.zshrc} などに記載しておく。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ export PATH="$HOME/my_scripts:$PATH"
 \end{lstlisting}
+
+\section{リダイレクトとログ保存}
+
+\subsection{\code{echo}、標準出力、標準エラー}
+
+シェルのコマンドは、単に画面へ文字を出すだけではなく、出力先を切り替えられる。ここで区別したいのは、通常の結果を流す標準出力（standard output, stdout）と、エラーメッセージを流す標準エラー（standard error, stderr）である。
+
+\code{echo} は標準出力へ文字列を出す最も基本的なコマンドであり、動作確認や設定ファイルへの追記でよく使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ echo "hello"
+$ echo "$HOME"
+\end{lstlisting}
+
+1 行目は単に \code{hello} を出力する。2 行目は前節で述べた変数展開により、\code{\$HOME} の値を出力する。ここで重要なのは、\code{echo} 自体は画面へ出しているだけであり、その出力先は次の節のリダイレクトで変えられるという点である。
+
+\subsection{\code{>} と \code{>>}}
+
+\code{>} は標準出力をファイルへ書き出す。既存のファイルがあれば中身を上書きする。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ echo "alpha" > notes.txt
+$ cat notes.txt
+alpha
+\end{lstlisting}
+
+この例では、\code{echo} の結果が画面ではなく \code{notes.txt} に保存される。すでに \code{notes.txt} が存在していた場合も、その内容は新しい内容で置き換わる。したがって、\code{>} は便利だが、うっかり使うと既存ファイルを消してしまう。
+
+\code{>>} は追記であり、既存の内容を残したまま末尾に足す。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ echo "alpha" > notes.txt
+$ echo "beta" >> notes.txt
+$ cat notes.txt
+alpha
+beta
+\end{lstlisting}
+
+設定ファイルの末尾へ 1 行追加したいときは、この \code{>>} を使う。たとえば \code{\textasciitilde/.zshrc} に環境変数の設定を足すときに自然である。逆に、\code{>} を使うと既存の設定を消してしまうので注意が必要である。
+
+\subsection{\code{1>} と \code{2>}}
+
+\code{>} は実際には \code{1>} と同じ意味であり、標準出力だけをファイルへ送る。標準エラーを別ファイルへ分けたいときは \code{2>} を使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python analyze.py > output.log
+$ python analyze.py 1> output.log 2> error.log
+\end{lstlisting}
+
+1 行目では通常の出力だけが \code{output.log} に入り、エラーメッセージは画面に残る。2 行目では、通常の出力を \code{output.log} に、エラーメッセージを \code{error.log} に分けて保存している。長い処理を回すときは、「結果は保存したいが、失敗したときの原因も別に残したい」ということが多いので、この書き方は有用である。
+
+標準出力と標準エラーを同じファイルへまとめたいときは、\code{2>\&1} を使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python analyze.py > run.log 2>&1
+\end{lstlisting}
+
+これは、標準エラーの行き先を標準出力と同じ先へ合わせる、という意味である。ログを 1 本にまとめたいときに使う。
+
+\subsection{\code{tee} で見ながら保存する}
+
+\code{>} や \code{>>} を使うと出力はファイルへ送られ、画面には出なくなる。実行中の様子も見たいが、同時に保存もしたいときは \code{tee} が便利である。\code{tee} は標準入力を受け取り、その内容を画面へ出しつつファイルへも書く。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python analyze.py | tee run.log
+$ python analyze.py 2>&1 | tee run.log
+\end{lstlisting}
+
+1 行目は標準出力だけを画面と \code{run.log} の両方へ流す。2 行目は標準エラーもまとめてから \code{tee} へ渡しているので、実質的に「全部を見ながら全部を保存する」形になる。処理が数分から数十分かかる場合、進捗を画面で見つつ、あとで見返すためのログも残せるので実用的である。
+
+\code{tee} に \code{-a} を付けると追記になる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python analyze.py 2>&1 | tee -a run.log
+\end{lstlisting}
+
+この場合は、既存の \code{run.log} を消さずに末尾へ足していく。毎日の実行結果を 1 つのログへ蓄積したい場合に向く。
 
 \section{権限とスクリプトの実行}
 
@@ -341,10 +592,23 @@ $ export PATH="$HOME/my_scripts:$PATH"
 \end{lstlisting}
 
 最初の 10 文字のうち、先頭 1 文字はファイル種別であり、残り 9 文字が権限である。3 文字ずつに区切って、所有者、グループ、その他の利用者に対する権限を表す。
+文字と権限の対応は表~\ref{table:mod}のとおりである。
+
+権限を変更するには\code{chmod}コマンドを用いる。
+所有者（\code{user}）に実行権限（\code{x}）を付与したければ\code{u+x}、その他の利用者（\code{other}）の読み込み権限（\code{r}）と書き込み権限（\code{w}）を剥奪したければ\code{o-rw}、グループ（\code{group}）とその他（\code{other}）の権限を読み取り（\code{r}）のみにしたければ\code{go=r}のように指定すればよい。
+\code{a+x}のようにして、すべてのユーザー（\code{all}）の権限を変更することもできる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ chmod u+x my_script.sh
+$ chmod o-rw notes.txt
+$ chmod go=r read_only.txt
+$ chmod a+x run_analysis.sh
+\end{lstlisting}
 
 \begin{table}[hbtp]
 \centering
 \caption{権限の記号と数字}
+\label{table:mod}
 \begin{tabular}{lll}
 \toprule
 記号 & 数字 & 意味 \\
@@ -356,7 +620,7 @@ $ export PATH="$HOME/my_scripts:$PATH"
 \end{tabular}
 \end{table}
 
-数字指定では足し算で表す。たとえば \code{7} は \code{rwx}、\code{6} は \code{rw-}、\code{5} は \code{r-x} である。したがって \code{755} は所有者が \code{rwx}、それ以外が \code{r-x} を意味し、\code{644} は所有者が \code{rw-}、それ以外が \code{r--} を意味する。秘密鍵のように本人だけが読めればよいものには \code{600} がよく使われる。設定を変更する例を下に示す。
+表~\ref{table:mod}に示すように、権限は数字で指定することもできる。数字指定では権限を足し算で表す。たとえば \code{7} は \code{rwx}、\code{6} は \code{rw-}、\code{5} は \code{r-x} である。したがって \code{755} は所有者が \code{rwx}、それ以外が \code{r-x} を意味し、\code{644} は所有者が \code{rw-}、それ以外が \code{r--} を意味する。秘密鍵のように本人だけが読めればよいものには \code{600} がよく使われる。設定を変更する例を下に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod 755 run_analysis.sh
@@ -367,7 +631,6 @@ $ chmod 600 ~/.ssh/id_ed25519
 \subsection{スクリプトを直接実行する}
 
 Python スクリプトは \code{python3 hello.py} の形で実行するなら、実行権限がなくてもよい。これに対して \code{./hello.py} のように直接実行する場合には、どのプログラムで解釈するかをファイル先頭に書いておく必要がある。
-
 その先頭行の \code{\#!} で始まる記法を、シバン (shebang) という。
 
 \begin{lstlisting}[language=Python]
@@ -376,7 +639,8 @@ Python スクリプトは \code{python3 hello.py} の形で実行するなら、
 print("hello")
 \end{lstlisting}
 
-このように記述した上で、ファイルそのものに対して直接実行できるようにするため、権限を付与して呼び出す。
+このように記述した上で、ファイルそのものに対して直接実行できるようにするため、実行権限を付与する。
+所有者に対して権限を付与する場合は、付与の対象（\code{u}）を省略することができる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod +x hello.py

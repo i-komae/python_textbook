@@ -1,15 +1,163 @@
 \chapter{Matplotlib による可視化}
 
-\section{可視化の基本}
+Matplotlib は、Python で図を描くための標準的なライブラリである。本章では、まず Figure と Axes の考え方を整理し、次に最小限の作図、ラベルや凡例、スタイル管理、比較図の作り方を順に扱う。後半では、大規模データの可視化や出力形式の選び方も含めて、解析で実際に困りやすい点を説明する。
+
+\section{Matplotlib が扱う考え方}
 
 図はレポートの飾りではない。ヒストグラムや散布図は、計算結果の妥当性を自分で確かめるための道具でもある。数値だけを並べるより、まず図にした方が異常に気付きやすいことは多い。
 
 例えば、平均値や標準偏差が妥当に見えても、分布の裾が長い、二峰性がある、外れ値が混ざっている、といった特徴は図にしないと分かりにくい。可視化は最後の仕上げではなく、途中の確認作業としても重要である。
 
-\subsection{最小限のヒストグラム}
+\subsection{Figure, Axes, Axis, Artist}
+
+Matplotlib の初学者が最も混乱しやすいのは、\code{Figure} と \code{Axes} と \code{Axis} の区別である。特にややこしいのは、\code{Axes} という名前が複数形に見えるにもかかわらず、Matplotlib では「1 枚の作図パネル」を表すクラス名として使われている点である。まずは次の対応で覚えるとよい。
+
+\begin{description}
+\item[\code{Figure}] 図全体である。1 つの PDF や PNG、1 つの表示ウィンドウに相当する。\code{savefig}、\code{suptitle}、図全体の凡例や colorbar などは主に Figure 側の仕事である。
+\item[\code{Axes}] データを実際に描く 1 つのパネルである。\code{plot}、\code{hist}、\code{scatter}、\code{set\_xlabel}、\code{legend} など、日常的な作図命令の多くは Axes のメソッドとして呼ぶ。
+\item[\code{Axis}] 目盛り、目盛りラベル、スケールを管理する部品である。通常は \code{ax.set\_xscale("log")} や \code{ax.set\_xlim(...)} のように Axes 経由で触るが、内部には \code{ax.xaxis} と \code{ax.yaxis} がある。
+\item[\code{Artist}] 図の中に描かれるすべての要素の総称である。線は \code{Line2D}、文字は \code{Text}、凡例は \code{Legend}、ヒストグラムの棒は \code{Rectangle} といった Artist として管理される。
+\end{description}
+
+Figure、Axes、Axis、Artist の階層関係だけを先に木構造で書くと、次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+Figure
+|-- Axes
+|   |-- xaxis
+|   |-- yaxis
+|   |-- Line2D
+|   |-- Text (title, xlabel, ylabel)
+|   `-- Legend
+`-- Figure-level Text / Colorbar / ...
+\end{lstlisting}
+
+\noindent この対応を、実際の Python オブジェクトの型で確かめる短いコードを次に示す。
 
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
+
+x = [0, 1, 2, 3]
+y = [1.0, 2.0, 1.5, 3.0]
+
+fig, ax = plt.subplots(figsize=(6, 4))
+line, = ax.plot(x, y, label="signal")
+ax.set_title("Axes title")
+ax.set_xlabel("time")
+ax.set_ylabel("signal")
+legend = ax.legend()
+
+print(type(fig).__name__)
+print(type(ax).__name__)
+print(type(ax.xaxis).__name__)
+print(type(line).__name__)
+print(type(legend).__name__)
+print(len(fig.axes))
+fig.savefig("line.pdf")
+\end{lstlisting}
+
+このコードを実行すると、次の出力が得られる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+Figure
+Axes
+XAxis
+Line2D
+Legend
+1
+\end{lstlisting}
+
+最後の \code{1} は、この Figure の中に Axes が 1 枚だけ入っていることを表す。もし \code{plt.subplots(2, 2)} と書けば、Figure は 1 つのままで、Axes が 4 枚入る。
+
+\code{Artist} という言葉も、線だけを指すわけではない。タイトルや軸ラベルは \code{Text}、ヒストグラムの各棒は \code{Rectangle} として管理される。次のコードで、どの型が返るかを確かめる。
+
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(6, 4))
+title = ax.set_title("Histogram")
+xlabel = ax.set_xlabel("value")
+bars = ax.hist([1, 1, 2, 3], bins=[0.5, 1.5, 2.5, 3.5])[2]
+
+print(type(title).__name__)
+print(type(xlabel).__name__)
+print(type(bars).__name__)
+print(type(bars[0]).__name__)
+\end{lstlisting}
+
+\noindent このコードの出力は次のとおりである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+Text
+Text
+BarContainer
+Rectangle
+\end{lstlisting}
+
+ここで \code{bars} 全体は \code{BarContainer} であり、その中の 1 本 1 本は \code{Rectangle} である。したがって、「ヒストグラムの棒だけ色を変える」といった細かい調整は、最終的には Artist を触る操作だと理解できる。
+
+Figure 側の要素も、コードで見ると役割が分かりやすい。図全体タイトル \code{suptitle} や colorbar は、特定の Axes だけでなく Figure 全体の見た目に関わることが多い。次のコードでは、その型を確認する。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(5, 4))
+img = ax.imshow(np.arange(4).reshape(2, 2))
+suptitle = fig.suptitle("Figure title")
+cbar = fig.colorbar(img, ax=ax)
+
+print(type(suptitle).__name__)
+print(type(cbar).__name__)
+\end{lstlisting}
+
+\noindent このコードでは、次の出力が得られる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+Text
+Colorbar
+\end{lstlisting}
+
+\code{suptitle} は Figure 全体に付く \code{Text} であり、\code{colorbar} は Figure に追加される補助要素である。複数パネルの図で共通タイトルや共通 colorbar を付けたいときは、Axes よりも Figure 側の仕事だと考えると整理しやすい。
+
+Axis は少し見えにくい部品だが、実際には目盛りと表示範囲を管理している。たとえば次のような操作は Axis に関わる設定である。
+
+\begin{lstlisting}[language=Python]
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.plot([1, 10, 100], [2, 3, 5], marker="o")
+ax.set_xlim(1, 100)
+ax.set_xscale("log")
+\end{lstlisting}
+
+\code{set\_xlim} は表示範囲を、\code{set\_xscale("log")} は目盛りの刻み方を変える。ふだんは \code{ax.xaxis} を直接操作しなくても、Axes メソッド経由で Axis の設定を変えていると理解すれば十分である。
+
+どのオブジェクトを操作すべきかは、何を変えたいかで決まる。次の対応で考えると迷いにくい。
+
+\begin{itemize}
+\item 図全体を保存する、図全体タイトルを付ける: Figure
+\item 線やヒストグラムを描く、軸ラベルや凡例を付ける: Axes
+\item 対数軸、目盛り位置、目盛りラベルを変える: Axis 関連。ただし実際の操作は Axes メソッド経由が多い
+\item 特定の線だけ色や太さを変える、凡例や文字を細かく調整する: Artist
+\end{itemize}
+
+図~\ref{fig:anatomy-example} に、Figure、Axes、Axis、Artist の位置関係を示す。まずは「Figure の中に Axes があり、その中に Axis と各種 Artist がある」という階層だけ押さえれば十分である。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.86\linewidth]{anatomy_example.pdf}
+\caption{Figure、Axes、Axis、Artist の関係を示した例。1 つの Figure の中に Axes があり、その Axes の中で線、文字、凡例などの Artist が描かれている。}
+\label{fig:anatomy-example}
+\end{figure}
+
+この区別が付くと、「保存はなぜ \code{fig.savefig(...)} なのか」「凡例はなぜ \code{ax.legend()} なのか」「対数軸はなぜ \code{ax.set\_xscale("log")} で変えるのか」が自然につながる。Matplotlib を使い始めたら、まず \code{fig} と \code{ax} のどちらへ命令しているのかを追うだけでも、コードの見通しはかなり良くなる。
+
+\subsection{最小限のヒストグラム}
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+values = np.random.normal(loc=0.0, scale=1.2, size=2500)
 
 plt.hist(values, bins=40)
 plt.xlabel("value")
@@ -17,15 +165,27 @@ plt.ylabel("count")
 plt.savefig("histogram.pdf")
 \end{lstlisting}
 
-解析では PDF 出力が便利である。拡大しても崩れにくく、LaTeX レポートへそのまま入れやすいからである。図~\ref{fig:distribution-examples} は、本章と次章で扱う基本的な図とフィットの例である。
+解析では PDF 出力が便利である。拡大しても崩れにくく、LaTeX レポートへそのまま入れやすいからである。図~\ref{fig:basic-histogram-example} は、この最小例をそのまま実行したときの典型的な出力である。
 
 \code{plt.show} による対話的な確認は便利だが、再現可能な解析では \code{savefig} でファイルへ残す方が重要になる。図を保存するたびに同じファイル名へ上書きするのか、条件ごとに別名で保存するのかも、早い段階で決めておくと混乱しにくい。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.72\linewidth]{basic_histogram_example.pdf}
+\caption{最小限のヒストグラム出力例。最初は、入力配列 \code{values} が何本の棒へ数え上げられているかだけを追えばよい。}
+\label{fig:basic-histogram-example}
+\end{figure}
 
 \subsection{オブジェクト指向 API で描く}
 
 Matplotlib には \code{plt.hist(...)} のような簡単な書き方と、\code{Figure} と \code{Axes} を明示的に扱う書き方がある。図が複雑になるほど、後者の方が整理しやすい。
 
 \begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+values = np.random.normal(loc=0.0, scale=1.2, size=2500)
+
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.hist(values, bins=40)
 ax.set_xlabel("value")
@@ -33,9 +193,119 @@ ax.set_ylabel("count")
 fig.savefig("histogram.pdf")
 \end{lstlisting}
 
-\code{ax} に対して操作を書く形にしておくと、複数図や複数パネルへ発展しやすい。教材やレポート用のコードでは、この書き方に慣れておく価値が高い。
+\code{ax} に対して操作を書く形にしておくと、複数図や複数パネルへ発展しやすい。解析スクリプトを後で拡張したり、提出用の図を安定して作り直したりする場面では、この書き方に慣れておく価値が高い。
 
 また、\code{Figure} と \code{Axes} を区別して考えると、図全体に効く設定と各パネルにだけ効く設定を整理しやすい。タイトルや余白は図全体、軸ラベルや凡例は各パネル、というように役割を分けて考えると見通しが良い。
+
+\subsection{plot 関数へ渡すデータ}
+
+Matplotlib の多くの作図関数は、NumPy 配列や Python リストのような「配列に変換できるもの」を受け取る。加えて、辞書や DataFrame のように列名で参照できるオブジェクトなら、\code{data=} を使って列名指定で描くこともできる。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+times = [0, 1, 2, 3]
+values = [1.0, 2.0, 1.5, 3.0]
+
+fig, ax = plt.subplots(figsize=(6, 4))
+x = np.asarray(times)
+y = np.asarray(values)
+ax.plot(x, y)
+
+table = {"time": x, "value": y}
+ax.plot("time", "value", data=table)
+\end{lstlisting}
+
+\code{np.asarray} で NumPy 配列へそろえておくと、型のぶれを減らせる。\code{data=} は短いコードを書くのに便利だが、列名の打ち間違いに気付きにくいこともあるので、最初は \code{x} と \code{y} を明示して渡す方が安全である。
+
+\subsection{軸ラベル、凡例、目盛り}
+
+図として最低限必要なのは、軸ラベル、必要なら単位、系列名、そして比較に必要な目盛りである。ここを省くと、図が描けても読めない。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(0.0, 10.0, 60)
+y = np.exp(-x / 4.0) * (1.0 + 0.08 * np.sin(2.5 * x))
+
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.plot(x, y, marker="o", label="sample A")
+ax.set_xlabel(r"$t\,[\mathrm{s}]$")
+ax.set_ylabel("signal")
+ax.set_title("Labeled line example")
+ax.set_xticks([0, 2, 4, 6, 8, 10])
+ax.legend(loc="upper right")
+fig.savefig("labeled_plot_example.pdf")
+\end{lstlisting}
+
+図~\ref{fig:labeled-plot-example} のように、ラベルと凡例と目盛りがそろうだけで、何を見せたい図なのかが一気に分かりやすくなる。最初は配色に凝るより、まずラベルと凡例を外さない方が重要である。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.72\linewidth]{labeled_plot_example.pdf}
+\caption{ラベル、凡例、目盛りを付けた最小限の線図。横軸の単位と系列名があるだけで読みやすさが大きく変わる。}
+\label{fig:labeled-plot-example}
+\end{figure}
+
+\subsection{補助関数で作図をまとめる}
+
+同じ体裁の図を何枚も作るなら、Axes を引数に取る補助関数へまとめると管理しやすい。Matplotlib の公式 quick start でも、この書き方が勧められている。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+def plot_hist(ax, values, label):
+    ax.hist(values, bins=40, alpha=0.7, label=label)
+    ax.set_xlabel("value")
+    ax.set_ylabel("count")
+    ax.legend(loc="upper right")
+
+rng = np.random.default_rng(0)
+values1 = rng.normal(loc=0.0, scale=1.0, size=2500)
+values2 = rng.normal(loc=0.8, scale=1.3, size=2500)
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
+plot_hist(axes[0], values1, "sample A")
+plot_hist(axes[1], values2, "sample B")
+fig.savefig("subplots_example.pdf")
+\end{lstlisting}
+
+重要なのは、\code{plt.hist(...)} のようなグローバルな状態へ書くのではなく、「どの Axes に描くか」を引数で受け取る点である。比較図、条件ごとの反復描画、関数の再利用がしやすくなる。
+
+\section{よくある落とし穴}
+
+\subsection{\code{plt} と \code{ax} を混ぜて迷子になる}
+
+Matplotlib では \code{plt.xlabel(...)} のような状態依存の書き方もできるが、複数パネルや複数 Figure を扱い始めると、「いまどの Axes が現在の対象なのか」が分かりにくくなる。複雑な図では \code{fig, ax = plt.subplots(...)} を起点にして、以後は \code{ax.set\_xlabel(...)} のように書く方が安全である。
+
+\subsection{文字列がカテゴリ軸になる}
+
+数字に見える列でも、実際には文字列として読まれていると、Matplotlib は数値軸ではなくカテゴリ軸として解釈する。すると、\code{1}, \code{2}, \code{10}, \code{20} が数値間隔ではなく、単なる 4 つのラベルとして等間隔に並ぶ。
+
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+
+x_str = ["1", "2", "10", "20"]
+y = [1.0, 4.0, 2.0, 5.0]
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.plot(x_str, y, marker="o")
+\end{lstlisting}
+
+図~\ref{fig:string-axis-example} の左では文字列がカテゴリ軸として扱われ、右では数値へ変換したので数値軸になっている。CSV を読んだ直後に軸の間隔が変だと感じたら、まず \code{dtype} を疑う方がよい。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.92\linewidth]{string_axis_example.pdf}
+\caption{文字列軸と数値軸の違い。左は \code{"1"}, \code{"2"}, \code{"10"}, \code{"20"} をカテゴリとして並べており、右は数値として扱っている。}
+\label{fig:string-axis-example}
+\end{figure}
+
+\subsection{\code{savefig} と余白調整の順序}
+
+\code{savefig} の直前に \code{tight\_layout()} や \code{constrained\_layout} を使わないと、長いラベルや凡例が切れることがある。また、対話環境では \code{show()} の後に状態が変わることもあるため、再現可能なスクリプトでは「描く、余白を整える、保存する」の順を守る方がよい。対数軸を使う場合は、0 以下の値をそのまま載せられない点にも注意が必要である。
 
 \section{見た目とスタイルの管理}
 
@@ -73,11 +343,22 @@ mpl.rcParams.update(
 )
 \end{lstlisting}
 
+\begin{itemize}
+\item \code{font.family}: 既定フォント族を決める。本文と図の雰囲気をそろえたいときの入口になる。
+\item \code{font.size}: 文字の基本サイズである。発表スライド用と論文用で最初に変えたくなる項目である。
+\item \code{axes.grid}, \code{grid.linestyle}: グリッドを既定で表示するか、その線種をどうするかを決める。
+\item \code{xtick.direction}, \code{ytick.direction}: 目盛り線を内向きにするか外向きにするかを決める。
+\item \code{axes.linewidth}: 枠線の太さである。細すぎると印刷時に弱く見える。
+\item \code{legend.frameon}: 凡例の枠を出すかどうかを決める。
+\end{itemize}
+
+\code{rcParams} で設定した値は、そのスクリプトで後から作る図へまとめて効く。したがって、「毎回同じ見た目にしたい項目」をここへ集め、「この図だけ変えたい項目」は後で \code{ax.set\_*} などで上書きする、と分けると整理しやすい。
+
 \subsection{設定ファイル (.mplstyle) で見た目を共通化する}
 
-しかし、解析テーマごとに作図スクリプトが何個も増えていくと、すべての Python ファイルの先頭に上記の長い辞書をコピーして回るのは非常に冗長である。Matplotlib には、この設定内容を一つのプレーンテキストに切り出して一括で読み込む、よりスマートな仕組みが存在する。
+しかし、解析テーマごとに作図スクリプトが増えていくと、すべての Python ファイルの先頭に上記の長い辞書をコピーするのは冗長である。Matplotlib では、これらの設定をプレーンテキストに切り出し、まとめて読み込める。
 
-ご自身の Python スクリプトを置いている作業ディレクトリに \code{my\_style.mplstyle} という名前で以下のようなテキストファイルを作成する。
+作業ディレクトリに \code{my\_style.mplstyle} という名前で、次のような設定ファイルを作成する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 font.family: serif
@@ -170,7 +451,7 @@ for ax in axes:
     ax.set_axisbelow(True)
 
 fig.tight_layout()
-fig.savefig("comparison.pdf")
+fig.savefig("subplots_example.pdf")
 \end{lstlisting}
 
 この例では、\code{axes} は二つの \code{Axes} を並べた配列であり、\code{for ax in axes:} の部分で「凡例位置をそろえる」という共通処理を両パネルへまとめて適用している。\code{sharey=True} を付けると縦軸の尺度がそろうため、左右の高さをそのまま比較しやすい。ここでは各パネルに系列が一つしかないため、凡例はやや大げさに見えるかもしれないが、後からフィット曲線や参照線を重ねるとそのまま拡張できる書き方である。
@@ -178,6 +459,13 @@ fig.savefig("comparison.pdf")
 \code{tight\_layout} は余白調整の基本であるが、すべてを自動で完璧に直してくれるわけではない。タイトルや長いラベルが多い場合は、図のサイズや余白を自分で調整した方がよい。複数パネルの図では、どのパネルを比較させたいのかを意識して配置することが大切である。
 
 凡例がデータを隠すなら、\code{loc="best"} で自動配置に任せるか、\code{bbox\_to\_anchor} を使って枠の外へ逃がす。レイアウト調整は「自動で整うかどうか」ではなく、「比較したい情報が隠れていないかどうか」で判断する方が実践的である。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.92\linewidth]{subplots_example.pdf}
+\caption{左右に並べたヒストグラムの出力例。縦軸を共有すると、高さの差をそのまま比較しやすい。}
+\label{fig:subplots-example}
+\end{figure}
 
 \subsection{結果例の読み方}
 
@@ -201,6 +489,18 @@ fig.savefig("comparison.pdf")
     \item \textbf{ベクタ形式 (\code{.pdf}, \code{.svg}, \code{.eps})}：どれだけ拡大しても線や文字がぼやけない。論文やレポートで図を用いる場合、文字やプロット点を高品質なまま印刷できるためこれが基本となる。関数 \code{savefig("plot.pdf")} で保存できる。
     \item \textbf{ラスタ形式 (\code{.png}, \code{.jpg})}：ピクセル（点）の集まりで画像を描画する。拡大するとジャギ（ピクセルのギザギザ）が見える。ただし、例えば数十万点に及ぶ密集した散布図や、ヒートマップのような巨大な2次元データをベクタ形式で保存すると、点の一つ一つがファイルに記録されるためファイルサイズがギガバイトを超え、PDFビューアがフリーズする原因になる。そのような複雑な図の場合は、\code{savefig("plot.png", dpi=150)} のように解像度（dpi）を指定して PNG で出力する方が適切である。
 \end{itemize}
+
+\begin{lstlisting}[language=Python]
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.plot(x, y)
+ax.set_xlabel("time [ns]")
+ax.set_ylabel("count")
+
+fig.savefig("spectrum.pdf")
+fig.savefig("spectrum.png", dpi=150)
+\end{lstlisting}
+
+同じ図でも、\code{spectrum.pdf} は拡大しても線と文字が崩れにくく、\code{spectrum.png} はスライド貼り付けや Web 掲載で扱いやすい。どちらが良いかは「図の複雑さ」と「最終的な使い道」で決まる。線図や通常のヒストグラムなら PDF を第一候補にし、巨大散布図やヒートマップでは PNG を検討する方が実務的である。
 
 \subsection{相関の可視化：論理的改善ステップ}
 
@@ -289,7 +589,7 @@ axes[1].set_title("Data B")
 # 複数のパネルを描くと軸の数字やラベルが隣の図と重なりやすいため、
 # 最後に必ず tight_layout() を呼んで余白を自動調整する。
 fig.tight_layout()
-fig.savefig("comparison.pdf")
+fig.savefig("subplots_example.pdf")
 \end{lstlisting}
 
 単純な \code{plt.plot()} ばかり使っていると、この「特定のパネル（\code{axes[0]}）に対して描画を命令する」という書き方に慣れるのに少し時間がかかるが、複雑な比較図を作る上では避けて通れない技法である。
@@ -325,3 +625,16 @@ axes[1].set_xscale('log')
 fig.tight_layout() # ラベルや目盛りが重ならないように余白を自動調整
 fig.savefig("errorbar_example.pdf")
 \end{lstlisting}
+
+\subsection{公式資料から似た図を探す}
+
+Matplotlib は機能が広いため、作りたい図の名前が分からなくても、公式資料から似たものを探す方が早いことが多い。特に次の 4 つは、章を読み終えた後も繰り返し見る価値が高い。
+
+\begin{itemize}
+\item Quick start: \href{https://matplotlib.org/stable/users/explain/quick_start.html}{Matplotlib Quick Start}
+\item Plot types: \href{https://matplotlib.org/stable/plot_types/index.html}{Plot types}
+\item Gallery: \href{https://matplotlib.org/stable/gallery/index.html}{Gallery}
+\item Cheatsheets: \href{https://matplotlib.org/cheatsheets/}{Cheatsheets}
+\end{itemize}
+
+作りたいグラフのイメージが先にあるなら、まず \code{Plot types} で種類を当て、次に \code{Gallery} で近い完成例を探し、最後に \code{Cheatsheets} で引数名や書式を確認する、という順にたどると迷いにくい。初学者が最初から完全なコードを自力で組み立てるより、近い例を見つけて必要な部分だけ差し替える方が現実的である。

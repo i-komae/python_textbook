@@ -14,6 +14,9 @@ SOURCES := $(MAIN).tex $(wildcard chapters/*.tex) $(wildcard assets/figures/*)
 
 .PHONY: all pdf clean distclean
 
+open: $(MAIN).pdf
+	$(OPEN_PDF) $(MAIN).pdf
+
 all: | $(BUILD_DIR) $(CACHE_DIR) $(VAR_DIR)
 	TEXMFCACHE=$(CACHE_DIR) TEXMFVAR=$(VAR_DIR) $(LATEXMK) $(LATEXMK_FORCE_FLAGS) $(MAIN).tex
 	cp $(BUILD_DIR)/$(MAIN).pdf $(MAIN).pdf
