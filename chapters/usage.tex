@@ -56,26 +56,23 @@
 
 特に初学者は、1 行ずつ読んで意味を取ろうとして全体像を見失いがちである。まずは関数名、引数、返り値、ファイル名、出力先だけを追い、流れをつかんでから細部へ戻る方が理解しやすい。本書のコード例も、その読み方を意識して配置している。
 
-\section{併用するとよい公開資料}
+\section{参考資料}
+\label{sec:reference-guide}
 
-本書は独立して読めるように書いているが、コマンドの細かいオプションやライブラリの仕様は版によって変わることがある。そのため、必要に応じて公式の公開資料も併用した方がよい。本書の記述も、以下のような公開資料の内容を踏まえて整理している。
+本書は独立して読めるように書いているが、コマンドの細かいオプションやライブラリの仕様は版によって変わることがある。そのため、必要に応じて公式資料も併用した方がよい。本文で公式資料に触れた箇所には参考文献番号を付けてあり、巻末の参考文献にはその番号ごとに題名と URL をまとめてある。
+
+特に参照頻度が高い資料は、次の通りである。
 
 \begin{itemize}
-\item Python 全般: \href{https://docs.python.org/3/tutorial/}{Python 公式チュートリアル} と \href{https://docs.python.org/3/library/}{Python 標準ライブラリ}
-\item JupyterLab: \href{https://jupyterlab.readthedocs.io/}{JupyterLab Documentation}
-\item uv: \href{https://docs.astral.sh/uv/}{uv Documentation}
-\item pyenv: \href{https://github.com/pyenv/pyenv}{pyenv README / Documentation}
-\item NumPy: \href{https://numpy.org/doc/stable/}{NumPy Documentation}
-\item pandas: \href{https://pandas.pydata.org/docs/}{pandas Documentation}
-\item Polars: \href{https://docs.pola.rs/}{Polars Documentation}
-\item Matplotlib: \href{https://matplotlib.org/stable/}{Matplotlib Documentation}
-\item SciPy: \href{https://docs.scipy.org/doc/scipy/}{SciPy Documentation}
-\item Astropy: \href{https://docs.astropy.org/}{Astropy Documentation}
-\item Git: \href{https://git-scm.com/doc}{Git Documentation}
-\item GitHub: \href{https://docs.github.com/}{GitHub Docs}
+\item Python の基礎:~\cite{python_tutorial,python_library}
+\item JupyterLab と環境構築:~\cite{jupyterlab_docs,uv_docs,pyenv_docs}
+\item NumPy, pandas, Polars:~\cite{numpy_quickstart,pandas_tutorials,pandas_10min,polars_concepts,polars_lazy,polars_from_pandas}
+\item Matplotlib:~\cite{matplotlib_quick_start,matplotlib_plot_types,matplotlib_gallery,matplotlib_cheatsheets}
+\item SciPy, Astropy:~\cite{scipy_user_guide,astropy_getting_started,astropy_user_guide}
+\item Git, GitHub:~\cite{git_docs,github_docs}
 \end{itemize}
 
-特にシェルの \code{ssh}、\code{rsync}、\code{ls}、\code{chmod} などは、環境ごとに細かな違いがある。細部を確認したいときは \code{man ssh} や \code{man rsync} のようにマニュアルを開く習慣も有効である。
+上の一覧は主に Web 上の公式資料だが、シェルコマンドについては手元の環境に入っているマニュアルも重要である。特に \code{ssh}、\code{rsync}、\code{ls}、\code{chmod} などは環境ごとに細かな違いが出ることがあるので、細部を確かめたいときは \code{man ssh}、\code{man rsync}、\code{man ls}、\code{man chmod} のように、その場で使える説明を直接確認した方がよい。
 
 \section{この本の後半で扱う実践的な内容}
 

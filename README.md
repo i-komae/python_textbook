@@ -41,12 +41,12 @@ python_textbook/
 ├── slow_event_analysis.py
 ├── events_data.zip
 ├── chapters/
-│   ├── 00_intro.tex
+│   ├── intro.tex
 │   ├── ...
-│   ├── 10_assignment.tex
-│   ├── 90_ssh.tex
-│   ├── 91_git.tex
-│   └── 92_regex.tex
+│   ├── assignment.tex
+│   ├── appendix_ssh.tex
+│   ├── appendix_git.tex
+│   └── appendix_regex.tex
 ├── assets/
 ├── scripts/
 └── build/
@@ -56,8 +56,8 @@ python_textbook/
 
 ## 章構成
 
-- 本文: `00_intro.tex` から `10_assignment.tex`
-- 付録: `90_ssh.tex`, `91_git.tex`, `92_regex.tex`
+- 本文: `intro.tex` から `assignment.tex`
+- 付録: `appendix_ssh.tex`, `appendix_git.tex`, `appendix_regex.tex`, `appendix_shell_scripting.tex`
 
 ## コンパイル
 

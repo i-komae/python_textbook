@@ -48,7 +48,7 @@ expr = pl.col("signal") / pl.col("signal").mean()
 print(expr)
 \end{lstlisting}
 
-この段階では、まだ計算結果ではなく「どう計算するか」という式を表している。Polars の公式ドキュメントでも、まず expression を理解することが最重要とされている。実際、\code{select()}、\code{with\_columns()}、\code{filter()}、\code{group\_by()} の多くは、最終的に式を受け取る API で統一されている。
+この段階では、まだ計算結果ではなく「どう計算するか」という式を表している。Polars の公式ドキュメント~\cite{polars_expressions} でも、まず expression を理解することが最重要とされている。実際、\code{select()}、\code{with\_columns()}、\code{filter()}、\code{group\_by()} の多くは、最終的に式を受け取る API で統一されている。
 
 \subsection{eager と lazy}
 
@@ -272,7 +272,7 @@ result = lf.filter(pl.col("signal") > 0).collect()
 
 \subsection{pandas の書き方をそのまま持ち込まない}
 
-Polars 公式の migration guide でも強調されているが、\textbf{Polars は pandas ではない}。pandas に似た書き方が一部動いても、それが最も自然な書き方とは限らない。特に、index 前提の考え方、\code{loc}、\code{apply(axis=1)} へ寄った設計は Polars では合わない。
+Polars 公式の migration guide~\cite{polars_from_pandas} でも強調されているが、\textbf{Polars は pandas ではない}。pandas に似た書き方が一部動いても、それが最も自然な書き方とは限らない。特に、index 前提の考え方、\code{loc}、\code{apply(axis=1)} へ寄った設計は Polars では合わない。
 
 \subsection{\code{map\_elements()} や Python の \code{lambda} を多用しない}
 
@@ -299,4 +299,4 @@ Polars が特に有効なのは、次のような場面である。
 
 一方で、小規模データで index を活かした対話的操作や、既存の pandas ベース資産をそのまま流用したいなら、pandas の方が自然なことも多い。大切なのは「pandas を捨てる」ことではなく、「どの規模、どの処理で Polars へ切り替えるべきか」を判断できるようになることである。
 
-本章の内容は、Polars 公式の \href{https://docs.pola.rs/user-guide/concepts/}{Concepts}、\href{https://docs.pola.rs/user-guide/concepts/expressions-and-contexts/}{Expressions and contexts}、\href{https://docs.pola.rs/user-guide/concepts/lazy-api/}{Lazy API}、\href{https://docs.pola.rs/user-guide/io/}{IO}、\href{https://docs.pola.rs/user-guide/migration/pandas/}{Coming from Pandas} を土台に、本書向けに解析寄りへ並べ直したものである。作りたい変換が明確なら、まず expression で書けないかを確認し、その後で lazy API を選ぶと整理しやすい。
+Polars の公式資料では、Concepts~\cite{polars_concepts}、Expressions and contexts~\cite{polars_expressions}、Lazy API~\cite{polars_lazy}、IO~\cite{polars_io}、Coming from Pandas~\cite{polars_from_pandas} が土台になる。本章もその流れを踏まえているが、解析で必要な判断が先に見えるように並べ替えてある。式の書き方で迷ったときは expression、遅い処理をまとめて最適化したいときは lazy API、pandas との違いを整理したいときは migration guide を見返すとよい。

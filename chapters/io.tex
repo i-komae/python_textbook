@@ -44,7 +44,7 @@ outfile = outdir / "summary.txt"
 
 \subsubsection{ファイルオブジェクトのメソッド}
 
-ファイルを開いた後には、\code{read}、\code{readline}、\code{write} などのメソッドが使える。Python 公式チュートリアルでも強調されているように、何をどの粒度で読むかでコードの性格が変わる。たとえば次のように記述する。
+ファイルを開いた後には、\code{read}、\code{readline}、\code{write} などのメソッドが使える。Python 公式チュートリアル~\cite{python_tutorial} でも強調されているように、何をどの粒度で読むかでコードの性格が変わる。たとえば次のように記述する。
 
 \begin{lstlisting}[language=Python]
 with open(path, "r", encoding="utf-8") as f:
@@ -119,7 +119,7 @@ print(text)
 
 \code{:.3f} は小数点以下 3 桁で表示するという意味である。解析結果をレポートへ貼る前に、このような整形で見やすくしておくと、図や本文との対応が取りやすい。
 
-Python 公式チュートリアルでは、f-string のほかに \code{str.format} や手動整形も紹介されている。現在の実務では f-string が最も使いやすいが、古いコードを読むと別の書き方が出てくることもある。複数の流儀があることは知っておきたい。
+Python 公式チュートリアル~\cite{python_tutorial} では、f-string のほかに \code{str.format} や手動整形も紹介されている。現在の実務では f-string が最も使いやすいが、古いコードを読むと別の書き方が出てくることもある。複数の流儀があることは知っておきたい。
 
 \section{オブジェクトと構造化データの保存}
 

@@ -51,7 +51,7 @@ float64
 \subsection{Python, C, NumPy でのデータ型の違い}
 \label{sec:numpy-types}
 
-Python 標準の変数は型を自動で管理して非常に自由度が高いが、NumPy を用いた数値計算では逆に「データサイズを固定した C 言語レベルの厳密な型」を意識することが重要になる。代表的な型の対応を表\ref{tab:type-comparison}に示す。
+Python 標準の変数は型を自動で管理して非常に自由度が高いが、NumPy を用いた数値計算では逆に「データサイズを固定した C 言語レベルの厳密な型」を意識することが重要になる。代表的な型の対応を表~\ref{tab:type-comparison}に示す。
 
 \begin{table}[hbtp]
 \centering
@@ -160,7 +160,7 @@ print(edges)
 
 \subsection{要素ごとの演算とユニバーサル関数}
 
-NumPy の演算子や多くの関数は、原則として要素ごとに働く。NumPy の公式ドキュメントでは、\code{exp}、\code{sqrt}、\code{sin} のような要素ごと関数をユニバーサル関数（ufunc）と呼んでいる。
+NumPy の演算子や多くの関数は、原則として要素ごとに働く。NumPy の公式ドキュメント~\cite{numpy_docs} では、\code{exp}、\code{sqrt}、\code{sin} のような要素ごと関数をユニバーサル関数（ufunc）と呼んでいる。
 
 \begin{lstlisting}[language=Python]
 a = np.array([1.0, 2.0, 3.0])
@@ -566,4 +566,4 @@ values_array = df["Value"].to_numpy()
 
 \subsection{公式資料の使い方}
 
-NumPy の基礎を復習するときは、\href{https://numpy.org/devdocs/user/quickstart.html}{NumPy quickstart} の順序が参考になる。特に、配列生成、添字とスライス、\code{shape} の変更、ブロードキャスト、コピーとビューは何度も見返す価値がある。本章では解析で必要な文脈を足して説明しているので、まず本章で流れをつかみ、細かな API 名を確認したいときに quickstart を引く、という使い方が自然である。
+NumPy の基礎を復習したいときは、NumPy quickstart~\cite{numpy_quickstart} を併読すると整理しやすい。特に、配列生成、添字とスライス、\code{shape} の変更、ブロードキャスト、コピーとビューは、解析コードを書くたびに戻って確認したくなる項目である。本章では解析で困りやすい点を補って説明しているので、まず本章で全体像をつかみ、その後で API 名や細かな仕様を quickstart で確認する読み方がよい。

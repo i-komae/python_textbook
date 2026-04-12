@@ -178,7 +178,7 @@ fig.tight_layout()
 fig.savefig("subplots_example.pdf")
 \end{lstlisting}
 
-単純な \code{plt.plot()} ばかり使っていると、この「特定のパネル（\code{axes[0]}）に対して描画を命令する」という書き方に慣れるのに少し時間がかかるが、複雑な比較図を作る上では避けて通れない技法である。\code{Figure} や\code{Axes}についての詳細は、\ref{sec:matplotlob-object}~節以降で述べる。
+単純な \code{plt.plot()} ばかり使っていると、この「特定のパネル（\code{axes[0]}）に対して描画を命令する」という書き方に慣れるのに少し時間がかかるが、複雑な比較図を作る上では避けて通れない技法である。\code{Figure} や \code{Axes} についての詳細は、第~\ref{sec:matplotlob-object}節以降で述べる。
 
 \subsection{凡例とレイアウト}
 
@@ -641,13 +641,13 @@ ax.plot(x_str, y, marker="o")
 
 \subsection{公式資料から似た図を探す}
 
-Matplotlib は機能が広いため、作りたい図の名前が分からなくても、公式資料から似たものを探す方が早いことが多い。特に次の 4 つは、章を読み終えた後も繰り返し見る価値が高い。
+ここまでで、基本的な描画、レイアウト、オブジェクトの役割、保存まで一通り見た。実際の作図では、その先で「似た例をどこから探すか」が次の問題になる。Matplotlib は機能が広いため、作りたい図の名前が分からなくても、公式資料から近いものを探す方が早いことが多い。特に次の 4 つは参照頻度が高い。
 
 \begin{itemize}
-\item Quick start: \url{https://matplotlib.org/stable/users/explain/quick_start.html}
-\item Plot types: \url{https://matplotlib.org/stable/plot_types/index.html}
-\item Gallery: \url{https://matplotlib.org/stable/gallery/index.html}
-\item Cheatsheets: \url{https://matplotlib.org/cheatsheets/}
+\item Quick start~\cite{matplotlib_quick_start}
+\item Plot types~\cite{matplotlib_plot_types}
+\item Gallery~\cite{matplotlib_gallery}
+\item Cheatsheets~\cite{matplotlib_cheatsheets}
 \end{itemize}
 
-作りたいグラフのイメージが先にあるなら、まず \code{Plot types} で種類を当て、次に \code{Gallery} で近い完成例を探し、最後に \code{Cheatsheets} で引数名や書式を確認する、という順にたどると迷いにくい。初学者が最初から完全なコードを自力で組み立てるより、近い例を見つけて必要な部分だけ差し替える方が現実的である。
+作りたいグラフのイメージが先にあるなら、まず \code{Plot types} で図の種類を当て、次に \code{Gallery} で近い完成例を探し、最後に \code{Cheatsheets} で引数名や書式を確認すると迷いにくい。\code{Quick start} は、`Figure` と `Axes` の関係を短時間で思い出したいときに向いている。初学者が最初から完全なコードを自力で組み立てるより、近い例を見つけて必要な部分だけ差し替える方が現実的である。

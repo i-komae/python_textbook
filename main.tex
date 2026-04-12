@@ -3,9 +3,11 @@
 \usepackage{amsmath,amssymb}
 \usepackage{xcolor}
 \usepackage{graphicx}
-\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
 \usepackage{listings}
 \usepackage{booktabs}
+\usepackage{cite}
 
 \lstset{
     backgroundcolor={\color[gray]{.95}},
@@ -35,25 +37,26 @@
 \setcounter{tocdepth}{2}
 \tableofcontents
 
-\input{chapters/00_intro.tex}
-\input{chapters/01_usage.tex}
-\input{chapters/02_shell.tex}
-\input{chapters/02_setup.tex}
-\input{chapters/03_basics.tex}
-\input{chapters/04_io.tex}
-\input{chapters/05_numpy.tex}
-\input{chapters/06_pandas.tex}
-\input{chapters/06_polars.tex}
-\input{chapters/07_matplotlib.tex}
-\input{chapters/08_scipy.tex}
-\input{chapters/08_astropy.tex}
-\input{chapters/09_performance.tex}
-\input{chapters/10_assignment.tex}
+\input{chapters/intro.tex}
+\input{chapters/usage.tex}
+\input{chapters/shell.tex}
+\input{chapters/setup.tex}
+\input{chapters/basics.tex}
+\input{chapters/io.tex}
+\input{chapters/numpy.tex}
+\input{chapters/pandas.tex}
+\input{chapters/polars.tex}
+\input{chapters/matplotlib.tex}
+\input{chapters/scipy.tex}
+\input{chapters/astropy.tex}
+\input{chapters/performance.tex}
+\input{chapters/assignment.tex}
 
 \appendix
-\input{chapters/90_ssh.tex}
-\input{chapters/91_git.tex}
-\input{chapters/92_regex.tex}
-\input{chapters/93_shell_scripting.tex}
+\input{chapters/appendix_ssh.tex}
+\input{chapters/appendix_git.tex}
+\input{chapters/appendix_regex.tex}
+\input{chapters/appendix_shell_scripting.tex}
+\input{chapters/references.tex}
 
 \end{document}

@@ -341,6 +341,6 @@ SciPy は、解析の中で次のような役割を持つ。
 
 ここで重要なのは、SciPy が「魔法の黒箱」ではないという点である。入力配列がどういう意味を持ち、返ってきた値をどう解釈するかは自分で決めなければならない。特にフィットでは、図を見る、範囲を切る、重み付けを考える、残差を見る、という手順を省略すべきではない。
 
-時刻系、単位、座標系、FITS のように「数値そのものの意味付け」まで含めて扱いたいなら、次章の Astropy が自然である。SciPy は主に計算アルゴリズムを担当し、Astropy は物理量や観測量の表現を担当すると考えると整理しやすい。
+ここまで見てきた SciPy は、主に「数値をどう計算するか」を受け持つ道具である。時刻系、単位、座標系、FITS のように「数値そのものの意味付け」まで含めて扱いたくなったところで、次章の Astropy が必要になる。SciPy は計算アルゴリズム、Astropy は物理量や観測量の表現を担当すると考えると、章のつながりも見えやすい。
 
-本章の内容は、SciPy 公式の \href{https://docs.scipy.org/doc/scipy/tutorial/}{SciPy User Guide} を軸に、\href{https://docs.scipy.org/doc/scipy/tutorial/stats.html}{Statistics}、\href{https://docs.scipy.org/doc/scipy/tutorial/optimize.html}{Optimization}、\href{https://docs.scipy.org/doc/scipy/tutorial/interpolate.html}{Interpolation}、\href{https://docs.scipy.org/doc/scipy/tutorial/signal.html}{Signal processing}、\href{https://docs.scipy.org/doc/scipy/tutorial/integrate.html}{Integration} の内容を本書向けに整理したものである。
+本文を読み終えた後で関数名や引数を確認したいときは、SciPy User Guide~\cite{scipy_user_guide} を起点にすると探しやすい。分布や検定は Statistics~\cite{scipy_stats}、フィットや最適化は Optimization~\cite{scipy_optimize}、補間は Interpolation~\cite{scipy_interpolate}、波形処理は Signal processing~\cite{scipy_signal}、数値積分は Integration~\cite{scipy_integrate} が対応している。本章は、それらを解析で使う順に並べ替えて説明した。
