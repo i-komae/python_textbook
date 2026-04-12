@@ -1,0 +1,301 @@
+\chapter{シェルスクリプトによる自動化と一括処理}
+\label{app:shell_scripting}
+
+第\ref{SEC:shell}章ではシェルの対話的な基本操作を紹介した。実際のデータ解析では、1 つのスクリプトを数十から数百のファイルに対して繰り返し実行したり、実行時のパラメータを少しずつ変えながら条件を変えてプログラムを走らせたりする場面が非常に多くなる。このような自動化やバッチ処理を担うのが\textbf{シェルスクリプト}である。
+
+本章では、単純なコマンドの列挙から一歩進み、引数の受け取り、変数の計算、ファイルの存在チェック、条件分岐（\code{if}, \code{case}）、リスト（配列）と \code{for} ループを用いた実践的なバッチ処理の書き方と \code{sed} による置換を解説する。
+
+\section{シェルスクリプトの基礎構造}
+
+\subsection{シバンと実行権限}
+
+シェルスクリプトを作成する際は、先頭に「どの解釈エンジン（シェル）で実行するか」を指定するシバン（shebang）を記述する。本書では UNIX 系の標準である \code{bash} を用いることを前提とする。
+
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+
+echo "Hello, Shell Scripting!"
+\end{lstlisting}
+
+作成したファイル（例: \code{run.sh}）には実行権限を付与し、直接実行できるようにしておく。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ chmod +x run.sh
+$ ./run.sh
+\end{lstlisting}
+
+\subsection{コマンドライン引数}
+
+スクリプトに外から値（ファイル名や設定値）を渡すには、実行時の引数を利用する。スクリプト内からは \code{\$1}, \code{\$2} といった特殊な変数で受け取れる。
+
+\begin{itemize}
+    \item \code{\$0}: 実行されたスクリプトのファイル名（例: \code{./run.sh}）
+    \item \code{\$1, \$2, ...}: 1番目、2番目の引数
+    \item \code{\$\#}: 渡された引数の総数
+    \item \code{\$@}: 渡されたすべての引数（リストとして展開される）
+\end{itemize}
+
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+
+# 引数が2つ渡されたかどうかを確認する簡易チェック
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <input_file> <output_file>"
+    exit 1
+fi
+
+INPUT=$1
+OUTPUT=$2
+echo "Reading from $INPUT, writing to $OUTPUT"
+\end{lstlisting}
+
+\section{変数、演算、条件式}
+
+\subsection{変数の定義とリスト（配列）}
+
+シェルで変数を定義する際は、イコールの前後に空白を入れてはならない。また、変数の値を参照するときは先頭に \code{\$} を付ける。
+
+\begin{lstlisting}[language=bash]
+COUNT=100
+NAME="data_analysis"
+
+echo "The count is $COUNT."       # 展開される
+echo 'The count is $COUNT.'       # シングルクォートでは展開されず "$COUNT" と表示される
+\end{lstlisting}
+
+カンマ区切りではなく、スペース区切りで括弧 \code{()} を用いるとリスト（配列）を定義できる。Python のリストのように扱うことができ、複数の対象をまとめて扱う際に非常に便利である。
+
+\begin{lstlisting}[language=bash]
+# 配列の定義
+targets=("background" "signal" "noise")
+
+# 配列サイズの取得
+echo "Number of targets: ${#targets[@]}"
+
+# 配列要素へのアクセス
+echo "First element: ${targets[0]}"
+
+# 配列全体を展開する（for ループでよく使う）
+echo "All elements: ${targets[@]}"
+\end{lstlisting}
+
+\subsection{数値計算 (算術式展開)}
+
+bash で整数の足し算や掛け算を行う場合は、\code{(( ))} （二重丸括弧）を用いる。この中では、変数の \code{\$} を省略でき、空白も自由に空けることができる。浮動小数点計算には対応していないため、少数を扱う場合は Python プログラムなどの外部コマンドに任せるか \code{bc} や \code{awk} を用いる。
+
+\begin{lstlisting}[language=bash]
+A=10
+B=5
+
+# 計算式は (( )) を用いる
+SUM=$((A + B))
+MUL=$((A * B))
+
+# 変数を直接加算・インクリメントする
+(( A++ ))
+(( B += 20 ))
+\end{lstlisting}
+
+\subsection{条件式 (testコマンド)}
+
+数値の大小比較や、ファイルが存在するかどうかの確認には、\code{[ ]} を用いる。大括弧の内側には必ずスペースが必要である。
+
+\textbf{数値の比較:}
+\begin{itemize}
+    \item \code{-eq}: 等しい (equal)
+    \item \code{-ne}: 等しくない (not equal)
+    \item \code{-gt}: より大きい (greater than)
+    \item \code{-ge}: 以上 (greater than or equal)
+    \item \code{-lt}: 未満 (less than)
+    \item \code{-le}: 以下 (less than or equal)
+\end{itemize}
+
+\textbf{文字列の比較:}
+\begin{itemize}
+    \item \code{=}, \code{==}: 一致する
+    \item \code{!=}: 一致しない
+    \item \code{-z "\$STR"}: 文字列が空である
+\end{itemize}
+
+\textbf{ファイルやディレクトリの確認:}
+\begin{itemize}
+    \item \code{-e "\$FILE"}: ファイル（またはディレクトリ）が存在する
+    \item \code{-f "\$FILE"}: 通常のファイルとして存在する
+    \item \code{-d "\$DIR"}: ディレクトリとして存在する
+\end{itemize}
+
+これらの条件式は、後述する \code{if} 文の \code{[]} の中身として頻繁に登場する。
+
+\section{条件分岐 (\code{if}, \code{case})}
+
+\subsection{\code{if} 文を用いた分岐}
+
+前節の条件式を組み合わせて処理を分岐する。\code{then} と \code{fi} でブロックを囲むのがシェルの特徴である。
+
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+FILE=$1
+
+if [ -z "$FILE" ]; then
+    echo "エラー: ファイル名が指定されていません"
+    exit 1
+fi
+
+if [ -f "$FILE" ]; then
+    echo "ファイル $FILE を発見しました。処理を開始します。"
+elif [ -d "$FILE" ]; then
+    echo "エラー: $FILE はディレクトリです。ファイルを指定してください。"
+    exit 1
+else
+    echo "エラー: $FILE が存在しません。"
+    exit 1
+fi
+\end{lstlisting}
+
+\subsection{\code{case} 文による分岐}
+
+条件が「特定の文字列パターンと一致するか」である場合は、\code{case} 文を用いると \code{elif} を重ねるよりもきれいに書ける。拡張子での判定や、オプション引数（ \code{-h}, \code{--version} など）のパースに有用である。
+
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+MODE=$1
+
+case "$MODE" in
+    "start")
+        echo "Starting process..."
+        ;;
+    "stop" | "halt")
+        echo "Stopping process..."
+        ;;
+    *)
+        echo "Unknown mode: $MODE"
+        echo "Available modes: start, stop, halt"
+        exit 1
+        ;;
+esac
+\end{lstlisting}
+
+各区分の終わりは \verb|;;| で締めくくる。アスタリスク \code{*} は「上記以外のすべて」にマッチするワイルドカードとして機能する。
+
+\section{反復処理と一括自動化 (\code{for})}
+
+\subsection{配列やリストの要素に対する \code{for} ループ}
+
+指定した値のリストや、定義した配列の全要素に対して処理を繰り返す場合は以下のように書く。
+
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+
+# 配列の全要素に対して
+targets=("run_01" "run_02" "run_03")
+
+for t in "${targets[@]}"; do
+    echo "Processing target: $t"
+done
+
+# 単純な数値の手書きリストやコマンド展開に対して
+for num in 10 20 30; do
+    echo "Number is $num"
+done
+\end{lstlisting}
+
+\subsection{実践: 複数ファイルのパス置換とバッチ処理}
+
+実務で最もよく使うループは「特定のディレクトリにあるファイルを順次処理する」ための構文である。ここで、入力ファイル名（例: \code{data/input/run01.csv}）から、出力ファイル名（例: \code{data/output/run01\_result.png}）を自動的に作り出す技術が必要となる。
+
+\code{basename} コマンドや、変数の後方一致削除（\code{\%...}）を用いることでこれを簡潔に実装できる。
+
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+
+INPUT_DIR="data/input"
+OUTPUT_DIR="data/output"
+
+# 出力先が存在しなければ作成する
+if [ ! -d "$OUTPUT_DIR" ]; then
+    mkdir -p "$OUTPUT_DIR"
+fi
+
+# INPUT_DIR の中にあるすべての .csv ファイルに対して反復
+for filepath in "$INPUT_DIR"/*.csv; do
+    # 該当するファイルが存在しない場合はそのままループが回ってしまうのでチェックする
+    if [ ! -f "$filepath" ]; then
+        echo "No CSV files found in $INPUT_DIR"
+        break
+    fi
+
+    echo "Found raw file: $filepath"
+
+    # basename コマンドでディレクトリパスを取り除き、ファイル名だけにする
+    # 例: "data/input/run01.csv" -> "run01.csv"
+    filename=$(basename "$filepath")
+
+    # 文字列置換: 後方の ".csv" を取り除く
+    # 例: "run01.csv" -> "run01"
+    name_no_ext="${filename%.csv}"
+
+    # 新しい出力パスを組み立て直す
+    output_path="$OUTPUT_DIR/${name_no_ext}_result.png"
+
+    echo "Running analysis Python code for: $name_no_ext"
+    # 実際の処理コマンド（例: python analyze.py <in> <out>）
+    # python analyze.py "$filepath" "$output_path"
+done
+\end{lstlisting}
+
+このように記述することで、数十から数千のファイルをディレクトリに放り込んでスクリプトを実行するだけで、結果ファイルが名簿通りに正しく生成されていくシステムを作ることができる。
+
+\section{\code{sed} を用いたテンプレート書き換えと動的実行}
+
+外部の実行プログラムの中には、引数（\code{--input XXX}）の形式ではなく、設定ファイル（例: \code{config.ini}）を読み込ませることで動作するものがある。バッチ処理で繰り返し実行したい場合、ループを回すたびに設定ファイルの特定のパラメータ（例えばシード値や閾値など）を書き換える必要が生じる。
+
+強力なストリーム・エディタである \code{sed} コマンドを使うことで、「テンプレートとなる設定ファイル」を用意しておき、シェルスクリプトから一部の文字列だけを置換した「実行用設定ファイル」を動的に生成させることができる。
+
+\subsection{テンプレートファイルの準備}
+
+パラメータ部分をユニークなプレースホルダー文字
+（例: \verb|__THRESHOLD__| や \verb|__OUTFILENAME__| のように、ファイル内の他の場所には現れない文字列）
+にした上で保存しておく。
+
+\begin{lstlisting}[numbers=none, title={config\_template.ini}]
+[Simulation]
+Events = 10000
+Threshold = __THRESHOLD__
+OutputFile = __OUTFILENAME__
+\end{lstlisting}
+
+\subsection{\code{sed} による置換の実行}
+
+シェルスクリプト内で変数をループさせ、\code{sed} によって置換した設定ファイルをその都度作成してプログラムに食わせる。
+
+\code{sed 's/置換前文字列/置換後文字列/g' 入力ファイル > 出力ファイル} の形式を取る。この際、\code{sed} で変数を展開したい場合はシングルクォートではなく、\textbf{ダブルクォート (\code{"..."})} で囲む必要がある点に注意する。
+
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+
+# 閾値を 3 つ変えてシミュレーション用の設定ファイルを動的生成し、実行する例
+thresholds=(0.5 1.0 2.5)
+
+for thresh in "${thresholds[@]}"; do
+    
+    out_name="result_th_${thresh}.dat"
+    run_config="config_run.ini"
+
+    echo "Generating config for Threshold = $thresh"
+
+    # sedコマンドを用いて __THRESHOLD__ と __OUTFILENAME__ の 2 箇所を同時に置換する。
+    # 変数 ($thresh など) を展開させるためダブルクォートで 's/.../.../g' 全体を囲む
+    sed -e "s/__THRESHOLD__/$thresh/g" \
+        -e "s/__OUTFILENAME__/$out_name/g" \
+        config_template.ini > "$run_config"
+    
+    # 置換された設定の内容を出力して確認 (または直接プログラムを走らせる)
+    cat "$run_config"
+
+    # 以下で実際のプログラムを呼び出す
+    # ./my_simulation_app --config "$run_config"
+
+done
+\end{lstlisting}
+
+このような構成を取ることで、Python プログラムはもちろんのこと、ソースコードに手を加えることのできないバイナリ形式のシミュレーションソフトやコンパイル済みの C プログラムであっても、シェルから自在に大量の条件を連続実行・制御することが可能になる。

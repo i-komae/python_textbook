@@ -48,6 +48,33 @@ float64
 
 出力を見れば、この配列が「2 行 3 列の \code{float64} 配列」であることがすぐ分かる。NumPy のトラブルの多くは、この 5 行のどれかを見れば原因に近づける。
 
+\subsection{Python, C, NumPy でのデータ型の違い}
+\label{sec:numpy-types}
+
+Python 標準の変数は型を自動で管理して非常に自由度が高いが、NumPy を用いた数値計算では逆に「データサイズを固定した C 言語レベルの厳密な型」を意識することが重要になる。代表的な型の対応を表\ref{tab:type-comparison}に示す。
+
+\begin{table}[hbtp]
+\centering
+\caption{Python, NumPy, C 言語での代表的な数値型の対応}
+\label{tab:type-comparison}
+\begin{tabular}{lp{0.25\linewidth}p{0.25\linewidth}p{0.25\linewidth}}
+\toprule
+分類 & C 言語の型 & Python の標準型 & NumPy の型 (\code{dtype}) \\
+\midrule
+整数型 & \code{int}, \code{long} & \code{int} (桁数上限なし) & \code{int32}, \code{int64} \\
+単精度浮動小数 & \code{float} (32ビット) & (標準では存在せず) & \code{float32} \\
+倍精度浮動小数 & \code{double} (64ビット) & \code{float} & \code{float64} \\
+論理型 & \code{bool} & \code{bool} & \code{bool\_} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+C 言語では、扱う変数が「メモリ空間を何ビットの箱として占有するか」を明示的に宣言しなければならない（例えば単精度の \code{float} と倍精度の \code{double}）。対して Python の標準型である \code{int} は桁数に実質的な上限がなく、\code{float} は背後で C 言語の倍精度（\code{double} 相当の 64ビット）として確保される。しかし、Python の標準変数は単なるメモリ上の数値だけでなく、「この変数は現在のどこから参照されているか」「これはいま何の型のオブジェクトか」といった管理情報を余分にひとまとめにして抱え込んでいるため、単純な数値演算の際には非常にオーバーヘッドが大きくなる。
+
+これに対して NumPy では、内部構造として C 言語の「純粋な数値の固定長な配列（ポインタからの連続オフセット）」と同じ状態をメモリ上に展開する。これにより、Python の無駄な管理部分を一切通さず、CPU や C 言語レベルの演算回路にデータを配列ごとそのまま流し込んで一気に処理（ベクタライズ計算）させることが可能になっている。
+
+なお、型の使い分けという観点では、現代のマシンにおける一般的な処理で、あえて単精度の \code{float32}（C言語における \code{float}）を使う場面は少なくなっている。現在でも GPU メモリの容量やバンド幅が逼迫する機械学習などの分野では単精度や半精度（16ビット）が積極的に効果を発揮するが、通常の科学技術計算やデータ解析を行う現代のパーソナルコンピュータでは計算誤差のリスクが少ない\textbf{倍精度 (\code{float64} = \code{double})} を標準として用いるのが主流であり安全である。特別なメモリ制約や速度要件がない限り、標準の \code{float64} をそのまま使用することで、無用な丸め誤差や桁落ちなどの問題を回避できる。
+
 \subsection{NumPy が速くなりやすい理由}
 
 NumPy が速くなりやすい理由は、単に「ライブラリだから」ではない。主な理由は三つある。
