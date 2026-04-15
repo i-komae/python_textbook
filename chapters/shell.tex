@@ -1,4 +1,5 @@
 \chapter{シェルとファイル操作}
+\label{chap:shell}
 
 \section{シェルの基本と環境}
 \label{SEC:shell}
@@ -744,6 +745,64 @@ $ wget -c https://example.com/archive.tar.gz
 
 \code{wget} が手元にない環境では、\code{curl -O} や \code{curl -o} で代用できる。また、画面へ流した内容をそのままパイプで次のコマンドへ渡したいときは、\code{wget} より \code{curl} の方が自然である。
 
+\section{圧縮ファイルを扱う}
+
+\subsection{\code{gzip}: 1 つのファイルを圧縮する}
+
+\code{gzip} は、基本的には 1 つのファイルを 1 つの圧縮ファイルへ変える道具である。ログ、CSV、設定ファイルのようなテキストを素早く縮めたいときによく使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ gzip -k events.csv
+$ ls -lh events.csv*
+$ gzip -cd events.csv.gz | head -n 2
+$ gunzip events.csv.gz
+\end{lstlisting}
+
+1 行目の \code{-k} は元ファイルを残す指定である。付けない場合は、通常 \code{events.csv} が \code{events.csv.gz} に置き換わる。2 行目では圧縮前後のサイズを見比べている。3 行目の \code{-cd} は、「展開した内容をファイルへ戻さず標準出力へ流す」という意味であり、\code{head} や \code{grep} と組み合わせやすい。4 行目の \code{gunzip} は展開用コマンドであり、\code{gzip -d} と同じ目的で使える。
+
+\begin{description}
+\item[\code{-k}] 元ファイルを残す。配布物を壊したくないときに安全である。
+\item[\code{-d}] 展開する。圧縮を戻すときの基本である。
+\item[\code{-c}] 結果を画面へ流す。パイプと相性がよい。
+\item[\code{-1} から \code{-9}] 圧縮率と速度のバランスを指定する。数字が大きいほど一般に圧縮率は上がるが時間がかかる。\code{-9} は、少しでも小さくしたい配布用ファイルでは意味があるが、日常的なログ圧縮では既定値のままで十分なことが多い。
+\end{description}
+
+\code{gzip} 自体は複数ファイルを 1 つに束ねる道具ではない。ディレクトリごとまとめたいときは、次の \code{tar} と組み合わせることが多い。
+
+\subsection{\code{tar}: 複数ファイルやディレクトリを 1 つに束ねる}
+
+\code{tar} は、本来は複数ファイルやディレクトリを 1 本のアーカイブへ束ねる道具である。\code{gzip} と組み合わせて \code{.tar.gz} を作る形が非常によく使われる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ tar -czf archive.tar.gz raw/ notes.txt
+$ tar -tzf archive.tar.gz
+$ tar -xzf archive.tar.gz
+\end{lstlisting}
+
+1 行目は、\code{raw/} と \code{notes.txt} をまとめて \code{archive.tar.gz} にしている。2 行目の \code{-t} は中身一覧の表示であり、展開せずに内容だけ確認したいときに便利である。3 行目の \code{-x} は展開である。つまり、\code{tar} では「作る」「一覧を見る」「展開する」が頻出操作になる。
+
+\begin{description}
+\item[\code{-c}] 新しくアーカイブを作る。
+\item[\code{-t}] 中身一覧だけを見る。
+\item[\code{-x}] 展開する。
+\item[\code{-z}] \code{gzip} 圧縮を併用する。
+\item[\code{-f}] 直後の文字列をアーカイブ名として扱う。
+\end{description}
+
+\code{tar -czf} のようにオプションが連なって見えにくいときは、\code{c=create}、\code{t=list}、\code{x=extract}、\code{z=gzip}、\code{f=file} と分解して読むと混乱しにくい。
+
+\subsection{\code{zip}: 配布しやすい形式}
+
+\code{zip} も複数ファイルやディレクトリを 1 つにまとめられる。Windows を含む環境で配布しやすいため、共同研究や授業資料では \code{.zip} が使われることも多い。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ zip -r archive.zip raw/ notes.txt
+$ unzip -l archive.zip
+$ unzip archive.zip
+\end{lstlisting}
+
+1 行目の \code{-r} はディレクトリを再帰的にたどってまとめる指定である。2 行目の \code{unzip -l} は展開せずに中身一覧を表示する。3 行目は実際に展開している。したがって、受け取った圧縮ファイルが \code{.zip} なら \code{unzip}、\code{.tar.gz} なら \code{tar -xzf}、\code{.gz} なら \code{gunzip} や \code{gzip -d} を使う、と対応付けて覚えるとよい。
+
 \section{環境変数と PATH}
 
 \subsection{環境変数を使う}
@@ -996,3 +1055,39 @@ $ ./hello.py
 \end{lstlisting}
 
 \code{\#!/usr/bin/env python3} は、「\code{python3} を見つけてこのファイルを実行せよ」という意味である。いきなり言葉だけで覚える必要はないが、「直接実行にはシバンと実行権限の両方が必要だ」という構造だけは理解しておいた方がよい。この考え方をシェルスクリプト全体へ広げると、自動化や一括処理を書けるようになる。付録~\ref{app:shell_scripting} では、\code{for} ループや条件分岐を用いた実践的なバッチ処理の書き方をまとめている。
+
+\section{章末問題}
+
+\begin{enumerate}
+\item \textbf{USGS データ用の作業ディレクトリを作る}。
+次のような構成を自分で作り、どのディレクトリに何を置くかを言葉で説明せよ。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ mkdir -p earthquake_practice/{raw,compressed,scripts,figures,results}
+$ cd earthquake_practice
+$ pwd
+$ ls
+\end{lstlisting}
+ここで \code{pwd} で現在位置を確認し、\code{ls} で 5 つのディレクトリができていることを確かめること。
+
+\item \textbf{USGS の地震カタログを取得し、シェルで中身を調べる}。
+全球 2024 年 1 月の CSV を \code{raw/} へ保存し、行数、先頭数行、末尾数行、特定の地名を含む行を調べよ。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ curl -L "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31&limit=20000&orderby=time-asc" \
+  -o raw/usgs_global_2024_01.csv
+$ ls -lh raw/usgs_global_2024_01.csv
+$ wc -l raw/usgs_global_2024_01.csv
+$ head -n 3 raw/usgs_global_2024_01.csv
+$ tail -n 3 raw/usgs_global_2024_01.csv
+$ grep -i "Japan" raw/usgs_global_2024_01.csv | head
+\end{lstlisting}
+どのコマンドが「件数確認」「冒頭確認」「末尾確認」「文字列検索」に対応しているかを整理して書け。
+
+\item \textbf{同じ CSV を 3 種類の圧縮形式で扱う}。
+\code{gzip}、\code{tar.gz}、\code{zip} をそれぞれ 1 つずつ作り、中身の確認コマンドを書き分けよ。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ gzip -k raw/usgs_global_2024_01.csv
+$ tar -czf compressed/usgs_global_2024_01.tar.gz raw/usgs_global_2024_01.csv
+$ zip -r compressed/usgs_global_2024_01.zip raw/usgs_global_2024_01.csv
+\end{lstlisting}
+そのうえで、\code{gzip -cd}、\code{tar -tzf}、\code{unzip -l} を使って、中身確認のやり方の違いを短く説明せよ。
+\end{enumerate}

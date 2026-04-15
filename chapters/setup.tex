@@ -539,3 +539,16 @@ print(window_ns)
 
 
 \code{250} や \code{3600} のような数値が説明なしにコードへ裸で出てくると、後から読んだ人は意味を判断しにくい。このような数値はマジックナンバーと呼ばれる。詳しくは第~\ref{sec:magic-number}節で述べるが、意味のある数値には名前を付け、実行条件なら引数や設定ファイルへ出す、という整理を早い段階で身に付けた方がよい。
+
+\section{章末問題}
+
+\begin{enumerate}
+\item \textbf{\code{uv} を使って地震データ解析用の新しいプロジェクトを作る}。
+\code{earthquake\_practice} の下に \code{usgs\_project} を作り、\code{uv init} を実行せよ。その後で、手元で使える Python を 1 つ選んで \code{uv python pin ...} で固定し、\code{uv add numpy matplotlib scipy} を実行せよ。その後で \code{uv run python --version} と \code{uv run python -c "import numpy, matplotlib, scipy"} を実行し、どの Python とどの仮想環境が使われているかを確認せよ。
+
+\item \textbf{\code{pyenv} と \code{venv} で別の作り方も試す}。
+\code{earthquake\_practice} の下に \code{usgs\_venv} を作り、必要なら \code{pyenv local ...} で Python を切り替えてから \code{python -m venv .venv} を実行せよ。活性化の前後で \code{which python}、\code{python --version}、\code{pip --version} がどう変わるかを記録せよ。
+
+\item \textbf{発展課題}。
+この課題では、同じコマンド名 \code{python} でもディレクトリごとに別の実体を指せることを確かめる。手元で 2 系統以上の Python が使えるなら、別ディレクトリを 2 つ作り、それぞれで \code{pyenv local} を設定して \code{python --version}、\code{which python}、\code{cat .python-version} を比較せよ。さらに片方のディレクトリで \code{uv run python --version} も実行し、\code{pyenv} による切り替えと \code{uv} による固定がどう重なるかを整理せよ。
+\end{enumerate}

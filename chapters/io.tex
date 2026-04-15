@@ -1,4 +1,5 @@
 \chapter{入出力とファイル}
+\label{chap:io}
 
 この章では、Python でファイルを開き、複数のファイルを集め、1 行ずつ読みながら値へ変換する基本を扱う。ここで重要なのは、特定のデータ形式に慣れることではなく、入力を見て必要な情報を取り出す流れを理解することである。
 
@@ -71,6 +72,28 @@ paths = sorted(glob.glob("data/**/*.txt", recursive=True))
 また、順序が重要な処理では \code{sorted} を付ける意味も大きい。ファイル探索の結果が環境依存の順序で返ると、処理結果やログの見え方が毎回変わり、デバッグしにくくなる。時系列や連番を扱う場面では、最初に順序を固定する方が安全である。
 
 \section{文字列データの解析と整形}
+
+\subsection{CSV を列名で安全に読む}
+
+CSV は一見単純に見えるが、引用符やカンマを含む列があると \code{line.split(",")} では壊れやすい。列名付きの表を扱うなら、標準ライブラリの \code{csv} を使う方が安全である。
+
+\begin{lstlisting}[language=Python]
+import csv
+from pathlib import Path
+
+path = Path("events.csv")
+
+with path.open("r", encoding="utf-8", newline="") as f:
+    reader = csv.DictReader(f)
+    first_row = next(reader)
+
+print(first_row["time"])
+print(first_row["mag"])
+\end{lstlisting}
+
+\code{DictReader} は 1 行目を列名として読み、その後の各行を辞書として返す。したがって \code{row["mag"]} のように列名で値を取り出せる。\code{newline=""} を付けるのは、CSV モジュールが改行を正しく扱いやすくするためである。
+
+列の中にカンマを含む場合でも、CSV の規則に従って引用されていれば \code{csv} モジュール側で処理してくれる。つまり、自由記述の文字列や名前の列を含む CSV では、\code{split(",")} よりこの方法の方が安全である。
 
 \subsection{文字列を値へ変換し、結果を書き出す}
 
@@ -206,3 +229,23 @@ unix_time = dt.timestamp()
 解析の初期段階ではデータの中身を目視確認するために CSV を使うことが多いが、大量のイベントデータを何回も読み直す段階になったら、\textbf{必ず最初に Parquet や HDF5 への変換スクリプトを書いてバイナリ化する}ことが全体を高速化する第一歩である。\code{.pkl} はその補助として、途中結果や作業用キャッシュを手元で素早く保存する用途に向いている。
 
 Parquet は「保存形式」の名前であり、\code{pyarrow} はその形式を pandas から読み書きする代表的な実装の一つである。したがって、「Parquet を使う」と「\code{pyarrow} を入れる」は同じ話ではない。多くの環境では \code{read\_parquet()} や \code{to\_parquet()} の背後で \code{pyarrow} が使われるため、これが入っていないと Parquet を扱えないことがある。
+
+\section{章末問題}
+
+\begin{enumerate}
+\item \textbf{USGS の CSV を読み、要約を JSON へ保存する}。
+第~\ref{chap:shell}章で取得した \code{raw/usgs\_global\_2024\_01.csv} を \code{csv.DictReader} で読み、少なくとも次の情報を \code{results/usgs\_summary.json} へ保存せよ。
+\begin{itemize}
+\item 全行数
+\item 最初のイベント時刻
+\item 最後のイベント時刻
+\item マグニチュードの最小値と最大値
+\end{itemize}
+出力には \code{pathlib} と \code{json.dump} を用いること。
+
+\item \textbf{後で NumPy や Matplotlib へ渡しやすい中間データを Pickle で保存する}。
+CSV から \code{time}、\code{latitude}、\code{longitude}、\code{mag} だけを抜き出し、辞書のリストとして \code{results/usgs\_preview.pkl} へ保存せよ。まずは先頭 200 行だけでよい。読み直して要素数と先頭 1 件を表示し、保存と復元ができていることを確かめよ。
+
+\item \textbf{発展課題}。
+CSV の中には空欄や想定外の値が入り得る。空欄の \code{mag} をスキップする処理を自分で足し、何件スキップしたかを \code{results/skipped\_rows.txt} へ書き出せ。\code{DictReader} では空欄セルは空文字列として読まれるので、たとえば \code{if row["mag"] == ""} のような判定を入れればよい。
+\end{enumerate}

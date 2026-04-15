@@ -651,3 +651,24 @@ ax.plot(x_str, y, marker="o")
 \end{itemize}
 
 作りたいグラフのイメージが先にあるなら、まず \code{Plot types} で図の種類を当て、次に \code{Gallery} で近い完成例を探し、最後に \code{Cheatsheets} で引数名や書式を確認すると迷いにくい。\code{Quick start} は、`Figure` と `Axes` の関係を短時間で思い出したいときに向いている。初学者が最初から完全なコードを自力で組み立てるより、近い例を見つけて必要な部分だけ差し替える方が現実的である。
+
+\section{章末問題}
+
+\begin{enumerate}
+\item \textbf{全球地震分布の散布図を作る}。
+USGS の CSV から \code{longitude}、\code{latitude}、\code{mag} を読み、横軸を経度、縦軸を緯度とする散布図を作れ。点の色でマグニチュードを表し、軸ラベル、カラーバー、タイトルを付けたうえで \code{figures/usgs\_global\_scatter.pdf} へ保存せよ。
+
+\item \textbf{発生間隔ヒストグラムを対数軸で描く}。
+第~\ref{chap:numpy}章で作った \(\Delta t\) 配列を用い、発生間隔ヒストグラムを描け。少なくとも縦軸は対数表示にし、必要なら横軸も対数にして、どの表示が見やすいかを比較せよ。図中にはビンの意味が分かる軸ラベルと単位を書くこと。
+
+\item \textbf{発展課題}。
+通常の散布図では、点がどの海溝や列島に沿って並んでいるかは読み取りにくい。海岸線付きの地図へ重ねたい場合は、Matplotlib だけではなく地図投影を扱う \code{cartopy} が必要になる。\code{cartopy} を導入し、同じ地震データを海岸線付きの地図へ重ねよ。必要な出発点は、
+\begin{itemize}
+\item \code{projection=ccrs.PlateCarree()} で地図 Axes を作る
+\item \code{transform=ccrs.PlateCarree()} を \code{scatter} 側に付ける
+\item \code{ax.coastlines()} で海岸線を描く
+\item 全球図では \code{ax.set\_global()} を使う
+\item 日本近海図では \code{ax.set\_extent([122, 154, 20, 50], crs=ccrs.PlateCarree())} を使う
+\end{itemize}
+である。これらの使い方を検索し、地図付きの散布図を作成せよ。
+\end{enumerate}
