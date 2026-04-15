@@ -29,6 +29,12 @@ print(distance.to(u.m))
 
 この例では、\code{250 * u.ns} という時点で「250 ns」という意味が値に埋め込まれている。式の途中で単位を落とさない限り、単位換算はライブラリが引き受ける。
 
+数式で書けば、ここで行っているのは
+\[
+d = v \Delta t
+\]
+である。特に \(v = c\) とみなすなら、250 ns の時間窓に対応する距離 \(d = c \Delta t\) をそのまま安全に計算できる。
+
 \subsection{時刻系と座標系を自前で持たない}
 
 観測データでは、UTC、TAI、TT、MJD、JD、Unix time が混在することがある。これを自前の文字列処理でつなぐと、秒境界やうるう秒で破綻しやすい。Astropy の \code{Time} と \code{SkyCoord} は、こうした表現を専用オブジェクトとして扱う。
@@ -58,6 +64,18 @@ print(velocity.to(u.m / u.s))
 \end{lstlisting}
 
 \code{to()} を使えば単位変換を明示できる。解析メモの段階では、いきなり \code{.value} で生の数値へ落とさず、できるだけ単位付きのまま式を組んだ方が安全である。
+
+この計算は
+\[
+v = \frac{L}{t}
+\]
+に対応しており、具体的には
+\[
+v = \frac{3.2\ \mathrm{m}}{12.5\ \mathrm{ns}}
+= 0.256\ \mathrm{m/ns}
+= 2.56 \times 10^8\ \mathrm{m/s}
+\]
+である。コードと単位換算を一緒に見ておくと、桁や接頭辞の取り違えに気付きやすい。
 
 \subsection{物理定数}
 
@@ -111,6 +129,12 @@ print(t.tai.iso)
 
 \code{format="iso"} は入力形式、\code{scale="utc"} は時刻系を表す。\code{mjd}、\code{unix}、\code{tai.iso} のように別形式・別時刻系へ変換できる。重要なのは、\code{datetime} の代替品というより、「観測時刻を正しい時刻系のまま持つ道具」として捉えることである。
 
+たとえば、修正ユリウス日 MJD は
+\[
+\mathrm{MJD} = \mathrm{JD} - 2400000.5
+\]
+で定義される。Astropy は、このような時刻表現どうしの対応を自前で管理せずに済むようにしてくれる。
+
 \subsection{時刻差と \code{TimeDelta}}
 
 差分計算も \code{Time} のまま行える。
@@ -135,6 +159,12 @@ print(dt.to_value("ns"))
 
 このように書くと、秒境界や日付境界をまたいでも同じ考え方で差分が取れる。課題のように 250 ns の窓を扱うときも、自前で桁を切り貼りするより安全である。
 
+ここで計算しているのは単純に
+\[
+\Delta t = t_2 - t_1 = 220\ \mathrm{ns}
+\]
+である。重要なのは、コード上では単に引き算しているだけでも、背後で時刻系と単位が保たれている点である。
+
 \subsection{\code{SkyCoord} による座標変換}
 
 Astropy の \code{coordinates} は、天球上の座標系を変換する。
@@ -158,6 +188,8 @@ print(gal.b.deg)
 \end{lstlisting}
 
 重要なのは、\code{ra} と \code{dec} に単位を付けている点である。度なのかラジアンなのかを曖昧にしない方が安全である。
+
+この操作は、赤道座標 \((\alpha, \delta)\) から銀河座標 \((l, b)\) への変換に対応する。天球上の回転そのものは自分で式を書かなくても、入力座標系と出力座標系を明示すれば Astropy が一貫して扱える。
 
 \subsection{\code{Table} と \code{QTable}}
 

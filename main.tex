@@ -8,6 +8,34 @@
 \usepackage{listings}
 \usepackage{booktabs}
 \usepackage{cite}
+\usepackage{luatexja-fontspec}
+
+\IfFontExistsTF{HackGen35 Console NF}{
+    \setmonofont{HackGen35 Console NF}[Scale=MatchLowercase]
+    \setmonojfont{HackGen35 Console NF}
+}{
+    \IfFontExistsTF{HackGen Console NF}{
+        \setmonofont{HackGen Console NF}[Scale=MatchLowercase]
+        \setmonojfont{HackGen Console NF}
+    }{
+        \IfFontExistsTF{Menlo}{
+            \setmonofont{Menlo}[Scale=MatchLowercase]
+        }{
+            \IfFontExistsTF{Monaco}{
+                \setmonofont{Monaco}[Scale=MatchLowercase]
+            }{
+                \IfFontExistsTF{Courier New}{
+                    \setmonofont{Courier New}[Scale=MatchLowercase]
+                }{
+                    \setmonofont{Latin Modern Mono}[Scale=MatchLowercase]
+                }
+            }
+        }
+        \IfFontExistsTF{HaranoAjiGothic-Medium}{
+            \setmonojfont{HaranoAjiGothic-Medium}
+        }{}
+    }
+}
 
 \lstset{
     backgroundcolor={\color[gray]{.95}},
@@ -17,7 +45,8 @@
     stringstyle={\small\ttfamily \color[rgb]{0.75,0,0.2}},
     frame={tb},
     breaklines=true,
-    columns=[l]{fullflexible},
+    keepspaces=true,
+    columns=fixed,
     numbers=left,
     xrightmargin=0\zw,
     xleftmargin=3\zw,
