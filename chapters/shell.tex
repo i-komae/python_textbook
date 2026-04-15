@@ -60,7 +60,7 @@ $ man rsync
 
 \section{ファイルとディレクトリの操作}
 
-\subsection{今どこにいるかを確認する}
+\subsection{今どこにいるかを確認する: \code{ls}}
 
 シェルでは、いま作業しているディレクトリが基準になる。この基準となるディレクトリをカレントディレクトリという。まずは、現在どこで作業しているのか、そしてその場所に何があるのかを確認できるようになろう。そのためによく使うのが、次の \code{pwd} と \code{ls} である。
 
@@ -158,9 +158,9 @@ drwxr-xr-x  3 ikomae  staff    96B  4月 12 23:19 scripts
 
 このように、\code{ls} はオプションを組み合わせることで、必要な情報を見やすく確認できる。まずは、現在位置を確認する \code{pwd}、項目を一覧する \code{ls}、詳細を見る \code{ls -l}、隠しファイルも含めて確認する \code{ls -a}、サイズを読みやすく表示する \code{ls -lh} や \code{ls -lah} を使い分けられるようになるとよい。
 
-\subsection{移動する}
+\subsection{移動する: \code{cd}}
 
-\code{cd} はディレクトリを移動するためのコマンドである。次のようなディレクトリ構成を例に考える。
+\code{cd} はカレントディレクトリを変更するためのコマンドである。\code{ls} や \code{cat}、\code{cp} など多くのコマンドは「いまいる場所」を基準に動くため、\code{cd} を正しく読めるようになると、その後のファイル操作も理解しやすくなる。次のようなディレクトリ構成を例に考える。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 analysis/
@@ -170,20 +170,67 @@ analysis/
     `-- plot.py
 \end{lstlisting}
 
-いま \code{/Users/ikomae/analysis} にいるとする。このとき、次の 4 つの \code{cd} の意味はそれぞれ違う。
+いま \code{/Users/ikomae/analysis} にいるとする。まず \code{pwd} と \code{ls} を実行すると、現在位置とその場にある項目は次のように分かる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ pwd
+/Users/ikomae/analysis
+$ ls
+data	scripts
+\end{lstlisting}
+
+この状態で \code{cd data} を実行すると、\code{analysis} の下にある \code{data} ディレクトリへ移動する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd data
-$ cd ..
-$ cd ~/analysis/scripts
-$ cd -
+$ pwd
+/Users/ikomae/analysis/data
+$ ls
+events.txt
 \end{lstlisting}
 
-\code{cd data} は \code{analysis/data} へ入る。\code{cd ..} は 1 つ上のディレクトリへ戻る。\code{cd \textasciitilde/analysis/scripts} はホームディレクトリを基準に \code{scripts} へ移動する。\code{cd -} は 1 つ前にいた場所へ戻る。
+\code{data} は相対パスなので、「いまいる \code{analysis} から見て \code{data} に入る」という意味になる。
 
-\subsection{パスを読む}
+次に \code{cd ..} を実行すると、1 つ上の親ディレクトリへ戻る。
 
-ファイルやディレクトリの場所は、パスで表す。パスには絶対パスと相対パスがある。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd ..
+$ pwd
+/Users/ikomae/analysis
+\end{lstlisting}
+
+ここで使っている \code{..} は、\code{ls -a} でも見た「親ディレクトリ」を表す特別な名前である。
+
+絶対パスを使って直接移動することもできる。たとえば \code{\textasciitilde} はホームディレクトリを表すので、次のように書けば現在位置に関係なく \code{scripts} へ移動できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd ~/analysis/scripts
+$ pwd
+/Users/ikomae/analysis/scripts
+$ ls
+plot.py
+\end{lstlisting}
+
+また、\code{cd -} は 1 つ前にいた場所へ戻る。たとえば上の状態で実行すると、直前にいた \code{/Users/ikomae/analysis} へ戻る。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd -
+/Users/ikomae/analysis
+\end{lstlisting}
+
+さらに、引数なしの \code{cd} はホームディレクトリへ戻る。深い階層まで移動したあとで基準位置を戻したいときに便利である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd
+$ pwd
+/Users/ikomae
+\end{lstlisting}
+
+このように、\code{cd} では「相対パスでたどる」「絶対パスで直接飛ぶ」「\code{..} や \code{-} で戻る」という使い分けが重要になる。慣れないうちは、移動した直後に \code{pwd} や \code{ls} を実行して、本当に意図した場所へ来ているかを確かめるとよい。
+
+\subsection{絶対パスと相対パス}
+
+ファイルやディレクトリの場所は、パスで表す。パスは階層を \code{/} でつないだ表記であり、最初の書き方によって意味が変わる。大きく分けると絶対パスと相対パスがある。
 
 \begin{table}[hbtp]
 \centering
@@ -193,7 +240,7 @@ $ cd -
 \toprule
 表記 & 意味 \\
 \midrule
-\code{/abs/data.txt} & 絶対パス。どこにいても同じ場所を指す \\
+\code{/abs/data.txt} & 絶対パス。\code{/} から始まり、どこにいても同じ場所を指す \\
 \code{\textasciitilde/analysis} & 絶対パス。\code{\textasciitilde} はホームディレクトリ \\
 \code{data.txt} & 相対パス。今いるディレクトリを基準に解釈される \\
 \code{./x.txt} & 相対パス。\code{.} は現在のディレクトリ \\
@@ -202,31 +249,92 @@ $ cd -
 \end{tabular}
 \end{table}
 
-表~\ref{tab:path-notation} は、シェルを読み始めた直後に最低限区別したい表記をまとめたものである。たとえば、現在位置が \code{/abs/analysis} なら、次の 2 つのコマンドは同じファイルを指している。
+表~\ref{tab:path-notation} は、シェルを読み始めた直後に最低限区別したい表記をまとめたものである。特に重要なのは、絶対パスは \code{/} や \code{\textasciitilde} から始まり、相対パスは現在のカレントディレクトリを基準に読む、という違いである。
+
+先ほどと同じく、次のディレクトリ構成を考える。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ cat data/events.txt
-$ cat /abs/analysis/data/events.txt
+analysis/
+|-- data/
+|   `-- events.txt
+`-- scripts/
+    `-- plot.py
 \end{lstlisting}
 
-一方で、現在位置が \code{/abs} なら、\code{cat data/events.txt} は別の意味になる。したがって、コマンドを読むときは「今どこにいるか」と「そのパスが絶対か相対か」を必ずセットで考える必要がある。
+現在位置が \code{/Users/ikomae/analysis} なら、次の 2 つのコマンドは同じファイルを指している。
 
-\subsection{ディレクトリを作る}
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ pwd
+/Users/ikomae/analysis
+$ cat data/events.txt
+$ cat /Users/ikomae/analysis/data/events.txt
+\end{lstlisting}
 
-\code{mkdir} はディレクトリを作る。\code{-p} を付けると、親ディレクトリがなくてもまとめて作れる。
+1 つ目の \code{data/events.txt} は相対パスであり、「いまいる \code{analysis} の中にある \code{data} の中にある \code{events.txt}」という意味である。2 つ目の \code{/Users/ikomae/analysis/data/events.txt} は絶対パスなので、どこにいても同じ \code{events.txt} を指す。
+
+一方で、現在位置が \code{/Users/ikomae/analysis/scripts} に変わると、同じ相対パスでも意味が変わる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ pwd
+/Users/ikomae/analysis/scripts
+$ cat data/events.txt
+cat: data/events.txt: No such file or directory
+$ cat ../data/events.txt
+\end{lstlisting}
+
+この場所で \code{data/events.txt} と書くと \code{scripts/data/events.txt} を探しに行くことになるが、そのようなファイルは存在しないので \code{data/events.txt: No such file or directory} というエラー文が表示される。
+相対パスで \code{events.txt} を指定するには、1 つ上へ戻る \code{..} を使って \code{../data/events.txt} と書く必要がある。
+
+同様に、\code{./plot.py} は「現在のディレクトリにある \code{plot.py}」、\code{../data} は「1 つ上にある \code{data} ディレクトリ」を表す。相対パスは短く書ける反面、現在位置を読み違えると別の場所を指してしまう。したがって、コマンドを読むときは「今どこにいるか」と「そのパスが絶対か相対か」を必ずセットで考える必要がある。
+
+\subsection{ディレクトリを作る: \code{mkdir}}
+
+\code{mkdir} は新しいディレクトリを作るコマンドである。解析では、生データ、途中結果、図、ログなどを別々の場所へ整理したいので、作業の最初に出力先のディレクトリを作ることが多い。
+
+たとえば、最初に次のような構成になっているとする。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+analysis/
+`-- data/
+    `-- events.txt
+\end{lstlisting}
+
+\code{output} というディレクトリを 1 つ作るだけなら、次のように実行すればよい。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir output
+$ ls
+data	output
+\end{lstlisting}
+
+1 行目では、現在のカレントディレクトリの直下に \code{output} が新しくできる。2 行目の \code{ls} で、それが確認できる。
+
+一方、\code{output/2026/04} のように深い階層をまとめて作りたい場面もある。途中の \code{output/2026} がまだ無い場合、単純に \code{mkdir output/2026/04} のように書くとエラーが表示される。 \code{-p} オプションを付けると、足りない親ディレクトリも含めてまとめて作ることができる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ mkdir output/2026/04
+mkdir: output/2026: No such file or directory
 $ mkdir -p output/2026/04
 \end{lstlisting}
 
-1 行目は \code{output} だけを作る。2 行目は \code{output} や \code{output/2026} がまだ無くても、必要な親ディレクトリごと作る。解析では日付ごとの出力先を作ることが多いので、\code{mkdir -p} はよく使う。
+実行後は、次のようなディレクトリ構成になる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+analysis/
+|-- data/
+|   `-- events.txt
+`-- output/
+    `-- 2026/
+        `-- 04/
+\end{lstlisting}
+
+解析では、観測日ごとの出力先や、\code{figures/summary/} のような途中ディレクトリを一度に作ることが多い。このような場面では \code{mkdir -p} を用いるのが便利である。
 
 \section{コピー、移動、削除}
 
 \subsection{コピーする: \code{cp}}
 
-\code{cp} は元のファイルやディレクトリを残したまま複製を作る。たとえば次のようなディレクトリ構造があるとする。
+\code{cp} は元のファイルやディレクトリを残したまま複製を作るコマンドである。最後の引数が既存のディレクトリならその中へ同じ名前でコピーされ、ファイル名ならその名前で複製が作られる。まずは次のようなディレクトリ構造を考える。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
@@ -235,23 +343,25 @@ work/
     `-- events.txt
 \end{lstlisting}
 
-ここで、\code{raw} ディレクトリ内のファイルを \code{backup} へコピーするには次のように実行する。
+ここで \code{raw/events.txt} を \code{backup} へコピーするには、たとえば次のように実行できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ cp raw/events.txt backup/events.txt
+$ cp raw/events.txt backup/
+$ cp raw/events.txt backup/events_20260412.txt
 \end{lstlisting}
 
-実行すると、ディレクトリ構造は次のようになる。
+1 行目では、\code{backup/} が既存のディレクトリなので、その中に同じ名前の \code{events.txt} が作られる。2 行目では、コピー先の名前まで明示しているので、同じ内容を \code{events\_20260412.txt} という別名で保存できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- backup/
-|   `-- events.txt
+|   |-- events.txt
+|   `-- events_20260412.txt
 `-- raw/
     `-- events.txt
 \end{lstlisting}
 
-コピー後も \code{raw/events.txt} は残る。\code{backup/events.txt} が新しく増えるだけである。これが \code{cp} の基本である。
+このように、\code{cp} は元ファイルを消さない。\code{raw/events.txt} はそのまま残り、コピー先だけが増える。バックアップを取るときや、元データを残したまま加工用のファイルを作るときによく使う。
 
 ディレクトリごと複製したい場合は \code{-r} を付ける。
 
@@ -259,80 +369,124 @@ work/
 $ cp -r raw raw_backup
 \end{lstlisting}
 
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+work/
+|-- backup/
+|   |-- events.txt
+|   `-- events_20260412.txt
+|-- raw/
+|   `-- events.txt
+`-- raw_backup/
+    `-- events.txt
+\end{lstlisting}
+
+\code{-r} は再帰的にコピーする、という意味である。ディレクトリの中にさらにファイルやサブディレクトリがあっても、その構造ごと複製される。なお、既存ファイルへの上書きが心配なときは \code{-i} を付けて確認しながらコピーすると安全である。
+
 \subsection{移動する、名前を変える: \code{mv}}
 
-\code{mv} は「移動」と「改名」の両方に使う。どちらになるかは、最後の引数が何を指しているかで決まる。
+\code{mv} は「別の場所へ移す」と「名前を変える」の両方に使う。考え方は \code{cp} と似ており、最後の引数が既存ディレクトリならその中へ移動し、そうでなければその名前へ変更する。ただし、\code{cp} と違って元の場所には残らない。
+
+まず、同じディレクトリの中で名前だけを変える例を見る。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- result.txt
 \end{lstlisting}
 
-この状態から、ファイル名を変更するには次のように実行する。
-
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mv result.txt result_old.txt
 \end{lstlisting}
-
-実行後、ディレクトリ内は次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- result_old.txt
 \end{lstlisting}
 
-この場合は、同じディレクトリの中で名前だけが変わる。
+この場合は、同じ場所にあるファイルの名前だけが \code{result\_old.txt} へ変わる。
 
-次に、ファイルを別のディレクトリへ移動することを考えよう。\code{work} ディレクトリの下に \code{output} ディレクトリと \code{result.txt} というファイルがあるとする。
+次に、別のディレクトリへ移動しながら名前も変える例を考える。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- output/
-`-- result.txt
+`-- result_old.txt
 \end{lstlisting}
-
-ここで、\code{result.txt} を \code{output} ディレクトリへ移動するには次のようにすればよい。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ mv result.txt output/
+$ mv result_old.txt output/final.txt
 \end{lstlisting}
-
-実行後、ディレクトリ構成は次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- output/
-    `-- result.txt
+    `-- final.txt
 \end{lstlisting}
 
-この場合は、\code{result.txt} が \code{output/} の中へ移る。元の場所からは消える。\code{cp} とは異なり、元ファイルは残らない。
+\code{mv result\_old.txt output/final.txt} では、\code{result\_old.txt} が \code{output} の中へ移り、名前も \code{final.txt} に変わる。もし \code{mv result\_old.txt output/} と書けば、名前はそのままで場所だけが変わる。
+
+このように、\code{mv} は「移動」と「改名」を 1 つのコマンドで行えるのが特徴である。整理のためにファイルを別ディレクトリへ移したり、解析段階に応じて \code{tmp.txt} を \code{final.txt} に改名したりするときに使う。\code{mv -i} を使うと、すでにファイルが存在した場合に上書きするかどうかを確認しながら進められる。
 
 \subsection{削除する: \code{rm}}
 
-\code{rm} はファイルを削除する。重要なのは、通常の \code{rm} はゴミ箱へ移すのではなく、その場で完全に削除するという点である。いくつか例を挙げる。
+\code{rm} はファイルやディレクトリを削除するコマンドである。重要なのは、通常の \code{rm} はゴミ箱へ移すのではなく、その場で削除するという点である。Finder での削除と違って、あとから気軽に戻すことはできない。したがって、慣れないうちは削除前に \code{pwd} や \code{ls} で場所と対象を確認する方がよい。
+
+たとえば、次のような状態を考える。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+work/
+|-- old_output/
+|   `-- plot.png
+`-- result_old.txt
+\end{lstlisting}
+
+ここで使う基本形は次の通りである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rm result_old.txt
 $ rm -i result_old.txt
 $ rm -r old_output
+$ rm -ri old_output
 \end{lstlisting}
 
-\code{rm result\_old.txt} はファイルを削除する。\code{rm -i result\_old.txt} は削除前に確認を出す。\code{rm -r old\_output} はディレクトリを中身ごと再帰的に削除する。
+\code{rm result\_old.txt} は通常のファイルを削除する。\code{rm -i result\_old.txt} は削除前に確認を出すので、うっかり消したくないときに有用である。\code{rm -r old\_output} はディレクトリを中身ごと再帰的に削除する。\code{rm -ri old\_output} のように \code{-r} と \code{-i} を組み合わせれば、ディレクトリ削除でも確認しながら進められる。
 
-特に \code{rm -r} は強力である。対象のパスを誤ると大きな被害になるので、削除前に \code{pwd} と \code{ls} で場所を確かめる習慣を持った方がよい。
+% \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+% work/
+% \end{lstlisting}
+
+特に \code{rm -r} は強力である。対象のパスを誤ると大きな被害になるので、削除前に \code{ls old\_output} や \code{ls result\_old.txt} のように対象を一度表示してから実行すると安全である。
 
 \subsection{ワイルドカード}
 
-複数のファイルを一度に指定したいときは、ワイルドカードが役に立つ。よく使うのは \code{*} であり、これは「0 文字以上の任意の文字列」を表す。重要なのは、\code{cat} や \code{rm} が \code{*} を理解しているのではなく、シェルが先に展開してから各コマンドへ渡しているという点である。
+複数のファイルを一度に指定したいときは、ワイルドカードが役に立つ。よく使うのは \code{*} であり、これは「0 文字以上の任意の文字列」を表す。重要なのは、\code{cat} や \code{rm} が \code{*} を理解しているのではなく、シェルが先に実際のファイル名へ展開してから各コマンドへ渡しているという点である。
+
+たとえば、次のような構成を考える。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+data/
+|-- run01.csv
+|-- run02.csv
+|-- run03.txt
+|-- test_20260411.csv
+|-- test_20260412.csv
+|-- test_20260413.csv
+`-- subdir/
+    `-- run04.csv
+\end{lstlisting}
+
+このとき、次のような書き方ができる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ ls data/*.csv
 $ cp data/*.csv backup/
 $ rm test_*.csv
 \end{lstlisting}
 
-\code{cp data/*.csv backup/} とすると複数の CSV をまとめてコピーできる。\code{rm test\_*.csv} なら条件に合うファイルを一括削除できる。
+\code{data/*.csv} は、\code{data} ディレクトリ直下にある \code{.csv} ファイルすべてを意味する。したがって、この例では \code{run01.csv} と \code{run02.csv} は対象になるが、\code{subdir/run04.csv} は含まれない。\code{*} は \code{/} をまたいで階層全体を探すわけではないからである。
 
-したがって、ワイルドカードを使うときは、実際に何が展開されるかを意識した方がよい。削除系のコマンドでは、先に \code{ls test\_*.csv} のように確認してから実行する方が安全である。
+\code{cp data/*.csv backup/} とすると、条件に合う複数の CSV をまとめてコピーできる。\code{rm test\_*.csv} なら、\code{test\_001.csv} や \code{test\_old.csv} のように同じ接頭辞を持つファイルを一括削除できる。
+
+ただし、ワイルドカードは便利な反面、想定より多くのファイルへ一致することもある。特に削除系のコマンドでは、先に \code{ls test\_*.csv} のように実際の対象を表示してから \code{rm test\_*.csv} を実行する方が安全である。また、一致しないときの振る舞いはシェル設定によって異なることがあるので、その意味でもまず \code{ls} で確認する習慣が有用である。
 
 
 \section{ファイルの内容確認とデータ抽出}
