@@ -15,6 +15,14 @@ macOS では \code{zsh}、Linux や WSL では \code{bash} を使うことが多
 $ echo $SHELL
 \end{lstlisting}
 
+実行結果の例は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+/bin/zsh
+\end{lstlisting}
+
+この 1 行は、「いまログイン中のシェルとして \code{zsh} が使われている」ことを表す。末尾の \code{zsh} や \code{bash} が、実際にコマンドを解釈しているプログラム名である。以後、設定ファイルを編集するときは、この結果を見て \code{\textasciitilde/.zshrc} と \code{\textasciitilde/.bashrc} のどちらを触るかを決める。
+
 本書では、シェルで入力するコマンド例の先頭に \code{\$} を付ける。\code{\$} 自体は「ここから先が入力するコマンドである」という印であり、読者が実際に打ち込むのはその後ろの部分である。これに対して、出力結果やファイル内容の例には \code{\$} を付けない。
 
 \subsection{Windows では WSL を使う}
@@ -51,6 +59,34 @@ $ python3 -h
 $ python3 --help
 $ man rsync
 \end{lstlisting}
+
+\code{python3 -h} の出力は長いが、先頭はたとえば次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+usage: python3 [option] ... [-c cmd | -m mod | file | -] [arg] ...
+Options and arguments (and corresponding environment variables):
+-b     : issue warnings about str(bytes_instance), str(bytearray_instance)
+         and comparing bytes/bytearray with str. (-bb: issue errors)
+-B     : don't write .pyc files on import; also PYTHONDONTWRITEBYTECODE=x
+-c cmd : program passed in as string (terminates option list)
+\end{lstlisting}
+
+ここで最初の \code{usage: ...} は「このコマンドをどういう形で呼び出せるか」を要約した行である。\code{[-c cmd | -m mod | file | -]} のように角括弧で囲まれた部分は省略可能、\code{|} で区切られた部分はどれか 1 つを選ぶ、という意味で読む。その次の \code{Options and arguments ...} 以下では、各オプションの意味が 1 行ずつ並ぶ。\code{-b} のように短いオプション名、コロンの後ろにその効果、必要なら対応する環境変数が示される。\code{-c cmd} のように引数を伴うものは、オプションの直後に必要な値の名前も書かれる。
+
+\code{man rsync} を開くと、画面の先頭付近はたとえば次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+OPENRSYNC(1)                                    General Commands Manual                                   OPENRSYNC(1)
+
+NAME
+     openrsync - synchronise local and remote files
+
+SYNOPSIS
+     openrsync [-0468BCDEFHILOPRSTWVabcdefghiklmnopqrtuvxyz] [-e program] [-f filter] ...
+               ... source ... directory
+\end{lstlisting}
+
+\code{NAME} はそのコマンドが何をするものかを 1 行で示す欄である。\code{SYNOPSIS} は、「このコマンドをどういう形で呼び出せるか」を要約した欄である。ここで角括弧 \code{[...]} に入っているものは省略可能であり、すべてを書かなければならないわけではない。この例では、末尾の \code{source ... directory} を見れば、コピー元を並べて最後にコピー先を書くことが分かる。全オプションを暗記する必要はない。\code{--exclude} や \code{-a} のように、必要なものだけを後ろの節や \code{man} から確認して使えば十分である。
 
 \code{--help} や \code{-h} は、そのコマンドが受け付けるオプションや引数の書式を短く表示することが多い。ただし、すべてのコマンドが両方を実装しているわけではない。macOS の \code{ls} のように \code{--help} を受け付けないコマンドもあるので、その場合は \code{man ls}、\code{man ssh}、\code{man rsync} のように \code{man} を引く方が確実である。
 \code{man} を開いたあとは、上下キーや \code{Space} で移動し、\code{/pattern} で検索できる。\code{q} を押せば終了する。
@@ -113,9 +149,8 @@ drwxr-xr-x  3 ikomae  staff  96  4月 12 23:19 scripts
 
 先頭の1文字は種別を表し、\code{d} ならディレクトリ、\code{-} なら通常のファイルである。続く \code{rwxr-xr-x} はアクセス権を表している。アクセス権の詳しい意味は\ref{subsec:mod}~節で説明する。
 
-ここで「リンク数」は、ファイルやディレクトリに対して、ファイルシステムの中でいくつ参照があるかを表す値である。通常のファイルでは、ふつうに作成したものであれば多くの場合は \code{1} であり、入門の段階ではあまり深く気にしなくてよい。
-
-一方、ディレクトリでは意味が少し異なる。 ディレクトリ構造により値が変化するが、その定義は環境によって異なるため、通常のファイルのように単純には読めない。
+リンク数は、ファイルやディレクトリに対して、ファイルシステムの中でいくつ参照があるかを表す値である。通常のファイルでは、ふつうに作成したものであれば多くの場合は \code{1} であり、入門の段階ではあまり深く気にしなくてよい。
+ディレクトリでは意味が少し異なる。 ディレクトリ構造により値が変化するが、その定義は環境によって異なるため、通常のファイルのように単純には読めない。
 したがって、リンク数については、通常のファイルでは多くの場合 \code{1} であり、ディレクトリでは構造に関係する値が表示される、と理解しておけば十分である。
 
 \code{ls -l} で表示されるサイズの欄は、通常はバイト単位で表示される。したがって、ファイルが大きくなると数値も大きくなり、ぱっと見ただけでは大きさをつかみにくいことがある。そこで、サイズを見やすく表示したいときには \code{-h} オプションを併用する。\code{h} は human-readable の略で、サイズを \code{K}、\code{M}、\code{G} などの読みやすい単位で表示する。
@@ -655,6 +690,60 @@ $ cat events.txt | grep -v "noise" | awk '{print $2}'
 
 このように、まず全体を見る、次に条件で絞る、最後に列を抜く、という手順を 1 行の中でつなげられる。ここまでは「コマンド同士をどうつなぐか」を見てきた。次は、そうしたコマンドの振る舞いに影響する環境変数を見る。
 
+\section{URL からファイルを取得する}
+
+解析では、公開データや設定例、インストーラスクリプトを URL から取得することがある。そのときによく使うのが \code{curl} と \code{wget} である。大きな違いは、\code{curl} は何も付けないと内容を標準出力へ出し、\code{wget} は既定でファイルとして保存する点にある。macOS には \code{curl} が標準で入っているが、\code{wget} は標準では入っていない。必要なら \code{brew install wget} などで追加する。
+
+\subsection{\code{curl}}
+
+\code{curl} は、URL の内容を表示したり、保存したり、別のコマンドへ渡したりするときに使う。まずは次の形を覚えておけばよい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ curl https://example.com/config.txt | head -n 2
+$ curl -O https://example.com/data/run001.csv
+$ curl -o events.csv https://example.com/data/run001.csv
+$ curl -L -O https://example.com/latest.csv
+$ curl -fsSL https://pyenv.run | bash
+\end{lstlisting}
+
+1 行目では、取得した内容をファイルへ保存せず、そのまま画面へ流している。たとえば結果は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+threshold=5.0
+window_ns=250
+\end{lstlisting}
+
+2 行目と 3 行目はファイル保存である。2 行目の \code{-O} は URL の末尾にあるファイル名をそのまま使う。3 行目の \code{-o events.csv} は、保存名を自分で決めたいときに使う。4 行目の \code{-L} はリダイレクト先までたどるオプションであり、短縮 URL や配布用リンクを扱うときによく必要になる。5 行目の \code{-fsSL} はインストール手順でよく見る組合せで、\code{-f} は HTTP エラー時に失敗として扱う、\code{-s} は通常の進捗表示を消す、\code{-S} は \code{-s} と併用したときでもエラー文は表示する、\code{-L} はリダイレクトをたどる、という意味である。
+
+\begin{description}
+\item[\code{-O}] URL の末尾にある名前で保存する。配布元のファイル名をそのまま使いたいときに向く。
+\item[\code{-o}] 保存名を自分で指定する。長い URL や分かりにくい名前を短く直したいときに使う。
+\item[\code{-L}] リダイレクトをたどる。共有 URL や最新版リンクでは付けた方が安全なことが多い。
+\item[\code{-f}] HTTP エラーを成功扱いにしない。存在しない URL を取ってしまったときの見落としを減らせる。
+\item[\code{-sS}] 通常表示を減らしつつ、エラーだけは見えるようにする。スクリプトから呼ぶときに便利である。
+\end{description}
+
+\subsection{\code{wget}}
+
+\code{wget} は、URL を指定すると既定でファイルへ保存する。大量のファイルを順に取得したいときや、大きなファイルの取得を再開したいときに使いやすい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ wget https://example.com/data/run001.csv
+$ wget -O events.csv https://example.com/data/run001.csv
+$ wget -c https://example.com/archive.tar.gz
+\end{lstlisting}
+
+1 行目では、URL の末尾にある \code{run001.csv} という名前で保存される。2 行目の \code{-O} は保存名を自分で決める形であり、\code{curl -o} と同じ発想である。3 行目の \code{-c} は途中で止まったダウンロードを再開するときに使う。回線が不安定な環境やサイズの大きい配布物では便利である。
+
+\begin{description}
+\item[\code{-O}] 保存名を自分で指定する。既定の名前を使いたくないときに使う。
+\item[\code{-c}] 中断したダウンロードを再開する。大きなファイルで有効である。
+\item[\code{-q}] 表示を減らす。ログを静かにしたいときに使う。
+\item[\code{--show-progress}] 進捗だけは見たいときに使う。静かな実行と相性がよい。
+\end{description}
+
+\code{wget} が手元にない環境では、\code{curl -O} や \code{curl -o} で代用できる。また、画面へ流した内容をそのままパイプで次のコマンドへ渡したいときは、\code{wget} より \code{curl} の方が自然である。
+
 \section{環境変数と PATH}
 
 \subsection{環境変数を使う}
@@ -667,14 +756,28 @@ $ echo $SHELL
 $ echo $PATH
 \end{lstlisting}
 
-\code{HOME} はホームディレクトリ、\code{SHELL} は使っているシェル、\code{PATH} は実行ファイルを探すディレクトリの並びを表す。後で出てくる \code{PYENV\_ROOT} や \code{DATA\_ROOT} も同じ仲間であり、「プログラムへ外から値を渡す仕組み」と考えると分かりやすい。新たに環境変数を設定するには次のようにする。
+実行結果は、たとえば次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+/Users/ikomae
+/bin/zsh
+/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+\end{lstlisting}
+
+1 行目はホームディレクトリ、2 行目は現在のシェル、3 行目は実行ファイルを探すディレクトリの一覧である。\code{PATH} はコロン \code{:} 区切りで並んでおり、シェルは左から順に探して最初に見つかった実行ファイルを使う。後で出てくる \code{PYENV\_ROOT} や \code{DATA\_ROOT} も同じ仲間であり、「プログラムへ外から値を渡す仕組み」と考えると分かりやすい。新たに環境変数を設定するには次のようにする。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ export DATA_ROOT="$HOME/data/events"
 $ echo $DATA_ROOT
 \end{lstlisting}
 
-\code{export} すると、そのシェルから起動する後続のコマンドにも値が渡る。たとえば Python スクリプト側で \code{DATA\_ROOT} を読めば、データ置き場をコードへ埋め込まずに済む。
+結果の例は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+/Users/ikomae/data/events
+\end{lstlisting}
+
+\code{export} 自体は成功しても通常は何も表示しない。続けて \code{echo \$DATA\_ROOT} を実行し、意図した値が入ったことを確認する。ここでは \code{\$HOME} が先に展開され、その結果として絶対パスが保存されている。
 
 ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値ならシェルの設定ファイルに \code{export ...} を書いておく。
 どのファイルを編集するかは今使っているシェルで決まる。
@@ -729,7 +832,15 @@ $ which ls
 $ echo $PATH
 \end{lstlisting}
 
-\code{which python3} を実行すると、たとえば Homebrew の Python なら \code{/opt/homebrew/bin} の下、仮想環境なら \code{.venv/bin} の下の実行ファイルが表示される。シェルは \code{\$PATH} に並んだディレクトリを左から順に調べ、最初に見つかった実行ファイルを使う。
+出力の例は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+/opt/homebrew/bin/python3
+/bin/ls
+/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+\end{lstlisting}
+
+\code{which python3} は「いま \code{python3} という名前で実際に呼ばれる実行ファイルの場所」を返す。ここでは Homebrew で入れた Python が使われている。\code{which ls} が \code{/bin/ls} なら、\code{ls} は OS 標準のコマンドを使っているという意味である。3 行目の \code{PATH} と見比べると、\code{/opt/homebrew/bin} が \code{/usr/bin} より左にあるため、\code{python3} ではそちらが優先されていることが分かる。
 
 \code{bin} という名前は、実行ファイルを置くディレクトリによく使われる。後で出てくる \code{.venv/bin} の \code{bin} も、この慣習に従っている。
 

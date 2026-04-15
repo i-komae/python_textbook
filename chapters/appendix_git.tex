@@ -6,7 +6,7 @@
 Git は、手元のファイルの変更履歴を記録するためのソフトウェアである。これに対して GitHub は、Git リポジトリを置いて共有するためのサービスである。
 
 \begin{itemize}
-\item Git: ローカルマシンでも単独で使える版管理システム
+\item Git: ローカルマシンでも単独で使えるバージョン管理システム
 \item GitHub: Git リポジトリをホストし、共有、Issue、Pull Request などを提供するサービス
 \end{itemize}
 
@@ -143,7 +143,7 @@ $ git commit -m "Stop tracking generated files"
 
 \subsubsection{\code{uv} プロジェクトで何をコミットするか}
 
-\code{uv} を使うプロジェクトでは、通常 \code{.venv/} はコミットしない。一方で、\code{pyproject.toml}、\code{uv.lock}、\code{.gitignore}、そしてプロジェクト単位で版を固定したいなら \code{.python-version} はコミット候補になる。
+\code{uv} を使うプロジェクトでは、通常 \code{.venv/} はコミットしない。一方で、\code{pyproject.toml}、\code{uv.lock}、\code{.gitignore}、そしてプロジェクト単位でバージョンを固定したいなら \code{.python-version} はコミット候補になる。
 
 \section{GitHub と接続する}
 
