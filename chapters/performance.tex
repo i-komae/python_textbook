@@ -252,7 +252,7 @@ for i in range(n):
 \item Cython: Python に近い構文を保ちながら、重いループや数値計算だけへ型を付けてコンパイルしたいときに向く
 \end{itemize}
 
-短い試作なら \code{ctypes}、Python らしい使い勝手まで整えたいなら pybind11、既存の Python 風コードを保ちながら内側だけ速くしたいなら Cython、といった選択が考えられる。重要なのは、インタフェースを狭く保ち、重い部分だけを外へ出すことである。
+短い試作なら \code{ctypes}、Python らしい使い勝手まで整えたいなら pybind11、既存の Python 風コードを保ちながら内側だけ速くしたいなら Cython、といった選択が考えられる。重要なのは、インタフェースを狭く保ち、重い部分だけを外へ出すことである。pybind11 の最小構成は付録~\ref{app:pybind11} を参照してほしい。
 
 \begin{lstlisting}[language=Python]
 result = fast_module.count_pairs(times, window)

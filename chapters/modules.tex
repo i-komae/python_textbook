@@ -1,0 +1,537 @@
+\chapter{自作モジュールを作って再利用する}
+\label{ch:modules}
+
+解析コードは最初、1 本のスクリプトとして書き始めることが多い。しかし、同じ処理を別の日のデータにも使いたくなり、さらに別のプロジェクトからも呼びたくなると、単発スクリプトのままでは管理しにくい。こういうときは、処理を自作モジュールとして切り出し、必要ならパッケージとしてインストールできる形へ整理した方がよい。
+
+ここでいう「モジュール」は、\code{plotting.py} や \code{models.py} のような Python ファイル 1 つを指すことが多い。一方、「パッケージ」は、それらのモジュールをディレクトリとしてまとめ、\code{import} できる形にした単位である。本章では、\code{uv} を使ってパッケージ開発を始め、\code{pip install} や \code{pip install -e} で使えるようにするまでを、具体例付きで順に見ていく。
+
+\section{なぜ自作モジュールにするのか}
+
+処理をモジュールへ分ける利点は、単にファイル数が増えることではない。役割ごとに分離でき、テストしやすくなり、エディタから補完やドキュメントも見やすくなる。特に解析では、次のような部品が再利用されやすい。
+
+\begin{itemize}
+\item データ読込み関数
+\item フィルタ条件やカットの判定関数
+\item 図を作成して保存する関数
+\item フィット関数やモデル関数
+\end{itemize}
+
+こうした処理を \code{main.py} の中へすべて書いてしまうと、別スクリプトから流用するときにコピーペーストが増える。コピー元とコピー先がずれると、片方だけバグ修正される、といった問題も起こりやすい。自作モジュールへ切り出して \code{from histfit\_tools import save\_histogram\_with\_fit} のように呼べる形にしておけば、修正箇所は 1 か所で済む。
+
+\section{\code{uv} でパッケージ開発を始める}
+
+\subsection{最初の初期化}
+
+本書では、単発スクリプトではなく「後で \code{import} される部品」として育てたいので、\code{uv init --package} から始めるのが自然である。たとえばヒストグラム作図用のパッケージを作るなら、次のように実行する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ mkdir histfit_tools
+$ cd histfit_tools
+$ uv init --package
+$ uv add numpy matplotlib scipy
+$ uv add --dev pytest ruff
+$ uv sync
+\end{lstlisting}
+
+\code{uv add} で追加した \code{numpy}、\code{matplotlib}、\code{scipy} は、このパッケージを使うときにも必要な実行時依存関係である。一方、\code{pytest} や \code{ruff} は開発者だけが使う道具なので、\code{--dev} 付きで追加する。たとえば \code{pytest} は、本章で後から示す \code{tests/test\_models.py} のように、\code{linear} が期待通りの値を返すか、未知のモデル名で \code{ValueError} が正しく送出されるかなどのテストを行う際に使用する。\code{ruff} は、\code{uv run ruff check .} として実行し、未使用 import や単純な書式崩れを commit 前に見つけるための道具である。
+\code{pytest} や \code{ruff} によるテストは必須ではないが、将来的にパッケージを公開する予定があるなら早い段階で実装しておくことが好ましい。
+
+最終的なディレクトリ構成は、少なくとも次のように整理したい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={histfit\_tools/ の例}]
+.gitignore
+.python-version
+README.md
+pyproject.toml
+src/
+`-- histfit_tools/
+    |-- __init__.py
+    |-- models.py
+    `-- plotting.py
+tests/
+`-- test_models.py
+\end{lstlisting}
+
+ここで \code{src/} の下にパッケージを置く構成を \code{src} レイアウトという。これは、作業ディレクトリ直下にあるファイルをたまたま import してしまう事故を防ぎやすい。パッケージとして配布する前提なら、この構成にしておく方が後で困りにくい。
+
+\subsection{\code{pyproject.toml} の役割}
+
+パッケージ開発では、\code{pyproject.toml} が中心になる。ここにはパッケージ名、Python バージョン条件、依存関係、ビルド方法などを書く。上の例なら、少なくとも次のような内容になる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={pyproject.toml}]
+[project]
+name = "histfit_tools"
+version = "0.1.0"
+description = "Histogram plotting and fitting utilities."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "matplotlib>=3.10",
+  "numpy>=2.0",
+  "scipy>=1.15",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "ruff>=0.11",
+]
+\end{lstlisting}
+
+\code{dependencies} に書いた内容は、このパッケージを \code{pip install} したときに一緒に解決される。つまり、「自分の環境でたまたま入っているから動く」のではなく、「このパッケージを使うにはこれが必要だ」と宣言していることになる。
+
+一方、\code{uv.lock} は開発側で環境を厳密にそろえるためのファイルである。自分のリポジトリへ戻ってきたときや、共同研究者が同じ環境を再現したいときには \code{uv lock} や \code{uv sync} が役に立つ。しかし、利用者が \code{pip install} するときに参照するのは基本的に \code{pyproject.toml} であり、\code{uv.lock} ではない。この違いは重要である。
+
+\section{具体例: ヒストグラムとフィットをまとめたパッケージ}
+
+ここでは、1 次元データを与えると、\code{numpy.histogram} でヒストグラムを作り、\code{matplotlib} の \code{errorbar} で描き、必要なら \code{scipy.optimize.curve\_fit} でフィットした曲線を重ねて保存する関数を作る。要求仕様は次の通りとする。
+
+\begin{itemize}
+\item データ列と保存先を受け取る
+\item \code{bins} か \code{bin\_width} のどちらかでビンを指定できる
+\item \code{fit=False} にするとフィットせずにヒストグラムだけ保存する
+\item \code{linear}、\code{quadratic}、\code{power\_law}、\code{gaussian} を名前で選べる
+\item 自分で定義した関数もそのまま渡せる
+\item フィット初期値 \code{p0} も引数から与えられる
+\end{itemize}
+
+\subsection{モデル関数を分ける}
+
+まず、フィット関数群を \code{models.py} へ切り出す。
+
+\begin{lstlisting}[language=Python, title={src/histfit\_tools/models.py}]
+from collections.abc import Callable
+
+import numpy as np
+
+ModelFunc = Callable[..., np.ndarray]
+
+
+def linear(x: np.ndarray, a: float, b: float) -> np.ndarray:
+    """一次関数 y = a x + b を返す。"""
+    return a * x + b
+
+
+def quadratic(x: np.ndarray, a: float, b: float, c: float) -> np.ndarray:
+    """二次関数 y = a x^2 + b x + c を返す。"""
+    return a * x**2 + b * x + c
+
+
+def power_law(x: np.ndarray, amplitude: float, alpha: float) -> np.ndarray:
+    """べき関数 amplitude * x^alpha を返す。x > 0 を仮定する。"""
+    return amplitude * np.power(x, alpha)
+
+
+def gaussian(
+    x: np.ndarray,
+    amplitude: float,
+    mean: float,
+    sigma: float,
+    offset: float,
+) -> np.ndarray:
+    """ガウス関数と定数オフセットを返す。"""
+    z = (x - mean) / sigma
+    return amplitude * np.exp(-0.5 * z**2) + offset
+
+
+NAMED_MODELS: dict[str, ModelFunc] = {
+    "linear": linear,
+    "quadratic": quadratic,
+    "power_law": power_law,
+    "gaussian": gaussian,
+}
+
+
+def resolve_model(model: str | ModelFunc) -> ModelFunc:
+    """名前または callable からフィット関数を返す。"""
+    if callable(model):
+        return model
+
+    try:
+        return NAMED_MODELS[model]
+    except KeyError as exc:
+        names = ", ".join(sorted(NAMED_MODELS))
+        raise ValueError(f"Unknown model: {model}. Choose from {names}.") from exc
+\end{lstlisting}
+
+モデル関数を別ファイルへ置いておくと、作図ロジックと数学的なモデルが分離される。その結果、後で指数減衰やローレンツ関数を追加したくなったときも、\code{plotting.py} を大きく書き換えずに済む。
+
+\subsection{\code{pytest} で最小のテストを書く}
+
+\code{tests/test\_models.py} は、\code{models.py} の公開関数が最低限期待通りに振る舞うかを確認するためのファイルである。ここでは、式の値そのもの、ガウス関数の基本的な形、未知のモデル名に対する例外の 3 点だけを確かめておく。
+
+\begin{lstlisting}[language=Python, title={tests/test\_models.py}]
+import numpy as np
+import pytest
+
+from histfit_tools.models import gaussian, linear, resolve_model
+
+
+def test_linear_returns_expected_values() -> None:
+    x = np.array([0.0, 1.0, 2.0])
+    y = linear(x, 2.0, 1.0)
+    assert np.allclose(y, [1.0, 3.0, 5.0])
+
+
+def test_gaussian_has_peak_at_mean() -> None:
+    x = np.array([4.0, 5.0, 6.0])
+    y = gaussian(x, amplitude=10.0, mean=5.0, sigma=1.0, offset=2.0)
+    assert y[1] == pytest.approx(12.0)
+    assert y[1] > y[0]
+    assert y[0] == pytest.approx(y[2])
+
+
+def test_resolve_model_rejects_unknown_name() -> None:
+    with pytest.raises(ValueError):
+        resolve_model("lorentzian")
+\end{lstlisting}
+
+最初のテストは、一次関数の実装が式通りかを直接確かめている。2 つ目は、ガウス関数が平均値の位置で最大になり、左右対称になることを見ている。3 つ目は、誤ったモデル名を黙って通さず、利用者へ早い段階でエラーを返すことを確かめるテストである。
+
+実行は次のように行う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ uv run pytest
+$ uv run ruff check .
+\end{lstlisting}
+
+ここで \code{pytest} は関数の振る舞いを確かめ、\code{ruff} は未使用 import や単純な書式の乱れを確認する。今回のような小さなパッケージでも、この 2 つがあるだけで「動いているつもり」の状態を減らしやすい。
+
+\subsection{ヒストグラムを作って保存する関数}
+
+次に、実際の主役である \code{save\_histogram\_with\_fit} を \code{plotting.py} に書く。
+
+\begin{lstlisting}[language=Python, title={src/histfit\_tools/plotting.py}]
+from collections.abc import Sequence
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+from numpy.typing import ArrayLike
+from scipy.optimize import curve_fit
+
+from .models import ModelFunc, resolve_model
+
+
+def _make_bin_edges(
+    values: np.ndarray,
+    bins: int | Sequence[float] | None,
+    bin_width: float | None,
+    data_range: tuple[float, float] | None,
+) -> np.ndarray:
+    if bins is not None and bin_width is not None:
+        raise ValueError("Specify either bins or bin_width, not both.")
+
+    if data_range is None:
+        low = float(np.min(values))
+        high = float(np.max(values))
+    else:
+        low, high = data_range
+
+    if low == high:
+        high = low + 1.0
+
+    if bin_width is not None:
+        if bin_width <= 0:
+            raise ValueError("bin_width must be positive.")
+        return np.arange(low, high + bin_width, bin_width)
+
+    if bins is None:
+        bins = 40
+
+    if isinstance(bins, int):
+        return np.linspace(low, high, bins + 1)
+
+    return np.asarray(bins, dtype=float)
+
+
+def save_histogram_with_fit(
+    data: ArrayLike,
+    output_path: str | Path,
+    *,
+    bins: int | Sequence[float] | None = 40,
+    bin_width: float | None = None,
+    data_range: tuple[float, float] | None = None,
+    fit_model: str | ModelFunc = "gaussian",
+    fit: bool = True,
+    p0: Sequence[float] | None = None,
+    xlabel: str = "x",
+    ylabel: str = "Counts",
+    title: str | None = None,
+) -> Path:
+    """ヒストグラムと誤差棒を描き、必要ならフィット線も重ねて保存する。
+
+    Args:
+        data: 1 次元データ列。
+        output_path: 保存先ファイル名。
+        bins: ビン数またはビン境界列。
+        bin_width: ビン幅。bins と同時には指定しない。
+        data_range: ヒストグラム範囲。
+        fit_model: モデル名または自作 callable。
+        fit: False ならフィットを実行しない。
+        p0: curve_fit へ渡す初期値。
+        xlabel: x 軸ラベル。
+        ylabel: y 軸ラベル。
+        title: 図タイトル。
+
+    Returns:
+        保存したファイルの Path。
+    """
+    values = np.asarray(data, dtype=float)
+    if values.ndim != 1:
+        raise ValueError("data must be one-dimensional.")
+
+    bin_edges = _make_bin_edges(values, bins, bin_width, data_range)
+    counts, bin_edges = np.histogram(values, bins=bin_edges)
+    centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+    errors = np.sqrt(counts)
+
+    fig, ax = plt.subplots()
+    ax.errorbar(centers, counts, yerr=errors, fmt="o", capsize=3, label="data")
+
+    if fit:
+        model = resolve_model(fit_model)
+        sigma = np.where(errors > 0, errors, 1.0)
+        params, _ = curve_fit(
+            model,
+            centers,
+            counts,
+            p0=p0,
+            sigma=sigma,
+            absolute_sigma=True,
+            maxfev=10000,
+        )
+        x_fit = np.linspace(bin_edges[0], bin_edges[-1], 400)
+        y_fit = model(x_fit, *params)
+        ax.plot(x_fit, y_fit, label="fit")
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if title is not None:
+        ax.set_title(title)
+    ax.legend()
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path
+\end{lstlisting}
+
+この関数では、ビン境界の決定と作図本体を分けている。こうしておくと、ビン幅指定のロジックだけを単独にテストしやすい。また、\code{fit\_model} が文字列なら既定のモデル群から選び、callable ならそのまま使うので、利用者は既定モデルと自作モデルを同じ引数で扱える。
+
+\subsection{公開インタフェースを \code{\_\_init\_\_.py} で整える}
+
+パッケージの外から使ってほしい関数は、\code{\_\_init\_\_.py} でまとめて再公開しておくとよい。
+
+\begin{lstlisting}[language=Python, title={src/histfit\_tools/\_\_init\_\_.py}]
+"""Histogram plotting and fitting utilities."""
+
+from .models import gaussian, linear, power_law, quadratic
+from .plotting import save_histogram_with_fit
+
+__all__ = [
+    "gaussian",
+    "linear",
+    "power_law",
+    "quadratic",
+    "save_histogram_with_fit",
+]
+\end{lstlisting}
+
+こうしておけば、利用側は \code{from histfit\_tools import save\_histogram\_with\_fit} と短く書ける。内部ファイル構成を後で整理し直しても、公開 API を保っている限り、利用者側のコードを壊しにくい。
+
+\subsection{使い方の例}
+
+実際にこのパッケージを使うスクリプトは、たとえば次のようになる。
+
+\begin{lstlisting}[language=Python]
+from pathlib import Path
+
+import numpy as np
+
+from histfit_tools import save_histogram_with_fit
+
+rng = np.random.default_rng(42)
+data = rng.normal(loc=5.0, scale=1.2, size=4000)
+
+save_histogram_with_fit(
+    data,
+    Path("figures/gaussian_fit.png"),
+    bins=35,
+    fit_model="gaussian",
+    p0=[250.0, 5.0, 1.0, 1.0],
+    xlabel="signal [mV]",
+    title="Gaussian fit example",
+)
+
+save_histogram_with_fit(
+    data,
+    Path("figures/hist_only.png"),
+    bin_width=0.2,
+    fit=False,
+    xlabel="signal [mV]",
+)
+\end{lstlisting}
+
+1 つ目はガウス関数でフィットし、2 つ目は \code{fit=False} としてヒストグラムだけを保存している。ビン数指定とビン幅指定の両方が動くことも、この 2 例で確認できる。
+
+自作関数を渡す例も示しておこう。たとえば指数減衰を仮定したいなら、次のように書ける。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+
+from histfit_tools import save_histogram_with_fit
+
+
+def exponential_decay(
+    x: np.ndarray,
+    amplitude: float,
+    tau: float,
+    offset: float,
+) -> np.ndarray:
+    return amplitude * np.exp(-x / tau) + offset
+
+
+save_histogram_with_fit(
+    data,
+    "figures/custom_fit.png",
+    bin_width=0.25,
+    fit_model=exponential_decay,
+    p0=[120.0, 3.0, 5.0],
+)
+\end{lstlisting}
+
+このように、\code{fit\_model} へ callable を渡せるようにしておけば、パッケージ側は柔軟性を保ちつつ、利用者側は自分の解析に必要なモデルを差し込める。
+
+\section{docstring、型ヒント、README}
+
+自作モジュールは、動くだけでは不十分である。後から自分で使うときにも、他人が使うときにも、「何を受け取り、何を返すか」がすぐ分かる形で書いておく方がよい。そのために有効なのが docstring、型ヒント、README である。
+
+\subsection{docstring と型ヒント}
+
+基礎編で見た docstring だが、パッケージではその重要性がさらに増す。特に、引数の意味や既定値、返り値、例外条件まで書いておくと、\code{help()} だけでなくエディタの補完でも内容が見やすくなる。
+
+先ほどの \code{save\_histogram\_with\_fit} には、\code{data: ArrayLike}、\code{output\_path: str | Path}、\code{fit: bool = True} のような型ヒントが付いている。VS Code などのエディタでは、関数名にカーソルを合わせたときや補完候補を開いたときに、これらの型ヒントと docstring の先頭がそのまま表示されることが多い。つまり、docstring は文書であると同時に、普段のコーディング画面そのものへ表示される説明でもある。
+
+そのため、docstring の最初の 1 行には、関数の役割を簡潔に書く方がよい。たとえば「ヒストグラムと誤差棒を描き、必要ならフィット線も重ねて保存する。」のように書けば、補完欄を見ただけでも関数の用途が分かる。
+
+\subsection{README に書くべきこと}
+
+\code{README.md} は、リポジトリを開いた人が最初に読む文書である。少なくとも次の 4 点は入れておきたい。
+
+\begin{itemize}
+\item このパッケージが何をするか
+\item どうインストールするか
+\item 最小の使用例
+\item 主要な依存関係
+\end{itemize}
+
+たとえば最小限の README は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={README.md}]
+# histfit_tools
+
+Histogram plotting and fitting utilities for analysis scripts.
+
+## Installation
+
+```bash
+pip install .
+```
+
+## Example
+
+```python
+from histfit_tools import save_histogram_with_fit
+```
+\end{lstlisting}
+
+将来 GitHub へ置いたり、研究室内で URL を共有したりするときも、README があるだけで入口がかなり分かりやすくなる。docstring は関数単位の説明、README はパッケージ全体の説明、と役割を分けると整理しやすい。
+
+\section{\code{pip install .} と \code{pip install -e .}}
+
+\subsection{通常インストール}
+
+作ったパッケージを別の環境から使いたいときは、パッケージのルートディレクトリで \code{pip install .} を実行する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source .venv/bin/activate
+$ pip install .
+\end{lstlisting}
+
+これは「いまのソースコードのスナップショットを環境へインストールする」操作である。したがって、後から \code{src/histfit\_tools/plotting.py} を編集しても、その変更は自動では反映されない。もう一度 \code{pip install .} し直す必要がある。
+
+\subsection{editable install}
+
+開発中は、\code{pip install -e .} の方が便利である。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source .venv/bin/activate
+$ pip install -e .
+\end{lstlisting}
+
+\code{-e} は editable の略であり、環境にコピーを置く代わりに、手元のソースディレクトリを参照する形でインストールする。つまり、Python ファイルを編集した結果がすぐ import 側へ反映される。関数定義や docstring を調整しながら試す段階では、こちらを使う方が自然である。
+
+ただし、editable install は「何もかも自動で再ビルドされる」という意味ではない。\code{pyproject.toml} の依存関係を書き換えたときや、後述する pybind11 のような C++ 拡張を編集したときは、再インストールや再ビルドが必要になることがある。この点は覚えておいた方がよい。
+
+\subsection{インストール確認}
+
+インストール後は、短い import テストを必ずしておく方がよい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python -c "from histfit_tools import save_histogram_with_fit; print(save_histogram_with_fit)"
+\end{lstlisting}
+
+\code{ImportError} が出なければ、少なくともパッケージとして見つかっている。さらに依存関係も含めて確認したいなら、短い実データや乱数データで関数を 1 回実行して、図ファイルが保存されることまで確認すると確実である。
+
+\section{Git リポジトリへ置いて共有する}
+
+研究室内や共同研究で共有するなら、Git リポジトリとして管理しておく方がよい。\code{uv init --package} は既定では \code{.git/} も作るので、通常は改めて \code{git init} し直す必要はない。
+
+GitHub で共有する場合は、まず GitHub の Web 画面で空のリポジトリを 1 つ作る。ここではリポジトリ名と公開範囲だけを決めればよい。README や \code{.gitignore} は手元ですでに用意しているので、最初は GitHub 側で追加しない方が流れが単純である。
+
+その準備ができたら、手元では次のように進めればよい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ git add pyproject.toml README.md src tests .python-version
+$ git commit -m "Create histfit_tools package"
+$ git remote add origin git@github.com:username/histfit_tools.git
+$ git push -u origin main
+\end{lstlisting}
+
+\code{uv init --vcs none} のように Git 初期化を明示的に無効化して始めた場合には、最初に \code{git init} が必要になる。
+
+\code{.venv/} や \code{\_\_pycache\_\_/} はコミットしないので、\code{.gitignore} に書いておくのがよい。Git の詳細については付録~\ref{app:git} を参照されたい。
+
+GitHub などへ置いたリポジトリは、別環境からそのまま \code{pip install} できる。たとえば次のように書く。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ pip install "git+ssh://git@github.com/username/histfit_tools.git"
+\end{lstlisting}
+
+タグやコミットを固定したいなら、URL の末尾に \code{@v0.1.0} や \code{@9f3c1a2} を付ける。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
+\end{lstlisting}
+
+これは再現性のために重要である。研究ノートや論文用メモには、「どのタグを入れたか」まで残しておく方が後で確実である。
+
+\section{依存関係をどう書くか}
+
+最後に、依存関係の考え方を整理しておく。パッケージでは「いま自分の環境で動く」ことより、「利用者の環境でも必要なものが入る」ことの方が重要である。そのため、次の 3 種類を区別するとよい。
+
+\begin{description}
+\item[実行時依存関係] パッケージを import して使うだけで必要なもの。今回なら \code{numpy}、\code{matplotlib}、\code{scipy} がこれに当たる。
+\item[開発用依存関係] テスト、整形、静的解析にだけ必要なもの。今回なら \code{pytest} や \code{ruff} がこれに当たる。
+\item[ローカル環境の固定] 開発者どうしで完全に同じ環境を再現したいときの情報。これは \code{uv.lock} が担う。
+\end{description}
+
+ライブラリとして配布するなら、\code{dependencies} にはあまり厳しすぎる固定を入れない方がよい。たとえば \code{numpy==2.0.0} のように完全固定すると、利用者側の既存環境と衝突しやすい。むしろ \code{numpy>=2.0} のように「必要な下限」を書き、自分の開発環境の厳密な再現は \code{uv.lock} に任せる方が扱いやすい。
+
+また、パッケージを書いていると、Jupyter、Sphinx、mkdocs など「利用者全員には不要だが、自分は使いたい」ものが増えやすい。そのとき全部を実行時依存関係へ入れてしまうと、インストールが重くなる。依存関係は増やすほど便利になる一方で、衝突や管理コストも増える。だからこそ、まずは公開 API を小さく保ち、本当に必要な依存関係だけを残す方がよい。

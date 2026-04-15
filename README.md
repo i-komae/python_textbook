@@ -13,11 +13,11 @@
 このリポジトリは GitHub から取得できます。
 
 ```sh
-git clone https://github.com/i-komae/python_textbook.git
+git clone git@github.com:i-komae/python_textbook.git
 cd python_textbook
 ```
 
-ブラウザから ZIP を落としてもよいですが、更新を追いやすいので通常は `git clone` の方が扱いやすいです。
+ブラウザから ZIP を落としてもよいですが、更新を追いやすいので通常は `git clone` の方が扱いやすいです。この README では、後で push や private repository の取得へ移りやすいように、HTTPS より SSH を推奨しています。
 
 ## 主なファイル
 

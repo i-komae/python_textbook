@@ -1,0 +1,166 @@
+\chapter{pybind11 による C++ 拡張モジュール}
+\label{app:pybind11}
+
+高速化を進めると、最終的に「この部分だけは C++ で書きたい」という場面が出てくる。そのとき、Python から自然に呼べる形で C++ 関数を公開する道具として便利なのが pybind11 である。本付録では、最小限の構成で C++ 製モジュールを作り、\code{pip install -e .} で使えるようにする流れを示す。
+
+\section{どのようなときに使うか}
+
+pybind11 が向いているのは、重いループや数値計算の核は C++ で書きたいが、入出力や可視化、制御全体は Python に残したい場合である。つまり、「公開する関数の数は少なく、内側だけが重い」という構造に合っている。
+
+具体例として、時刻列 \code{times} に対して、差が \code{window} 以下のペア数を数える関数を C++ で実装する。これは高速化章で出てきた「重い内側のループ」を外へ出す典型例である。
+
+\section{最小構成}
+
+ディレクトリ構成は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={fastcount\_cpp/ の例}]
+pyproject.toml
+CMakeLists.txt
+cpp/
+`-- bindings.cpp
+src/
+`-- fastcount_cpp/
+    `-- __init__.py
+\end{lstlisting}
+
+\subsection{\code{pyproject.toml}}
+
+純粋な Python パッケージと違って、C++ 拡張ではビルドバックエンドも必要になる。ここでは \code{scikit-build-core} と pybind11 を使う。pybind11 は \code{setup.py} ベースでも扱えるが、この付録では C++ 側の構成を見通しよく保ちやすい CMake ベースの流儀でそろえる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={pyproject.toml}]
+[build-system]
+requires = [
+  "pybind11>=2.13",
+  "scikit-build-core>=0.10",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "fastcount_cpp"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["numpy>=2.0"]
+
+[tool.scikit-build]
+wheel.packages = ["src/fastcount_cpp"]
+\end{lstlisting}
+
+\code{build-system} に書いたパッケージは、拡張モジュールをコンパイルするために必要である。これは通常の実行時依存関係とは別物であり、\code{dependencies} へ混ぜない方が整理しやすい。
+
+\subsection{\code{CMakeLists.txt}}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={CMakeLists.txt}]
+cmake_minimum_required(VERSION 3.15)
+project(fastcount_cpp LANGUAGES CXX)
+
+find_package(pybind11 CONFIG REQUIRED)
+
+pybind11_add_module(_core cpp/bindings.cpp)
+target_compile_features(_core PRIVATE cxx_std_17)
+install(TARGETS _core DESTINATION fastcount_cpp)
+\end{lstlisting}
+
+\code{pybind11\_add\_module} が、Python から import できる共有ライブラリを作る中心になる。ここで作るモジュール名を \code{\_core} にしておくと、Python 側では \code{fastcount\_cpp.\_core} として参照できる。
+
+\subsection{C++ の実装}
+
+\begin{lstlisting}[language=C++, title={cpp/bindings.cpp}]
+#include <cmath>
+#include <cstddef>
+#include <vector>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+std::size_t count_pairs_within_window(
+    const std::vector<double>& times,
+    double window
+) {
+    std::size_t count = 0;
+    const std::size_t n = times.size();
+
+    for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t j = i + 1; j < n; ++j) {
+            if (std::abs(times[j] - times[i]) <= window) {
+                ++count;
+            }
+        }
+    }
+    return count;
+}
+
+namespace py = pybind11;
+
+PYBIND11_MODULE(_core, m) {
+    m.doc() = "Count close pairs in C++.";
+    m.def(
+        "count_pairs_within_window",
+        &count_pairs_within_window,
+        py::arg("times"),
+        py::arg("window"),
+        "Return the number of pairs whose time difference is within window."
+    );
+}
+\end{lstlisting}
+
+\code{pybind11/stl.h} を include しているので、Python の list は自動で \code{std::vector<double>} に変換される。つまり、Python 側からは特別な変換コードを書かずに呼べる。
+
+\subsection{Python 側の入口}
+
+\begin{lstlisting}[language=Python, title={src/fastcount\_cpp/\_\_init\_\_.py}]
+"""Python interface for the C++ pair counter."""
+
+from ._core import count_pairs_within_window
+
+__all__ = ["count_pairs_within_window"]
+\end{lstlisting}
+
+この \code{\_\_init\_\_.py} を用意しておくと、利用側は \code{from fastcount\_cpp import count\_pairs\_within\_window} と書ける。C++ 側の内部モジュール名 \code{\_core} を意識させずに済む。
+
+\section{ビルドとインストール}
+
+開発中は、プロジェクトの仮想環境を作ったうえで editable install するのが分かりやすい。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ uv sync
+$ source .venv/bin/activate
+$ pip install -e .
+$ python -c "from fastcount_cpp import count_pairs_within_window; print(count_pairs_within_window([0.0, 0.1, 0.4], 0.25))"
+\end{lstlisting}
+
+最後の出力は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+1
+\end{lstlisting}
+
+これは、\code{(0.0, 0.1)} だけが窓 \code{0.25} の中に入っていることを表している。
+
+ここで重要なのは、純粋な Python の editable install と違い、C++ ソースを書き換えたら再ビルドが必要になることが多い点である。つまり、\code{bindings.cpp} を編集した後は、\code{pip install -e .} をもう一度実行するか、対応するビルドコマンドを走らせて更新する必要がある。
+
+\section{Python 側からの使い方}
+
+Python から見れば、これは普通のモジュールと同じである。
+
+\begin{lstlisting}[language=Python]
+from fastcount_cpp import count_pairs_within_window
+
+times = [0.0, 0.1, 0.4, 0.55]
+window = 0.2
+
+count = count_pairs_within_window(times, window)
+print(count)
+\end{lstlisting}
+
+したがって、設計上は「どの関数を Python へ公開するか」を小さく保つ方がよい。まず Python 側で使いやすい関数シグネチャを決め、その中身だけを C++ へ差し替える、という順序で進めると壊れにくい。
+
+\section{どこまで C++ へ出すべきか}
+
+pybind11 を使えるようになると、つい多くの処理を C++ へ移したくなる。しかし、入出力や可視化、例外処理、引数整理まで全部 C++ へ押し出すと、かえって保守が難しくなる。通常は、次のように役割を分けるとよい。
+
+\begin{itemize}
+\item Python: ファイル読込み、引数処理、図の保存、ワークフロー全体
+\item C++: 重いループ、組合せ探索、繰り返し数値計算
+\end{itemize}
+
+つまり、Python 側には分かりやすい API を残し、C++ 側には計算コアだけを押し込む。これが、pybind11 を長く使いやすく保つための基本方針である。
