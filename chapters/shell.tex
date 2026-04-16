@@ -780,6 +780,7 @@ $ tar -xzf archive.tar.gz
 \end{lstlisting}
 
 1 行目は、\code{raw/} と \code{notes.txt} をまとめて \code{archive.tar.gz} にしている。2 行目の \code{-t} は中身一覧の表示であり、展開せずに内容だけ確認したいときに便利である。3 行目の \code{-x} は展開である。つまり、\code{tar} では「作る」「一覧を見る」「展開する」が頻出操作になる。
+\code{tar} では、\code{tar czf archive.tar.gz ...} のように先頭の \code{-} を省いた書き方も広く使われる。ただし、本書では他のコマンドとの対応を分かりやすくするため、\code{tar -czf} のように \code{-} を付けた形で統一する。
 
 \begin{description}
 \item[\code{-c}] 新しくアーカイブを作る。
@@ -1059,18 +1060,19 @@ $ ./hello.py
 \section{章末問題}
 
 \begin{enumerate}
-\item \textbf{USGS データ用の作業ディレクトリを作る}。
-次のような構成を自分で作り、どのディレクトリに何を置くかを言葉で説明せよ。
+\item \textbf{章末問題用の作業ディレクトリを作る}。
+次のコマンドを実行し、どのようなディレクトリが作成されるか確認せよ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p earthquake_practice/{raw,compressed,scripts,figures,results}
 $ cd earthquake_practice
 $ pwd
 $ ls
 \end{lstlisting}
-ここで \code{pwd} で現在位置を確認し、\code{ls} で 5 つのディレクトリができていることを確かめること。
+\code{\{\}} の役割について調べ、1行目のコマンドの意味を説明せよ。
 
 \item \textbf{USGS の地震カタログを取得し、シェルで中身を調べる}。
-全球 2024 年 1 月の CSV を \code{raw/} へ保存し、行数、先頭数行、末尾数行、特定の地名を含む行を調べよ。
+本書の章末課題では、アメリカ地質調査所（\textbf{U}nited \textbf{S}tates \textbf{G}eological \textbf{S}urvey、\textbf{USGS}）が公開している地震カタログを使用する。
+以下のコマンドを実行し、2024年のカタログを \code{raw/} へ保存し、行数、先頭数行、末尾数行、特定の地名を含む行を調べよ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ curl -L "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31&limit=20000&orderby=time-asc" \
   -o raw/usgs_global_2024_01.csv
@@ -1080,14 +1082,18 @@ $ head -n 3 raw/usgs_global_2024_01.csv
 $ tail -n 3 raw/usgs_global_2024_01.csv
 $ grep -i "Japan" raw/usgs_global_2024_01.csv | head
 \end{lstlisting}
-どのコマンドが「件数確認」「冒頭確認」「末尾確認」「文字列検索」に対応しているかを整理して書け。
+どのコマンドが「件数確認」「冒頭確認」「末尾確認」「文字列検索」に対応しているかを整理してまとめよ。
 
 \item \textbf{同じ CSV を 3 種類の圧縮形式で扱う}。
-\code{gzip}、\code{tar.gz}、\code{zip} をそれぞれ 1 つずつ作り、中身の確認コマンドを書き分けよ。
+\code{gzip}、\code{tar.gz}、\code{zip} をそれぞれ 1 つずつ作り、圧縮前後の容量を確認せよ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ gzip -k raw/usgs_global_2024_01.csv
 $ tar -czf compressed/usgs_global_2024_01.tar.gz raw/usgs_global_2024_01.csv
 $ zip -r compressed/usgs_global_2024_01.zip raw/usgs_global_2024_01.csv
 \end{lstlisting}
-そのうえで、\code{gzip -cd}、\code{tar -tzf}、\code{unzip -l} を使って、中身確認のやり方の違いを短く説明せよ。
+\code{gzip -cd}、\code{tar -tzf}、\code{unzip -l} を使って中身を確認し、それぞれのオプションの意味についてまとめよ。
+
+\item \textbf{発展課題}。
+URL の構造について調べよ。
+カタログの URL（\url{https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31&limit=20000&orderby=time-asc}）を確認し、\code{https}、\code{earthquake.usgs.gov}、\code{usgs.gov}、\code{.gov}、\code{/fdsnws/event/1/query}、\code{?format=csv\&starttime=2024-01-01\&endtime=2024-01-31\&limit=20000\&orderby=time-asc} のそれぞれについて、名称や役割をまとめよ。
 \end{enumerate}

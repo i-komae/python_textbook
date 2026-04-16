@@ -4,9 +4,7 @@
 
 ## PDF
 
-- [main.pdf](./main.pdf)
-
-上の PDF が、カレントディレクトリに置いてある最新版の通読用ファイルです。
+- [main.pdf をダウンロード](https://raw.githubusercontent.com/i-komae/python_textbook/main/main.pdf)
 
 ## 入手方法
 
