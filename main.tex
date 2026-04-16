@@ -62,6 +62,14 @@
 \graphicspath{{assets/figures/}}
 \makeindex
 
+%% --- ページ番号: ページ外側の上 ---
+\ModifyPageStyle{plain}{
+  nombre_position=top-fore-edge,
+}
+\ModifyPageStyle{headings}{
+  nombre_position=top-fore-edge,
+}
+
 %% --- see 参照（別名 → 主項目）---
 % 図の概念 → 関数名（概念で引いたら関数名へ飛ばす）
 \index{さんぷず@散布図|see{\code{scatter()}}}
@@ -89,9 +97,12 @@
 \author{Ichiro KOMAE}
 
 \begin{document}
+\frontmatter
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
+
+\mainmatter
 
 \input{chapters/intro.tex}
 \input{chapters/usage.tex}
@@ -116,7 +127,7 @@
 \input{chapters/appendix_regex.tex}
 \input{chapters/appendix_shell_scripting.tex}
 \input{chapters/references.tex}
-\clearpage
+\cleardoublepage
 \phantomsection
 \addcontentsline{toc}{chapter}{\indexname}
 \printindex
