@@ -10,6 +10,7 @@
 \usepackage{booktabs}
 \usepackage{cite}
 \usepackage{luatexja-fontspec}
+\usepackage{bookstyle}
 
 \IfFontExistsTF{HackGen35 Console NF}{
     \setmonofont{HackGen35 Console NF}[Scale=MatchLowercase]
@@ -63,14 +64,6 @@
 \graphicspath{{assets/figures/}}
 \makeindex
 
-%% --- ページ番号: ページ外側の上 ---
-\ModifyPageStyle{plain}{
-  nombre_position=top-fore-edge,
-}
-\ModifyPageStyle{headings}{
-  nombre_position=top-fore-edge,
-}
-
 %% --- see 参照（別名 → 主項目）---
 % 図の概念 → 関数名（概念で引いたら関数名へ飛ばす）
 \index{さんぷず@散布図|see{\code{scatter()}}}
@@ -95,12 +88,39 @@
 \index{オーダー|see{Big-O 記法}}
 
 
-\title{Pythonによるデータ解析と高速化}
-\author{Ichiro KOMAE}
-
 \begin{document}
 \frontmatter
-\maketitle
+
+% --- タイトルページ開始 ---
+\begin{titlepage}
+    \sffamily
+    \vspace*{4cm}
+
+    \begin{flushleft}
+        {\Large \textcolor{BookAccent}{\bfseries Scientific Data Analysis and\\Performance Optimization in Python}}\par
+        \vspace{1.5cm}
+
+        {\fontsize{38pt}{46pt}\selectfont \bfseries Pythonによる}\par
+        \vspace{0.3cm}
+        {\fontsize{38pt}{46pt}\selectfont \bfseries データ解析と高速化}\par
+        \vspace{1.5cm}
+
+        {\color{BookLine}\rule{0.8\textwidth}{1pt}}\par
+        \vspace{1.5cm}
+
+        {\Large \textcolor{BookAccent}{\bfseries Ichiro KOMAE}}\par
+    \end{flushleft}
+
+    \vfill
+
+    \begin{center}
+        \makeatletter
+        {\large \textcolor{BookAccent}{\the\year/\two@digits{\month}/\two@digits{\day}}}
+        \makeatother%
+    \end{center}
+\end{titlepage}
+% --- タイトルページ終了 ---
+
 \setcounter{tocdepth}{2}
 \tableofcontents
 

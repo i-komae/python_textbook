@@ -1,4 +1,4 @@
-\chapter{シェルスクリプトによる自動化と一括処理}
+\chapter{シェルスクリプトによる自動化と\mbox{一括処理}}
 \label{app:shell_scripting}
 
 第~\ref{SEC:shell}章ではシェルの対話的な基本操作を紹介した。実際のデータ解析では、1 つのスクリプトを数十から数百のファイルに対して繰り返し実行したり、実行時のパラメータを少しずつ変えながら条件を変えてプログラムを走らせたりする場面が非常に多くなる。このような自動化やバッチ処理を担うのが\textbf{シェルスクリプト}である。
@@ -277,7 +277,7 @@ OutputFile = __OUTFILENAME__
 thresholds=(0.5 1.0 2.5)
 
 for thresh in "${thresholds[@]}"; do
-    
+
     out_name="result_th_${thresh}.dat"
     run_config="config_run.ini"
 
@@ -288,7 +288,7 @@ for thresh in "${thresholds[@]}"; do
     sed -e "s/__THRESHOLD__/$thresh/g" \
         -e "s/__OUTFILENAME__/$out_name/g" \
         config_template.ini > "$run_config"
-    
+
     # 置換された設定の内容を出力して確認 (または直接プログラムを走らせる)
     cat "$run_config"
 
