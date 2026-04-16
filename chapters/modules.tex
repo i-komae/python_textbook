@@ -1,9 +1,9 @@
 \chapter{自作モジュールを作って再利用する}
 \label{ch:modules}
 
-解析コードは最初、1 本のスクリプトとして書き始めることが多い。しかし、同じ処理を別の日のデータにも使いたくなり、さらに別のプロジェクトからも呼びたくなると、単発スクリプトのままでは管理しにくい。こういうときは、処理を自作モジュールとして切り出し、必要ならパッケージとしてインストールできる形へ整理した方がよい。
+解析コードは最初、1 本のスクリプトとして書き始めることが多い。しかし、同じ処理を別の日のデータにも使いたくなり、さらに別のプロジェクトからも呼びたくなると、単発スクリプトのままでは管理しにくい。こういうときは、処理を自作モジュール\index{もじゅーる@モジュール|textbf}として切り出し、必要ならパッケージとしてインストールできる形へ整理した方がよい。
 
-ここでいう「モジュール」は、\code{plotting.py} や \code{models.py} のような Python ファイル 1 つを指すことが多い。一方、「パッケージ」は、それらのモジュールをディレクトリとしてまとめ、\code{import} できる形にした単位である。本章では、\code{uv} を使ってパッケージ開発を始め、\code{pip install} や \code{pip install -e} で使えるようにするまでを、具体例付きで順に見ていく。
+ここでいう「モジュール」は、\code{plotting.py} や \code{models.py} のような Python ファイル 1 つを指すことが多い。一方、パッケージ\index{ぱっけーじ@パッケージ|textbf}は、それらのモジュールをディレクトリとしてまとめ、\code{import} できる形にした単位である。本章では、\code{uv}\index{uv@\code{uv}|textbf} を使ってパッケージ開発を始め、\code{pip install} や \code{pip install -e} で使えるようにするまでを、具体例付きで順に見ていく。
 
 \section{なぜ自作モジュールにするのか}
 
@@ -34,7 +34,7 @@ $ uv sync
 \end{lstlisting}
 
 \code{uv add} で追加した \code{numpy}、\code{matplotlib}、\code{scipy} は、このパッケージを使うときにも必要な実行時依存関係である。一方、\code{pytest} や \code{ruff} は開発者だけが使う道具なので、\code{--dev} 付きで追加する。たとえば \code{pytest} は、本章で後から示す \code{tests/test\_models.py} のように、\code{linear} が期待通りの値を返すか、未知のモデル名で \code{ValueError} が正しく送出されるかなどのテストを行う際に使用する。\code{ruff} は、\code{uv run ruff check .} として実行し、未使用 import や単純な書式崩れを commit 前に見つけるための道具である。
-\code{pytest} や \code{ruff} によるテストは必須ではないが、将来的にパッケージを公開する予定があるなら早い段階で実装しておくことが好ましい。
+\code{pytest}\index{pytest@\code{pytest}|textbf} や \code{ruff}\index{ruff@\code{ruff}|textbf} によるテストは必須ではないが、将来的にパッケージを公開する予定があるなら早い段階で実装しておくことが好ましい。
 
 最終的なディレクトリ構成は、少なくとも次のように整理したい。
 
@@ -56,7 +56,7 @@ tests/
 
 \subsection{\code{pyproject.toml} の役割}
 
-パッケージ開発では、\code{pyproject.toml} が中心になる。ここにはパッケージ名、Python バージョン条件、依存関係、ビルド方法などを書く。上の例なら、少なくとも次のような内容になる。
+パッケージ開発では、\code{pyproject.toml}\index{pyproject.toml@\code{pyproject.toml}|textbf} が中心になる。ここにはパッケージ名、Python バージョン条件、依存関係\index{いそんかんけい@依存関係|textbf}、ビルド方法などを書く。上の例なら、少なくとも次のような内容になる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={pyproject.toml}]
 [project]
@@ -414,9 +414,9 @@ save_histogram_with_fit(
 
 \subsection{docstring と型ヒント}
 
-基礎編で見た docstring だが、パッケージではその重要性がさらに増す。特に、引数の意味や既定値、返り値、例外条件まで書いておくと、\code{help()} だけでなくエディタの補完でも内容が見やすくなる。
+基礎編で見た docstring\index{docstring@docstring|textbf} だが、パッケージではその重要性がさらに増す。特に、引数の意味や既定値、返り値、例外条件まで書いておくと、\code{help()} だけでなくエディタの補完でも内容が見やすくなる。
 
-先ほどの \code{save\_histogram\_with\_fit} には、\code{data: ArrayLike}、\code{output\_path: str | Path}、\code{fit: bool = True} のような型ヒントが付いている。VS Code などのエディタでは、関数名にカーソルを合わせたときや補完候補を開いたときに、これらの型ヒントと docstring の先頭がそのまま表示されることが多い。つまり、docstring は文書であると同時に、普段のコーディング画面そのものへ表示される説明でもある。
+先ほどの \code{save\_histogram\_with\_fit} には、\code{data: ArrayLike}、\code{output\_path: str | Path}、\code{fit: bool = True} のような型ヒント\index{かたひんと@型ヒント|textbf}が付いている。VS Code などのエディタでは、関数名にカーソルを合わせたときや補完候補を開いたときに、これらの型ヒントと docstring の先頭がそのまま表示されることが多い。つまり、docstring は文書であると同時に、普段のコーディング画面そのものへ表示される説明でもある。
 
 そのため、docstring の最初の 1 行には、関数の役割を簡潔に書く方がよい。たとえば「ヒストグラムと誤差棒を描き、必要ならフィット線も重ねて保存する。」のように書けば、補完欄を見ただけでも関数の用途が分かる。
 
@@ -457,7 +457,7 @@ from histfit_tools import save_histogram_with_fit
 
 \subsection{通常インストール}
 
-作ったパッケージを別の環境から使いたいときは、パッケージのルートディレクトリで \code{pip install .} を実行する。
+作ったパッケージを別の環境から使いたいときは、パッケージのルートディレクトリで \code{pip install .}\index{pip@\code{pip}!install@\code{install}|textbf} を実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source .venv/bin/activate
@@ -468,7 +468,7 @@ $ pip install .
 
 \subsection{editable install}
 
-開発中は、\code{pip install -e .} の方が便利である。
+開発中は、\code{pip install -e .}\index{pip@\code{pip}!install -e@\code{install -e}|textbf} の方が便利である。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source .venv/bin/activate
@@ -493,7 +493,7 @@ $ python -c "from histfit_tools import save_histogram_with_fit; print(save_histo
 
 研究室内や共同研究で共有するなら、Git リポジトリとして管理しておく方がよい。\code{uv init --package} は既定では \code{.git/} も作るので、通常は改めて \code{git init} し直す必要はない。
 
-GitHub で共有する場合は、まず GitHub の Web 画面で空のリポジトリを 1 つ作る。ここではリポジトリ名と公開範囲だけを決めればよい。README や \code{.gitignore} は手元ですでに用意しているので、最初は GitHub 側で追加しない方が流れが単純である。
+GitHub\index{github@GitHub|textbf} で共有する場合は、まず GitHub の Web 画面で空のリポジトリを 1 つ作る。ここではリポジトリ名と公開範囲だけを決めればよい。README や \code{.gitignore} は手元ですでに用意しているので、最初は GitHub 側で追加しない方が流れが単純である。
 
 その準備ができたら、手元では次のように進めればよい。
 

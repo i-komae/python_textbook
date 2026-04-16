@@ -1,13 +1,13 @@
 \chapter{NumPy による数値計算}
 \label{chap:numpy}
 
-NumPy は、Python で数値配列を扱うときの基本となるライブラリである。本章では、まず配列計算の考え方と \code{ndarray} の基本を確認し、その後で配列生成、演算、形の変更、集計、ブロードキャストを順に扱う。後半では、初学者がつまずきやすい点を整理し、最後に解析でどのように使うかを具体例で見る。
+NumPy\index{numpy@NumPy|textbf} は、Python で数値配列を扱うときの基本となるライブラリである。本章では、まず配列計算の考え方と \code{ndarray} の基本を確認し、その後で配列生成、演算、形の変更、集計、ブロードキャストを順に扱う。後半では、初学者がつまずきやすい点を整理し、最後に解析でどのように使うかを具体例で見る。
 
 \section{NumPy の考え方}
 
 \subsection{配列計算の基本概念}
 
-Python のリストは柔軟だが、数値配列として大量の値を処理するには向いていないことがある。NumPy は、同じ型の数値を多次元配列 \code{ndarray} として持ち、配列全体へまとめて演算をかけるためのライブラリである。最も基本的な NumPy 配列の定義と差分計算の例を示す。
+Python のリストは柔軟だが、数値配列として大量の値を処理するには向いていないことがある。NumPy は、同じ型の数値を多次元配列 \code{ndarray}\index{ndarray@\code{ndarray}|textbf} として持ち、配列全体へまとめて演算をかけるためのライブラリである。最も基本的な NumPy 配列の定義と差分計算の例を示す。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -43,7 +43,7 @@ print(a.size)      # 6
 print(a.itemsize)  # 8
 \end{lstlisting}
 
-\code{shape} は各軸の長さ、\code{ndim} は次元数、\code{dtype} は要素型、\code{size} は総要素数、\code{itemsize} は 1 要素あたりのバイト数である。NumPy の初学者は「配列の中身」ばかり見がちだが、実際には \code{shape} と \code{dtype} を見れば、多くの不具合の原因を早い段階で絞り込める。
+\code{shape}\index{shape@\code{shape}|textbf} は各軸の長さ、\code{ndim} は次元数、\code{dtype}\index{dtype@\code{dtype}|textbf} は要素型、\code{size} は総要素数、\code{itemsize} は 1 要素あたりのバイト数である。NumPy の初学者は「配列の中身」ばかり見がちだが、実際には \code{shape} と \code{dtype} を見れば、多くの不具合の原因を早い段階で絞り込める。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 (2, 3)
@@ -123,13 +123,13 @@ print(x)
 [0.   0.25 0.5  0.75 1.  ]
 \end{lstlisting}
 
-\code{np.array} は既存の Python リストなどから配列を作る。\code{np.zeros} と \code{np.ones} は初期値が明確なので安全である。\code{np.arange} は整数刻みの列、\code{np.linspace} は区間を等分した実数列を作る。解析では、ビン中心、時間軸、周波数軸を作る場面で \code{linspace} をよく使う。
+\code{np.array}\index{NumPy!np.array@\code{np.array}|textbf} は既存の Python リストなどから配列を作る。\code{np.zeros}\index{NumPy!np.zeros@\code{np.zeros}} と \code{np.ones}\index{NumPy!np.ones@\code{np.ones}} は初期値が明確なので安全である。\code{np.arange}\index{NumPy!np.arange@\code{np.arange}} は整数刻みの列、\code{np.linspace}\index{NumPy!np.linspace@\code{np.linspace}} は区間を等分した実数列を作る。解析では、ビン中心、時間軸、周波数軸を作る場面で \code{linspace} をよく使う。
 
 \code{zeros.shape} が \code{(2, 3)} なので、\code{zeros} と \code{ones} は 2 行 3 列の配列である。\code{grid} は 0 から 8 まで 2 刻み、\code{x} は 0 から 1 を 5 点で等分した座標列である。\code{np.empty} はメモリだけ確保して値を初期化しないため高速だが、初期値は未定である。後で必ず全要素を上書きする場合にだけ使う方が安全である。
 
 \subsection{よく使う操作}
 
-解析でよく使う NumPy の操作として、条件に合う要素だけを取り出すフィルタ、順序をそろえるソート、隣り合う要素の差を取る差分、分布を数えるヒストグラムがある。これらは別々の操作に見えるが、解析ではまとめて使うことが多い。
+解析でよく使う NumPy の操作として、条件に合う要素だけを取り出すフィルタ、順序をそろえるソート、隣り合う要素の差を取る差分、分布を数えるヒストグラム\index{ひすとぐらむ@ヒストグラム|textbf}がある。これらは別々の操作に見えるが、解析ではまとめて使うことが多い。
 
 \begin{lstlisting}[language=Python]
 times = np.array([41, 10, 23, 15, 42])
@@ -158,9 +158,9 @@ print(edges)
 
 \begin{itemize}
 \item フィルタ: \code{times > 20} は \code{[True, False, True, False, True]} に相当する条件配列を作り、その位置にある要素だけを \code{selected} として取り出す。
-\item ソート: \code{np.sort(times)} は値を昇順に並べる。観測時刻やエネルギーのように順序が意味を持つ量では、後続の処理の前に並べ替えることが多い。
-\item 差分: \code{np.diff(sorted\_times)} は隣り合う値の差を返す。返る配列の長さは元の配列より 1 つ短い。イベント時刻が昇順に並んでいれば、これは到着間隔として読める。
-\item ヒストグラム: \code{np.histogram(times, bins=[0, 20, 40, 60])} は、区間ごとの個数を \code{hist}、区間境界を \code{edges} として返す。この例では \code{[0, 20)} に 2 個、\code{[20, 40)} に 1 個、\code{[40, 60]} に 2 個入っている。
+\item ソート: \code{np.sort(times)}\index{NumPy!np.sort@\code{np.sort}} は値を昇順に並べる。観測時刻やエネルギーのように順序が意味を持つ量では、後続の処理の前に並べ替えることが多い。
+\item 差分: \code{np.diff(sorted\_times)}\index{NumPy!np.diff@\code{np.diff}} は隣り合う値の差を返す。返る配列の長さは元の配列より 1 つ短い。イベント時刻が昇順に並んでいれば、これは到着間隔として読める。
+\item ヒストグラム: \code{np.histogram(times, bins=[0, 20, 40, 60])}\index{NumPy!np.histogram@\code{np.histogram}} は、区間ごとの個数を \code{hist}、区間境界を \code{edges} として返す。この例では \code{[0, 20)} に 2 個、\code{[20, 40)} に 1 個、\code{[40, 60]} に 2 個入っている。
 \end{itemize}
 
 ブール配列によるフィルタは NumPy の基本である。条件式の結果をそのまま添字にできるので、\code{(times > 20) \& (times < 40)} のような複数条件も簡潔に書ける。一方で、差分は順序に依存するので、時刻列のようなデータでは \code{np.diff(times)} をいきなり使わず、まずソートが必要かどうかを確認した方が安全である。
@@ -173,7 +173,7 @@ h_k = \#\{ t_i \mid b_k \le t_i < b_{k+1} \}
 
 \subsection{要素ごとの演算とユニバーサル関数}
 
-NumPy の演算子や多くの関数は、原則として要素ごとに働く。NumPy の公式ドキュメント~\cite{numpy_docs} では、\code{exp}、\code{sqrt}、\code{sin} のような要素ごと関数をユニバーサル関数（ufunc）と呼んでいる。
+NumPy の演算子や多くの関数は、原則として要素ごとに働く。NumPy の公式ドキュメント~\cite{numpy_docs} では、\code{exp}、\code{sqrt}、\code{sin} のような要素ごと関数をユニバーサル関数\index{ゆにばーさるかんすう@ユニバーサル関数 (ufunc)|textbf}（ufunc）と呼んでいる。
 
 \begin{lstlisting}[language=Python]
 a = np.array([1.0, 2.0, 3.0])
@@ -206,7 +206,7 @@ print(np.sqrt(a))
 
 \subsection{集計と \code{axis}}
 
-NumPy の集計関数は、配列全体に対しても、特定の軸ごとにも使える。\code{axis} の意味は初学者がつまずきやすいので、コードで確認するのがよい。
+NumPy の集計関数は、配列全体に対しても、特定の軸ごとにも使える。\code{axis}\index{axis@\code{axis}|textbf} の意味は初学者がつまずきやすいので、コードで確認するのがよい。
 
 \begin{lstlisting}[language=Python]
 matrix = np.array([[1.0, 2.0, 3.0],
@@ -241,7 +241,7 @@ print(col_max)
 
 \subsection{添字、スライス、条件抽出}
 
-NumPy の添字は Python リストと似ているが、多次元配列とブール配列が自然に使える点が重要である。
+NumPy の添字は Python リストと似ているが、多次元配列とブール配列が自然に使える点が重要である。\index{すらいす@スライス|textbf}
 
 \begin{lstlisting}[language=Python]
 times = np.array([10, 15, 23, 41, 42])
@@ -343,7 +343,7 @@ print(right)
 
 \subsection{形とブロードキャスト}
 
-NumPy では、配列の形状をそろえなくても、自動拡張の規則に従って演算できる場合がある。この規則をブロードキャストという。
+NumPy では、配列の形状をそろえなくても、自動拡張の規則に従って演算できる場合がある。この規則をブロードキャスト\index{ぶろーどきゃすと@ブロードキャスト|textbf}という。
 
 \begin{lstlisting}[language=Python]
 x = np.array([1.0, 2.0, 3.0])
@@ -376,7 +376,7 @@ M_{ij} = x_i + y_j
 
 \subsection{統計量とヒストグラム}
 
-NumPy には、平均、分散、最小値、最大値、ヒストグラムなど、解析の基本となる集計関数がそろっている。代表的な統計量とヒストグラムを計算する例を下に示す。
+NumPy には、平均、分散、最小値、最大値、ヒストグラムなど、解析の基本となる集計関数がそろっている。代表的な統計量\index{NumPy!np.mean@\code{np.mean}}\index{NumPy!np.std@\code{np.std}}とヒストグラムを計算する例を下に示す。
 
 \begin{lstlisting}[language=Python]
 values = np.array([1.0, 2.0, 2.0, 3.0, 4.0])

@@ -2,9 +2,9 @@
 
 \section{まず測る}
 
-高速化を始める前に、どこが遅いのかを測る。読込みが遅いのか、探索が遅いのか、図の作成が遅いのかを区別しないまま最適化しても、効果は見えにくい。
+高速化\index{こうそくか@高速化|textbf}を始める前に、どこが遅いのかを測る。読込みが遅いのか、探索が遅いのか、図の作成が遅いのかを区別しないまま最適化しても、効果は見えにくい。
 
-ここで役立つのが \code{time.perf\_counter} である。処理の前後で時刻を取り、差を記録するだけでも、どの段階が重いかの見当が付く。大切なのは、全体時間だけでなく、読込み、前処理、探索、書き出し、作図のように段階を分けて測ることである。
+ここで役立つのが \code{time.perf\_counter}\index{perf_counter@\code{time.perf\_counter}|textbf} である。処理の前後で時刻を取り、差を記録するだけでも、どの段階が重いかの見当が付く。大切なのは、全体時間だけでなく、読込み、前処理、探索、書き出し、作図のように段階を分けて測ることである。
 
 \begin{lstlisting}[language=Python]
 import time
@@ -19,7 +19,7 @@ print(f"elapsed = {t1 - t0:.3f} s")
 
 \subsection{Jupyter では \code{\%timeit} も使える}
 
-ノートブック環境で短い式や関数の速度を見たいときは、Jupyter の \code{\%timeit} や \code{\%\%timeit} も便利である。複数回の実行を自動で繰り返し、平均的な実行時間を表示してくれるため、小さな差を見たいときに役立つ。
+ノートブック環境で短い式や関数の速度を見たいときは、Jupyter の \code{\%timeit}\index{timeit@\code{\%timeit}|textbf} や \code{\%\%timeit} も便利である。複数回の実行を自動で繰り返し、平均的な実行時間を表示してくれるため、小さな差を見たいときに役立つ。
 
 \begin{lstlisting}[language=Python]
 %%timeit
@@ -38,7 +38,7 @@ result = array * 2
 
 \subsection{オーダーとは何か}
 
-ここでいう「オーダー」とは、入力サイズ $N$ を大きくしたときに処理回数がどのように増えるかを表す粗い記法である。通常は Big-O 記法で書き、定数倍や低次の項を落として、最終的に支配的になる項だけを見る。
+ここでいう「オーダー」とは、入力サイズ $N$ を大きくしたときに処理回数がどのように増えるかを表す粗い記法である。通常は Big-O 記法\index{big-o@Big-O 記法|textbf}で書き、定数倍や低次の項を落として、最終的に支配的になる項だけを見る。
 
 \[
 3N + 20 \rightarrow O(N), \qquad
@@ -173,7 +173,7 @@ def is_symmetric_fast(A):
 
 \subsection{NumPy と pandas による高速化}
 
-アルゴリズムを見直した後は、NumPy や pandas へ処理を移すことで、Python レベルのループを減らせる。特に差分計算、ソート、列抽出、フィルタは、これらのライブラリが得意とする。図~\ref{fig:vectorization-benchmark} からも、配列演算が速度に与える効果を視覚的に確認できる。
+アルゴリズムを見直した後は、NumPy や pandas へ処理を移すことで、Python レベルのループを減らせる。特に差分計算、ソート、列抽出、フィルタは、これらのライブラリが得意とする。図~\ref{fig:vectorization-benchmark} からも、ベクトル化\index{べくとるか@ベクトル化|textbf}が速度に与える効果を視覚的に確認できる。
 
 ここで注意したいのは、NumPy や pandas を使えば自動的に何でも速くなるわけではないことである。根本的に無駄な比較をしているなら、配列演算へ移しても限界がある。まず計算量を減らし、そのうえで実装をベクトル化するという順序が自然である。
 
@@ -193,7 +193,7 @@ def is_symmetric_fast(A):
 
 \subsection{プロファイラを使う}
 
-本格的に遅い理由を調べるなら、プロファイラも役立つ。例えば \code{cProfile} を使うと、どの関数に時間が使われているかを確認できる。
+本格的に遅い理由を調べるなら、プロファイラ\index{ぷろふぁいら@プロファイラ|textbf}も役立つ。例えば \code{cProfile}\index{cprofile@\code{cProfile}|textbf} を使うと、どの関数に時間が使われているかを確認できる。
 
 \begin{lstlisting}[language=Python]
 import cProfile

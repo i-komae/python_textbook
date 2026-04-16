@@ -1,13 +1,13 @@
 \chapter{Astropy による時刻・単位・天体データ処理}
 \label{chap:astropy}
 
-Astropy は、天文学や宇宙物理の解析で頻出する「単位付き物理量」「時刻系」「座標系」「FITS」「天文向け表」を安全に扱うためのライブラリである。NumPy や SciPy だけでも数値計算はできるが、単位や時刻系を自前で文字列管理すると、解釈違いや換算ミスが入りやすい。本章では、Astropy の考え方、最小限のコード例、落とし穴、解析へのつながりを整理する。
+Astropy\index{astropy@Astropy|textbf} は、天文学や宇宙物理の解析で頻出する「単位付き物理量」「時刻系」「座標系」「FITS」「天文向け表」を安全に扱うためのライブラリである。NumPy や SciPy だけでも数値計算はできるが、単位や時刻系を自前で文字列管理すると、解釈違いや換算ミスが入りやすい。本章では、Astropy の考え方、最小限のコード例、落とし穴、解析へのつながりを整理する。
 
 \section{Astropy の考え方}
 
 \subsection{数値だけでなく意味も持たせる}
 
-Astropy の中心的な発想は、「数値そのもの」ではなく「何の単位で、どの時刻系で、どの座標系なのか」までオブジェクトへ持たせることである。例えば 100 という値だけでは、100 ns なのか 100 ms なのか分からない。Astropy の \code{Quantity} を使えば、この曖昧さを減らせる。
+Astropy の中心的な発想は、「数値そのもの」ではなく「何の単位で、どの時刻系で、どの座標系なのか」までオブジェクトへ持たせることである。例えば 100 という値だけでは、100 ns なのか 100 ms なのか分からない。Astropy の \code{Quantity}\index{quantity@\code{Quantity}|textbf} を使えば、この曖昧さを減らせる。
 
 \begin{lstlisting}[language=Python]
 import astropy.units as u
@@ -107,7 +107,7 @@ Astropy の定数オブジェクトを表示すると、値だけでなく単位
 
 \subsection{\code{Time} による時刻表現}
 
-Astropy の \code{Time} は、複数のフォーマットと複数の時刻系をまたいで扱える。
+Astropy の \code{Time}\index{time@\code{Time}|textbf} は、複数のフォーマットと複数の時刻系をまたいで扱える。
 
 \begin{lstlisting}[language=Python]
 from astropy.time import Time
@@ -137,7 +137,7 @@ print(t.tai.iso)
 
 \subsection{時刻差と \code{TimeDelta}}
 
-差分計算も \code{Time} のまま行える。
+差分計算も \code{Time} のまま行える。\code{TimeDelta}\index{timedelta@\code{TimeDelta}|textbf} によって、差分の単位変換も一貫して扱える。
 
 \begin{lstlisting}[language=Python]
 from astropy.time import Time
@@ -167,7 +167,7 @@ print(dt.to_value("ns"))
 
 \subsection{\code{SkyCoord} による座標変換}
 
-Astropy の \code{coordinates} は、天球上の座標系を変換する。
+Astropy の \code{coordinates} は、天球上の座標系を変換する。\code{SkyCoord}\index{skycoord@\code{SkyCoord}|textbf} はその中心となるクラスである。
 
 \begin{lstlisting}[language=Python]
 from astropy.coordinates import SkyCoord
@@ -193,7 +193,7 @@ print(gal.b.deg)
 
 \subsection{\code{Table} と \code{QTable}}
 
-Astropy には表処理のために \code{Table} と \code{QTable} がある。\code{QTable} は列へ単位を保持できる。
+Astropy には表処理のために \code{Table}\index{table@\code{Table}|textbf} と \code{QTable}\index{qtable@\code{QTable}|textbf} がある。\code{QTable} は列へ単位を保持できる。
 
 \begin{lstlisting}[language=Python]
 from astropy.table import QTable
@@ -233,7 +233,7 @@ print(df)
 
 \subsection{\code{astropy.io.fits} による FITS の読み書き}
 
-天文データでは FITS が標準的である。Astropy なら NumPy 配列やヘッダをそのまま扱える。
+天文データでは FITS\index{fits@FITS|textbf} が標準的である。Astropy なら NumPy 配列やヘッダをそのまま扱える。
 
 \begin{lstlisting}[language=Python]
 import numpy as np

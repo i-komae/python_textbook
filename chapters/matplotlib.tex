@@ -1,8 +1,9 @@
 \chapter{Matplotlib による可視化}
+\label{chap:matplotlib}
 
-Matplotlib は、Python で図を描くための標準的なライブラリである。本章では、まずデータを手軽に可視化するための基本的なコードの書き方からはじめ、データの性質に応じた図の選び方（実践的な作図）を学ぶ。そして後半では、より複雑な図を制御するために必須となる「オブジェクト指向API」と構成要素の考え方や、スタイルの管理について解説する。
+Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python で図を描くための標準的なライブラリである。本章では、まずデータを手軽に可視化するための基本的なコードの書き方からはじめ、データの性質に応じた図の選び方（実践的な作図）を学ぶ。そして後半では、より複雑な図を制御するために必須となる「オブジェクト指向 API」と構成要素の考え方や、スタイルの管理について解説する。
 
-図はレポートの飾りではない。ヒストグラムや散布図は、計算結果の妥当性を自分で確かめるための道具でもある。数値だけを並べるより、まず図にした方が異常に気付きやすいことは多い。
+図はレポートの飾りではない。ヒストグラム\index{ひすとぐらむ@ヒストグラム}や散布図は、計算結果の妥当性を自分で確かめるための道具でもある。数値だけを並べるより、まず図にした方が異常に気付きやすいことは多い。
 
 例えば、平均値や標準偏差が妥当に見えても、分布の裾が長い、二峰性がある、外れ値が混ざっている、といった特徴は図にしないと分かりにくい。可視化は最後の仕上げではなく、途中の確認作業としても重要である。
 
@@ -16,7 +17,7 @@ import matplotlib.pyplot as plt
 
 values = np.random.normal(loc=0.0, scale=1.2, size=2500)
 
-plt.hist(values, bins=40)
+plt.hist(values, bins=40)  % \index{Matplotlib!hist@\code{hist()}}
 plt.xlabel("value")
 plt.ylabel("count")
 plt.savefig("histogram.pdf")
@@ -45,7 +46,7 @@ x = np.linspace(0.0, 10.0, 60)
 y = np.exp(-x / 4.0) * (1.0 + 0.08 * np.sin(2.5 * x))
 
 fig, ax = plt.subplots(figsize=(6, 4))
-ax.plot(x, y, marker="o", label="sample A")
+ax.plot(x, y, marker="o", label="sample A")  % \index{Matplotlib!plot@\code{plot()}}
 ax.set_xlabel(r"$t\,[\mathrm{s}]$")
 ax.set_ylabel("signal")
 ax.set_title("Labeled line example")
@@ -84,6 +85,111 @@ ax.plot("time", "value", data=table)
 \end{lstlisting}
 
 \code{np.asarray} で NumPy 配列へそろえておくと、型のぶれを減らせる。\code{data=} は短いコードを書くのに便利だが、列名の打ち間違いに気付きにくいこともあるので、最初は \code{x} と \code{y} を明示して渡す方が安全である。
+
+\subsection{最初に覚える主要な描画関数}
+
+Matplotlib を使い始めた段階で、まず頻繁に使うのは、線図を描く \code{plot()}\index{Matplotlib!plot@\code{plot()}|textbf}、散布図を描く \code{scatter()}\index{Matplotlib!scatter@\code{scatter()}|textbf}、参照線を引く \code{axvline()}\index{Matplotlib!axvline@\code{axvline()}} と \code{axhline()}\index{Matplotlib!axhline@\code{axhline()}}、誤差付きの点を描く \code{errorbar()}\index{Matplotlib!errorbar@\code{errorbar()}|textbf} である。これらをまとめて見ておくと、「何をしたいときにどの関数を選ぶか」が整理しやすい。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+rng = np.random.default_rng(1234)
+t = np.linspace(0.0, 10.0, 80)
+y = np.sin(t) * np.exp(-t / 12.0)
+y_noise = y + 0.12 * rng.normal(size=t.size)
+y_err = 0.10 + 0.03 * np.cos(t / 2.0) ** 2
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 7))
+
+axes[0, 0].plot(t, y, marker="o")
+axes[0, 1].scatter(t, y_noise, c=t, cmap="viridis")
+axes[1, 0].plot(t, y_noise)
+axes[1, 0].axvline(3.0, linestyle="--")
+axes[1, 0].axhline(0.0, linestyle=":")
+axes[1, 1].errorbar(t[::4], y_noise[::4], yerr=y_err[::4], fmt="o")
+
+fig.savefig("basic_plot_types_example.pdf")
+\end{lstlisting}
+
+図~\ref{fig:basic-plot-types-example} は、この最小例で使った主要な描画関数を並べたものである。線図は時系列や関数の形を見るときに、散布図は 2 変量の相関やばらつきを見るときに、参照線はしきい値や基準値を示すときに、エラーバーは測定誤差を明示したいときに使う。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.94\linewidth]{basic_plot_types_example.pdf}
+\caption{Matplotlib で最初に覚えたい主要な描画関数。左上が \code{plot()}、右上が \code{scatter()}、左下が \code{axvline()} と \code{axhline()}、右下が \code{errorbar()} の例である。}
+\label{fig:basic-plot-types-example}
+\end{figure}
+
+\code{plot()} は既定で点を線で結ぶため、測定点そのものを見せたいのか、連続関数の形を見せたいのかを意識して使う必要がある。対して \code{scatter()} は点同士を結ばないので、イベント列やサンプル点をそのまま表示したい場合に向く。縦線や横線は、図に補助的な意味を足すためのものであり、基準値を視覚的に共有する手段と考えるとよい。
+
+\subsection{ヒートマップとカラーバー}
+
+2 次元配列や格子状のデータを表示するには、ヒートマップが自然である。Matplotlib では、配列をそのまま色で表示する \code{imshow()}\index{Matplotlib!imshow@\code{imshow()}|textbf}、散布点の数密度を色へ変換する \code{hist2d()}\index{Matplotlib!hist2d@\code{hist2d()}|textbf} がよく使われる。色の意味を図へ明示するには、カラーバーも同時に付ける。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+
+x = np.linspace(-3.0, 3.0, 160)
+y = np.linspace(-2.5, 2.5, 140)
+xx, yy = np.meshgrid(x, y)
+image = np.exp(-(xx**2 + 1.6 * yy**2)) + 0.02
+rng = np.random.default_rng(1234)
+sample_x = rng.normal(loc=0.0, scale=1.0, size=80000)
+sample_y = 0.7 * sample_x + rng.normal(loc=0.0, scale=0.8, size=80000)
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+im = axes[0].imshow(image, origin="lower", cmap="viridis", aspect="auto")
+fig.colorbar(im, ax=axes[0], label="intensity")
+
+h = axes[1].hist2d(sample_x, sample_y, bins=90, norm=LogNorm(), cmap="magma")
+fig.colorbar(h[3], ax=axes[1], label="counts")
+\end{lstlisting}
+
+図~\ref{fig:heatmap-colorbar-example} の左は \code{imshow()} によるヒートマップ、右は \code{hist2d()} と \code{LogNorm} を使った 2 次元ヒストグラムである。ここで重要なのは、\code{cmap=} で色の割り当て\index{からーまっぷ@カラーマップ}を決め、\code{fig.colorbar(...)} でその色が何を意味するかを図の中へ戻している点である。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.94\linewidth]{heatmap_colorbar_example.pdf}
+\caption{ヒートマップとカラーバーの例。左は \code{imshow()}、右は \code{hist2d()} と \code{LogNorm} を使った例であり、どちらもカラーバーによって色の意味を示している。}
+\label{fig:heatmap-colorbar-example}
+\end{figure}
+
+\code{imshow()} は「すでに格子上へ並んだ値」を描く関数であり、シミュレーション結果や画像データと相性がよい。一方、\code{hist2d()} は「点群から格子へ数え上げた結果」を描く関数である。点の密度が数桁にまたがるなら、右図のように \code{LogNorm()} を使ってカラーバーを対数にする方が内部構造を見失いにくい。
+
+\subsection{全天図と投影: Hammer 図法と Mollweide 図法}
+
+経度と緯度のような球面上のデータを平面へ描くには、投影法\index{とうえいほう@投影法}が必要になる。Matplotlib には、地図ライブラリなしでも使える全天図向けの投影として、Hammer\index{hammer@Hammer projection} 図法や Mollweide\index{mollweide@Mollweide projection} 図法が用意されている。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+lon_deg = np.linspace(-180.0, 180.0, 241)
+lat_deg = 25.0 * np.sin(np.deg2rad(2.0 * lon_deg))
+lon = np.deg2rad(lon_deg)
+lat = np.deg2rad(lat_deg)
+
+fig = plt.figure(figsize=(10, 4))
+ax1 = fig.add_subplot(1, 2, 1, projection="hammer")
+ax2 = fig.add_subplot(1, 2, 2, projection="mollweide")
+
+ax1.scatter(lon, lat)
+ax2.scatter(lon, lat)
+\end{lstlisting}
+
+図~\ref{fig:projection-examples} は、同じ点群を Hammer 図法と Mollweide 図法へ載せた例である。どちらも全周を 1 枚へ収めやすく、全天イベント分布や銀河座標図のような用途で使われる。注意すべき点は、\code{projection="hammer"} や \code{projection="mollweide"} を使う場合、角度は通常ラジアンで渡す必要があることである。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.94\linewidth]{projection_examples.pdf}
+\caption{Hammer 図法と Mollweide 図法の例。どちらも球面全体を 1 枚の図へ収めるための投影であり、全天分布を俯瞰したいときに使いやすい。}
+\label{fig:projection-examples}
+\end{figure}
+
+地図上の国境や海岸線を描く用途なら Cartopy の方が自然だが、球面上の分布そのものを俯瞰したいだけなら、Matplotlib の標準投影で十分なことも多い。座標系が度なのかラジアンなのか、周期境界をまたぐかどうかを最初に確認する方が、投影名を覚えるより重要である。
 
 
 \section{実践的な作図（データに応じた図の選択）}
@@ -134,7 +240,7 @@ fig.savefig("hist2d_linear_bad.pdf")
 
 \subsubsection{Step 3: 大規模データに必須となる LogNorm (対数カラースケール)}
 
-現実の物理イベントは、頻度が「1, 10, 100, 1000」のように桁単位で変化することが多い。この何桁にもまたがる広がりを一つの図に収めるための判断基準が\textbf{「カウントのカラーバーを対数（log）にするべきか否か」}である。
+現実の物理イベントは、頻度が「1, 10, 100, 1000」のように桁単位で変化することが多い。この何桁にもまたがる広がりを一つの図に収めるための判断基準が\textbf{「カウントのカラーバーを対数（log）にするべきか否か」}である。\index{Matplotlib!LogNorm@\code{LogNorm}|textbf}
 
 \begin{lstlisting}[language=Python]
 import matplotlib.colors as mcolors
@@ -157,7 +263,7 @@ fig.savefig("hist2d_lognorm_good.pdf")
 
 \subsection{複数の図を並べる (subplots)}
 
-レポートや論文では、関連する分布を左右や上下に並べて比較することが多い。この場合、1枚のキャンバス（\code{Figure}）の中に複数のパネル（\code{Axes}）を配置する機能を利用する。
+レポートや論文では、関連する分布を左右や上下に並べて比較することが多い。この場合、1枚のキャンバス（\code{Figure}\index{Matplotlib!Figure@\code{Figure}|textbf}）の中に複数のパネル（\code{Axes}\index{Matplotlib!Axes@\code{Axes}|textbf}）を配置する機能を利用する。
 
 \begin{lstlisting}[language=Python]
 # 1行2列（左右に2つ）のパネルを作成する。
@@ -179,6 +285,39 @@ fig.savefig("subplots_example.pdf")
 \end{lstlisting}
 
 単純な \code{plt.plot()} ばかり使っていると、この「特定のパネル（\code{axes[0]}）に対して描画を命令する」という書き方に慣れるのに少し時間がかかるが、複雑な比較図を作る上では避けて通れない技法である。\code{Figure} や \code{Axes} についての詳細は、第~\ref{sec:matplotlob-object}節以降で述べる。
+
+\subsection{単純な横並び以外: \code{subplot\_mosaic} と \code{GridSpec}}
+
+実際の解析では、すべてのパネルを同じ大きさで並べたいとは限らない。例えば、上段に主結果を大きく 1 枚置き、下段に補助図を 2 枚並べたい場合がある。このようなレイアウトでは、\code{subplot\_mosaic()}\index{subplot_mosaic@subplot\_mosaic} や \code{GridSpec}\index{gridspec@GridSpec} が役立つ。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+values = np.random.default_rng(42).normal(size=2000)
+x = np.linspace(0.0, 10.0, 150)
+y_top = np.exp(-x / 5.0) * np.cos(2.0 * x)
+x_sc = np.linspace(0.0, 1.0, 25)
+y_sc = x_sc**2 + 0.05 * np.sin(20.0 * x_sc)
+
+layout = [["A", "A"], ["B", "C"]]
+fig, axes = plt.subplot_mosaic(layout, figsize=(10, 6))
+
+axes["A"].plot(x, y_top)
+axes["B"].hist(values, bins=40)
+axes["C"].scatter(x_sc, y_sc)
+\end{lstlisting}
+
+図~\ref{fig:subplot-mosaic-example} のように、\code{"A"} を 2 回書くと上段全体を 1 枚の大きな Axes として使える。これは、主図と補助図の役割が異なるときに便利である。左右に同じ大きさで並べるだけが subplot ではない、という点を早めに押さえておくと、比較図の自由度が上がる。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.92\linewidth]{subplot_mosaic_example.pdf}
+\caption{\code{subplot\_mosaic()} を使った複合レイアウトの例。上段は 2 列をまたぐ主図、下段は補助図 2 枚であり、単純な \code{plt.subplots(1, 2)} では作れない配置になっている。}
+\label{fig:subplot-mosaic-example}
+\end{figure}
+
+\code{subplot\_mosaic()} は名前付きで Axes を取り出せる点が読みやすく、比較的小規模な複雑レイアウトに向く。一方、列幅や行高を数値で細かく制御したい場合は \code{GridSpec} の方が柔軟である。つまり、「名前で配置を考えたいか」「格子の比率を直接いじりたいか」で使い分けるとよい。
 
 \subsection{凡例とレイアウト}
 
@@ -220,7 +359,7 @@ fig.savefig("subplots_example.pdf")
 
 \subsection{エラーバーと対数軸（log-logプロット）}
 
-実際の物理データの多くは測定誤差を伴うため、単なる散布図ではなくエラーバー付きのプロットが必要になる。また、横軸や縦軸のスケールが指数関数的に落ち幅を変える場合、対数（log）のグラフでプロットしなければ分布の様子が潰れてしまうことが多い。
+実際の物理データの多くは測定誤差を伴うため、単なる散布図ではなくエラーバー付きのプロットが必要になる。また、横軸や縦軸のスケールが指数関数的に落ち幅を変える場合、対数\index{たいすうじく@対数軸|textbf}（log）のグラフでプロットしなければ分布の様子が潰れてしまうことが多い。
 
 図~\ref{fig:errorbar-example} にエラーバーと対数プロットの例を示す。
 
@@ -263,7 +402,7 @@ fig.savefig("errorbar_example.pdf")
 \label{fig:distribution-examples}
 \end{figure}
 
-\subsection{画像フォーマットの選択：ラスタとベクタ}
+\subsection{画像フォーマットの選択：ラスタとベクタ}\index{Matplotlib!savefig@\code{savefig()}}
 
 解析図を保存する際、適切な画像フォーマットを選ぶことは極めて重要である。
 
@@ -497,9 +636,91 @@ fig.savefig("subplots_example.pdf")
 
 色やフォント、線幅をばらばらにすると、個々の図は読めてもレポート全体として落ち着かない。逆に、軸ラベルの位置、単位の書き方、凡例のスタイルをそろえるだけで、見た目の質は大きく上がる。可視化では、派手さより統一感の方が効くことが多い。
 
+\subsection{マーカー、線種、色の指定}
+
+Matplotlib では、点の形\index{marker@marker}、線種\index{linestyle@linestyle}、色をそれぞれ独立に指定できる。まずよく使う引数は次の 4 つである。
+
+\begin{lstlisting}[language=Python]
+ax.plot(
+    x,
+    y,
+    marker="o",
+    markersize=5,
+    linestyle="--",
+    linewidth=2.0,
+    color="C3",
+)
+\end{lstlisting}
+
+\begin{itemize}
+\item \code{marker}: 点の形を決める。
+\item \code{markersize}: 点の大きさを決める。
+\item \code{linestyle}: 実線、破線、点線などを決める。
+\item \code{color}: 線や点の色を決める。
+\end{itemize}
+
+図~\ref{fig:style-reference-example} は、よく使う marker、line style、既定の color cycle を並べたものである。見た目の違いを先に知っておくと、コード中の短い記号だけを見ても何が起きるかを想像しやすい。
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=0.92\linewidth]{style_reference_example.pdf}
+\caption{marker、line style、既定色の例。短い指定でも見た目はかなり変わるので、まず代表的なものだけ覚えて使い分けるとよい。}
+\label{fig:style-reference-example}
+\end{figure}
+
+\begin{table}[tbp]
+\centering
+\caption{よく使う marker の指定}
+\label{tab:matplotlib-markers}
+\begin{tabular}{lll}
+\toprule
+指定 & 見た目 & 用途の例 \\
+\midrule
+\code{"o"} & 丸 & 測定点、既定の散布図 \\
+\code{"s"} & 四角 & 条件の違いを強調したい点 \\
+\code{"\^"} & 上向き三角 & 系列ごとの差別化 \\
+\code{"D"} & ひし形 & 参照データや補助系列 \\
+\code{"x"} & バツ & 強調した外れ値や選択点 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[tbp]
+\centering
+\caption{よく使う line style の指定}
+\label{tab:matplotlib-linestyles}
+\begin{tabular}{lll}
+\toprule
+指定 & 見た目 & 用途の例 \\
+\midrule
+\code{"-"} & 実線 & 主結果、連続関数 \\
+\code{"--"} & 破線 & フィット曲線、比較対象 \\
+\code{":"} & 点線 & 補助線、閾値 \\
+\code{"-."} & 一点鎖線 & 参照モデル、別条件 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[tbp]
+\centering
+\caption{色指定の基本}
+\label{tab:matplotlib-colors}
+\begin{tabular}{lll}
+\toprule
+指定 & 例 & 備考 \\
+\midrule
+\code{"C0"} など & \code{"C3"} & 既定の color cycle を順に使う \\
+名前付き色 & \code{"black"}, \code{"tab:blue"} & 手早く書ける \\
+16 進数 & \code{"\#d62728"} & 図全体の配色を固定したいときに便利 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+色だけで系列を区別しようとすると、印刷や色覚特性によって読みにくくなることがある。系列が 2 つ以上ある場合は、色に加えて marker や line style も変える方が安全である。
+
 \subsection{\code{rcParams} で見た目をそろえる}
 
-Matplotlib では、図のフォントや線幅などの既定値の多くを \code{rcParams} という辞書オブジェクトで一元管理している。図を描くたびに同じ設定を繰り返すより、作図スクリプトの冒頭で一度だけこの辞書を更新するのが基本である。
+Matplotlib では、図のフォントや線幅などの既定値の多くを \code{rcParams}\index{rcparams@\code{rcParams}} という辞書オブジェクトで一元管理している。図を描くたびに同じ設定を繰り返すより、作図スクリプトの冒頭で一度だけこの辞書を更新するのが基本である。
 
 \begin{lstlisting}[language=Python]
 import matplotlib as mpl
@@ -530,7 +751,29 @@ mpl.rcParams.update(
 
 \code{rcParams} で設定した値は、そのスクリプトで後から作る図へまとめて効く。したがって、「毎回同じ見た目にしたい項目」をここへ集め、「この図だけ変えたい項目」は後で \code{ax.set\_*} などで上書きする、と分けると整理しやすい。
 
-\subsection{設定ファイル (.mplstyle) で見た目を共通化する}
+\subsection{\code{cmap} の選び方}
+
+ヒートマップや散布図で色を値へ対応付けるときは、\code{cmap=} でカラーマップを選ぶ。どの色を選んでもよいわけではなく、データの意味に応じて使い分ける必要がある。代表例を表~\ref{tab:matplotlib-colormaps} に示す。
+
+\begin{table}[tbp]
+\centering
+\caption{よく使うカラーマップ}
+\label{tab:matplotlib-colormaps}
+\begin{tabular}{lll}
+\toprule
+種類 & 例 & 向いている用途 \\
+\midrule
+Sequential & \code{viridis}, \code{plasma}, \code{cividis} & 0 から大へ単調に増える量 \\
+Diverging & \code{coolwarm}, \code{RdBu\_r} & 0 や基準値をはさんで符号が変わる量 \\
+Grayscale & \code{Greys} & 印刷や下地としての濃淡表示 \\
+Categorical & \code{tab10} & 離散的な系列の識別 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+例えば、カウント数や強度のように「小さいから大きいへ一方向に変化する量」には \code{viridis} のような sequential map が自然である。正負のずれや差分のように中心値が重要な量には diverging map が向く。系列を分類したいだけなのに sequential map を使うと、値の大小に意味があるように見えてしまうので注意が必要である。
+
+\subsection{設定ファイル (.mplstyle) で見た目を共通化する}\index{Matplotlib!.mplstyle@\code{.mplstyle}|textbf}
 
 しかし、解析テーマごとに作図スクリプトが増えていくと、すべての Python ファイルの先頭に上記の長い辞書をコピーするのは冗長である。Matplotlib では、これらの設定をプレーンテキストに切り出し、まとめて読み込める。
 
@@ -593,7 +836,7 @@ ax.grid(False)  # この Axes だけグリッドを消す
 
 \subsection{Matplotlib の数式表記を使う}
 
-Matplotlib では、軸ラベルや凡例に数式風の表記を書ける。既定では LaTeX そのものではなく、TeX に似た \code{MathText} という仕組みが使われる。
+Matplotlib では、軸ラベルや凡例に数式風の表記を書ける。既定では LaTeX そのものではなく、TeX に似た \code{MathText}\index{mathtext@MathText} という仕組みが使われる。
 
 \begin{lstlisting}[language=Python]
 plt.xlabel(r"$\Delta t\,[\mathrm{ns}]$")

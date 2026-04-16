@@ -52,7 +52,7 @@ print(name.split("_"))
 
 \section{データ構造}
 
-\subsection{リスト、タプル、辞書}
+\subsection{リスト、タプル、辞書}\index{りすと@リスト|textbf}\index{たぷる@タプル|textbf}\index{じしょ@辞書|textbf}
 
 複数の値をまとめたいときには、いくつかの基本的な入れ物がある。よく使う3種類の定義例を下に示す。
 
@@ -167,7 +167,7 @@ for value in values:
 
 \code{continue} はその回だけを飛ばし、\code{break} はループ全体を終了する。探索範囲を打ち切る処理では特に重要である。さらに Python には \code{for ... else} という構文もあり、\code{break} せずに最後まで回り切ったときだけ \code{else} 節が実行される。頻出ではないが、見かけても驚かないようにしておくとよい。
 
-\subsubsection{内包表記}
+\subsubsection{内包表記}\index{りすとないほうひょうき@リスト内包表記|textbf}
 
 短い変換や簡単なフィルタであれば、内包表記を使うとすっきりと構築できる。
 
@@ -183,7 +183,7 @@ large_values = [x for x in values if x >= 3]
 
 \subsection{関数を分ける理由}
 
-同じ処理を何度も書かないためだけでなく、処理の意味を分けるためにも関数は重要である。一例として、時刻を表す文字列から秒数を計算する関数を考える。
+同じ処理を何度も書かないためだけでなく、処理の意味を分けるためにも関数\index{かんすう@関数|textbf}は重要である。一例として、時刻を表す文字列から秒数を計算する関数を考える。
 
 \begin{lstlisting}[language=Python]
 def hhmmss_to_seconds(hhmmss):

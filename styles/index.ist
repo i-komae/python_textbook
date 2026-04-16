@@ -1,0 +1,12 @@
+headings_flag 1
+group_skip "\n\n  \\vspace{0.5\\baselineskip}\\indexspace\n"
+item_0 "\n  \\item \\normalfont "
+item_1 "\n    \\subitem \\normalfont "
+item_2 "\n      \\subsubitem \\normalfont "
+heading_prefix "\\par\\vspace{0.5\\baselineskip}\\noindent{\\sffamily\\bfseries\\large "
+heading_suffix "}\\nopagebreak\\par\\nobreak\\vspace{0.15\\baselineskip}\n"
+symhead_positive "記号"
+numhead_positive "数字"
+delim_0 " \\nobreak\\hskip0.5em \\textcolor[gray]{0.55}{\\leaders\\hbox{.}\\hfill}\\nobreak\\hspace{0.35em} "
+delim_1 " \\nobreak\\hskip0.5em \\textcolor[gray]{0.55}{\\leaders\\hbox{.}\\hfill}\\nobreak\\hspace{0.35em} "
+delim_2 " \\nobreak\\hskip0.5em \\textcolor[gray]{0.55}{\\leaders\\hbox{.}\\hfill}\\nobreak\\hspace{0.35em} "

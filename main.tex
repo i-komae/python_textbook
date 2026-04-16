@@ -6,6 +6,7 @@
 \usepackage{xurl}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
 \usepackage{listings}
+\usepackage{makeidx}
 \usepackage{booktabs}
 \usepackage{cite}
 \usepackage{luatexja-fontspec}
@@ -55,8 +56,34 @@
     numbersep=1\zw
 }
 \renewcommand{\lstlistingname}{リスト}
+\renewcommand{\indexname}{索引}
+\renewcommand{\seename}{$\rightarrow$}
 \newcommand{\code}[1]{\texttt{#1}}
 \graphicspath{{assets/figures/}}
+\makeindex
+
+%% --- see 参照（別名 → 主項目）---
+% 図の概念 → 関数名（概念で引いたら関数名へ飛ばす）
+\index{さんぷず@散布図|see{\code{scatter()}}}
+\index{せんず@線図|see{\code{plot()}}}
+\index{ひーとまっぷ@ヒートマップ|see{\code{imshow()}}}
+\index{えらーばー@エラーバー|see{\code{errorbar()}}}
+\index{はんれい@凡例|see{\code{legend()}}}
+\index{からーばー@カラーバー|see{\code{colorbar()}}}
+\index{さんしょうせん@参照線|see{\code{axvline()}}}
+% データ構造（英語 → 日本語: 教科書は日本語で説明しているため）
+\index{list|see{リスト}}
+\index{dict|see{辞書}}
+\index{dictionary|see{辞書}}
+\index{tuple|see{タプル}}
+\index{はいれつ@配列|see{\code{ndarray}}}
+% 操作（日本語/英語 → 関数名）
+\index{fitting|see{\code{curve\_fit}}}
+\index{フィッティング|see{\code{curve\_fit}}}
+\index{broadcast|see{ブロードキャスト}}
+\index{slice|see{スライス}}
+\index{初期値|see{\code{p0}}}
+
 
 \title{Pythonによるデータ解析と高速化}
 \author{Ichiro KOMAE}
@@ -89,5 +116,9 @@
 \input{chapters/appendix_regex.tex}
 \input{chapters/appendix_shell_scripting.tex}
 \input{chapters/references.tex}
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{\indexname}
+\printindex
 
 \end{document}
