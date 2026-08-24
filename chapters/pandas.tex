@@ -43,6 +43,7 @@ DataFrame の利点は、列ごとに意味を持たせながら、まとめて�
 DataFrame の基本操作は、Python 公式チュートリアルの「データ構造」章に相当する考え方を、表形式へ拡張したものだと考えると理解しやすい。リストや辞書を知っていると、列名によるアクセスや行集合に対するフィルタの意味が見えやすい。
 
 \subsection{最初に見るべき情報}
+\index{pandas!describe@\code{describe()}}
 
 DataFrame を作ったり読んだりした直後は、まず \code{head()}、\code{shape}、\code{dtypes}、\code{info()} を見る癖を付けるとよい。
 
@@ -71,6 +72,7 @@ dtype: object
 \code{shape} は行数と列数、\code{dtypes} は各列の型である。ここで \code{signal} が \code{float64} なのか、\code{detector} が文字列列として読まれているのかを確かめるだけで、多くの不具合を早い段階で防げる。特に \code{object} は「文字列かもしれないし、型が混ざっているかもしれない」という合図なので、数値に見える列が \code{object} になっていたら注意が必要である。
 
 \subsection{index と列名の役割}
+\index{pandas!index@index}
 
 pandas の操作は、整数位置だけでなくラベルでも書ける。これが NumPy との大きな違いである。
 
@@ -159,6 +161,8 @@ derived = (
 \code{assign()} は処理をパイプラインの形で並べたいときに読みやすい。一方で、単に 1 列だけ追加するなら \code{events["new\_col"] = ...} の方が直感的である。
 
 \subsection{欠損値と型}
+\index{pandas!isna@\code{isna()}}
+\index{けっそんち@欠損値|textbf}
 
 現実のデータでは、空欄や壊れた値が入り込む。pandas ではこれを \code{NaN} や \code{NA} として扱うことが多い。
 
@@ -243,6 +247,9 @@ B             2        12.25    3.606245            0.5
 \code{groupby()} は「検出器ごと」「日ごと」「run ごと」に同じ集計を繰り返したいときの基本である。\code{agg()} に名前付き集計を書くと、列名が分かりやすくなる。
 
 \subsection{表の形を変える}
+\index{pandas!merge@\code{merge()}}
+\index{pandas!concat@\code{concat()}}
+\index{pandas!pivot_table@\code{pivot\_table()}}
 
 Getting started tutorials~\cite{pandas_tutorials} でも、表を縦長から横長へ変える操作、複数表を結合する操作が重視されている。解析でも、観測値と較正値を結び付けたり、日別表をまとめたりする場面で必ず使う。
 
@@ -254,7 +261,7 @@ gain = pd.DataFrame(
     }
 )
 
-merged = events.merge(gain, on="detector", how="left")  % \index{pandas!merge@\code{merge()}}
+merged = events.merge(gain, on="detector", how="left")
 stacked = pd.concat([events.iloc[:2], events.iloc[2:]], ignore_index=True)
 
 long_df = pd.DataFrame(
@@ -287,6 +294,8 @@ B         14.4  14.8
 \code{merge()} は SQL の join に近い。\code{concat()} は同じ形の表を縦や横につなぐ。\code{pivot()} や \code{pivot\_table()} は、縦長データを比較しやすい横長形式へ変えるときに使う。逆に横長から縦長へ戻すなら \code{melt()} が便利である。
 
 \subsection{時刻、文字列、カテゴリ}
+\index{pandas!datetime@datetime}
+\index{pandas!category@category}
 
 時刻や文字列は、そのままでは解析しにくい。pandas には時刻用の \code{dt} アクセサ、文字列用の \code{str} アクセサ、カテゴリ型がある。
 
@@ -319,22 +328,25 @@ print(log[["timestamp", "date", "prefix", "detector"]])
 \code{to\_datetime()} を早めに使うと、差分計算、日付抽出、時刻順ソートが自然に書ける。文字列列には \code{str.contains()}、\code{str.extract()}、\code{str.strip()} などのベクトル化メソッドがある。カテゴリ型は、取り得る値が少ない列のメモリ削減や並び順の明示に役立つ。
 
 \subsection{入出力}
+\index{parquet@Parquet|textbf}
+\index{pandas!parquet@Parquet}
 
 Getting started tutorials~\cite{pandas_tutorials} でも、入出力は最初期の重要項目である。本書では特に CSV、Parquet、圧縮テキストを意識する。
 
+\index{pandas!read\_csv@\code{read\_csv()}|textbf}
 \begin{lstlisting}[language=Python]
-df = pd.read_csv(  % \index{pandas!read\_csv@\code{read\_csv()}|textbf}
+df = pd.read_csv(
     "events.csv.gz",
     compression="gzip",
-    sep=r"\s+",
-    comment="#",
-    names=["detector", "date", "time", "signal"],
-    usecols=[0, 1, 2, 3],
+    usecols=["detector", "time_ns", "signal"],
+    dtype={"detector": "category", "time_ns": "int64", "signal": "float64"},
 )
 
 df.to_parquet("events.parquet")
 small = pd.read_parquet("events.parquet", columns=["detector", "signal"])
 \end{lstlisting}
+
+この例は、ヘッダ付きのカンマ区切り CSV を gzip 圧縮した \code{events.csv.gz} を想定している。第 1 引数は入力パス、\code{compression="gzip"} は圧縮方式、\code{usecols} は読み込む列、\code{dtype} は列ごとの型である。\code{to\_parquet()} は表全体を Parquet へ保存し、\code{read\_parquet(..., columns=...)} は指定した 2 列だけを読み込む。
 
 \code{read\_csv()} を使うときは、必要な列だけ読む、型を指定する、コメント行を飛ばす、といった工夫が重要である。たとえば次のように書くと、圧縮付きの空白区切りファイルから必要列だけを型付きで読める。
 
@@ -353,6 +365,8 @@ df = pd.read_csv(
 
 このように列を絞るだけでも、読込み時間とメモリ消費はかなり変わる。さらに \code{dtype=} を指定しておくと、読込み後の型変換を減らせる。列数や行数が大きいデータでは、どの列が本当に必要かを考えるだけで、後続の処理全体が軽くなる。読込みは解析の最初の一歩だが、同時に最適化の出発点でもある。
 
+2 つ目の例は、ヘッダのない空白区切りファイルを想定している。\verb|sep=r"\s+"| は 1 個以上の空白を区切りとし、\verb|comment="#"| は \code{\#} から始まる行の残りをコメントとして扱う。\code{header=None} は列名行がないことを示し、\code{names} が読み込んだ 4 列へ名前を付ける。\code{usecols=[0, 1, 2, 3]} の番号は入力ファイル中の列位置であり、0 から数える。
+
 巨大なテキストファイルを何度も読むより、一度整形したら Parquet にして再利用する方がよい。特に \code{read\_parquet()} は列選択と相性が良く、反復的な解析で待ち時間を減らせる。日々の解析では、この「最初に 1 回だけテキストを整理して、以後は Parquet を読む」という流れを作るだけで、待ち時間が大きく減る。
 
 ここで区別したいのは、Parquet がファイル形式の名前であり、\code{pyarrow} はその読み書きを実装するライブラリだという点である。したがって、\code{to\_parquet()} や \code{read\_parquet()} が失敗したときは、「Parquet が壊れている」のではなく、「必要な実装がまだ入っていない」ことがある。
@@ -366,7 +380,56 @@ selected = df[df["ratio"] > 1.5]
 
 行ごとの \code{for} ループを書く前に、列単位で表現できないかを考える習慣を持つとよい。
 
+\subsection{大きな CSV を分割して集計する}
+\index{pandas!chunksize@\code{chunksize}}
+\index{ぶんかつよみこみ@分割読込み|textbf}
+
+pandas の DataFrame は主としてメモリ上で処理されるが、\code{read\_csv()} の \code{chunksize} を使えば、CSV を一定行数ずつ読みながら集計できる。例として、次の \code{events.csv} を考える。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={events.csv}]
+detector,signal
+A,12.4
+B,14.8
+A,10.1
+B,9.7
+A,13.0
+\end{lstlisting}
+
+検出器ごとの件数と信号値の合計は、次のように 2 行ずつ読んでも計算できる。
+
+\begin{lstlisting}[language=Python]
+counts = pd.Series(dtype="int64")
+sums = pd.Series(dtype="float64")
+
+for chunk in pd.read_csv(
+    "events.csv",
+    usecols=["detector", "signal"],
+    dtype={"detector": "string", "signal": "float64"},
+    chunksize=2,
+):
+    grouped = chunk.groupby("detector")["signal"]
+    counts = counts.add(grouped.count(), fill_value=0)
+    sums = sums.add(grouped.sum(), fill_value=0)
+
+summary = pd.DataFrame({"count": counts, "mean": sums / counts})
+print(summary)
+\end{lstlisting}
+
+実行結果は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+          count       mean
+detector
+A           3.0  11.833333
+B           2.0  12.250000
+\end{lstlisting}
+
+\code{chunksize=2} は、反復ごとに最大 2 行の DataFrame を返す指定である。実データでは 10 万行など、利用可能なメモリと処理時間を見ながら値を決める。\code{Series.add(..., fill\_value=0)} は、あるチャンクに片方の検出器しか含まれない場合にも、存在しない集計値を 0 として足す。平均値をチャンク平均の単純平均として求めると、チャンクごとの件数が違う場合に誤るため、全体の合計を全体の件数で割っている。
+
+分割処理が適するのは、総和、件数、最小値、最大値のようにチャンクごとの結果を統合できる計算である。全行を同時に並べ替える処理、全行どうしを結合する処理、全データに依存する順位計算では、単純な分割だけでは同じ結果にならない。その場合は、必要列を減らす、Parquet を使う、Polars の lazy API やデータベースを使うといった別の方法も検討する。
+
 \subsection{表を LaTeX へ出力する}
+\index{pandas!to_latex@\code{to\_latex()}}
 
 集計結果をレポートへ貼るときは、手で打ち直さずに \code{to\_latex()} を使う方が再現性が高い。
 
@@ -395,11 +458,12 @@ pandas にも \code{plot()} があるが、これは Matplotlib の薄いラッ�
 summary.plot(kind="bar", y="mean_signal")
 \end{lstlisting}
 
-手早い確認には便利だが、最終的な提出図や論文用図では、Matplotlib の \code{Figure} と \code{Axes} を明示して描く方が制御しやすい。本書でも最終的な作図は第~\ref{sec:matplotlob-object}節以降の方法を基準とする。
+手早い確認には便利だが、最終的な提出図や論文用図では、Matplotlib の \code{Figure} と \code{Axes} を明示して描く方が制御しやすい。本書でも最終的な作図は第~\ref{sec:matplotlib-object}節以降の方法を基準とする。
 
 \section{よくある落とし穴}
 
 \subsection{\code{SettingWithCopy} と \code{loc}}
+\index{settingwithcopy@SettingWithCopy|textbf}
 
 pandas 初学者がよく踏むのが、切り出した表へ代入したつもりで元の DataFrame を安全に更新できていない問題である。
 
@@ -415,14 +479,17 @@ events.loc[events["signal"] > 11.0, "flag"] = True
 \end{lstlisting}
 
 \subsection{\code{object} 型のまま計算しない}
+\index{object dtype@\code{object} 型|textbf}
 
 見た目が数値でも、空白や記号が混ざると \code{object} 型で読まれることがある。そのまま足し算や比較をすると、文字列連結や例外が起きる。大きなファイルでは \code{read\_csv()} の \code{dtype=} を使い、読込み直後に \code{dtypes} を確かめる方が安全である。
 
 \subsection{行ループは最後の手段である}
 
-Pandas の DataFrame は数百万行のデータを保持できるが、各行に対して複雑な文字列処理や条件判定を加えようとした時、コードの書き方一つで実行時間が数十分から数秒へと劇的に変わる。特に、\code{iterrows()}、\code{apply(axis=1)}、並列化の使い分けは初心者がつまずきやすい。
+pandas の DataFrame では、同じ処理でも列演算と行単位の Python 関数で実行時間が大きく異なることがある。特に、\code{iterrows()}、\code{apply(axis=1)}、並列化の使い分けは、処理内容と測定結果に基づいて判断する必要がある。
 
 \subsubsection{Step 1: \code{iterrows()} の限界}
+\index{pandas!iterrows@\code{iterrows()}}
+\index{pandas!itertuples@\code{itertuples()}}
 
 Python 初学者が最も陥りやすい罠が、「DataFrame の行を 1 つずつ取り出して処理する」という直感的な書き方である。
 
@@ -436,11 +503,11 @@ for index, row in df.iterrows():
 df["value_sq"] = results
 \end{lstlisting}
 
-この書き方は、Pandas がデータフレームとしてデータを一括管理している利点をほぼ打ち消す。さらに \code{iterrows()} は各行を毎回 \code{Series} として作り直すため、列ごとの型情報が崩れやすく、オブジェクト生成コストも大きい。どうしても行ループが必要なら \code{itertuples()} の方が軽いことが多いが、基本方針は「まず行ループ自体を避ける」である。
+この書き方は、pandas が DataFrame の列をまとめて処理できる利点を活かしにくい。さらに \code{iterrows()} は各行を毎回 \code{Series} として作り直すため、列ごとの型情報が崩れやすく、オブジェクト生成コストも大きい。行ループが避けられない場合は、\code{itertuples()} の方が軽いことが多い。それでも、まず列演算や既存のベクトル化メソッドで表現できないかを確認する。
 
 \subsubsection{Step 2: \code{apply(axis=1)} と列演算}
 
-行ごとに処理を適用したい場合、Pandas が用意している \code{apply()} メソッドを使うと、少なくともコードを pandas の文脈に保ったまま書ける。\code{axis=1} は「各行へ関数を適用する」という意味であり、\code{axis=0} なら各列に適用する。
+行ごとに処理を適用したい場合、pandas が用意している \code{apply()} メソッドを使うと、コードを DataFrame の処理として記述できる。\code{axis=1} は「各行へ関数を適用する」という意味であり、\code{axis=0} なら各列に適用する。
 
 \begin{lstlisting}[language=Python]
 df["value_sq"] = df.apply(lambda row: heavy_computation(row["value"]), axis=1)
@@ -456,7 +523,7 @@ df["value_sq"] = df["value"] ** 2
 
 \subsubsection{Step 3: 並列化と \code{pandarallel}}
 
-しかし、\code{apply()} はどれだけ行数があっても CPU の 1 コアしか使わない。本当に計算が重い処理の場合、ここで初めてマルチコアを用いた並列化が選択肢に入る。
+通常の \code{apply()} は、Python 関数を行ごとに順番に呼び出す。本当に計算が重く、列演算や既存の NumPy 関数へ置き換えられない場合に、マルチプロセスによる並列化が選択肢に入る。
 
 \begin{lstlisting}[language=Python]
 from pandarallel import pandarallel
@@ -504,6 +571,39 @@ df["value_sq"] = df.parallel_apply(
 
 一方で、数千万行規模になり、CSV 読込みや集計が待ち時間の支配項になってきたら、次章で扱う Polars を検討する価値がある。pandas は基準になる道具であり、その上で「どこから別の道具へ切り替えるべきか」を判断できるようになることが重要である。
 
-また、pandas は全データを一度にメモリへ載せる必要がある設計なので、マシンのメモリを超えるようなテラバイト級データをそのまま処理させると破綻する。つまり、この章で扱ったのは「1 台のマシンのメモリに載る表を丁寧に扱う方法」である。その前提が崩れ始めたときに、次章の Polars という選択肢が出てくる。
+また、pandas の多くの操作は、DataFrame が 1 台の計算機のメモリに収まることを前提とする。ただし、\code{read\_csv(chunksize=...)} を使えば、総和や件数のように部分結果を統合できる処理は全件を同時に保持せずに実行できる。必要な表がメモリに収まらない場合は、列と行を早い段階で絞る、分割集計を使う、Parquet に変換する、次章の Polars やデータベースを使う、という順に処理の性質に合う方法を選ぶ。
 
 ここまでの内容を自分で確かめ直したくなったら、公式資料へ戻るとよい。入口としては Getting started tutorials~\cite{pandas_tutorials} と 10 minutes to pandas~\cite{pandas_10min} が分かりやすい。本章はそれらを解析向けの順序へ並べ替えて説明している。列選択や代入で迷ったときは Indexing~\cite{pandas_indexing}、欠損値処理は Missing data~\cite{pandas_missing}、表の結合は Merge, join, concatenate and compare~\cite{pandas_merging}、時刻列は Time series / date functionality~\cite{pandas_timeseries} を見ると対応する話題に戻りやすい。
+
+\section{章末問題}
+
+次の CSV を \code{events.csv} として保存し、すべての課題で共通して使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={events.csv}]
+detector,time_ns,signal,valid
+A,1000,12.4,true
+B,1180,9.8,true
+A,1300,15.1,true
+B,1510,,false
+A,1760,11.0,true
+B,2050,13.2,true
+\end{lstlisting}
+
+\begin{enumerate}
+\item \textbf{読込み直後の表を検査する}。
+\code{pd.read\_csv()} で読み、\code{shape}、\code{columns}、\code{dtypes}、\code{head(3)}、\code{isna().sum()} を表示せよ。行数は 6、列数は 4、\code{signal} の欠損数は 1 になる。\code{head(3)} の \code{3} と、\code{isna().sum()} の \code{sum()} がどの方向に集計しているかを説明せよ。
+
+\item \textbf{条件抽出と列追加を行う}。
+\code{valid} が真で \code{signal >= 12.0} の行を \code{loc} で抽出し、\code{signal / signal.mean()} を \code{signal\_ratio} 列として追加せよ。抽出行は 3 件になる。複数条件を括弧で囲み、\code{and} ではなく \code{\&} を使う理由を説明せよ。
+
+\item \textbf{検出器ごとに集計して別表と結合する}。
+\code{groupby("detector")} と \code{agg()} を使い、有効な信号の件数、平均、標準偏差を求めよ。平均は A が約 12.8333、B が 11.5 になる。さらに、A と B の較正係数を持つ DataFrame を作り、\code{merge(..., on="detector", how="left")} で結合せよ。\code{on} と \code{how} の役割を説明すること。
+
+\item \textbf{一括読込みと分割読込みを比較する}。
+本文の \code{chunksize=2} の方法で件数と平均を求め、一括読込みから得た結果と \code{pd.testing.assert\_frame\_equal()} または \code{np.allclose()} で一致を確認せよ。チャンク平均の単純平均が一般には誤る理由を、件数が異なる 2 チャンクの例を使って説明せよ。
+
+\item \textbf{結果を再利用できる形式で保存する}。
+集計表を CSV と Parquet の両方へ保存し、読み戻して列名と値を確認せよ。\code{index=False} を付けた場合に何が保存されないかを説明し、Parquet の読込みに追加ライブラリが必要な環境では、表示された例外名も記録せよ。
+\end{enumerate}
+
+pandas で表処理の基本と結果の検証方法を確認した後は、同じ処理を別の DataFrame 実装で書くと、設計上の違いが明確になる。次章では Polars を用い、index に依存しない表、列式、遅延実行による処理を扱う。

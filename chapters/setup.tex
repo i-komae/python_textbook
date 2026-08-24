@@ -1,4 +1,5 @@
 \chapter{Python 環境を整える}
+\label{chap:setup}
 
 \section{Python の確認と管理方針}
 
@@ -210,6 +211,7 @@ Python 3.11.11
 \code{pyenv shell 3.11.11} は、そのターミナルを閉じるまでの一時的な切り替えである。検証用に 1 回だけ古いバージョンで動かしたいときに便利である。
 
 \section{\code{venv} でプロジェクトごとの仮想環境を作る}
+\index{venv@\code{venv}|textbf}
 
 Python 本体のバージョンを決めたら、そのバージョンの上にプロジェクト専用の仮想環境\index{かそうかんきょう@仮想環境|textbf}を作る。依存ライブラリの衝突を避けるためである。仮想環境を作り、そこに入るための基本コマンドは次の通りである。
 
@@ -330,6 +332,8 @@ pyproject.toml
 特に、コードを再利用可能なモジュールやライブラリとして育てたいなら、\code{--package} や \code{--lib} を意識した方がよい。単発スクリプトで終わるのか、将来 \code{import} される部品になるのかで、適切な初期構成は変わる。
 
 \subsection{依存関係の追加と環境の同期}
+\index{uv.lock@\code{uv.lock}|textbf}
+\index{ろっくふぁいる@ロックファイル|textbf}
 
 \code{uv add} は依存ライブラリを追加し、\code{pyproject.toml} とロック情報を更新する。複数同時に指定する場合は次のようにする。
 
@@ -506,6 +510,7 @@ data/run001 results/figures
 入力ファイルのパス、出力先、しきい値、作業ディレクトリのように「実行条件」であるものは、原則としてハードコーディングしない方がよい。コードを書き換えずに切り替えられるようにしておくと、再利用と再現が楽になる。
 
 \subsection{設定ファイルとマジックナンバーの排除}
+\index{まじっくなんばー@マジックナンバー|textbf}
 
 めったに変わらない値は、設定ファイルへまとめる方が使いやすい。形式は JSON でも TOML でもよい。ここでは標準ライブラリだけで扱える JSON の例（\code{config.json}）を示す。
 
@@ -542,13 +547,20 @@ print(window_ns)
 
 \section{章末問題}
 
+この章の課題では、コマンドだけでなく、作成されたファイルと実際に選ばれた Python を確認する。バージョン番号は環境によって異なるため、特定の番号との一致ではなく、各コマンドの出力が互いに矛盾していないかを検証する。
+
 \begin{enumerate}
 \item \textbf{\code{uv} を使って地震データ解析用の新しいプロジェクトを作る}。
 \code{earthquake\_practice} の下に \code{usgs\_project} を作り、\code{uv init} を実行せよ。その後で、手元で使える Python を 1 つ選んで \code{uv python pin ...} で固定し、\code{uv add numpy matplotlib scipy} を実行せよ。その後で \code{uv run python --version} と \code{uv run python -c "import numpy, matplotlib, scipy"} を実行し、どの Python とどの仮想環境が使われているかを確認せよ。
+\code{uv init} 後には少なくとも \code{pyproject.toml} が作られ、Python を固定すると \code{.python-version} が作られる。\code{uv add} 後には依存関係が \code{pyproject.toml} へ記録され、通常は \code{uv.lock} と \code{.venv/} も作られる。\code{uv run python -c "import sys; print(sys.executable)"} を追加で実行し、表示されたパスがプロジェクトの \code{.venv} 以下にあることを確認せよ。\code{-c} が後続文字列を Python コードとして実行するオプションであることも説明すること。
 
 \item \textbf{\code{pyenv} と \code{venv} で別の作り方も試す}。
 \code{earthquake\_practice} の下に \code{usgs\_venv} を作り、必要なら \code{pyenv local ...} で Python を切り替えてから \code{python -m venv .venv} を実行せよ。活性化の前後で \code{which python}、\code{python --version}、\code{pip --version} がどう変わるかを記録せよ。
+活性化後のプロンプト先頭に通常は \code{(.venv)} が現れ、\code{which python} は \code{usgs\_venv/.venv/bin/python} を指す。\code{pip --version} の出力にも同じ \code{.venv} 以下のパスが含まれることを確認せよ。最後に \code{deactivate} を実行し、\code{which python} が活性化前の場所へ戻ることも記録する。\code{python -m venv .venv} の \code{-m} と最後の \code{.venv} がそれぞれ何を指定するかを説明せよ。
 
 \item \textbf{発展課題}。
 この課題では、同じコマンド名 \code{python} でもディレクトリごとに別の実体を指せることを確かめる。手元で 2 系統以上の Python が使えるなら、別ディレクトリを 2 つ作り、それぞれで \code{pyenv local} を設定して \code{python --version}、\code{which python}、\code{cat .python-version} を比較せよ。さらに片方のディレクトリで \code{uv run python --version} も実行し、\code{pyenv} による切り替えと \code{uv} による固定がどう重なるかを整理せよ。
+比較結果には、シェルが最初に見つけた \code{python}、\code{pyenv local} が選ぶバージョン、\code{uv} がプロジェクト仮想環境で使うバージョンを区別して記述する。\code{which python} だけで実体を断定せず、\code{python -c "import sys; print(sys.executable); print(sys.version)"} でも確認せよ。
 \end{enumerate}
+
+ここまでで、シェルから呼び出される Python の実体と、プロジェクトごとのライブラリ環境を区別できるようになった。次章では、この環境でインタラクティブモードとスクリプトを実行し、値、条件分岐、反復、関数を用いて処理を組み立てる。

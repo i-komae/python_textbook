@@ -1,39 +1,47 @@
 \chapter{シェルスクリプトによる自動化と\mbox{一括処理}}
 \label{app:shell_scripting}
+\index{しぇるすくりぷと@シェルスクリプト|textbf}
 
-第~\ref{SEC:shell}章ではシェルの対話的な基本操作を紹介した。実際のデータ解析では、1 つのスクリプトを数十から数百のファイルに対して繰り返し実行したり、実行時のパラメータを少しずつ変えながら条件を変えてプログラムを走らせたりする場面が非常に多くなる。このような自動化やバッチ処理を担うのが\textbf{シェルスクリプト}である。
+第~\ref{chap:shell}~章では、シェルを対話的に操作する方法を説明した。同じコマンド列を複数のファイルや条件に対して実行する場合は、操作をシェルスクリプトへ記述すると、処理順序と引数を記録したまま再実行できる。
 
-本章では、単純なコマンドの列挙から一歩進み、引数の受け取り、変数の計算、ファイルの存在チェック、条件分岐（\code{if}, \code{case}）、リスト（配列）と \code{for} ループを用いた実践的なバッチ処理の書き方と \code{sed} による置換を解説する。
+本付録では、引数の受取り、変数の計算、ファイルの存在確認、条件分岐、配列、\code{for} ループを扱う。最後に、設定ファイルのテンプレートを \code{sed} で置換して複数条件を実行する方法を説明する。
 
 \section{シェルスクリプトの基礎構造}
 
 \subsection{シバンと実行権限}
+\index{しばん@シバン|textbf}
 
-シェルスクリプトを作成する際は、先頭に「どの解釈エンジン（シェル）で実行するか」を指定するシバン（shebang）を記述する。本書では UNIX 系の標準である \code{bash} を用いることを前提とする。
+シェルスクリプトの先頭には、どのシェルで解釈するかを指定するシバン（shebang）を書く。本付録の例は Bash の配列と算術式を使うため、\code{env} で \code{bash} の所在を検索する。
 
 \begin{lstlisting}[language=bash]
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "Hello, Shell Scripting!"
 \end{lstlisting}
 
-作成したファイル（例: \code{run.sh}）には実行権限を付与し、直接実行できるようにしておく。
+\code{run.sh} という名前で保存した場合は、実行権限を付けてから直接実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod +x run.sh
 $ ./run.sh
+Hello, Shell Scripting!
 \end{lstlisting}
 
+\code{chmod +x} は実行権限を追加し、\code{./run.sh} は現在のディレクトリにあるファイルを実行する。最後の行がスクリプトの標準出力である。
+
 \subsection{コマンドライン引数}
+\index{こまんどらいんひきすう@コマンドライン引数|textbf}
 
 スクリプトに外から値（ファイル名や設定値）を渡すには、実行時の引数を利用する。スクリプト内からは \code{\$1}, \code{\$2} といった特殊な変数で受け取れる。
 
 \begin{itemize}
     \item \code{\$0}: 実行されたスクリプトのファイル名（例: \code{./run.sh}）
-    \item \code{\$1, \$2, ...}: 1番目、2番目の引数
+    \item \code{\$1, \$2, ...}: 1 番目、2 番目以降の引数
     \item \code{\$\#}: 渡された引数の総数
-    \item \code{\$@}: 渡されたすべての引数（リストとして展開される）
+    \item \code{\$@}: 渡された全ての引数
 \end{itemize}
+
+次のスクリプトは、二つの位置引数を検査してから入力名と出力名を表示する。
 
 \begin{lstlisting}[language=bash]
 #!/bin/bash
@@ -49,9 +57,12 @@ OUTPUT=$2
 echo "Reading from $INPUT, writing to $OUTPUT"
 \end{lstlisting}
 
+\code{./run.sh input.csv result.csv} と実行すると、\code{Reading from input.csv, writing to result.csv} と表示される。引数が二つでなければ使用法を表示し、終了状態 1 で処理を打ち切る。
+
 \section{変数、演算、条件式}
 
-\subsection{変数の定義とリスト（配列）}
+\subsection{変数の定義と配列}
+\index{bash@Bash!はいれつ@配列}
 
 シェルで変数を定義する際は、イコールの前後に空白を入れてはならない。また、変数の値を参照するときは先頭に \code{\$} を付ける。
 
@@ -63,7 +74,7 @@ echo "The count is $COUNT."       # 展開される
 echo 'The count is $COUNT.'       # シングルクォートでは展開されず "$COUNT" と表示される
 \end{lstlisting}
 
-カンマ区切りではなく、スペース区切りで括弧 \code{()} を用いるとリスト（配列）を定義できる。Python のリストのように扱うことができ、複数の対象をまとめて扱う際に非常に便利である。
+Bash では、要素を空白で区切って括弧 \code{()} で囲むと配列を定義できる。各要素を引用符で囲めば、要素内の空白やワイルドカードが意図せず展開されることを防げる。
 
 \begin{lstlisting}[language=bash]
 # 配列の定義
@@ -79,9 +90,10 @@ echo "First element: ${targets[0]}"
 echo "All elements: ${targets[@]}"
 \end{lstlisting}
 
-\subsection{数値計算 (算術式展開)}
+\subsection{数値計算（算術式展開）}
+\index{さんじゅつしきてんかい@算術式展開|textbf}
 
-bash で整数の足し算や掛け算を行う場合は、\code{(( ))} （二重丸括弧）を用いる。この中では、変数の \code{\$} を省略でき、空白も自由に空けることができる。浮動小数点計算には対応していないため、少数を扱う場合は Python プログラムなどの外部コマンドに任せるか \code{bc} や \code{awk} を用いる。
+Bash で整数の加減乗除を行う場合は、算術式展開 \code{\$((...))} または算術評価 \code{((...))} を用いる。この中では変数名の \code{\$} を省略できる。Bash の算術評価は浮動小数点計算に対応しないため、小数を扱う場合は Python、\code{bc}、\code{awk} などを用いる。
 
 \begin{lstlisting}[language=bash]
 A=10
@@ -96,7 +108,8 @@ MUL=$((A * B))
 (( B += 20 ))
 \end{lstlisting}
 
-\subsection{条件式 (testコマンド)}
+\subsection{条件式（\code{test} コマンド）}
+\index{test command@\code{test}|textbf}
 
 数値の大小比較や、ファイルが存在するかどうかの確認には、\code{[ ]} を用いる。大括弧の内側には必ずスペースが必要である。
 
@@ -129,6 +142,7 @@ MUL=$((A * B))
 \section{条件分岐 (\code{if}, \code{case})}
 
 \subsection{\code{if} 文を用いた分岐}
+\index{bash@Bash!if@\code{if} 文}
 
 前節の条件式を組み合わせて処理を分岐する。\code{then} と \code{fi} でブロックを囲むのがシェルの特徴である。
 
@@ -153,8 +167,9 @@ fi
 \end{lstlisting}
 
 \subsection{\code{case} 文による分岐}
+\index{bash@Bash!case@\code{case} 文}
 
-条件が「特定の文字列パターンと一致するか」である場合は、\code{case} 文を用いると \code{elif} を重ねるよりもきれいに書ける。拡張子での判定や、オプション引数（ \code{-h}, \code{--version} など）のパースに有用である。
+条件が特定の文字列パターンとの一致で表せる場合は、\code{case} 文を用いると \code{elif} を重ねずに分岐を列挙できる。拡張子の判定や、\code{-h}、\code{--version} などのオプション処理に利用できる。
 
 \begin{lstlisting}[language=bash]
 #!/bin/bash
@@ -180,6 +195,7 @@ esac
 \section{反復処理と一括自動化 (\code{for})}
 
 \subsection{配列やリストの要素に対する \code{for} ループ}
+\index{bash@Bash!for@\code{for} ループ}
 
 指定した値のリストや、定義した配列の全要素に対して処理を繰り返す場合は以下のように書く。
 
@@ -200,6 +216,7 @@ done
 \end{lstlisting}
 
 \subsection{実践: 複数ファイルのパス置換とバッチ処理}
+\index{ばっちしょり@バッチ処理|textbf}
 
 実務で最もよく使うループは「特定のディレクトリにあるファイルを順次処理する」ための構文である。ここで、入力ファイル名（例: \code{data/input/run01.csv}）から、出力ファイル名（例: \code{data/output/run01\_result.png}）を自動的に作り出す技術が必要となる。
 
@@ -243,13 +260,14 @@ for filepath in "$INPUT_DIR"/*.csv; do
 done
 \end{lstlisting}
 
-このように記述することで、数十から数千のファイルをディレクトリに放り込んでスクリプトを実行するだけで、結果ファイルが名簿通りに正しく生成されていくシステムを作ることができる。
+この例では、入力ファイルごとに拡張子を除いた名前を作り、対応する出力パスを組み立てている。実際に解析コマンドを有効にする前に、\code{echo} で入力と出力の対応を表示し、同名ファイルを上書きしないことを確認する。
 
 \section{\code{sed} を用いたテンプレート書き換えと動的実行}
+\index{sed@\code{sed}|textbf}
 
 外部の実行プログラムの中には、引数（\code{--input XXX}）の形式ではなく、設定ファイル（例: \code{config.ini}）を読み込ませることで動作するものがある。バッチ処理で繰り返し実行したい場合、ループを回すたびに設定ファイルの特定のパラメータ（例えばシード値や閾値など）を書き換える必要が生じる。
 
-強力なストリーム・エディタである \code{sed} コマンドを使うことで、「テンプレートとなる設定ファイル」を用意しておき、シェルスクリプトから一部の文字列だけを置換した「実行用設定ファイル」を動的に生成させることができる。
+\code{sed} を使うと、テンプレートとして用意した設定ファイルの一部を置換し、条件ごとの実行用設定ファイルを生成できる。
 
 \subsection{テンプレートファイルの準備}
 
@@ -266,7 +284,7 @@ OutputFile = __OUTFILENAME__
 
 \subsection{\code{sed} による置換の実行}
 
-シェルスクリプト内で変数をループさせ、\code{sed} によって置換した設定ファイルをその都度作成してプログラムに食わせる。
+シェルスクリプト内で条件値を順に取り出し、\code{sed} で置換した設定ファイルを生成して実行プログラムへ渡す。
 
 \code{sed 's/置換前文字列/置換後文字列/g' 入力ファイル > 出力ファイル} の形式を取る。この際、\code{sed} で変数を展開したい場合はシングルクォートではなく、\textbf{ダブルクォート (\code{"..."})} で囲む必要がある点に注意する。
 
@@ -298,4 +316,4 @@ for thresh in "${thresholds[@]}"; do
 done
 \end{lstlisting}
 
-このような構成を取ることで、Python プログラムはもちろんのこと、ソースコードに手を加えることのできないバイナリ形式のシミュレーションソフトやコンパイル済みの C プログラムであっても、シェルから自在に大量の条件を連続実行・制御することが可能になる。
+この方法は、設定ファイルを入力とする Python プログラムだけでなく、コンパイル済みのシミュレーションプログラムにも適用できる。各反復で生成した設定ファイルを別名で保存すれば、どの条件で各結果を得たかを後から確認できる。ただし、置換値に \code{/} や \code{\&} が含まれる場合は、\code{sed} の区切り文字やエスケープ方法を調整する必要がある。

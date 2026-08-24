@@ -329,4 +329,54 @@ fig.tight_layout()
 fig.savefig("../assets/figures/fit_sigma_comparison.pdf")
 plt.close(fig)
 
+# 6. Output from the reusable histogram-and-fit example
+rng = np.random.default_rng(42)
+module_data = rng.normal(loc=5.0, scale=1.2, size=4000)
+module_counts, module_edges = np.histogram(module_data, bins=35)
+module_centers = 0.5 * (module_edges[:-1] + module_edges[1:])
+module_width = module_edges[1] - module_edges[0]
+module_p0 = [module_counts.max(), module_data.mean(), module_data.std(), 0.0]
+module_popt, _ = curve_fit(
+    lambda x, amplitude, mean, sigma, offset: (
+        amplitude * np.exp(-0.5 * ((x - mean) / sigma) ** 2) + offset
+    ),
+    module_centers,
+    module_counts,
+    p0=module_p0,
+)
+module_x = np.linspace(module_edges[0], module_edges[-1], 500)
+module_y = (
+    module_popt[0]
+    * np.exp(-0.5 * ((module_x - module_popt[1]) / module_popt[2]) ** 2)
+    + module_popt[3]
+)
+
+fig, ax = plt.subplots(figsize=(6.4, 4.2))
+ax.hist(
+    module_data,
+    bins=module_edges,
+    histtype="step",
+    color="#1f4e79",
+    linewidth=1.6,
+    label="data",
+)
+ax.plot(
+    module_x,
+    module_y,
+    color="#c44e52",
+    linewidth=2,
+    label=fr"Gaussian fit: $\mu={module_popt[1]:.2f}$, $\sigma={abs(module_popt[2]):.2f}$",
+)
+ax.set_xlabel("signal [mV]")
+ax.set_ylabel(f"counts / {module_width:.2f} mV")
+ax.legend(
+    loc="lower center",
+    bbox_to_anchor=(0.5, 1.02),
+    ncol=2,
+    frameon=False,
+)
+fig.tight_layout()
+fig.savefig("../assets/figures/histfit_module_example.pdf")
+plt.close(fig)
+
 print("Figures generated successfully.")

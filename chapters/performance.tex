@@ -1,4 +1,5 @@
 \chapter{Python 解析の高速化}
+\label{chap:performance}
 
 \section{まず測る}
 
@@ -29,6 +30,8 @@ result = array * 2
 ただし、\code{\%timeit} はノートブックや IPython での簡便な測定であり、スクリプト全体の読込みや入出力を含めた時間を見るには向かない。小さな部品には \code{\%timeit}、解析全体には \code{perf\_counter} というように使い分けると整理しやすい。
 
 \section{計算量の見積もり}
+\index{けいさんりょう@計算量|textbf}
+\index{あるごりずむ@アルゴリズム|textbf}
 
 高速化では、実測だけでなく理屈の見積もりも役に立つ。入力サイズを $N$ としたとき、処理回数が $N$ に比例するのか、$N \log N$ 程度なのか、$N^2$ なのかで、大きなデータに対する伸び方がまるで違う。
 
@@ -178,20 +181,87 @@ def is_symmetric_fast(A):
 ここで注意したいのは、NumPy や pandas を使えば自動的に何でも速くなるわけではないことである。根本的に無駄な比較をしているなら、配列演算へ移しても限界がある。まず計算量を減らし、そのうえで実装をベクトル化するという順序が自然である。
 
 \subsection{メモリとコピーの管理}
+\index{めもりかんり@メモリ管理|textbf}
+\index{びゅー@ビュー|textbf}
+\index{こぴー@コピー}
 
 速度だけを見ていると、メモリ使用量が大きくなりすぎて逆に遅くなることがある。巨大な中間配列を何度も作る実装では、CPU よりもメモリ転送が支配的になる場合がある。
 
 そのため、高速化では「何回ループしたか」だけでなく、「何回コピーしたか」も見る必要がある。不要なコピーを減らし、必要な列や範囲だけを扱う設計は、速度と安定性の両方に効く。
 
+NumPy では、スライスが元配列とメモリを共有するビューになる一方、条件抽出は新しい配列を作る。次のコードで両者を確認できる。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+
+values = np.arange(1_000_000, dtype=np.float64)
+view = values[100:200]
+copied = values[values % 2 == 0]
+
+print(values.nbytes)
+print(view.nbytes, np.shares_memory(values, view))
+print(copied.nbytes, np.shares_memory(values, copied))
+\end{lstlisting}
+
+実行結果は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+8000000
+800 True
+4000000 False
+\end{lstlisting}
+
+\code{nbytes} は配列要素が占めるバイト数を表す。\code{np.shares\_memory(a, b)} は 2 配列が同じメモリ領域を共有するかを調べる。この例では、\code{view} 自体が参照する要素は 800 バイト分だが、元配列のメモリを共有するため、\code{view} の要素を書き換えると対応する \code{values} の要素も変わる。\code{copied} は 50 万要素の独立した配列であり、新たに 4 MB を使う。なお、\code{nbytes} は Python オブジェクト自体の管理領域を含まないため、プロセス全体のメモリ使用量と完全には一致しない。
+
 \subsection{分割読込み、並列化、ストリーミング}
+\index{ぶんかつよみこみ@分割読込み|textbf}
+\index{へいれつか@並列化|textbf}
+\index{すとりーみんぐ@ストリーミング|textbf}
 
 大規模解析では、全部を一度にメモリへ載せない設計も重要である。ファイル単位で処理し、必要な情報だけを持ち回る。さらに、独立な単位に分割できるなら並列化も検討できる。
 
 ストリーミング処理では、「今必要な範囲だけを覚える」という考え方が中心になる。全履歴が不要なら保持しない、集計済みの量は逐次更新する、といった設計が有効である。メモリ節約と速度向上が同時に得られることも多い。
 
+例えば、1 行に 1 個の測定値が書かれた \code{values.txt} の平均は、全行をリストへ保存せずに求められる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={values.txt}]
+1.5
+2.0
+4.0
+2.5
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+def streaming_mean(path):
+    count = 0
+    total = 0.0
+
+    with open(path, "r", encoding="utf-8") as f:
+        for line_number, line in enumerate(f, start=1):
+            text = line.strip()
+            if text == "":
+                continue
+            try:
+                value = float(text)
+            except ValueError as exc:
+                raise ValueError(f"line {line_number}: {text!r}") from exc
+            count += 1
+            total += value
+
+    if count == 0:
+        raise ValueError("input contains no numeric values")
+    return total / count
+
+
+print(streaming_mean("values.txt"))
+\end{lstlisting}
+
+出力は \code{2.5} となる。引数 \code{path} は入力ファイルの場所であり、\code{enumerate(..., start=1)} はエラー箇所をファイルと同じ 1 始まりの行番号で報告するために使う。この関数が保持するのは現在行、件数、合計だけなので、入力行数が増えても集計用メモリはほぼ一定である。ただし、中央値や全体のソートのように全データの順序が必要な統計量は、この単純な方法だけでは正確に求められない。
+
 \section{プロファイリングと低レベル実装}
 
 \subsection{プロファイラを使う}
+\index{ぼとるねっく@ボトルネック|textbf}
 
 本格的に遅い理由を調べるなら、プロファイラ\index{ぷろふぁいら@プロファイラ|textbf}も役立つ。例えば \code{cProfile}\index{cprofile@\code{cProfile}|textbf} を使うと、どの関数に時間が使われているかを確認できる。
 
@@ -230,6 +300,8 @@ for (std::size_t i = 0; i < n; ++i) {
 この書き換えは、定数倍の改善をもたらすことがある。しかし、比較回数そのものが多すぎるなら本質的な改善ではない。アルゴリズムと実装言語を分けて考える姿勢が必要である。
 
 \subsection{Python から C/C++ を呼び出す}
+\index{cython@Cython|textbf}
+\index{pybind11@pybind11|textbf}
 
 方法はいくつかある。たとえば \code{ctypes} で共有ライブラリを呼ぶ方法、Python C 拡張を書く方法、pybind11 を使って C++ を Python から自然に使える形へ包む方法などがある。さらに、Python と C の中間に位置する Cython を使い、Python に近い構文のまま重いループだけをコンパイルする方法も、この節に含まれる重要な選択肢である。
 
@@ -303,3 +375,26 @@ count = np.count_nonzero(diffs > 0.25)
 \caption{同じ隣接差分フィルタを、純粋な Python ループ、NumPy、pandas で実行した例。縦軸は実行時間で、対数目盛を使っている。}
 \label{fig:vectorization-benchmark}
 \end{figure}
+
+図~\ref{fig:vectorization-benchmark} は実行時間の大小を比較するための図であり、結果の正しさまでは保証しない。高速化の前後で同じ \code{count} が得られることをテストし、その上で入力サイズ、反復回数、実行環境、代表値をそろえて時間を比較する必要がある。
+
+\section{章末問題}
+
+\begin{enumerate}
+\item \textbf{結果を変えずにベクトル化する}。
+\verb|values = np.arange(1_000_000, dtype=np.float64)| について、各要素を二乗してから総和を求める処理を Python の \code{for} 文と NumPy の列演算で実装せよ。\code{np.isclose()} で結果が一致することを先に確認し、その後で \code{time.perf\_counter()} を使って各方法を 5 回ずつ測定せよ。最小値または中央値を報告し、1 回だけの値を比較しない理由を説明すること。
+
+\item \textbf{入力サイズと計算量の関係を測る}。
+本文の \code{has\_duplicate\_slow()} と \code{has\_duplicate\_fast()} を使い、重複を含まない入力について \(N=1000, 2000, 4000\) の実行時間を測定せよ。\(N\) を 2 倍にしたときの時間比を求め、\(O(N^2)\) と \(O(N\log N)\) の予想と比較する。計算機や実行時の状態によって時間は変わるため、絶対時間ではなく比と傾向を説明せよ。
+
+\item \textbf{ビューとコピーの影響を確認する}。
+本文の \code{values}、\code{view}、\code{copied} を作り、\code{view[0] = -1} と \code{copied[0] = -2} を実行した後で \code{values[100]} と \code{values[0]} を表示せよ。前者だけが変化する理由を、\code{np.shares\_memory()} の結果と対応させて説明する。さらに \code{float32} と \code{float64} で同じ要素数の \code{nbytes} を比較せよ。
+
+\item \textbf{逐次集計を検証する}。
+1 から 100000 までを 1 行ずつ書いたファイルを作り、本文の \code{streaming\_mean()} で平均を求めよ。期待値は \code{50000.5} である。同じファイルを全件リストへ読み込む実装も作り、結果の一致を確認せよ。両者が保持するデータ量を、入力行数 \(N\) に対するオーダーで説明すること。
+
+\item \textbf{プロファイル結果から改善対象を選ぶ}。
+自分の解析スクリプト、または 1 問目の 2 実装を関数へ分けたスクリプトを \code{python -m cProfile -s cumtime script.py} で測定せよ。出力の \code{ncalls}、\code{tottime}、\code{cumtime} の意味を説明し、累積時間の上位 3 関数を記録する。そのうち改善対象に選ぶ関数と、選ばない関数の理由をそれぞれ述べよ。
+\end{enumerate}
+
+性能改善は、速いコードを書くことだけを目的としない。高速化の前後で同じ結果が得られることを検証し、入力条件と測定方法を記録して初めて、改善を再現できる。次章の総合課題では、同時観測イベントの探索を題材として、読込み、検証、可視化、フィット、性能測定を一つの解析へ統合する。

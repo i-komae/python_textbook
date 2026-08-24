@@ -80,7 +80,9 @@ C 言語では、扱う変数が「メモリ空間を何ビットの箱として
 
 これに対して NumPy では、内部構造として C 言語の「純粋な数値の固定長な配列（ポインタからの連続オフセット）」と同じ状態をメモリ上に展開する。これにより、Python の無駄な管理部分を一切通さず、CPU や C 言語レベルの演算回路にデータを配列ごとそのまま流し込んで一気に処理（ベクタライズ計算）させることが可能になっている。
 
-なお、型の使い分けという観点では、現代のマシンにおける一般的な処理で、あえて単精度の \code{float32}（C言語における \code{float}）を使う場面は少なくなっている。現在でも GPU メモリの容量やバンド幅が逼迫する機械学習などの分野では単精度や半精度（16ビット）が積極的に効果を発揮するが、通常の科学技術計算やデータ解析を行う現代のパーソナルコンピュータでは計算誤差のリスクが少ない\textbf{倍精度 (\code{float64} = \code{double})} を標準として用いるのが主流であり安全である。特別なメモリ制約や速度要件がない限り、標準の \code{float64} をそのまま使用することで、無用な丸め誤差や桁落ちなどの問題を回避できる。
+浮動小数点型は、必要な精度と値域、配列の大きさ、入出力元の型、CPU や GPU の特性を基準に選ぶ。NumPy の多くの配列生成関数や Python の \code{float} から作る配列では \code{float64} が既定になり、反復計算や差の小さい値を扱う計算では有力な選択肢になる。一方、\code{float32} は 1 要素が 4 バイトであり、8 バイトの \code{float64} の半分で済むため、大きな画像、センサデータ、GPU 計算、メモリ転送が支配的な処理では有効である。元データが \code{float32} なら、必要性を検討せずに倍精度へ変換するとメモリだけが増える場合もある。
+
+型を変えるときは、速度だけでなく結果が必要な精度を満たすかを確認する。例えば \code{np.finfo(np.float32).eps} と \code{np.finfo(np.float64).eps} を表示すると、1 付近で区別できる相対的な刻み幅を比較できる。どちらの型でも、桁落ちや丸め誤差そのものがなくなるわけではない。基準値が決まっていない段階では \code{float64} から始め、メモリや転送が問題になった時点で \code{float32} でも解析結果が変わらないかを検証する方法が堅実である。
 
 \subsection{NumPy が速くなりやすい理由}
 
@@ -591,20 +593,21 @@ doubled_array = np_array * 2
 back_to_list = doubled_array.tolist()
 \end{lstlisting}
 
-\subsubsection{Pandas DataFrame との変換}
+\subsubsection{pandas DataFrame との変換}
 
-後述する Pandas DataFrame は、この NumPy 配列を「列」として束ねた拡張版である。分析の途中で NumPy 独自の計算関数を使いたい場合、DataFrame を NumPy に戻すことができる。Pandas の DataFrame・Series と NumPy アレイを相互変換するには、主に次のように書く。
+後述する pandas DataFrame は、列名と行ラベルを持つ表形式のデータ構造であり、列の内部では NumPy 配列や拡張配列が使われる。解析の途中で NumPy の関数を使いたい場合は、DataFrame や Series を NumPy 配列へ変換できる。pandas の DataFrame・Series と NumPy 配列を相互変換する基本形は次の通りである。
 
 \begin{lstlisting}[language=Python]
 import pandas as pd
 
-# NumPy アレイから pandas の DataFrame （二次元）に変換
+# NumPy 配列から pandas の DataFrame（二次元表）に変換
 df = pd.DataFrame(np_array, columns=["Value"])
 
-# Pandas のデータから NumPy アレイに戻す
-# \code{.to_numpy()} は背後で持っているC言語配列を直接取り出すため一瞬で終わる
+# pandas の列から NumPy 配列を得る
 values_array = df["Value"].to_numpy()
 \end{lstlisting}
+
+\code{to\_numpy()} がコピーを作るかどうかは、列の型、列数、必要な型変換に依存する。単一の数値列では元データとメモリを共有する場合もあるが、常に共有されるとは限らない。コピーの有無が性能や書換えに影響する場面では、\code{np.shares\_memory()} で確認し、必要なら \code{to\_numpy(copy=True)} で独立した配列を要求する。
 
 \subsection{公式資料の使い方}
 
@@ -612,13 +615,23 @@ NumPy の基礎を復習したいときは、NumPy quickstart~\cite{numpy_quicks
 
 \section{章末問題}
 
+USGS の CSV をまだ用意していない場合は、次の配列を入力として 1 問目と 2 問目を実行する。この配列は秒単位の発生時刻であり、意図的に未整列にしてある。
+
+\begin{lstlisting}[language=Python]
+times = np.array([720.0, 0.0, 60.0, 4200.0, 180.0, 780.0])
+\end{lstlisting}
+
 \begin{enumerate}
 \item \textbf{地震の発生時刻から発生間隔配列を作る}。
 第~\ref{chap:io}章で扱った CSV から \code{time} 列を読み、秒単位の数値配列へ変換せよ。その後で NumPy 配列へまとめ、\code{np.sort} と \code{np.diff} を使って隣り合う地震の発生間隔 \(\Delta t\) を求めよ。
+小規模入力では、整列後の時刻が \code{[0., 60., 180., 720., 780., 4200.]}、\(\Delta t\) が \code{[60., 120., 540., 60., 3420.]} になる。\code{np.sort()} が返す配列と \code{np.diff()} が返す配列について、\code{shape}、\code{dtype}、要素数が 1 減る理由を説明せよ。
 
 \item \textbf{発生間隔の基本統計とヒストグラムを NumPy だけで調べる}。
 \(\Delta t\) 配列に対して、平均値、0 秒超だけに絞った要素数、\([0, 60)\,\mathrm{s}\)、\([60, 600)\,\mathrm{s}\)、\([600, 3600)\,\mathrm{s}\) の 3 区間の個数を求めよ。さらに \code{np.histogram} を用いて 0 秒から 3600 秒までを等間隔ビンに分け、最も多いビンの範囲を報告せよ。
+小規模入力の平均値は 840 秒であり、0 秒超の要素数は 5 である。3 区間の個数は順に 0、4、1 になる。区間の右端を含めるかどうかが条件式と一致していることを確認し、\code{np.histogram()} が返す \code{counts} と \code{bin\_edges} の長さの関係も説明せよ。
 
 \item \textbf{発展課題}。
 発生間隔は短時間側に密集し、長時間側にはまばらに点が残ることが多い。そのため、等間隔ビンだけでは短時間側の構造が見えにくいことがある。たとえば \code{np.logspace(np.log10(1), np.log10(3600), 30)} のようにビン境界を作り、\(\Delta t\) のヒストグラムを対数ビンで作り直して、固定幅ビンの場合と見え方を比較せよ。余裕があれば、日本近海データを別に取得して同じ処理を行い、全球データとの違いも比較せよ。
 \end{enumerate}
+
+NumPy 配列は同じ型の数値を計算する場合に適している。一方、観測時刻、検出器名、信号値のように、意味と型が異なる列をまとめて扱うには表形式の構造が適している。次章では、NumPy の列演算を土台として、pandas で列名、欠損値、グループ集計、結合を扱う。

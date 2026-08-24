@@ -1,7 +1,7 @@
 \chapter{Matplotlib による可視化}
 \label{chap:matplotlib}
 
-Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python で図を描くための標準的なライブラリである。本章では、まずデータを手軽に可視化するための基本的なコードの書き方からはじめ、データの性質に応じた図の選び方（実践的な作図）を学ぶ。そして後半では、より複雑な図を制御するために必須となる「オブジェクト指向 API」と構成要素の考え方や、スタイルの管理について解説する。
+Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python で図を描くための代表的なライブラリである。本章では、最小限の作図コードを確認した後、データの性質に応じた図の選び方を扱う。後半では、複数のパネルや構成要素を制御するために、オブジェクト指向 API、Figure、Axes、Axis、Artist の関係とスタイルの管理方法を説明する。
 
 図はレポートの飾りではない。ヒストグラム\index{ひすとぐらむ@ヒストグラム}や散布図は、計算結果の妥当性を自分で確かめるための道具でもある。数値だけを並べるより、まず図にした方が異常に気付きやすいことは多い。
 
@@ -11,13 +11,15 @@ Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python で図を描くた�
 
 \subsection{最小限のヒストグラム}
 
+最初に、正規乱数を 2500 個生成し、40 本のビンへ数え上げて PDF に保存する。入力は \code{values}、作図処理は \code{plt.hist()}、出力先は \code{histogram.pdf} である。
+
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
 
 values = np.random.normal(loc=0.0, scale=1.2, size=2500)
 
-plt.hist(values, bins=40)  % \index{Matplotlib!hist@\code{hist()}}
+plt.hist(values, bins=40)
 plt.xlabel("value")
 plt.ylabel("count")
 plt.savefig("histogram.pdf")
@@ -46,7 +48,7 @@ x = np.linspace(0.0, 10.0, 60)
 y = np.exp(-x / 4.0) * (1.0 + 0.08 * np.sin(2.5 * x))
 
 fig, ax = plt.subplots(figsize=(6, 4))
-ax.plot(x, y, marker="o", label="sample A")  % \index{Matplotlib!plot@\code{plot()}}
+ax.plot(x, y, marker="o", label="sample A")
 ax.set_xlabel(r"$t\,[\mathrm{s}]$")
 ax.set_ylabel("signal")
 ax.set_title("Labeled line example")
@@ -194,7 +196,7 @@ ax2.scatter(lon, lat)
 
 \section{実践的な作図（データに応じた図の選択）}
 
-データ解析において、2つの変数の相関関係を見ることは非常に多い。しかし、これを「とりあえず」描画関数にかけるだけでは、重要な特徴を見落とす。データ量に応じた適切な図の選択プロセスを順番に見ていく。
+2 変数の関係を調べるときに、データ量を確認せず散布図を描くだけでは、点の重なりによって密度構造を見落とす場合がある。ここでは、データ点数と確認したい性質に応じて、散布図、透過表示、2 次元ヒストグラムを選ぶ手順を説明する。
 
 \subsection{相関の可視化：論理的改善ステップ}
 
@@ -284,7 +286,7 @@ fig.tight_layout()
 fig.savefig("subplots_example.pdf")
 \end{lstlisting}
 
-単純な \code{plt.plot()} ばかり使っていると、この「特定のパネル（\code{axes[0]}）に対して描画を命令する」という書き方に慣れるのに少し時間がかかるが、複雑な比較図を作る上では避けて通れない技法である。\code{Figure} や \code{Axes} についての詳細は、第~\ref{sec:matplotlob-object}節以降で述べる。
+単純な \code{plt.plot()} ばかり使っていると、この「特定のパネル（\code{axes[0]}）に対して描画を命令する」という書き方に慣れるのに少し時間がかかるが、複雑な比較図を作る上では避けて通れない技法である。\code{Figure} や \code{Axes} についての詳細は、第~\ref{sec:matplotlib-object}節以降で述べる。
 
 \subsection{単純な横並び以外: \code{subplot\_mosaic} と \code{GridSpec}}
 
@@ -424,7 +426,7 @@ fig.savefig("spectrum.png", dpi=150)
 同じ図でも、\code{spectrum.pdf} は拡大しても線と文字が崩れにくく、\code{spectrum.png} はスライド貼り付けや Web 掲載で扱いやすい。どちらが良いかは「図の複雑さ」と「最終的な使い道」で決まる。線図や通常のヒストグラムなら PDF を第一候補にし、巨大散布図やヒートマップでは PNG を検討する方が実務的である。
 
 
-\section{オブジェクト指向 API による複雑な図の管理}\label{sec:matplotlob-object}
+\section{オブジェクト指向 API による複雑な図の管理}\label{sec:matplotlib-object}
 
 \subsection{Figure, Axes, Axis, Artist の役割}
 
@@ -668,6 +670,8 @@ ax.plot(
 \label{fig:style-reference-example}
 \end{figure}
 
+図~\ref{fig:style-reference-example} では、マーカー、線種、色を組み合わせたときの見え方を比較できる。個々の指定と用途は、マーカーを表~\ref{tab:matplotlib-markers}、線種を表~\ref{tab:matplotlib-linestyles}、色を表~\ref{tab:matplotlib-colors} にまとめた。系列を区別するときは色だけに依存せず、マーカーや線種も併用すると、白黒印刷や色覚特性が異なる読者にも情報が伝わりやすい。
+
 \begin{table}[tbp]
 \centering
 \caption{よく使う marker の指定}
@@ -897,12 +901,25 @@ ax.plot(x_str, y, marker="o")
 
 \section{章末問題}
 
+USGS データと前章の \(\Delta t\) 配列がない場合は、次の小規模データを使う。課題では画面表示だけで終わらせず、指定したファイルを保存し、保存後に \code{Path(...).exists()} で存在を確認する。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+
+longitude = np.array([140.0, 141.2, 139.5, 142.0, 138.7])
+latitude = np.array([35.0, 36.1, 34.8, 37.0, 33.9])
+magnitude = np.array([3.2, 4.1, 2.8, 4.8, 3.7])
+dt = np.array([1.0, 4.0, 12.0, 60.0, 180.0, 900.0, 3600.0])
+\end{lstlisting}
+
 \begin{enumerate}
 \item \textbf{全球地震分布の散布図を作る}。
 USGS の CSV から \code{longitude}、\code{latitude}、\code{mag} を読み、横軸を経度、縦軸を緯度とする散布図を作れ。点の色でマグニチュードを表し、軸ラベル、カラーバー、タイトルを付けたうえで \code{figures/usgs\_global\_scatter.pdf} へ保存せよ。
+\code{fig, ax = plt.subplots()} の返り値、\code{scatter = ax.scatter(...)} の返り値、\code{fig.colorbar(scatter, ax=ax)} の第 1 引数と \code{ax} 引数の役割を説明せよ。\code{scatter.get\_array()} がマグニチュード配列と一致し、\code{len(fig.axes)} がカラーバーを含めて 2 になることを確認すること。
 
 \item \textbf{発生間隔ヒストグラムを対数軸で描く}。
 第~\ref{chap:numpy}章で作った \(\Delta t\) 配列を用い、発生間隔ヒストグラムを描け。少なくとも縦軸は対数表示にし、必要なら横軸も対数にして、どの表示が見やすいかを比較せよ。図中にはビンの意味が分かる軸ラベルと単位を書くこと。
+線形ビンの図と \code{np.logspace()} で作った対数ビンの図を 2 枚の Axes に並べ、\code{figures/interval\_comparison.pdf} へ保存せよ。\code{ax.set\_yscale("log")} と \code{ax.set\_xscale("log")} がデータ値そのものを変換するのではなく、Axis の表示尺度を変えることを説明する。0 以下の値を対数軸へ置けない理由も述べよ。
 
 \item \textbf{発展課題}。
 通常の散布図では、点がどの海溝や列島に沿って並んでいるかは読み取りにくい。海岸線付きの地図へ重ねたい場合は、Matplotlib だけではなく地図投影を扱う \code{cartopy} が必要になる。\code{cartopy} を導入し、同じ地震データを海岸線付きの地図へ重ねよ。必要な出発点は、
@@ -914,4 +931,7 @@ USGS の CSV から \code{longitude}、\code{latitude}、\code{mag} を読み、
 \item 日本近海図では \code{ax.set\_extent([122, 154, 20, 50], crs=ccrs.PlateCarree())} を使う
 \end{itemize}
 である。これらの使い方を検索し、地図付きの散布図を作成せよ。
+最小コードは、\code{import cartopy.crs as ccrs}、\code{fig, ax = plt.subplots(subplot\_kw=\{"projection": ccrs.PlateCarree()\})}、\code{ax.set\_global()}、\code{ax.coastlines()}、\code{ax.scatter(longitude, latitude, c=magnitude, transform=ccrs.PlateCarree())} の順に組み立てられる。\code{projection} は地図を描く Axes の座標系、\code{transform} は入力データの座標系を指定する。\code{figures/usgs\_map.pdf} を保存し、両者を同じ値にしていても役割が異なることを説明せよ。Cartopy が未導入なら、実行した導入コマンドと、導入前に出た例外名を記録すること。
 \end{enumerate}
+
+可視化によって分布の形、外れ値、残差の傾向を確認できると、次に検討すべき数値計算を選びやすくなる。次章では、図から得た仮説を SciPy の統計分布、フィット、補間、信号処理によって定量化する。

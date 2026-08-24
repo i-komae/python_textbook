@@ -3,7 +3,7 @@
 
 \section{シェルの基本と環境}
 \label{SEC:shell}
-本書では、ファイル操作やスクリプト実行をターミナル\index{たーみなる@ターミナル|textbf}から行う。まず言葉を分けておく。
+本書では、ファイル操作やスクリプト実行をターミナル\index{たーみなる@ターミナル|textbf}から行う。初めに、ターミナルとシェルの役割を区別する。
 
 \begin{itemize}
 \item ターミナル: 文字で命令を入力するためのアプリケーション
@@ -148,7 +148,7 @@ drwxr-xr-x  3 ikomae  staff  96  4月 12 23:19 scripts
   \item \code{data}：名前
 \end{itemize}
 
-先頭の1文字は種別を表し、\code{d} ならディレクトリ、\code{-} なら通常のファイルである。続く \code{rwxr-xr-x} はアクセス権を表している。アクセス権の詳しい意味は\ref{subsec:mod}~節で説明する。
+先頭の1文字は種別を表し、\code{d} ならディレクトリ、\code{-} なら通常のファイルである。続く \code{rwxr-xr-x} はアクセス権を表している。アクセス権の詳しい意味は第~\ref{subsec:mod}~節で説明する。
 
 リンク数は、ファイルやディレクトリに対して、ファイルシステムの中でいくつ参照があるかを表す値である。通常のファイルでは、ふつうに作成したものであれば多くの場合は \code{1} であり、入門の段階ではあまり深く気にしなくてよい。
 ディレクトリでは意味が少し異なる。 ディレクトリ構造により値が変化するが、その定義は環境によって異なるため、通常のファイルのように単純には読めない。
@@ -1059,6 +1059,8 @@ $ ./hello.py
 
 \section{章末問題}
 
+各課題では、コマンドを実行した事実だけでなく、入力、主要なオプション、出力の読み方を記録する。ネットワーク上のデータを取得できない場合でも、1 問目と、手元の任意の CSV を使った 3 問目は実行できる。
+
 \begin{enumerate}
 \item \textbf{章末問題用の作業ディレクトリを作る}。
 次のコマンドを実行し、どのようなディレクトリが作成されるか確認せよ。
@@ -1068,7 +1070,7 @@ $ cd earthquake_practice
 $ pwd
 $ ls
 \end{lstlisting}
-\code{\{\}} の役割について調べ、1行目のコマンドの意味を説明せよ。
+シェルは \code{earthquake\_practice/\{raw,compressed,scripts,figures,results\}} を、コンマで区切られた 5 通りのパスへ展開してから \code{mkdir} へ渡す。この機能をブレース展開という。\code{-p} は親ディレクトリも作り、対象が既存でもエラーにしない。\code{ls} の結果に 5 個の名前が現れることを確認し、\code{pwd} の出力がどのディレクトリを示すかも説明せよ。
 
 \item \textbf{USGS の地震カタログを取得し、シェルで中身を調べる}。
 本書の章末課題では、アメリカ地質調査所（\textbf{U}nited \textbf{S}tates \textbf{G}eological \textbf{S}urvey、\textbf{USGS}）が公開している地震カタログを使用する。
@@ -1083,6 +1085,7 @@ $ tail -n 3 raw/usgs_global_2024_01.csv
 $ grep -i "Japan" raw/usgs_global_2024_01.csv | head
 \end{lstlisting}
 どのコマンドが「件数確認」「冒頭確認」「末尾確認」「文字列検索」に対応しているかを整理してまとめよ。
+\code{curl} の \code{-L} は転送先が変更された場合に追従し、\code{-o} は保存先を指定する。\code{wc -l} の値にはヘッダ行も含まれるので、データ件数との違いを説明せよ。\code{grep -i} の \code{-i} と、後段の \code{head} が検索結果を何件に制限するかも記録すること。
 
 \item \textbf{同じ CSV を 3 種類の圧縮形式で扱う}。
 \code{gzip}、\code{tar.gz}、\code{zip} をそれぞれ 1 つずつ作り、圧縮前後の容量を確認せよ。
@@ -1092,8 +1095,12 @@ $ tar -czf compressed/usgs_global_2024_01.tar.gz raw/usgs_global_2024_01.csv
 $ zip -r compressed/usgs_global_2024_01.zip raw/usgs_global_2024_01.csv
 \end{lstlisting}
 \code{gzip -cd}、\code{tar -tzf}、\code{unzip -l} を使って中身を確認し、それぞれのオプションの意味についてまとめよ。
+\code{gzip -k} は元の CSV を残し、\code{tar -czf} は複数ファイルをまとめた書庫を gzip 圧縮し、\code{zip -r} は指定ディレクトリ以下を再帰的に格納する。\code{ls -lh} で各ファイルの容量を表示し、圧縮率を \code{圧縮後の容量 / 圧縮前の容量} として比較せよ。表示単位が丸められるため、厳密な比には \code{ls -l} または \code{stat} のバイト数を使うこと。
 
 \item \textbf{発展課題}。
 URL の構造について調べよ。
 カタログの URL（\url{https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31&limit=20000&orderby=time-asc}）を確認し、\code{https}、\code{earthquake.usgs.gov}、\code{usgs.gov}、\code{.gov}、\code{/fdsnws/event/1/query}、\code{?format=csv\&starttime=2024-01-01\&endtime=2024-01-31\&limit=20000\&orderby=time-asc} のそれぞれについて、名称や役割をまとめよ。
+ここでは順に、スキーム、ホスト名、登録ドメイン、トップレベルドメイン、パス、クエリ文字列を表す。クエリ文字列は \code{\&} で複数の \code{名前=値} を区切る。\code{format}、\code{starttime}、\code{endtime}、\code{limit}、\code{orderby} が取得結果をどう変えるかを、2 問目の出力と対応させて説明せよ。
 \end{enumerate}
+
+シェルでファイルの所在、内容、権限、入出力を確認できれば、Python の導入後も実行されるプログラムと保存先を追跡できる。次章では、\code{PATH} と実行ファイルの知識を用いて、Python のバージョン、仮想環境、プロジェクトの依存関係を管理する。

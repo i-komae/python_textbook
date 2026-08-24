@@ -1,5 +1,7 @@
 \chapter{Git と GitHub の基本}
 \label{app:git}
+\index{git@Git|textbf}
+\index{github@GitHub|textbf}
 
 \section{Git の基本概念}
 
@@ -13,6 +15,8 @@ Git は、手元のファイルの変更履歴を記録するためのソフト�
 したがって、\code{git init}、\code{git add}、\code{git commit} は Git の話であり、\code{git push} で GitHub へ送る段階になって初めて GitHub が関係してくる。
 
 \subsection{リポジトリと公開範囲}
+\index{りぽじとり@リポジトリ|textbf}
+\index{こうかいはんい@公開範囲|textbf}
 
 リポジトリは、コード、データ、履歴をまとめて管理する単位である。GitHub へ置く場合は、公開範囲も意識する必要がある。
 
@@ -25,6 +29,8 @@ Git は、手元のファイルの変更履歴を記録するためのソフト�
 授業用の配布物、研究中のコード、機密データを含むリポジトリでは、公開範囲の設定を誤ると問題になる。GitHub で新しいリポジトリを作るときは、まず visibility を確認した方がよい。
 
 \subsection{Git で何をしているのか}
+\index{すてーじんぐえりあ@ステージングエリア|textbf}
+\index{わーきんぐつりー@ワーキングツリー|textbf}
 
 Git は、ファイルを 1 回で全部自動保存してくれるわけではない。ふつうは次の 3 段階で進む。
 
@@ -49,6 +55,7 @@ Git は、ファイルを 1 回で全部自動保存してくれるわけでは�
 \section{ローカルで履歴を作る}
 
 \subsection{最初の設定}
+\index{git config@\code{git config}|textbf}
 
 最初に、自分の名前とメールアドレスを設定しておく。
 
@@ -60,6 +67,7 @@ $ git config --global user.email "your_email@example.com"
 これをしておかないと、コミット時に誰の変更なのかが分からなくなる。
 
 \subsection{新しいリポジトリを作る}
+\index{git init@\code{git init}|textbf}
 
 まだ Git 管理されていないディレクトリなら、\code{git init} で始める。
 
@@ -73,6 +81,10 @@ $ git status
 \code{git status} は最重要コマンドである。今どのファイルが未追跡か、どれが変更済みか、何がコミット待ちかを確認できる。迷ったらまず \code{git status} を見る、という習慣を付けるとよい。
 
 \subsection{編集、確認、記録の流れ}
+\index{git status@\code{git status}|textbf}
+\index{git diff@\code{git diff}|textbf}
+\index{git add@\code{git add}|textbf}
+\index{git commit@\code{git commit}|textbf}
 
 日常的な流れは、編集して、差分を確認して、必要なものだけをコミットする、である。
 
@@ -112,6 +124,7 @@ $ git diff --cached
 この 2 回の \code{diff} を見分けられるようになると、Git の挙動がかなり分かりやすくなる。
 
 \subsection{\code{.gitignore} を使って除外する}
+\index{gitignore@\code{.gitignore}|textbf}
 
 生成物まで毎回コミットすると、履歴が見にくくなる。Python 解析なら、仮想環境、キャッシュ、ビルド成果物などは除外することが多い。
 
@@ -131,6 +144,7 @@ dist/
 このファイルを作ると、まだ追跡されていない \code{.venv/} や \code{build/} は \code{git status} に出にくくなり、誤ってコミットしにくくなる。
 
 \subsubsection{すでに追跡済みなら \code{git rm --cached} が必要}
+\index{git rm cached@\code{git rm --cached}|textbf}
 
 \code{.gitignore} は「これから追跡しない」ための設定である。すでに一度コミットしたファイルには、そのままでは効かない。
 
@@ -148,6 +162,7 @@ $ git commit -m "Stop tracking generated files"
 \section{GitHub と接続する}
 
 \subsection{既存のリポジトリを持ってくる}
+\index{git clone@\code{git clone}|textbf}
 
 他人のプロジェクトや GitHub 上の教材は、\code{git clone} で手元へコピーする。
 
@@ -160,6 +175,8 @@ $ git remote -v
 \code{git clone} は、履歴も含めて手元へ持ってくる。\code{git remote -v} は、どの URL が接続先として設定されているかを確認する。本書では、GitHub から取得するときも push するときも SSH URL を使う方針を勧める。公開鍵の準備は付録~\ref{app:ssh} を参照してほしい。
 
 \subsection{手元のリポジトリを GitHub へ初めて載せる}
+\index{りもーとりぽじとり@リモートリポジトリ|textbf}
+\index{git remote@\code{git remote}|textbf}
 
 ここまでは「GitHub 上にあるものを取得する」話だったが、逆に、手元で \code{git init} して育てたプロジェクトを自分の GitHub へ載せたい場面も多い。その場合は、まず GitHub 側で空のリポジトリを作り、次に手元のリポジトリから接続先を登録して push する。
 
@@ -214,6 +231,8 @@ $ git remote -v
 教材を別のリポジトリから複製して流用した場合や、HTTPS から SSH へ切り替えたい場合に、この操作が必要になることがある。
 
 \subsection{GitHub と同期する}
+\index{git pull@\code{git pull}|textbf}
+\index{git push@\code{git push}|textbf}
 
 ローカルでコミットしただけでは、まだ GitHub には反映されない。GitHub 側から最新を取り込むのが \code{pull}、手元のコミットを送るのが \code{push} である。
 
@@ -225,6 +244,8 @@ $ git push origin main
 \code{git pull --ff-only} は、自分がまだ追加のコミットを持っていないときだけ安全に進める書き方である。履歴が分岐している場合は止まるので、意図しないマージを避けやすい。
 
 \subsection{GitHub で使う URL には HTTPS と SSH がある}
+\index{github@GitHub!https@HTTPS}
+\index{github@GitHub!ssh@SSH}
 
 GitHub のリポジトリ URL には、少なくとも HTTPS と SSH の 2 通りがある。
 
@@ -239,6 +260,8 @@ HTTPS は見慣れた URL で扱いやすい。一方 SSH は、公開鍵認証�
 \section{認証と最小ワークフロー}
 
 \subsection{GitHub の認証: SSH 鍵を基本にし、必要なら PAT}
+\index{github@GitHub!にんしょう@認証|textbf}
+\index{pat@個人用アクセストークン（PAT）|textbf}
 
 GitHub では、HTTPS 経由の Git 操作で通常のアカウントパスワードは使えない。現在は、SSH 鍵を登録して使うか、個人用アクセストークン (PAT) を使うのが基本である。本書では SSH 鍵を使う方法を標準とし、HTTPS + PAT は事情がある場合の代替手段として扱う。
 

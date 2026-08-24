@@ -1,11 +1,13 @@
 \chapter{正規表現の基本}
 \label{app:regex}
+\index{せいきひょうげん@正規表現|textbf}
 
 正規表現は、文字列の集合を短く記述するための書き方である。\code{grep}、\code{awk}、Python の \code{re} モジュールなどで共通して使われ、ログの抽出、ファイル名の検査、検出器 ID の選別、時刻文字列の確認といった場面で役に立つ。ここでは、本文で触れた \code{grep} や \code{awk} の延長として、解析で本当に必要になる範囲をまとめる。
 
 \section{正規表現とは何か}
 
 \subsection{文字どおりの一致とメタ文字}
+\index{めたもじ@メタ文字|textbf}
 
 最初の一歩は、普通の文字列検索と正規表現の違いを区別することである。\code{det\_A} という文字列だけを探したいなら、文字をそのまま並べればよい。
 
@@ -30,6 +32,7 @@ $
 たとえば \code{det\_.} は \code{det\_A} にも \code{det\_B} にも一致する。\code{.} は「任意の 1 文字」を表すからである。逆に、ピリオドそのものを探したいなら、前にバックスラッシュを付けて \texttt{\textbackslash.} のようにエスケープしなければならない。これは \code{+} や \code{?} でも同じである。
 
 \subsection{ワイルドカードとの違い}
+\index{わいるどかーど@ワイルドカード}
 
 シェルのワイルドカードと正規表現は似て見えるが、同じものではない。\code{ls *.txt} の \code{*} は「任意の文字列」を表すが、正規表現の \code{*} は「直前の要素の 0 回以上のくり返し」を表す。したがって、正規表現で「任意の文字列」を書きたいときは \code{.*} と書く。
 
@@ -52,6 +55,7 @@ $
 \section{よく使う部品}
 
 \subsection{アンカー（行頭と行末）}
+\index{あんかー@アンカー（正規表現）|textbf}
 
 \code{\textasciicircum} は行頭、\code{\$} は行末を表す。したがって、文字列の一部ではなく「行全体がその形である」ことを確かめたいときに使う。
 
@@ -64,6 +68,7 @@ $ grep '^det_A$' detectors.txt
 1 行目は \code{ERROR} で始まる行、2 行目は \code{txt} で終わる行、3 行目は行全体がちょうど \code{det\_A} である行だけを取る。特に 3 行目のように両端をアンカーで挟むと、\code{det\_AB} や \code{xdet\_A} が紛れ込むのを防げる。
 
 \subsection{文字クラス \code{[...]} と代表的な省略記法}
+\index{もじくらす@文字クラス|textbf}
 
 \code{[abc]} は \code{a} か \code{b} か \code{c} の 1 文字、\code{[A-Z]} は英大文字 1 文字を表す。検出器名やセンサー番号のように、限られた候補から 1 文字だけ変わる文字列を扱うときに便利である。
 
@@ -88,6 +93,7 @@ re.search(r"\s+", "det_A   15.2")
 ただし、\code{grep} や \code{awk} では \code{\textbackslash d} や \code{\textbackslash s} がそのまま使えないことがある。コマンドラインでは \code{[0-9]} や \code{[[:space:]]} を使う方が移植性が高い。
 
 \subsection{量指定子 \code{*}, \code{+}, \code{?}}
+\index{りょうしていし@量指定子|textbf}
 
 量指定子は、直前の要素が何回くり返されるかを表す。\code{*} は 0 回以上、\code{+} は 1 回以上、\code{?} は 0 回または 1 回である。
 
@@ -155,6 +161,8 @@ if match:
 \section{Python の \code{re} と \code{grep}/\code{awk} の使い分け}
 
 \subsection{Python では raw string を使う}
+\index{raw string@raw string|textbf}
+\index{re module@\code{re} モジュール|textbf}
 
 Python の文字列中で \code{\textbackslash} を多用すると読みにくくなる。そのため、正規表現を書くときは \code{r"..."} のような raw string を使うのが基本である。
 
@@ -168,6 +176,9 @@ print(bool(pattern.fullmatch("det_A12")))
 raw string を使わないと、\texttt{"\textbackslash\textbackslash d+"} のようにバックスラッシュを二重に書かなければならない。正規表現の意図が見えにくくなるので、特別な事情がなければ raw string を選ぶ方がよい。
 
 \subsection{\code{search}, \code{match}, \code{fullmatch} を使い分ける}
+\index{re module@\code{re} モジュール!search@\code{search}}
+\index{re module@\code{re} モジュール!match@\code{match}}
+\index{re module@\code{re} モジュール!fullmatch@\code{fullmatch}}
 
 \code{re.search} は文字列のどこかに一致があればよいとき、\code{re.match} は先頭から一致していればよいとき、\code{re.fullmatch} は文字列全体がその形かを確かめたいときに使う。ファイル名や識別子を検証するときは、意図せず余分な文字が混ざらないよう \code{fullmatch} を使う方が安全である。
 

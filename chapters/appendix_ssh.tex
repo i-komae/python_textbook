@@ -1,11 +1,14 @@
 \chapter{SSH, 鍵認証, ファイル転送}
 \label{app:ssh}
+\index{ssh@SSH|textbf}
+\index{かぎにんしょう@鍵認証|textbf}
 
 \section{SSH の基本}
 
 SSH は、離れたマシンへ安全に接続してコマンドを実行するための仕組みである。研究室や計算サーバーへ入り、大きなデータ処理や長時間ジョブを回すときによく使う。GitHub へ SSH で接続するときにも同じ仕組みを使うが、GitHub はシェルへログインする相手ではなく、Git 操作の認証先である点は区別しておいた方がよい。
 
 \subsection{サーバーへ接続する}
+\index{ssh command@\code{ssh}|textbf}
 
 最も基本的な形は次である。
 
@@ -22,6 +25,9 @@ $ ssh -p 2222 user@server.example.jp
 接続後は、ローカルのターミナルと似た形でコマンドを打てる。ただし、そこで見えているファイルは自分の手元ではなく、サーバー側のファイルである。この区別が曖昧になると事故の原因になるので、\code{hostname}、\code{whoami}、\code{pwd} を見て今どこにいるかを確かめる習慣を持った方がよい。
 
 \subsection{SSH 鍵を作る}
+\index{ssh-keygen@\code{ssh-keygen}|textbf}
+\index{こうかいかぎ@公開鍵|textbf}
+\index{ひみつかぎ@秘密鍵|textbf}
 
 毎回パスワードを打つ代わりに、SSH 鍵を使うことが多い。鍵は公開鍵と秘密鍵の 2 つ 1 組であり、公開鍵をサーバーへ登録し、秘密鍵は自分だけが持つ。
 
@@ -44,6 +50,7 @@ $ chmod 644 ~/.ssh/id_ed25519.pub
 \end{lstlisting}
 
 \subsection{公開鍵をサーバーへ登録する}
+\index{ssh-copy-id@\code{ssh-copy-id}|textbf}
 
 公開鍵をサーバーへ登録する最も簡単な方法は \code{ssh-copy-id} である。
 
@@ -70,6 +77,7 @@ $ cat ~/.ssh/id_ed25519.pub
 表示された 1 行全体を、サーバー側の \code{\textasciitilde/.ssh/authorized\_keys} へ追記する。サーバーへ通常のパスワードログインができるなら、自分でログインして追記してもよい。
 
 \subsection{ssh-agent を使う}
+\index{ssh-agent@\code{ssh-agent}|textbf}
 
 パスフレーズ付きの鍵を使う場合は、\code{ssh-agent} に読み込ませておくと毎回の入力を減らせる。
 
@@ -81,6 +89,7 @@ $ ssh-add ~/.ssh/id_ed25519
 \section{接続設定と GitHub 連携}
 
 \subsection{\code{\textasciitilde/.ssh/config} を書く}
+\index{ssh config@\code{\textasciitilde/.ssh/config}|textbf}
 
 接続先が増えると、毎回長いホスト名やポート番号や鍵ファイル名を書くのは面倒になる。そこで \code{\textasciitilde/.ssh/config} を使う。設定ファイルの中身は次のようになる。
 
@@ -117,6 +126,9 @@ GitHub CLI を使う場合は、既存の鍵を検出してアップロードす
 小さなファイルを 1 回だけ送るなら \code{scp} でもよいが、解析ではディレクトリ全体を何度も同期することが多い。その場合は \code{rsync} を使う方が自然である。
 
 \subsection{\code{scp} の最小例}
+\index{scp@\code{scp}|textbf}
+
+\code{scp} では、ローカルとリモートのどちらを送信元に書くかによって転送方向が決まる。両方向の最小例を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ scp result.csv user@server.example.jp:~/work/
@@ -126,6 +138,7 @@ $ scp user@server.example.jp:~/work/result.csv .
 1 行目は手元からサーバーへ送り、2 行目はサーバーから手元へ持ってくる。ディレクトリごと送りたい場合は \code{-r} を付ける。
 
 \subsection{\code{rsync} を推奨する理由}
+\index{rsync@\code{rsync}|textbf}
 
 \code{rsync} は、差分だけを転送し、途中で止まっても再開しやすく、除外パターンも柔軟に書ける。そのため、解析用ディレクトリやコード一式をサーバーへ送る用途では \code{scp} より向いている。
 
@@ -143,6 +156,8 @@ $ rsync -aP ./analysis/ user@server.example.jp:~/work/analysis/
 \item[\code{--exclude}] 特定のファイルやディレクトリを転送対象から除外する。
 \end{description}
 
+次の例では、アーカイブモードと進捗表示を有効にし、転送先で再作成できる仮想環境、キャッシュ、ビルド成果物を除外する。
+
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rsync -aPv \
   --exclude='.venv/' \
@@ -155,6 +170,7 @@ $ rsync -aPv \
 仮想環境、キャッシュ、ビルド成果物はサーバー側で作り直せることが多いので、転送から外した方が軽くなる。
 
 \subsubsection{末尾のスラッシュに注意する}
+\index{rsync@\code{rsync}!まつびのすらっしゅ@末尾のスラッシュ}
 
 \code{rsync} では、送信元パスの末尾に \code{/} を付けるかどうかで意味が変わる。
 
@@ -163,4 +179,4 @@ $ rsync -aP analysis user@server:~/work/
 $ rsync -aP analysis/ user@server:~/work/analysis/
 \end{lstlisting}
 
-1 行目は \code{analysis} というディレクトリごと送る。2 行目は \code{analysis} の中身を送る。この違いは非常に重要であり、意図しない階層を作る原因になりやすい。
+1 行目は \code{analysis} というディレクトリごと送る。2 行目は \code{analysis} の中身を送る。末尾のスラッシュを取り違えると転送先の階層が 1 段ずれるため、初回は \code{--dry-run} を加えて転送対象を確認する。

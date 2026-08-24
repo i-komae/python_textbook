@@ -7,13 +7,33 @@
 
 \subsection{ファイルを開き、読み書きの基本を押さえる}
 
-Python でテキストファイルを読むときの基本は \code{open}\index{open@\code{open}|textbf} である。さらに \code{with} を組み合わせると、読み終えた後に自動でファイルが閉じられる。テキストファイルを 1 行ずつ読む基本形は次のようになる。
+Python でテキストファイルを読むときの基本は \code{open}\index{open@\code{open}|textbf} である。さらに \code{with} を組み合わせると、処理が正常に終わった場合だけでなく、途中で例外が発生した場合にもファイルが閉じられる。例として、\code{sample.txt} に次の 3 行が入っているとする。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={sample.txt}]
+run 1: 12.4
+run 2: 10.1
+run 3: 14.8
+\end{lstlisting}
+
+このファイルを 1 行ずつ表示するコードは次のようになる。
 
 \begin{lstlisting}[language=Python]
+path = "sample.txt"
+
 with open(path, "r", encoding="utf-8") as f:
     for line in f:
         print(line.rstrip())
 \end{lstlisting}
+
+実行結果は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+run 1: 12.4
+run 2: 10.1
+run 3: 14.8
+\end{lstlisting}
+
+第 1 引数の \code{path} は開くファイルの場所、\code{"r"} は読込みモード、\code{encoding="utf-8"} は文字を UTF-8 として解釈する指定である。\code{as f} によって、開いたファイルを表すオブジェクトを変数 \code{f} で参照する。\code{for line in f} は全行を一度にメモリへ置かず、1 行ずつ取り出す。
 
 \code{read} でまとめて読む方法もあるが、大きなファイルでは 1 行ずつ読む方が安全である。まずはこの形に慣れておくとよい。
 
@@ -26,12 +46,21 @@ with open(path, "r", encoding="utf-8") as f:
 \begin{lstlisting}[language=Python]
 from pathlib import Path
 
-root = Path("data")
-path = root / "2026" / "04" / "sample.txt"
+root = Path(".")
+path = root / "sample.txt"
 
 print(path.exists())
 print(path.name)
 \end{lstlisting}
+
+この例でファイルが存在する場合、出力は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+True
+sample.txt
+\end{lstlisting}
+
+\code{exists()} はパスが存在するかを真偽値で返し、\code{name} は末尾のファイル名だけを返す。\code{root / "sample.txt"} の \code{/} は除算ではなく、\code{Path} オブジェクトに対してパス要素を結合する演算子である。例えば \code{Path("data") / "2026" / "04" / "sample.txt"} とすれば、複数階層のパスも同じ方法で組み立てられる。
 
 \code{/} 演算子でパスをつなげられるため、文字列連結より読みやすい。ファイル名だけ取りたい、親ディレクトリへ戻りたい、拡張子を変えたい、といった操作も自然に書ける。解析コードでは、パス操作を文字列で済ませるより安全なことが多い。\code{pathlib} を用いて新しく出力先を作る処理は次のようになる。
 
@@ -40,6 +69,8 @@ outdir = Path("output")
 outdir.mkdir(parents=True, exist_ok=True)
 outfile = outdir / "summary.txt"
 \end{lstlisting}
+
+\code{parents=True} は \code{output} より上位の未作成ディレクトリも必要に応じて作る指定であり、\code{exist\_ok=True} は既存のディレクトリをエラーにしない指定である。ただし、同名の通常ファイルが存在する場合はエラーになる。
 
 ディレクトリがなければ作る、すでにあってもエラーにしない、という処理は解析コードで非常によく使う。こうした定型操作を安全に書ける点でも \code{pathlib} は便利である。
 
@@ -55,6 +86,8 @@ with open("out.txt", "w", encoding="utf-8") as f:
     f.write("hello\n")
 \end{lstlisting}
 
+\code{readline()} の戻り値には末尾の改行が含まれる。\code{write()} は書き込んだ文字数を返すが、改行を自動では補わないため、行末が必要なら \verb|"\n"| を明示する。この例を実行すると、\code{out.txt} の内容は \code{hello} と改行になる。
+
 \code{readline} は 1 行だけ確認したいとき、\code{write} は整形済み文字列をそのまま出したいときに便利である。大きな入力全体を一気に読む前に、最初の数行だけ確認するという使い方もよく行う。
 
 \subsubsection{複数のファイルを集める}
@@ -65,7 +98,21 @@ with open("out.txt", "w", encoding="utf-8") as f:
 import glob
 
 paths = sorted(glob.glob("data/**/*.txt", recursive=True))
+print(f"count = {len(paths)}")
+for path in paths[:3]:
+    print(path)
 \end{lstlisting}
+
+例えば対象が 3 ファイルなら、出力は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+count = 3
+data/2025/run01.txt
+data/2026/run01.txt
+data/2026/run02.txt
+\end{lstlisting}
+
+パターン中の \code{*} は同じ階層の任意の文字列、\code{**} は \code{recursive=True} と組み合わせたときに複数階層へ一致する。\code{paths[:3]} は確認のために先頭 3 件だけを表示するスライスであり、処理対象を 3 件へ制限しているわけではない。
 
 \code{glob.glob} はシェルのワイルドカードに近い感覚で使える。複数ファイルを扱う処理では、最初に見つかった件数や先頭数件のパスを表示して確認する習慣を付けておくとよい。
 
@@ -91,6 +138,21 @@ print(first_row["time"])
 print(first_row["mag"])
 \end{lstlisting}
 
+ここで \code{events.csv} の先頭が次の内容だとする。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={events.csv}]
+time,mag,place
+2026-04-04T12:00:00Z,3.2,"Offshore, Japan"
+2026-04-04T12:05:00Z,2.8,Tokyo
+\end{lstlisting}
+
+先頭データ行の \code{time} と \code{mag} が文字列として読み込まれるため、実行結果は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+2026-04-04T12:00:00Z
+3.2
+\end{lstlisting}
+
 \code{DictReader}\index{dictreader@\code{DictReader}|textbf} は 1 行目を列名として読み、その後の各行を辞書として返す。したがって \code{row["mag"]} のように列名で値を取り出せる。\code{newline=""} を付けるのは、CSV モジュールが改行を正しく扱いやすくするためである。
 
 列の中にカンマを含む場合でも、CSV の規則に従って引用されていれば \code{csv} モジュール側で処理してくれる。つまり、自由記述の文字列や名前の列を含む CSV では、\code{split(",")} よりこの方法の方が安全である。
@@ -108,6 +170,14 @@ date_text = columns[1]
 time_text = columns[2]
 value = float(columns[3])
 status = columns[4]
+
+print(record_id, date_text, time_text, value, status)
+\end{lstlisting}
+
+\code{split()} は引数を省略すると連続する空白を一つの区切りとして扱う。\code{int()} と \code{float()} が文字列を数値へ変換するため、出力は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+17 2026-04-04 12:34:56 15.2 OK
 \end{lstlisting}
 
 ここで重要なのは、どの列をどの型で持つかを自分で決めることである。後で pandas を使う場合でも、この感覚を持っていると列の意味を見失いにくい。
@@ -126,7 +196,7 @@ with open("summary.txt", "w", encoding="utf-8") as f:
         f.write(line + "\n")
 \end{lstlisting}
 
-\code{"w"} は新しく書くモード、\code{"a"} は追記モードである。既存ファイルを上書きしてよいのか、別名で保存すべきかは、実験ノートやレポート再現性にも関わる。出力ファイル名の設計は、解析の一部として考えるべきである。
+このコードの実行後、\code{summary.txt} には \code{lines} の 3 要素が 1 行ずつ保存される。\code{"w"} は、ファイルが存在すれば内容を空にしてから書き、存在しなければ新しく作るモードである。これに対して \code{"a"} は既存内容の末尾へ追記する。既存ファイルを上書きしてよいのか、別名で保存すべきかは、実験ノートやレポートの再現性にも関わる。出力ファイル名の設計も解析手順に含まれる。
 
 \subsubsection{文字列整形}
 
@@ -139,6 +209,8 @@ sigma = 0.27182
 text = f"mean = {mean:.3f}, sigma = {sigma:.3f}"
 print(text)
 \end{lstlisting}
+
+実行結果は \code{mean = 3.142, sigma = 0.272} となる。\code{f} は固定小数点形式、\code{.3} は小数点以下の桁数を指定する。これは表示上の丸めであり、変数 \code{mean} と \code{sigma} に保存された値そのものは変化しない。
 
 \code{:.3f} は小数点以下 3 桁で表示するという意味である。解析結果をレポートへ貼る前に、このような整形で見やすくしておくと、図や本文との対応が取りやすい。
 
@@ -160,7 +232,17 @@ with open("config.json", "w", encoding="utf-8") as f:
 
 with open("config.json", "r", encoding="utf-8") as f:
     loaded_config = json.load(f)
+
+print(loaded_config)
 \end{lstlisting}
+
+\code{indent=2} は入れ子を 2 空白で字下げし、人間が読みやすい JSON を保存する指定である。読み戻した結果は次のように表示される。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+{'threshold': 3.5, 'bins': 40}
+\end{lstlisting}
+
+JSON のオブジェクトは Python では辞書として復元される。
 
 大きな表形式データの本体を JSON で持つのは効率が悪いことも多いが、設定や要約結果を保存するには便利である。人間が読める形式と、Python が簡単に読める形式を両立しやすい。
 
@@ -178,6 +260,16 @@ with open("result.pkl", "wb") as f:
 
 with open("result.pkl", "rb") as f:
     loaded_result = pickle.load(f)
+
+print(loaded_result["mean"])
+print(loaded_result["values"])
+\end{lstlisting}
+
+復元後の出力は次の通りである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+3.14
+[1.0, 2.0, 3.0]
 \end{lstlisting}
 
 \code{"wb"} と \code{"rb"} の \code{b} はバイナリモードを意味する。JSON と違って人間には読めないが、Python では構造を保ったまま簡単に保存できる。ただし、\code{pickle} は Python 専用であり、他言語との受け渡しには向かない。また、信頼できない \code{.pkl} ファイルを \code{load} してはならない。共有用の正式な保存形式というより、自分の解析途中結果を手早く再利用するためのローカル形式と考える方が安全である。
@@ -196,7 +288,11 @@ from datetime import datetime
 text = "2026-04-04 12:34:56.123456"
 dt = datetime.strptime(text, "%Y-%m-%d %H:%M:%S.%f")
 unix_time = dt.timestamp()
+print(dt)
+print(unix_time)
 \end{lstlisting}
+
+\code{strptime()} の第 1 引数は変換する文字列、第 2 引数は文字列の形式である。\code{\%Y}、\code{\%m}、\code{\%d} は年、月、日を表し、\code{\%f} はマイクロ秒を表す。\code{timestamp()} は Unix epoch からの秒数を返すが、タイムゾーン情報を持たない \code{datetime} の解釈は実行環境のローカルタイムゾーンに依存する。UTC のログでは、タイムゾーンを明示するか、後述する Astropy の \code{Time} を使う必要がある。
 
 秒単位の差を見たいのか、より細かい時間差を見たいのかによって、どの単位で値を持つかは変わる。ただし、どの表現を選んでも、一貫して使うことが大切である。
 
@@ -215,22 +311,33 @@ unix_time = dt.timestamp()
 \textbf{問題点}: コンピュータはディスク上の文字列（例：「1.2345」という 6 文字の羅列）を、計算に使える実数値にいちいち変換（パース）しなければならない。データ量が数GBに及ぶと、この「文字列から実数への変換処理」だけで何十分も待たされることになる。
 
 \subsubsection{Step 2: バイナリ形式への移行と、どれを選ぶかの判断基準}
-メモリ上の数値を人間には読めない生のバイト列としてそのままファイルに記録する「バイナリ形式」を使えば、読み込み時間は一瞬（ディスクの転送速度の限界）になる。
+バイナリ形式は、数値を文字列から変換する処理を省ける場合があり、CSV より短時間で読み書きできることが多い。ただし、実際の時間はファイルサイズ、圧縮方式、記憶装置、列数、読み込む範囲、ライブラリの実装に左右される。バイナリ形式に変えただけで、常に記憶装置の転送速度だけが上限になるわけではない。
 
 しかし、バイナリ形式にはいくつかデファクトスタンダードがあり、目的に合わせて選ばなければならない。
 
 \begin{itemize}
     \item \textbf{NPY / NPZ (NumPy標準)}: NumPyだけで完結する小さな解析なら最も手軽。ただし、Python・NumPy 以外（C++やRなど）からは読みづらく使い捨てになりがちである。
     \item \textbf{Pickle / PKL}: Python オブジェクトをそのまま保存できるため、中間結果や学習済みモデルの一時保存に便利である。ただし、Python 以外ではほぼ使えず、信頼できないファイルを読み込んではならない。共同研究の交換形式というより、ローカルな作業用キャッシュとして使うべき形式である。
-    \item \textbf{HDF5}: 大規模な数値データをディレクトリの階層構造のように管理する形式。C/C++（Geant4など）、Fortran、R 等さまざまな言語の公式ライブラリが存在する。他のグループや別言語のプログラムにデータを渡す場合は、HDF5 を選ぶのが最も安全で汎用性が高い。
-    \item \textbf{Parquet}: 列指向のバイナリフォーマット。後述する Pandas や Polars などの DataFrame をそのまま保存でき、特定の列だけを高速に読み込むことが得意。Hadoop や Spark などのビッグデータエコシステムでも標準的である。分析チーム内での巨大データのやり取りにはこれが現在の最強の選択肢である。
+    \item \textbf{HDF5}: 大規模な数値データを階層構造で管理できる形式である。多次元配列を部分的に読み書きし、データとメタデータを一つのファイルへまとめたい場合に向く。C/C++、Fortran、R などからも利用できるが、受渡し相手が使うライブラリとデータ構造を事前に確認する必要がある。
+    \item \textbf{Parquet}: 列指向のバイナリ形式である。pandas や Polars から表を保存し、必要な列だけを読む用途に向く。行単位の頻繁な更新より、列の選択、集計、複数ファイルの一括処理と相性がよい。
 \end{itemize}
 
-解析の初期段階ではデータの中身を目視確認するために CSV を使うことが多いが、大量のイベントデータを何回も読み直す段階になったら、\textbf{必ず最初に Parquet や HDF5 への変換スクリプトを書いてバイナリ化する}ことが全体を高速化する第一歩である。\code{.pkl} はその補助として、途中結果や作業用キャッシュを手元で素早く保存する用途に向いている。
+解析の初期段階では、中身を目視でき、他のソフトウェアでも読みやすい CSV が役立つ。大量のイベントデータを繰り返し読むことが実測上のボトルネックになった場合は、変換手順と列型を記録した上で Parquet や HDF5 を中間形式として導入するとよい。小規模なデータや一度しか読まないデータでは、変換時間と形式管理の手間が利点を上回ることもある。\code{.pkl} はその補助として、信頼できる環境内で途中結果や作業用キャッシュを保存する用途に向いている。
 
 Parquet は「保存形式」の名前であり、\code{pyarrow} はその形式を pandas から読み書きする代表的な実装の一つである。したがって、「Parquet を使う」と「\code{pyarrow} を入れる」は同じ話ではない。多くの環境では \code{read\_parquet()} や \code{to\_parquet()} の背後で \code{pyarrow} が使われるため、これが入っていないと Parquet を扱えないことがある。
 
 \section{章末問題}
+
+第~\ref{chap:shell}章で USGS の CSV を取得していない場合は、次の内容を \code{raw/usgs\_global\_2024\_01.csv} として保存すれば、同じ課題を小規模な入力で実行できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={raw/usgs\_global\_2024\_01.csv}]
+time,latitude,longitude,mag,place
+2024-01-01T00:00:00.000Z,35.0,140.0,3.2,"Offshore, Japan"
+2024-01-01T00:05:00.000Z,36.0,141.0,,Japan
+2024-01-01T00:12:30.000Z,34.5,139.5,2.8,Tokyo
+\end{lstlisting}
+
+この小規模入力では、ヘッダを除くデータ行数は 3、最初と最後の時刻はそれぞれ \code{2024-01-01T00:00:00.000Z} と \code{2024-01-01T00:12:30.000Z}、空欄を除くマグニチュードの最小値と最大値は 2.8 と 3.2 になる。自分の出力がこれらと一致することを確認してから、実データへ進むこと。
 
 \begin{enumerate}
 \item \textbf{USGS の CSV を読み、要約を JSON へ保存する}。
@@ -242,10 +349,15 @@ Parquet は「保存形式」の名前であり、\code{pyarrow} はその形式
 \item マグニチュードの最小値と最大値
 \end{itemize}
 出力には \code{pathlib} と \code{json.dump} を用いること。
+\code{Path.mkdir(parents=True, exist\_ok=True)} で出力ディレクトリを作り、\code{json.dump(..., indent=2)} の各引数が何を指定するかも説明せよ。保存後に \code{json.load()} で読み戻し、辞書の内容を表示して検証すること。
 
 \item \textbf{後で NumPy や Matplotlib へ渡しやすい中間データを Pickle で保存する}。
 CSV から \code{time}、\code{latitude}、\code{longitude}、\code{mag} だけを抜き出し、辞書のリストとして \code{results/usgs\_preview.pkl} へ保存せよ。まずは先頭 200 行だけでよい。読み直して要素数と先頭 1 件を表示し、保存と復元ができていることを確かめよ。
+小規模入力を使った場合、要素数は 3 であり、先頭辞書の \code{time} は \code{2024-01-01T00:00:00.000Z} になる。\code{"wb"} と \code{"rb"} の \code{b} の意味を説明し、この PKL を信頼できない相手から受け取った場合に読み込んではならない理由も述べよ。
 
 \item \textbf{発展課題}。
 CSV の中には空欄や想定外の値が入り得る。空欄の \code{mag} をスキップする処理を自分で足し、何件スキップしたかを \code{results/skipped\_rows.txt} へ書き出せ。\code{DictReader} では空欄セルは空文字列として読まれるので、たとえば \code{if row["mag"] == ""} のような判定を入れればよい。
+小規模入力では 1 件をスキップする。\code{float(row["mag"])} が失敗する場合も \code{ValueError} として数えられるようにし、空欄と不正な文字列を区別して記録せよ。
 \end{enumerate}
+
+ファイルの構造を確認し、必要な値を Python のオブジェクトへ変換できれば、次は多数の数値を同じ型の配列として計算できる。次章では、ここで読み込んだ時刻や信号値を NumPy 配列へ移し、差分、条件抽出、集計、ヒストグラムを扱う。
