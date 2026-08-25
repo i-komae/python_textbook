@@ -3,13 +3,13 @@
 \index{pybind11@pybind11|textbf}
 \index{cpp extension@C++ 拡張モジュール|textbf}
 
-高速化を進めると、最終的に「この部分だけは C++ で書きたい」という場面が出てくる。そのとき、Python から自然に呼べる形で C++ 関数を公開する道具として便利なのが pybind11 である。本付録では、最小限の構成で C++ 製モジュールを作り、\code{pip install -e .} で使えるようにする流れを示す。
+Python のプロファイル結果から計算量の多い関数を特定した後、その関数だけを C++ で実装する方法がある。pybind11 は、C++ の関数やクラスを Python モジュールとして公開するためのライブラリである。本付録では、最小構成の C++ 拡張モジュールを作り、\code{uv pip install -e .} で開発用環境へインストールする手順を示す。
 
 \section{C++ 拡張を選ぶ判断基準}
 
-pybind11 が向いているのは、重いループや数値計算の核は C++ で書きたいが、入出力や可視化、制御全体は Python に残したい場合である。つまり、「公開する関数の数は少なく、内側だけが重い」という構造に合っている。
+プロファイルによって少数の関数が処理時間を支配すると確認でき、NumPy などの既存実装では置き換えられない場合は、その関数を C++ で実装する候補となる。入出力、可視化、ワークフロー制御を Python に残し、計算量の多い関数だけを pybind11 で公開すれば、C++ との境界を限定できる。
 
-具体例として、時刻列 \code{times} に対して、差が \code{window} 以下のペア数を数える関数を C++ で実装する。これは高速化章で出てきた「重い内側のループ」を外へ出す典型例である。
+具体例として、時刻列 \code{times} に対して、差の絶対値が \code{window} 以下となる全ペアの数を C++ で数える。この二重ループの計算量は、時刻数を \(N\) とすると \(O(N^2)\) である。
 
 \section{pybind11 パッケージの最小構成}
 \index{scikit-build-core@scikit-build-core|textbf}
@@ -31,7 +31,7 @@ src/
 
 \subsection{\code{pyproject.toml}}
 
-純粋な Python パッケージと違って、C++ 拡張ではビルドバックエンドも必要になる。ここでは \code{scikit-build-core} と pybind11 を使う。pybind11 は \code{setup.py} ベースでも扱えるが、この付録では C++ 側の構成を見通しよく保ちやすい CMake ベースの流儀でそろえる。
+C++ 拡張には、Python パッケージの情報に加えてコンパイル方法を定めるビルドバックエンドが必要である。ここでは、\code{scikit-build-core}、pybind11、CMake を組み合わせる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={pyproject.toml}]
 [build-system]
@@ -51,7 +51,7 @@ dependencies = ["numpy>=2.0"]
 wheel.packages = ["src/fastcount_cpp"]
 \end{lstlisting}
 
-\code{build-system} に書いたパッケージは、拡張モジュールをコンパイルするために必要である。これは通常の実行時依存関係とは別物であり、\code{dependencies} へ混ぜない方が整理しやすい。
+\code{build-system} に書いたパッケージは、拡張モジュールのビルド環境で用いられる。インストール後の実行に必要なパッケージは \code{project.dependencies} に分けて記述する。
 
 \subsection{\code{CMakeLists.txt}}
 \index{cmakelists@\code{CMakeLists.txt}|textbf}
@@ -79,6 +79,7 @@ install(TARGETS _core DESTINATION fastcount_cpp)
 \begin{lstlisting}[language=C++, title={cpp/bindings.cpp}]
 #include <cmath>
 #include <cstddef>
+#include <stdexcept>
 #include <vector>
 
 #include <pybind11/pybind11.h>
@@ -88,6 +89,10 @@ std::size_t count_pairs_within_window(
     const std::vector<double>& times,
     double window
 ) {
+    if (window < 0.0) {
+        throw std::invalid_argument("window must be non-negative");
+    }
+
     std::size_t count = 0;
     const std::size_t n = times.size();
 
@@ -115,9 +120,9 @@ PYBIND11_MODULE(_core, m) {
 }
 \end{lstlisting}
 
-\code{pybind11/stl.h} を include しているので、Python の list は自動で \code{std::vector<double>} に変換される。つまり、Python 側からは特別な変換コードを書かずに呼べる。
+\code{pybind11/stl.h} をインクルードすると、Python の list から \code{std::vector<double>} への変換が有効になる。したがって、この関数の呼び出し側に明示的な変換コードは不要である。負の時間窓は定義に反するため、C++ 側で \code{std::invalid\_argument} を送出する。
 
-\subsection{Python 側の入口}
+\subsection{Python から公開する API}
 
 C++ 拡張を内部モジュール \code{\_core} として直接公開すると、利用者が実装上の名前を知る必要が生じる。そこで、パッケージの \code{\_\_init\_\_.py} から公開関数だけを再公開する。
 
@@ -129,18 +134,17 @@ from ._core import count_pairs_within_window
 __all__ = ["count_pairs_within_window"]
 \end{lstlisting}
 
-この \code{\_\_init\_\_.py} を用意しておくと、利用側は \code{from fastcount\_cpp import count\_pairs\_within\_window} と書ける。C++ 側の内部モジュール名 \code{\_core} を意識させずに済む。
+この \code{\_\_init\_\_.py} に公開関数を再エクスポートすると、利用側は \code{from fastcount\_cpp import count\_pairs\_within\_window} と記述できる。C++ 側の内部モジュール名 \code{\_core} は、公開 API に現れない。
 
 \section{拡張モジュールのビルドとインストール}
 \index{editable install@editable install|textbf}
 
-開発中は、プロジェクトの仮想環境を作ったうえで editable install するのが分かりやすい。
+開発中は、プロジェクトの仮想環境へ editable install する。Python 側のファイルはインストール元を参照し、C++ ソースは再ビルドによってコンパイル済み拡張へ反映される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv sync
-$ source .venv/bin/activate
-$ pip install -e .
-$ python -c "from fastcount_cpp import count_pairs_within_window; print(count_pairs_within_window([0.0, 0.1, 0.4], 0.25))"
+$ uv pip install -e .
+$ uv run python -c "from fastcount_cpp import count_pairs_within_window; print(count_pairs_within_window([0.0, 0.1, 0.4], 0.25))"
 \end{lstlisting}
 
 最後の出力は次のようになる。
@@ -151,11 +155,11 @@ $ python -c "from fastcount_cpp import count_pairs_within_window; print(count_pa
 
 これは、\code{(0.0, 0.1)} だけが窓 \code{0.25} の中に入っていることを表している。
 
-ここで重要なのは、純粋な Python の editable install と違い、C++ ソースを書き換えたら再ビルドが必要になることが多い点である。つまり、\code{bindings.cpp} を編集した後は、\code{pip install -e .} をもう一度実行するか、対応するビルドコマンドを走らせて更新する必要がある。
+純粋な Python ファイルとは異なり、C++ ソースの変更はコンパイル済み拡張へ自動では反映されない。\code{bindings.cpp} を編集した後は、\code{uv pip install -e .} を再実行して拡張モジュールを再ビルドする。
 
-\section{Python からの C++ 関数の呼出し}
+\section{Python からの C++ 関数の呼び出し}
 
-Python から見れば、これは普通のモジュールと同じである。
+インストール後の拡張モジュールは、Python モジュールと同じ import 文で読み込める。
 
 \begin{lstlisting}[language=Python]
 from fastcount_cpp import count_pairs_within_window
@@ -167,15 +171,15 @@ count = count_pairs_within_window(times, window)
 print(count)
 \end{lstlisting}
 
-したがって、設計上は「どの関数を Python へ公開するか」を小さく保つ方がよい。まず Python 側で使いやすい関数シグネチャを決め、その中身だけを C++ へ差し替える、という順序で進めると壊れにくい。
+Python へ公開する関数を限定し、その関数の引数、返り値、例外条件をテストで固定する。C++ への移植後もこの契約を保てば、利用側のコードを変更せずに内部実装を置き換えられる。
 
 \section{C++ へ移す処理の選び方}
 
-pybind11 を使えるようになると、つい多くの処理を C++ へ移したくなる。しかし、入出力や可視化、例外処理、引数整理まで全部 C++ へ押し出すと、かえって保守が難しくなる。通常は、次のように役割を分けるとよい。
+入出力、可視化、例外処理、引数処理まで C++ へ移すと、Python と C++ の境界が広がり、ビルドと保守が複雑になる。次のように、ワークフローを担う Python と計算コアを担う C++ の役割を分ける。
 
 \begin{itemize}
-\item Python: ファイル読込み、引数処理、図の保存、ワークフロー全体
-\item C++: 重いループ、組合せ探索、繰り返し数値計算
+\item Python: ファイルの読み込み、引数処理、図の保存、ワークフロー全体
+\item C++: 処理時間を支配するループ、組み合わせ探索、反復数値計算
 \end{itemize}
 
-つまり、Python 側には分かりやすい API を残し、C++ 側には計算コアだけを押し込む。これが、pybind11 を長く使いやすく保つための基本方針である。
+Python 側には引数検証を含む公開 API とワークフローを置き、C++ 側には測定上のボトルネックとなった計算コアを置く。この分離により、C++ のビルドが必要な範囲と、Python から検証する公開契約を限定できる。

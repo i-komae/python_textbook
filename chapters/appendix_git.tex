@@ -28,11 +28,11 @@ Git は、手元のファイルの変更履歴を記録するためのソフト�
 
 授業用の配布物、研究中のコード、機密データを含むリポジトリでは、公開範囲の誤設定が情報漏えいにつながる。GitHub で新しいリポジトリを作成する際には、公開範囲（visibility）の確認が必要である。
 
-\subsection{Git で何をしているのか}
+\subsection{作業ツリー・ステージングエリア・コミット履歴}
 \index{すてーじんぐえりあ@ステージングエリア|textbf}
 \index{わーきんぐつりー@ワーキングツリー|textbf}
 
-Git は、ファイルを 1 回で全部自動保存してくれるわけではない。ふつうは次の 3 段階で進む。
+Git では、作業中のファイルと履歴へ記録する内容を分けて管理する。変更を履歴へ記録する手順は、次の 3 段階からなる。
 
 \begin{enumerate}
 \item 作業ファイルの編集
@@ -40,9 +40,9 @@ Git は、ファイルを 1 回で全部自動保存してくれるわけでは�
 \item \code{git commit} による履歴の確定
 \end{enumerate}
 
-この 2 段階目の「いったん選ぶ場所」をステージングエリアという。\code{git add} と \code{git commit} の違いを理解するには、ここが重要である。
+この 2 段階目にある、次のコミットへ記録する内容を保持する領域をステージングエリアという。\code{git add} は作業ツリーの内容をステージングエリアへ登録し、\code{git commit} は登録済みの内容を履歴へ記録する。
 
-最初はここが見えにくいので、次の 3 層に分けて考えるとよい。
+Git が管理する状態は、次の 3 層に分けられる。
 
 \begin{itemize}
 \item 作業ツリー（working tree）: エディタで直接編集しているファイル
@@ -50,14 +50,14 @@ Git は、ファイルを 1 回で全部自動保存してくれるわけでは�
 \item コミット履歴（commit history）: 確定済みの変更が記録された履歴
 \end{itemize}
 
-たとえば、ファイルを編集した直後は変更は working tree にしかない。\code{git add} を実行すると、その時点の内容が staging area へコピーされる。\code{git commit} は、その staging area の内容を履歴として確定する操作である。したがって、\code{git add} の後にさらにファイルを編集すると、「ステージ済みの内容」と「作業中の内容」がずれることがある。
+たとえば、ファイルを編集した直後の変更は作業ツリーだけに存在する。\code{git add} を実行すると、その時点の内容がステージングエリアへ登録される。\code{git commit} は、ステージングエリアの内容を履歴として確定する操作である。\code{git add} の後に同じファイルを編集した場合、追加分は作業ツリーだけに残り、ステージ済みの内容には含まれない。
 
 \section{ローカル履歴の作成}
 
-\subsection{最初の設定}
+\subsection{コミットへ記録する名前とメールアドレスの設定}
 \index{git config@\code{git config}|textbf}
 
-最初に、自分の名前とメールアドレスを設定しておく。
+コミットへ記録する作成者名とメールアドレスを設定する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git config --global user.name "Your Name"
@@ -101,7 +101,7 @@ $ git log --oneline
 
 \subsubsection{\code{git status} の読み方}
 
-\code{git status} は、少なくとも次の 3 種類を見分けられるようになるとよい。
+\code{git status} の表示では、少なくとも次の 3 種類を区別する。
 
 \begin{itemize}
 \item 未追跡（untracked）: まだ Git が追跡していない新規ファイル
@@ -109,9 +109,9 @@ $ git log --oneline
 \item コミット予定（changes to be committed）: \code{add} 済みで、次のコミットへ入る変更
 \end{itemize}
 
-つまり、\code{git status} は「いま何がどの段階にあるか」を示す画面である。
+\code{git status} の出力から、各ファイルが未追跡、変更済み、コミット予定のいずれに該当するかを判別できる。
 
-\subsubsection{\code{git add} は何をしているのか}
+\subsubsection{\code{git add} による変更内容のステージング}
 
 \code{git add} は「変更を次のコミット候補として選ぶ」コマンドである。保存ではない。したがって、\code{git add} した後でも、コミット前にさらに編集すれば、その追加分はまだコミット対象へ入っていない。
 
@@ -141,7 +141,7 @@ dist/
 .pytest_cache/
 \end{lstlisting}
 
-このファイルを作ると、まだ追跡されていない \code{.venv/} や \code{build/} は \code{git status} に出にくくなり、誤ってコミットしにくくなる。
+このファイルを作ると、まだ追跡されていない \code{.venv/} や \code{build/} は無視され、通常の \code{git status} には表示されない。すでに追跡中のファイルには、この設定は適用されない。
 
 \subsubsection{すでに追跡済みなら \code{git rm --cached} が必要}
 \index{git rm cached@\code{git rm --cached}|textbf}
@@ -153,11 +153,11 @@ $ git rm --cached -r .venv __pycache__ build
 $ git commit -m "Stop tracking generated files"
 \end{lstlisting}
 
-\code{git rm --cached} は、作業ディレクトリの実ファイルを消さずに、インデックスからだけ外す。そのため、「手元には残したまま Git の追跡対象から外す」という目的に向いている。
+\code{git rm --cached} は、作業ディレクトリの実ファイルを残したまま、インデックスに登録されたパスだけを削除する。実行後の削除をコミットすると、そのパスは Git の追跡対象から外れる。
 
 \subsubsection{\code{uv} プロジェクトにおけるコミット対象}
 
-\code{uv} を使うプロジェクトでは、通常 \code{.venv/} はコミットしない。一方で、\code{pyproject.toml}、\code{uv.lock}、\code{.gitignore}、そしてプロジェクト単位でバージョンを固定したいなら \code{.python-version} はコミット候補になる。
+\code{uv} を使うプロジェクトでは、通常 \code{.venv/} はコミットしない。依存関係を記述する \code{pyproject.toml} と除外規則を記述する \code{.gitignore} はコミットする。アプリケーションや再現可能な解析環境では、解決済みの依存関係を記録する \code{uv.lock} も通常はコミットする。ライブラリでは、リポジトリ内のテストや開発環境をロックファイルで再現するかどうかを運用方針として定める。\code{.python-version} は、プロジェクトで使用する Python の版を共有する場合にコミットする。
 
 \section{GitHub への接続}
 
@@ -172,23 +172,23 @@ $ cd project
 $ git remote -v
 \end{lstlisting}
 
-\code{git clone} は、履歴も含めて手元へ持ってくる。\code{git remote -v} は、どの URL が接続先として設定されているかを確認する。本書では、GitHub から取得するときも push するときも SSH URL を使う方針を勧める。公開鍵の準備は付録~\ref{app:ssh} を参照してほしい。
+\code{git clone} は、リポジトリのファイルと履歴をローカルへ複製する。\code{git remote -v} は、接続先として登録された URL を表示する。本書の例では、取得と push の双方に SSH URL を用いる。公開鍵の準備は付録~\ref{app:ssh} で説明する。
 
 \subsection{ローカルリポジトリの GitHub への初回公開}
 \index{りもーとりぽじとり@リモートリポジトリ|textbf}
 \index{git remote@\code{git remote}|textbf}
 
-ここまでは「GitHub 上にあるものを取得する」話だったが、逆に、手元で \code{git init} して育てたプロジェクトを自分の GitHub へ載せたい場面も多い。その場合は、まず GitHub 側で空のリポジトリを作り、次に手元のリポジトリから接続先を登録して push する。
+既存リポジトリの取得とは逆に、ローカルで作成した履歴を新しい GitHub リポジトリへ送る場合がある。まず GitHub 上に空のリポジトリを作成し、次にローカルリポジトリへ接続先を登録して push する。
 
 \subsubsection{GitHub 上の空リポジトリの作成}
 
-GitHub の Web 画面で \code{New repository} を開き、リポジトリ名と公開範囲を決める。このとき、手元にすでに履歴があるなら、最初は空のリポジトリとして作る方が簡単である。つまり、\code{Add a README file}、\code{Add .gitignore}、\code{Choose a license} には最初は触れない方がよい。
+GitHub の Web 画面で \code{New repository} を開き、リポジトリ名と公開範囲を決める。ローカルにすでに履歴がある場合は、README、\code{.gitignore}、ライセンスを GitHub 側で追加せず、コミットを持たない空のリポジトリを作成する。
 
-最初から README や \code{.gitignore} を GitHub 側で作ると、リモート側に 1 個目のコミットができる。その状態で手元の履歴をそのまま push すると、履歴の始点が一致しないため、初心者には扱いにくい状況になりやすい。したがって、既存のローカルリポジトリを載せるときは「空の GitHub リポジトリ」を作る、という方針で覚えた方が安全である。
+README や \code{.gitignore} を GitHub 側で追加すると、リモート側にローカルとは別のコミットが作られる。その場合、双方の履歴を統合してから push する必要がある。空のリモートリポジトリであれば、この統合は不要である。
 
 \subsubsection{README や LICENSE を先に作っていた場合}
 
-すでに GitHub 側で README や LICENSE を作ってしまったなら、リモート側には先にコミットが 1 つ以上存在する。その場合は、いきなり \code{git push} するのではなく、まずリモート側の履歴を取り込んでから push しなければならない。
+GitHub 側で README や LICENSE を作成した場合、リモートリポジトリにはローカルと異なるコミットが存在する。リモート側の履歴をローカルへ取り込んで統合した後に push する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git branch -M main
@@ -199,11 +199,11 @@ $ git push -u origin main
 
 \code{--allow-unrelated-histories} が必要なのは、手元のリポジトリと GitHub 側のリポジトリが別々に作られており、履歴の出発点が一致していないからである。この \code{pull} によって、GitHub 側の README や LICENSE のコミットを自分の履歴へ取り込んでから、その続きとして push できるようになる。
 
-もし手元にも README や LICENSE があり、同じ名前のファイルを両側で作っていたなら、\code{git pull} の途中で競合が起こることがある。その場合は、どちらの内容を残すかを自分で決めて修正し、\code{git add} と \code{git commit} で競合解消を確定してから、あらためて \code{git push -u origin main} を実行する。
+ローカルとリモートの双方で同じ名前の README や LICENSE を作成している場合、\code{git pull} によって競合が生じることがある。競合箇所を編集し、\code{git add} と \code{git commit} で統合結果を記録してから、\code{git push -u origin main} を実行する。
 
 \subsubsection{接続先の登録と最初の push}
 
-GitHub が表示する URL を確認し、手元のリポジトリで \code{origin} として登録する。多くの場合、次の流れで足りる。
+GitHub が表示する URL を確認し、ローカルリポジトリへ \code{origin} という名前で登録する。既定ブランチを \code{main} とする例を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git status
@@ -214,9 +214,9 @@ $ git remote -v
 $ git push -u origin main
 \end{lstlisting}
 
-\code{git branch --show-current} は、いま自分がどのブランチにいるかを確認する。\code{git branch -M main} は、既定ブランチ名を \code{main} へそろえるための書き方である。\code{main} ではなく既存のブランチ名をそのまま使いたいなら、その名前で push してよい。
+\code{git branch --show-current} は現在のブランチ名を表示する。\code{git branch -M main} は現在のブランチ名を \code{main} へ変更する。既存のブランチ名を維持する場合は、以後のコマンドにその名前を指定する。
 
-\code{git remote add origin ...} は、GitHub の URL を \code{origin} という別名で登録する。\code{git remote -v} を見れば、正しい URL が設定されたかを確認できる。\code{git push -u origin main} の \code{-u} は、以後このローカルブランチが \code{origin/main} を追跡する、という設定である。初回にこれを付けておけば、次回以降は \code{git push} や \code{git pull} を短く書きやすい。
+\code{git remote add origin ...} は、GitHub の URL を \code{origin} という名前で登録する。\code{git remote -v} は登録後の取得用 URL と送信用 URL を表示する。\code{git push -u origin main} の \code{-u} は、ローカルの \code{main} に対する上流ブランチを \code{origin/main} に設定する。この設定後は、接続先とブランチ名を省略した \code{git push} と \code{git pull} を利用できる。
 
 \subsubsection{\code{origin} がすでにある場合}
 
@@ -241,7 +241,7 @@ $ git pull --ff-only
 $ git push origin main
 \end{lstlisting}
 
-\code{git pull --ff-only} は、自分がまだ追加のコミットを持っていないときだけ安全に進める書き方である。履歴が分岐している場合は止まるので、意図しないマージを避けやすい。
+\code{git pull --ff-only} は、ローカルブランチをリモートブランチまで早送りできる場合にだけ更新する。ローカルとリモートの両方に異なるコミットがあり履歴が分岐している場合は停止するため、意図しないマージコミットを作らない。
 
 \subsection{GitHub で利用する HTTPS URL と SSH URL}
 \index{github@GitHub!https@HTTPS}
@@ -254,8 +254,8 @@ https://github.com/owner/repo.git
 git@github.com:owner/repo.git
 \end{lstlisting}
 
-HTTPS は見慣れた URL で扱いやすい。一方 SSH は、公開鍵認証を済ませておけばパスワードやトークン入力を減らしやすい。どちらを使ってもよいが、混在させると混乱しやすいので、最初に方針を決めた方がよい。
-\code{git clone}、\code{pull}、\code{push} を通して運用をそろえるなら、本書では SSH を標準にする方が自然だと考える。特に、公開リポジトリを読む段階では HTTPS でも動くが、後で push や private repository の取得が必要になると認証方式が増えて煩雑になりやすい。そのため、最初から SSH へそろえておく方が混乱が少ない。
+HTTPS URL は HTTPS 認証、SSH URL は SSH 鍵認証を用いる。一つのリポジトリでは、登録したリモート URL と認証情報の対応を記録する。
+本書では、\code{git clone}、\code{pull}、\code{push} に用いる認証方式を SSH に統一する。公開リポジトリの取得には HTTPS URL も利用できるが、push や非公開リポジトリの取得には認証が必要になる。SSH URL に統一すれば、操作ごとに認証方式を切り替える必要がない。
 
 \section{認証と最小ワークフロー}
 
@@ -263,11 +263,11 @@ HTTPS は見慣れた URL で扱いやすい。一方 SSH は、公開鍵認証�
 \index{github@GitHub!にんしょう@認証|textbf}
 \index{pat@個人用アクセストークン（PAT）|textbf}
 
-GitHub では、HTTPS 経由の Git 操作で通常のアカウントパスワードは使えない。現在は、SSH 鍵を登録して使うか、個人用アクセストークン (PAT) を使うのが基本である。本書では SSH 鍵を使う方法を標準とし、HTTPS + PAT は事情がある場合の代替手段として扱う。
+GitHub では、HTTPS 経由の Git 操作にアカウントのパスワードを使用できない。SSH URL では SSH 鍵、HTTPS URL では個人用アクセストークン（PAT）または認証情報ヘルパーを用いる\footnote{\href{https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github}{GitHub Docs, ``About authentication to GitHub''}（2026 年 8 月 25 日閲覧）。}。本書では SSH 鍵を標準とし、HTTPS と PAT の組み合わせを代替手段として扱う。
 
 \subsubsection{SSH 鍵による認証}
 
-SSH を使う場合は、付録~\ref{app:ssh} を参照して公開鍵を用意し、それを GitHub の \code{SSH and GPG keys} へ登録する。GitHub CLI \code{gh auth login --git-protocol ssh --web} を使うと、その作業を対話的に進めやすい。
+SSH を使う場合は、付録~\ref{app:ssh} の手順で公開鍵を用意し、それを GitHub の \code{SSH and GPG keys} へ登録する。GitHub CLI の \code{gh auth login --git-protocol ssh --web} は、認証と公開鍵の登録に必要な操作を対話形式で案内する。
 
 \subsubsection{PAT による認証}
 
@@ -281,15 +281,15 @@ SSH 鍵を使えない事情があり、HTTPS で GitHub を使う場合は、�
 \item 発行済みトークンの安全な保管
 \end{enumerate}
 
-認証時には、ユーザー名は GitHub のアカウント名、パスワード欄には通常のパスワードではなく PAT を入れる。組織アカウントでは、SAML SSO の承認が別に必要なこともある。その場合は、発行したトークンをその組織用に追加承認しないと使えない。
+認証時には、ユーザー名として GitHub のアカウント名を入力し、パスワードを求められた欄へ PAT を入力する。組織がトークンの利用制限や承認を設定している場合には、その方針にも従う必要がある。
 
-\code{fine-grained token} は、どのリポジトリへ、どの操作権限だけを与えるかを細かく絞れる新しい方式である。個人の通常利用では、まずこちらを選ぶ方が安全である。これに対して \code{classic token} は古い方式で、広い権限をまとめて与える形になりやすい。古いツールや特殊な用途ではまだ必要になることがあるが、理由がなければ fine-grained の方を優先した方がよい。
+Fine-grained PAT では、対象となるリポジトリと権限を個別に限定できる。GitHub は、可能であれば personal access token (classic) よりも fine-grained PAT を推奨している\footnote{\href{https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens}{GitHub Docs, ``Managing your personal access tokens''}（2026 年 8 月 25 日閲覧）。}。ただし、組織の方針によって管理者の承認が必要な場合があり、利用する機能が fine-grained PAT に対応しているかも確認する。
 
-SAML SSO は、組織アカウントで「そのトークンが本当に組織のリソースへアクセスしてよいか」を追加で承認する仕組みである。つまり、トークンを作っただけでは終わらず、対象組織に対して明示的に利用許可を与えないと push や pull に失敗することがある。個人リポジトリしか使わないなら通常は意識しなくてよいが、大学や研究所の GitHub 組織では重要になる。
+SAML SSO を利用する組織では、SSH 鍵や PAT に組織リソースへのアクセス許可が必要になる場合がある。Personal access token (classic) は作成後に SSO への承認が必要であり、fine-grained PAT は作成時に組織を対象として指定する\footnote{\href{https://docs.github.com/authentication/authenticating-with-saml-single-sign-on/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on}{GitHub Docs, ``Authorizing a personal access token for use with single sign-on''}（2026 年 8 月 25 日閲覧）。}。実際の承認手順と利用可能な認証方式は、対象組織の方針を確認する。
 
-\subsection{初心者が押さえるべき最小ワークフロー}
+\subsection{変更確認から同期までの最小ワークフロー}
 
-最初のうちは、次の順序だけ守れば十分である。
+変更の確認から GitHub との同期までは、次の順序で行う。
 
 \begin{enumerate}
 \item \code{git status} による状況の確認
@@ -300,4 +300,4 @@ SAML SSO は、組織アカウントで「そのトークンが本当に組織�
 \item GitHub との同期に用いる \code{git pull --ff-only} と \code{git push}
 \end{enumerate}
 
-この流れを身に付ければ、教材の取得、\code{uv} プロジェクトの再現、共同研究でのコード共有まで一通り対応できる。最初からブランチ運用や複雑な履歴操作まで覚える必要はないが、\code{status} と \code{diff} を読まずに \code{add} や \code{commit} をする癖だけは避けた方がよい。
+この流れは、教材の取得、\code{uv} プロジェクトの再現、共同研究でのコード共有に共通する。\code{git add} と \code{git commit} の前後で \code{status} と \code{diff} を確認し、記録対象と実際の差分を一致させる。

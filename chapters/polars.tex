@@ -1,7 +1,7 @@
-\chapter{Polars による高速な表処理}
+\chapter{Polars による式ベースの表処理}
 \label{chap:polars}
 
-Polars\index{polars@Polars|textbf} は、列指向の DataFrame 処理を高速に行うためのライブラリである。pandas と同じく表形式データを扱うが、index を持たず、式を組み合わせて列変換を書く点が異なる。さらに、\code{LazyFrame}\index{lazyframe@LazyFrame|textbf} では、実行前に処理全体を最適化できる。本章では、ライブラリが利用者へ提供する操作の体系（API）を、直ちに処理する eager API と、処理を蓄えてから実行する lazy API に分けて説明し、集計、結合、入出力を扱う。
+Polars\index{polars@Polars|textbf} は、列指向の DataFrame ライブラリである。pandas と同じく表形式データを扱うが、index を持たず、列に対する処理を式として組み立てる点が異なる。\code{LazyFrame}\index{lazyframe@LazyFrame|textbf} では、式から作った実行計画を評価前に最適化できる。本章では、呼び出し時に結果を返す eager API と、処理を実行計画として蓄積する lazy API を区別し、列変換、集計、結合、入出力を扱う。
 
 \section{式と遅延実行による表処理}
 
@@ -39,18 +39,18 @@ shape: (4, 3)
 +----------+---------+--------+
 \end{lstlisting}
 
-この出力でも、重要なのは \code{shape: (4, 3)} と列名である。Polars は「何行目を label で指すか」よりも、「どの列にどの式を適用するか」を中心に据えている。
+\code{shape: (4, 3)} は 4 行 3 列であることを示し、各列名の下にはデータ型が表示される。Polars の式は行ラベルではなく列名を参照し、その列に適用する処理を表す。
 
 \subsection{式による列変換}
 
-Polars の中心概念は expression\index{expression@expression|textbf} である。\code{pl.col("signal")} は「signal 列を参照する式」であり、これを四則演算や比較で組み合わせる。
+Polars の中心概念は expression（式）\index{expression@expression|textbf}である。式は、列に対してどの計算を適用するかを表す処理記述であり、その時点の値そのものではない。\code{pl.col("signal")} は \code{signal} 列を参照する式であり、四則演算、比較、集計などと組み合わせられる。
 
 \begin{lstlisting}[language=Python]
 expr = pl.col("signal") / pl.col("signal").mean()
 print(expr)
 \end{lstlisting}
 
-表示されるのは、概ね \code{[(col("signal")) / (col("signal").mean())]} のような式であり、4 行分の数値ではない。この段階では、まだ計算結果ではなく「どう計算するか」を表している。実際の値を得るには、\code{df.select(expr.alias("signal\_ratio"))} のように DataFrame の文脈へ式を渡す。Polars の公式ドキュメント~\cite{polars_expressions} でも、expression は列処理を構成する基本概念として説明されている。\code{select()}、\code{with\_columns()}、\code{filter()}、\code{group\_by()} の多くは、式を受け取る API で統一されている。
+表示されるのは、概ね \code{[(col("signal")) / (col("signal").mean())]} のような式であり、4 行分の数値ではない。実際の値を得るには、\code{df.select(expr.alias("signal\_ratio"))} のように、式を DataFrame の処理へ渡す。\code{alias()} は式の結果へ列名を付ける。Polars の公式ドキュメント~\cite{polars_expressions} でも、expression は列処理を構成する基本概念として説明されている。\code{select()}、\code{with\_columns()}、\code{filter()}、\code{group\_by()} の多くは、式を受け取る API で統一されている。
 
 \subsection{eager と lazy}
 \index{polars@Polars!eager api@eager API}
@@ -63,13 +63,13 @@ eager_df = pl.read_csv("events.csv")
 lazy_df = pl.scan_csv("events.csv")
 \end{lstlisting}
 
-\code{read\_csv()} はすぐに DataFrame を作るが、\code{scan\_csv()} は \code{LazyFrame} を返す。lazy API を使うと、必要な列だけ読む、不要な行を早い段階で落とす、といった最適化が入りやすい。巨大なログを扱うときは、この違いがそのまま待ち時間の差になる。
+\code{read\_csv()} は呼び出し時に読み込んで DataFrame を作るが、\code{scan\_csv()} は実行前の処理計画を表す \code{LazyFrame} を返す。lazy API では、必要な列だけを読む列射影や、不要な行を早い段階で除く述語プッシュダウンなどを適用できる場合がある。処理時間とメモリ使用量への効果は、入力形式と処理内容に依存するため、同じ入力で測定する。
 
 \section{列変換・集計・結合・入出力}
 
 \subsection{\code{select()} と \code{filter()}}
 
-Polars では、列選択は \code{select()}\index{select@\code{select}|textbf}、行抽出は \code{filter()}\index{filter@\code{filter}|textbf} が基本である。
+列の選択には \code{select()}\index{select@\code{select}|textbf}、条件に合う行の抽出には \code{filter()}\index{filter@\code{filter}|textbf} を用いる。
 
 \begin{lstlisting}[language=Python]
 selected = df.select("detector", "signal")
@@ -100,11 +100,11 @@ shape: (2, 3)
 +----------+---------+--------+
 \end{lstlisting}
 
-\code{df["signal"]} のような書き方もできるが、Polars では「表に対する操作」を \code{select()} や \code{filter()} の文脈で書く方が自然である。特に複数列をまとめて変換したいときは、この違いが大きく効く。
+\code{df["signal"]} は列を Series として取り出す。これに対して、\code{select()} や \code{filter()} へ渡した式は、複数列の変換や lazy API の実行計画にも使用できる。値を取り出す操作と、表に適用する式を区別する。
 
 \subsection{\code{with\_columns()} による列の追加}
 
-新しい列は \code{with\_columns()}\index{with_columns@\code{with\_columns}|textbf} で追加する。複数列を同時に書けるので、Polars の式ベース設計と相性が良い。
+新しい列は \code{with\_columns()}\index{with_columns@\code{with\_columns}|textbf} で追加する。複数の式を一度に渡すと、それぞれの評価結果が列として追加または置換される。
 
 \begin{lstlisting}[language=Python]
 derived = df.with_columns(
@@ -129,7 +129,7 @@ shape: (4, 5)
 +----------+---------+--------+--------------+---------+
 \end{lstlisting}
 
-\code{alias()} は列名を付ける操作である。Polars では式の結果へ名前を付けるという発想が頻繁に現れるので、早めに慣れておく方がよい。
+\code{alias()} は式の結果へ列名を付ける操作である。式を複数組み合わせる場合は、出力列名を明示すると後続の選択や集計との対応を追いやすい。
 
 \subsection{\code{group\_by()} と集計}
 
@@ -287,14 +287,13 @@ test_B_001  14.8    null    high
 \index{polars@Polars!scan_parquet@\code{scan\_parquet()}}
 \index{polars@Polars!collect@\code{collect()}}
 
-大きなデータでは、eager API より lazy API の方が自然である。
+lazy API は、複数の読み込み、抽出、列選択、集計を一つの実行計画として最適化する場合に用いる。
 
 \begin{lstlisting}[language=Python]
 lf = (
     pl.scan_parquet("events/*.parquet")
     .filter(pl.col("signal") > 0.0)
-    .select("detector", "signal", "time_ns")
-    .with_columns((pl.col("time_ns") - pl.col("time_ns").min()).alias("dt_ns"))
+    .select("detector", "signal")
     .group_by("detector")
     .agg(pl.col("signal").mean().alias("mean_signal"))
 )
@@ -309,7 +308,7 @@ print(result)
 \index{polars@Polars!parquet@Parquet}
 \index{parquet@Parquet|textbf}
 
-Polars でも CSV と Parquet は基本である。
+CSV の読み込み、Parquet への保存、遅延読み込みの型の違いを次の例で確認する。
 
 \begin{lstlisting}[language=Python]
 df = pl.read_csv("events.csv")
@@ -323,43 +322,43 @@ print(type(lf).__name__)
 print(type(result).__name__)
 \end{lstlisting}
 
-表示される型名は順に \code{DataFrame}、\code{LazyFrame}、\code{DataFrame} である。\code{read\_csv()} はその場で読み込み、\code{scan\_csv()} は読込み計画を作り、\code{collect()} が計画を実行する。\code{write\_parquet()} の第 1 引数は保存先であり、同名のファイルがある場合は上書きされるため、保存先を確認してから実行する。
+表示される型名は順に \code{DataFrame}、\code{LazyFrame}、\code{DataFrame} である。\code{read\_csv()} はその場で読み込み、\code{scan\_csv()} は読み込み計画を作り、\code{collect()} が計画を実行する。\code{write\_parquet()} の第 1 引数は保存先であり、同名のファイルがある場合は上書きされるため、保存先を確認してから実行する。
 
-\code{read\_csv()} と \code{write\_parquet()} は eager API、\code{scan\_csv()} は lazy API の入口である。pandas と同じ名前の関数もあるが、遅延実行では処理を式として蓄積してから \code{collect()} で評価する点が異なる。
+\code{read\_csv()} と \code{write\_parquet()} は呼び出し時に入出力を行う。\code{scan\_csv()} は \code{LazyFrame} を返し、後続の式を実行計画へ追加する。計画の評価と DataFrame の生成は \code{collect()} が行う。
 
 \section{pandas との違いと遅延実行の注意点}
 
 \subsection{pandas の書き方をそのまま持ち込まない}
 
-Polars 公式の migration guide~\cite{polars_from_pandas} でも強調されているが、\textbf{Polars は pandas ではない}。pandas に似た書き方が一部動いても、それが最も自然な書き方とは限らない。特に、index 前提の考え方、\code{loc}、\code{apply(axis=1)} へ寄った設計は Polars では合わない。
+Polars と pandas では、同じ DataFrame という名称を使っていても API と実行モデルが異なる。Polars 公式の migration guide~\cite{polars_from_pandas} では、index を前提にせず、列式と処理文脈を用いる設計が説明されている。pandas の \code{loc} や \code{apply(axis=1)} を機械的に置き換えるのではなく、\code{select()}、\code{filter()}、組み込みの式で処理を表現する。
 
 \subsection{\code{map\_elements()} や Python の \code{lambda} を多用しない}
 \index{polars@Polars!map_elements@\code{map\_elements()}}
 
-Polars の利点は、式が query optimizer に見えることにある。Python の \code{lambda} や \code{map\_elements()} へ逃げると、その最適化が効きにくくなる。まずは \code{pl.col()}、\code{when}、\code{str}、\code{dt}、\code{over} などの組み込み式で書けないかを考える方がよい。
+Polars の組み込み式は query optimizer が解析できる。Python の \code{lambda} や \code{map\_elements()} で任意の Python 関数を呼ぶと、最適化や並列実行の範囲が狭まり、呼び出しのオーバーヘッドも加わる場合がある。まず \code{pl.col()}、\code{when}、\code{str}、\code{dt}、\code{over} などの組み込み式で表せるかを確認し、表せない処理にだけ Python 関数を用いる。
 
 \subsection{lazy API では \code{collect()} を忘れない}
 
-\code{scan\_csv()} や \code{scan\_parquet()} は \code{LazyFrame} を返す。ここで \code{print(lf)} としても、実データではなく計画しか見えない。結果が欲しいなら \code{collect()} が必要である。
+\code{scan\_csv()} や \code{scan\_parquet()} は \code{LazyFrame} を返す。\code{print(lf)} が表示するのは実データではなく実行計画である。計画を評価して結果の DataFrame を得るには、\code{collect()} を呼び出す。
 
 \subsection{欠損値における \code{null} と \code{NaN} の区別}
 
-Polars は型に厳密である。欠損をまとめて扱っているつもりでも、実際には \code{null} と \code{NaN} が混ざっていることがある。フィルタや集計の前に、どちらが入っているかを確認した方が安全である。
+Polars では、各列のデータ型に応じて利用できる式が決まり、値が存在しない \code{null} と浮動小数点値 \code{NaN} は別に扱われる。フィルタや集計の前に列型を確認し、\code{is\_null()} と \code{is\_nan()} のどちらを条件に含めるかを決める。
 
 \section{大規模表処理と可視化への受け渡し}
 
-Polars が特に有効なのは、次のような場面である。
+Polars への移行を検討する条件を次に示す。
 
 \begin{itemize}
-\item 数千万行の CSV や Parquet を条件付きで読みたいとき
-\item 同じ表に対する列変換と集計を一つの query としてまとめたいとき
-\item pandas では待ち時間が長く、入出力と集計が支配的になっているとき
-\item 複数ファイルをまとめて scan し、必要な列だけを残したいとき
+\item 複数の CSV または Parquet ファイルに対し、同じ列選択と行抽出を適用する場合
+\item 列変換と集計を一つの実行計画として最適化する場合
+\item pandas による入出力または集計が、測定した総所要時間の主要部分を占める場合
+\item 列射影や述語プッシュダウンを適用できる入力形式と処理内容である場合
 \end{itemize}
 
-一方で、小規模データで index を活かした対話的操作や、既存の pandas ベース資産をそのまま流用したいなら、pandas の方が自然なことも多い。大切なのは「pandas を捨てる」ことではなく、「どの規模、どの処理で Polars へ切り替えるべきか」を判断できるようになることである。
+小規模データで index を用いた対話的操作が必要な場合や、既存コードが pandas の API に依存している場合は、pandas を維持する方が変更量を抑えられる。切り替えの判断には、行数だけでなく、必要な API、移行コスト、メモリ使用量、同じ入力に対する処理時間を用いる。
 
-Polars の公式資料では、Concepts~\cite{polars_concepts}、Expressions and contexts~\cite{polars_expressions}、Lazy API~\cite{polars_lazy}、IO~\cite{polars_io}、Coming from Pandas~\cite{polars_from_pandas} が土台になる。本章もその流れを踏まえているが、解析で必要な判断が先に見えるように並べ替えてある。式の書き方で迷ったときは expression、遅い処理をまとめて最適化したいときは lazy API、pandas との違いを整理したいときは migration guide を見返すとよい。
+Polars の概念は Concepts~\cite{polars_concepts}、式は Expressions and contexts~\cite{polars_expressions}、遅延実行は Lazy API~\cite{polars_lazy}、入出力は IO~\cite{polars_io}、pandas との差は Coming from Pandas~\cite{polars_from_pandas} に記載されている。本章は、これらの機能を解析手順に沿って再構成した。
 
 \section{検出器別集計と遅延実行}
 

@@ -22,12 +22,12 @@ echo "Hello, Shell Scripting!"
 \code{run.sh} という名前で保存した場合は、実行権限を付けてから直接実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ chmod +x run.sh
+$ chmod u+x run.sh
 $ ./run.sh
 Hello, Shell Scripting!
 \end{lstlisting}
 
-\code{chmod +x} は実行権限を追加し、\code{./run.sh} は現在のディレクトリにあるファイルを実行する。最後の行がスクリプトの標準出力である。
+\code{chmod u+x} はファイル所有者に実行権限を追加し、\code{./run.sh} は現在のディレクトリにあるファイルを実行する。最後の行がスクリプトの標準出力である。
 
 \subsection{コマンドライン引数}
 \index{こまんどらいんひきすう@コマンドライン引数|textbf}
@@ -38,22 +38,22 @@ Hello, Shell Scripting!
     \item \code{\$0}: 実行されたスクリプトのファイル名（例: \code{./run.sh}）
     \item \code{\$1, \$2, ...}: 1 番目、2 番目以降の引数
     \item \code{\$\#}: 渡された引数の総数
-    \item \code{\$@}: 渡された全ての引数
+    \item \code{\$@}: 渡されたすべての引数。個々の引数を保ったまま展開する場合は \code{"\$@"} と書く
 \end{itemize}
 
 次のスクリプトは、二つの位置引数を検査してから入力名と出力名を表示する。
 
 \begin{lstlisting}[language=bash]
-#!/bin/bash
+#!/usr/bin/env bash
 
-# 引数が2つ渡されたかどうかを確認する簡易チェック
+# 二つの位置引数が渡されたことを確認する
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <input_file> <output_file>"
     exit 1
 fi
 
-INPUT=$1
-OUTPUT=$2
+INPUT="$1"
+OUTPUT="$2"
 echo "Reading from $INPUT, writing to $OUTPUT"
 \end{lstlisting}
 
@@ -147,8 +147,14 @@ MUL=$((A * B))
 前節の条件式を組み合わせて処理を分岐する。\code{then} と \code{fi} でブロックを囲むのがシェルの特徴である。
 
 \begin{lstlisting}[language=bash]
-#!/bin/bash
-FILE=$1
+#!/usr/bin/env bash
+
+if [ "$#" -ne 1 ]; then
+    echo "使用法: $0 <file>" >&2
+    exit 1
+fi
+
+FILE="$1"
 
 if [ -z "$FILE" ]; then
     echo "エラー: ファイル名が指定されていません"
@@ -172,8 +178,14 @@ fi
 条件が特定の文字列パターンとの一致で表せる場合は、\code{case} 文を用いると \code{elif} を重ねずに分岐を列挙できる。拡張子の判定や、\code{-h}、\code{--version} などのオプション処理に利用できる。
 
 \begin{lstlisting}[language=bash]
-#!/bin/bash
-MODE=$1
+#!/usr/bin/env bash
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <start|stop|halt>" >&2
+    exit 1
+fi
+
+MODE="$1"
 
 case "$MODE" in
     "start")
@@ -200,7 +212,7 @@ esac
 指定した値のリストや、配列の全要素に対して処理を繰り返す \code{for} 文の例を次に示す。
 
 \begin{lstlisting}[language=bash]
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 配列の全要素に対して
 targets=("run_01" "run_02" "run_03")
@@ -215,15 +227,15 @@ for num in 10 20 30; do
 done
 \end{lstlisting}
 
-\subsection{実践: 複数ファイルのパス置換とバッチ処理}
+\subsection{複数ファイルの入出力パス生成と一括処理}
 \index{ばっちしょり@バッチ処理|textbf}
 
-実務で最もよく使うループは「特定のディレクトリにあるファイルを順次処理する」ための構文である。ここで、入力ファイル名（例: \code{data/input/run01.csv}）から、出力ファイル名（例: \code{data/output/run01\_result.png}）を自動的に作り出す技術が必要となる。
+特定のディレクトリにある複数のファイルを順次処理する場合にも、\code{for} ループを利用できる。次の例では、入力ファイル名（\code{data/input/run01.csv} など）から、対応する出力ファイル名（\code{data/output/run01\_result.png} など）を生成する。
 
 \code{basename} コマンドや、変数の後方一致削除（\code{\%...}）を用いることでこれを簡潔に実装できる。
 
 \begin{lstlisting}[language=bash]
-#!/bin/bash
+#!/usr/bin/env bash
 
 INPUT_DIR="data/input"
 OUTPUT_DIR="data/output"
@@ -262,10 +274,10 @@ done
 
 この例では、入力ファイルごとに拡張子を除いた名前を作り、対応する出力パスを組み立てている。解析コマンドを有効にする前に、\code{echo} で表示される入出力の対応を確認すれば、意図しない上書きを防げる。
 
-\section{\code{sed} を用いたテンプレート書き換えと動的実行}
+\section{\code{sed} による条件別設定ファイルの生成}
 \index{sed@\code{sed}|textbf}
 
-外部の実行プログラムの中には、引数（\code{--input XXX}）の形式ではなく、設定ファイル（例: \code{config.ini}）を読み込ませることで動作するものがある。バッチ処理で繰り返し実行したい場合、ループを回すたびに設定ファイルの特定のパラメータ（例えばシード値や閾値など）を書き換える必要が生じる。
+外部プログラムには、\code{--input XXX} のようなコマンドライン引数ではなく、\code{config.ini} などの設定ファイルから実行条件を読み込むものもある。複数のシード値や閾値を比較する場合は、条件ごとの設定ファイルをテンプレートから生成すると、各出力に対応する実行条件を保存できる。
 
 \code{sed} を使うと、テンプレートとして用意した設定ファイルの一部を置換し、条件ごとの実行用設定ファイルを生成できる。
 
@@ -287,7 +299,7 @@ OutputFile = __OUTFILENAME__
 基本形は \code{sed 's/置換前文字列/置換後文字列/g' 入力ファイル > 出力ファイル} である。\code{sed} の置換式でシェル変数を展開するには、シングルクォートではなく\textbf{ダブルクォート（\code{"..."}）}で囲む必要がある。
 
 \begin{lstlisting}[language=bash]
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 閾値を 3 つ変えてシミュレーション用の設定ファイルを動的生成し、実行する例
 thresholds=(0.5 1.0 2.5)
@@ -295,7 +307,7 @@ thresholds=(0.5 1.0 2.5)
 for thresh in "${thresholds[@]}"; do
 
     out_name="result_th_${thresh}.dat"
-    run_config="config_run.ini"
+    run_config="config_run_${thresh}.ini"
 
     echo "Generating config for Threshold = $thresh"
 
@@ -305,7 +317,7 @@ for thresh in "${thresholds[@]}"; do
         -e "s/__OUTFILENAME__/$out_name/g" \
         config_template.ini > "$run_config"
 
-    # 置換された設定の内容を出力して確認 (または直接プログラムを走らせる)
+    # 置換された設定の内容を表示して確認する
     cat "$run_config"
 
     # 生成した設定ファイルを実行プログラムへ渡す

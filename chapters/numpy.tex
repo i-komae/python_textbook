@@ -16,7 +16,7 @@ times = np.array([10, 15, 23, 41], dtype=np.int64)
 deltas = times[1:] - times[:-1]
 \end{lstlisting}
 
-このような差分計算は、Python の \code{for} ループでも書けるが、NumPy では配列全体に対してまとめて書ける。後の図~\ref{fig:vectorization-benchmark} に示すように、この差は速度にも大きく効く。
+この差分計算は Python の \code{for} ループでも記述できるが、NumPy では添字ループを明示せずに配列演算として記述できる。図~\ref{fig:vectorization-benchmark} では、同じ計算に要した時間を両者で比較する。
 
 数式で書けば、これは隣り合う時刻の差
 \[
@@ -24,11 +24,11 @@ deltas = times[1:] - times[:-1]
 \]
 をまとめて計算していることに対応する。NumPy を使うと、このような「添字付きの式」を配列全体に対してそのまま書きやすい。
 
-ここで重要なのは、NumPy が単に「速いリスト」ではないという点である。NumPy 配列は、同じ型の数値をまとめて持ち、一つの式で大量の要素を処理するための道具である。したがって、設計の発想も「1 要素ずつ何をするか」から「配列全体にどの変換をかけるか」へ変わる。
+NumPy 配列は、Python のリストを高速化したものではない。同じ型の数値を共通のデータ領域に保持し、配列全体への演算を低水準の実装へ渡すデータ構造である。この構造に合わせて、要素ごとの手続きではなく、配列に適用する変換として処理を記述する。
 
 \subsection{\code{ndarray} と属性}
 
-NumPy の中心は \code{ndarray} である。配列を作ったら、まず \code{shape}、\code{ndim}、\code{dtype} を確認する癖を付けると混乱しにくい。
+NumPy の中心となるデータ構造は \code{ndarray} である。配列の生成後には、\code{shape}、\code{ndim}、\code{dtype} によって形状、次元数、要素型を確認する。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -43,7 +43,7 @@ print(a.size)      # 6
 print(a.itemsize)  # 8
 \end{lstlisting}
 
-\code{shape}\index{shape@\code{shape}|textbf} は各軸の長さ、\code{ndim} は次元数、\code{dtype}\index{dtype@\code{dtype}|textbf} は要素型、\code{size} は総要素数、\code{itemsize} は 1 要素あたりのバイト数である。NumPy の初学者は「配列の中身」ばかり見がちだが、実際には \code{shape} と \code{dtype} を見れば、多くの不具合の原因を早い段階で絞り込める。
+\code{shape}\index{shape@\code{shape}|textbf} は各軸の長さ、\code{ndim} は次元数、\code{dtype}\index{dtype@\code{dtype}|textbf} は要素型、\code{size} は総要素数、\code{itemsize} は 1 要素あたりのバイト数である。値だけでなく \code{shape} と \code{dtype} も確認すると、形状不一致と型変換に起因する不具合を切り分けられる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 (2, 3)
@@ -53,7 +53,7 @@ float64
 8
 \end{lstlisting}
 
-出力を見れば、この配列が「2 行 3 列の \code{float64} 配列」であることがすぐ分かる。NumPy のトラブルの多くは、この 5 行のどれかを見れば原因に近づける。
+この出力は、\code{a} が 2 行 3 列、2 次元、6 要素の \code{float64} 配列であり、1 要素が 8 バイトであることを示す。形状不一致には \code{shape} と \code{ndim}、型変換には \code{dtype} と \code{itemsize} が診断材料となる。
 
 \subsection{Python, C, NumPy でのデータ型の違い}
 \label{sec:numpy-types}
@@ -80,13 +80,13 @@ C 言語では、\code{float} や \code{double} のように変数の型を宣�
 
 NumPy の \code{ndarray} は、要素ごとではなく配列全体で一つの \code{dtype} を共有し、データ領域と、形状・ストライドなどの管理情報を分けて保持する。配列は常に連続とは限らないが、同じ型の値を規則的にたどれるため、要素ごとの Python オブジェクト操作を避け、C や Fortran で実装されたループへまとめて処理を渡せる。この書き方をベクトル化と呼ぶ。
 
-浮動小数点型は、必要な精度と値域、配列の大きさ、入出力元の型、CPU や GPU の特性を基準に選ぶ。NumPy の多くの配列生成関数や Python の \code{float} から作る配列では \code{float64} が既定になり、反復計算や差の小さい値を扱う計算では有力な選択肢になる。一方、\code{float32} は 1 要素が 4 バイトであり、8 バイトの \code{float64} の半分で済むため、大きな画像、センサデータ、GPU 計算、メモリ転送が支配的な処理では有効である。元データが \code{float32} なら、必要性を検討せずに倍精度へ変換するとメモリだけが増える場合もある。
+浮動小数点型は、必要な精度と値域、配列の大きさ、入出力元の型、CPU や GPU の特性を基準に選ぶ。NumPy の多くの配列生成関数や Python の \code{float} から作る配列では \code{float64} が既定になり、反復計算や差の小さい値を扱う計算では有力な選択肢になる。一方、\code{float32} は 1 要素が 4 バイトであり、8 バイトの \code{float64} と比べて配列本体のメモリ使用量が半分になる。大きな画像、センサデータ、GPU 計算、メモリ転送が支配的な処理では、この差が処理可能な配列サイズを左右する。元データが \code{float32} なら、必要性を検討せずに倍精度へ変換するとメモリ使用量だけが増える場合もある。
 
 型を変えるときは、速度だけでなく結果が必要な精度を満たすかを確認する。例えば \code{np.finfo(np.float32).eps} と \code{np.finfo(np.float64).eps} を表示すると、1 付近で区別できる相対的な刻み幅を比較できる。どちらの型でも、桁落ちや丸め誤差そのものがなくなるわけではない。基準値が決まっていない段階では \code{float64} から始め、メモリや転送が問題になった時点で \code{float32} でも解析結果が変わらないかを検証する方法が堅実である。
 
-\subsection{NumPy が速くなりやすい理由}
+\subsection{メモリ配置と低水準ループによる配列演算}
 
-NumPy が速くなりやすい理由は、単に「ライブラリだから」ではない。主な理由は三つある。
+NumPy の配列演算と Python の要素別ループには、主に次の三つの実装上の差がある。
 
 \begin{enumerate}
 \item 数値を連続したメモリにまとめて持てること
@@ -94,15 +94,15 @@ NumPy が速くなりやすい理由は、単に「ライブラリだから」�
 \item 内部で低レベルに最適化された処理を使えること
 \end{enumerate}
 
-特に重要なのは、Python で 1 要素ずつ処理する回数が減ることである。大きなデータでは、この差がそのまま処理時間の差になる。
+配列演算は、Python で要素ごとに演算を呼び出す代わりに、配列全体を低水準の実装へ渡す。実行時間は、同じ入力と演算について Python ループと配列演算を測定して比較する。
 
-もう一つの利点は、式がそのまま数学的な記述に近づくことである。たとえば差分、閾値判定、正規化、平均、分散といった操作は、配列演算で書いた方が意図が明確になることが多い。読みやすさと速度が同時に改善する場面は少なくない。
+配列演算では、差分、閾値判定、正規化、平均、分散を、明示的な添字ループを用いずに記述できる。処理対象となる配列と演算の対応が式に現れるため、要素ごとの更新処理と区別できる。
 
 \section{配列の生成・演算・集計}
 
 \subsection{配列の作成}
 
-NumPy では、最初に「どの形の配列を、どの型で作るのか」を決める。\code{np.array} 以外にも、一定値で埋める、等間隔の値を作る、といった入口が多い。
+配列の生成時には、形状、要素型、初期値を定める。\code{np.array} は既存の値から配列を作り、\code{np.zeros} と \code{np.ones} は一定値で初期化し、\code{np.arange} と \code{np.linspace} は規則的な数列を作る。
 
 \begin{lstlisting}[language=Python]
 a = np.array([1, 2, 3], dtype=np.float64)
@@ -125,13 +125,13 @@ print(x)
 [0.   0.25 0.5  0.75 1.  ]
 \end{lstlisting}
 
-\code{np.array}\index{NumPy!np.array@\code{np.array}|textbf} は既存の Python リストなどから配列を作る。\code{np.zeros}\index{NumPy!np.zeros@\code{np.zeros}} と \code{np.ones}\index{NumPy!np.ones@\code{np.ones}} は初期値が明確なので安全である。\code{np.arange}\index{NumPy!np.arange@\code{np.arange}} は整数刻みの列、\code{np.linspace}\index{NumPy!np.linspace@\code{np.linspace}} は区間を等分した実数列を作る。解析では、ビン中心、時間軸、周波数軸を作る場面で \code{linspace} をよく使う。
+\code{np.array}\index{NumPy!np.array@\code{np.array}|textbf} は既存の Python リストなどから配列を作る。\code{np.zeros}\index{NumPy!np.zeros@\code{np.zeros}} と \code{np.ones}\index{NumPy!np.ones@\code{np.ones}} は、すべての要素をそれぞれ 0 と 1 で初期化する。\code{np.arange}\index{NumPy!np.arange@\code{np.arange}} は指定した刻み幅の数列、\code{np.linspace}\index{NumPy!np.linspace@\code{np.linspace}} は指定区間を等分する数列を作る。後者はビン中心、時間軸、周波数軸の生成に利用できる。
 
-\code{zeros.shape} が \code{(2, 3)} なので、\code{zeros} と \code{ones} は 2 行 3 列の配列である。\code{grid} は 0 から 8 まで 2 刻み、\code{x} は 0 から 1 を 5 点で等分した座標列である。\code{np.empty} はメモリだけ確保して値を初期化しないため高速だが、初期値は未定である。後で必ず全要素を上書きする場合にだけ使う方が安全である。
+\code{zeros.shape} が \code{(2, 3)} なので、\code{zeros} と \code{ones} は 2 行 3 列の配列である。\code{grid} は 0 から 8 まで 2 刻み、\code{x} は 0 から 1 を 5 点で等分した座標列である。\code{np.empty} は値を初期化せずにメモリを確保するため、生成直後の要素値は未定義である。読み出す前に全要素を代入する処理に用途を限定する。
 
-\subsection{よく使う操作}
+\subsection{条件抽出・ソート・差分・ヒストグラム}
 
-解析でよく使う NumPy の操作として、条件に合う要素だけを取り出すフィルタ、順序をそろえるソート、隣り合う要素の差を取る差分、分布を数えるヒストグラム\index{ひすとぐらむ@ヒストグラム|textbf}がある。これらは別々の操作に見えるが、解析ではまとめて使うことが多い。
+条件に合う要素の抽出、値のソート、隣接要素の差分、ヒストグラム\index{ひすとぐらむ@ヒストグラム|textbf}を、一つの時刻配列へ順に適用する例を示す。
 
 \begin{lstlisting}[language=Python]
 times = np.array([41, 10, 23, 15, 42])
@@ -165,7 +165,7 @@ print(edges)
 \item ヒストグラム: \code{np.histogram(times, bins=[0, 20, 40, 60])}\index{NumPy!np.histogram@\code{np.histogram}} は、区間ごとの個数を \code{hist}、区間境界を \code{edges} として返す。この例では \code{[0, 20)} に 2 個、\code{[20, 40)} に 1 個、\code{[40, 60]} に 2 個入っている。
 \end{itemize}
 
-ブール配列によるフィルタは NumPy の基本である。条件式の結果をそのまま添字にできるので、\code{(times > 20) \& (times < 40)} のような複数条件も簡潔に書ける。一方で、差分は順序に依存するので、時刻列のようなデータでは \code{np.diff(times)} をいきなり使わず、まずソートが必要かどうかを確認した方が安全である。
+条件式が返すブール配列は、そのまま添字に指定できる。複数条件には \code{(times > 20) \& (times < 40)} のように要素ごとの論理演算を用いる。\code{np.diff} の結果は要素の順序に依存するため、時刻差を求める前に入力の順序を確認し、必要ならソートする。
 
 ヒストグラムは、ビン境界 \(b_0, b_1, \dots, b_n\) に対して
 \[
@@ -208,7 +208,7 @@ print(np.sqrt(a))
 
 \subsection{集計と \code{axis}}
 
-NumPy の集計関数は、配列全体に対しても、特定の軸ごとにも使える。\code{axis}\index{axis@\code{axis}|textbf} の意味は初学者がつまずきやすいので、コードで確認するのがよい。
+NumPy の集計関数は、配列全体または指定した軸に沿って値を集計する。\code{axis}\index{axis@\code{axis}|textbf} の指定と入出力の \code{shape} の関係を、次の例で確認する。
 
 \begin{lstlisting}[language=Python]
 matrix = np.array([[1.0, 2.0, 3.0],
@@ -232,18 +232,18 @@ print(col_max)
 [4. 5. 6.]
 \end{lstlisting}
 
-\code{total} は全要素の和である。\code{axis=0} は「0 軸をつぶす」、すなわち各列ごとの集計になり、\code{axis=1} は各行ごとの集計になる。言葉だけで覚えるより、「どの軸が消えて、何が残るか」を \code{shape} で確認する方が理解しやすい。
+\code{total} は全要素の和である。\code{axis=0} は 0 軸に沿って集計するため各列の和を返し、\code{axis=1} は 1 軸に沿って集計するため各行の和を返す。入力と出力の \code{shape} を比較すると、集計によって除かれた軸を確認できる。
 
 行列 \(A = (a_{ij})\) に対しては、
 \[
 (\mathrm{col\_sum})_j = \sum_i a_{ij},\qquad
 (\mathrm{row\_sum})_i = \sum_j a_{ij}
 \]
-に対応する。つまり、\code{axis=0} は列方向の和、\code{axis=1} は行方向の和を返している。
+に対応する。したがって、\code{axis=0} の出力は列ごとの和、\code{axis=1} の出力は行ごとの和である。
 
 \subsection{添字、スライス、条件抽出}
 
-NumPy の添字は Python リストと似ているが、多次元配列とブール配列が自然に使える点が重要である。\index{すらいす@スライス|textbf}
+NumPy の添字には、Python リストと同じ整数・スライスに加え、多次元の軸指定とブール配列を使用できる。\index{すらいす@スライス|textbf}
 
 \begin{lstlisting}[language=Python]
 times = np.array([10, 15, 23, 41, 42])
@@ -268,11 +268,11 @@ print(grid[1, :])
 [4 5 6 7]
 \end{lstlisting}
 
-\code{times[1:4]} は 1 番目から 3 番目までを取り出す。\code{grid[:, 1]} は全行の 2 列目、\code{grid[1, :]} は 2 行目全体である。多次元配列に対して \code{for row in grid:} と書くと、最初の軸に沿って 1 行ずつ取り出される。反復自体はできるが、NumPy を使うなら、まず配列演算で書けないかを先に考える方が自然である。
+\code{times[1:4]} は 1 番目から 3 番目までを取り出す。\code{grid[:, 1]} は全行の 2 列目、\code{grid[1, :]} は 2 行目全体である。多次元配列に対する \code{for row in grid:} は、第 0 軸に沿って 1 行ずつ反復する。同じ演算を全行へ適用する場合は、明示的な反復と配列演算のどちらが入力と出力の関係を直接表すかを比較する。
 
 \subsection{配列形状の変更}
 
-NumPy を使い始めたら、配列の \code{shape} を意識することが重要である。1 次元配列なのか、行列なのか、列ベクトルとして扱いたいのかで、同じ演算でも結果が変わる。
+配列の \code{shape} は、演算時の軸の対応を決める。1 次元配列、2 次元行列、2 次元の列ベクトルでは、同じ演算子を用いてもブロードキャスト後の結果が異なる。
 
 \begin{lstlisting}[language=Python]
 a = np.arange(12)
@@ -309,7 +309,7 @@ print(column)
 
 \subsection{配列の連結と分割}
 
-複数の配列をつないだり、1 つの配列を分割したりする操作もよく使う。特に、前処理済みデータを縦に積む、特徴量を列方向に並べる、といった場面で必要になる。
+前処理済みデータを縦方向に連結する場合や、複数の特徴量を列方向に並べる場合には、連結する軸を指定する。逆に、一つの配列を同じ軸に沿って複数部分へ分割できる。
 
 \begin{lstlisting}[language=Python]
 x = np.array([1, 2, 3])
@@ -341,7 +341,7 @@ print(right)
  [10 11]]
 \end{lstlisting}
 
-\code{concatenate} は既存の軸に沿ってつなぐ。\code{stack} は新しい軸を追加して積む。\code{split} は指定した軸に沿って分割する。見た目が似ていても結果の \code{shape} は異なるので、実行後に必ず \code{shape} を見る方がよい。
+\code{concatenate} は既存の軸に沿って配列を連結し、\code{stack} は新しい軸を追加して配列を並べる。\code{split} は指定した軸に沿って配列を分割する。これらの操作では、実行後の \code{shape} が意図した値と一致するかを確認する。
 
 \subsection{形とブロードキャスト}
 
@@ -355,7 +355,7 @@ z = x + y
 matrix = x[:, None] + y[None, :]
 \end{lstlisting}
 
-後半の \code{matrix} では、1 次元配列に軸を追加して、3 行 3 列の和の表を作っている。このように、形状が異なる配列を一定の規則で拡張して演算する仕組みをブロードキャストという。二つの配列の全組合せを計算する場合などに有効である。この例の結果を次に示す。
+後半の \code{matrix} では、1 次元配列に軸を追加して、3 行 3 列の和の表を作っている。このように、形状が異なる配列を一定の規則で拡張して演算する仕組みをブロードキャストという。二つの 1 次元配列から要素の全組合せを計算できる一方、結果の要素数は両配列の要素数の積になる。この例の結果を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 z =
@@ -367,14 +367,14 @@ matrix =
  [13. 23. 33.]]
 \end{lstlisting}
 
-この結果から、\code{z} は要素ごとの和、\code{matrix} は全組合せの表であることが分かる。便利ではあるが、配列サイズが大きいと一気にメモリを消費するので、実データでは常に形と大きさを見積もる必要がある。
+この結果から、\code{z} は要素ごとの和、\code{matrix} は全組み合わせの表であることが分かる。\code{x} と \code{y} の要素数がそれぞれ \(N_x\) と \(N_y\) なら、\code{matrix} の要素数は \(N_xN_y\) になる。大きな配列では、生成前に形状、要素数、\code{dtype} から必要なメモリ量を見積もる。
 
 数式で書けば、
 \[
 z_i = x_i + y_i,\qquad
 M_{ij} = x_i + y_j
 \]
-である。後者の \(M_{ij}\) が、ブロードキャストによって作られる「全組合せの表」に対応している。
+である。後者の \(M_{ij}\) が、ブロードキャストによって作られる「全組み合わせの表」に対応している。
 
 \subsection{統計量とヒストグラム}
 
@@ -392,7 +392,7 @@ print(hist)
 print(edges)
 \end{lstlisting}
 
-\code{np.histogram} は図を描かずに分布だけを数えたいときに便利である。ビン境界 \code{edges} も同時に返るため、後で自分で曲線を重ねたり、複数データを比較したりしやすい。可視化と数え上げを分けて考えると、処理の見通しが良くなる。実際にこれらの統計量を出力した結果は次のようになる。
+\code{np.histogram} は、指定したビンごとの要素数とビン境界 \code{edges} を返し、図は作成しない。同じビン境界による複数データの比較や、度数に対するモデル計算を作図処理から独立させられる。これらの統計量を出力した結果を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 mean = 2.40
@@ -414,7 +414,7 @@ std = 1.02
 
 \subsection{演算子の意味の取り違え}
 
-\code{*} は要素ごとの積であり、行列積ではない。行列積が欲しいときは \code{@} か \code{np.dot} を使う。
+\code{*} は要素ごとの積であり、行列積ではない。行列積の計算には \code{@} または \code{np.dot} を用いる。
 
 \begin{lstlisting}[language=Python]
 A = np.array([[1.0, 2.0],
@@ -426,11 +426,11 @@ print(A * B)
 print(A @ B)
 \end{lstlisting}
 
-この違いを理解せずに書くと、コードは動いているのに意味だけが間違う、という厄介な状態になる。特に線形代数や座標変換では注意が必要である。
+演算子を取り違えても、形状が適合すれば例外が発生せず、意味の異なる数値が得られる場合がある。線形代数や座標変換では、期待する数式と演算子を対応付け、既知の小さな入力で結果を検証する。
 
 \subsection{\code{axis} と条件式}
 
-\code{axis} の意味は、初学者が最初に混乱しやすい箇所である。\code{axis=0} は列ごとの集計、\code{axis=1} は行ごとの集計になる。また、配列どうしの条件結合では \code{and} や \code{or} ではなく、\code{\&} や \code{|} を使う。
+2 次元配列を集計するとき、\code{axis=0} は第 0 軸を縮約して列ごとの値を返し、\code{axis=1} は第 1 軸を縮約して行ごとの値を返す。また、配列どうしの条件結合では \code{and} や \code{or} ではなく、要素ごとの論理演算子 \code{\&} や \code{|} を使う。
 
 \begin{lstlisting}[language=Python]
 matrix = np.array([[1, 2, 3],
@@ -451,7 +451,7 @@ print(times[mask])
 [15 23]
 \end{lstlisting}
 
-\code{times > 10 \& times < 40} のように括弧を省略すると、優先順位の違いで意図しない式になる。NumPy の条件式では「各比較を括弧で囲む」を基本にした方が安全である。
+\code{times > 10 \& times < 40} のように括弧を省略すると、演算子の優先順位によって意図した比較にならない。各比較を括弧で囲み、その結果を \code{\&} または \code{|} で結合する。
 
 \subsection{\code{dtype} と \code{np.empty}}
 
@@ -477,11 +477,11 @@ False
 (5,)
 \end{lstlisting}
 
-\code{a} は浮動小数点へそろえられる。これに対して \code{b} は \code{dtype.kind == "U"}、つまり Unicode 文字列の配列になっており、もはや数値計算用ではない。\code{tmp} は 0 で初期化されないので、値を見る前に必ず全要素を書き込む必要がある。配列生成直後に \code{dtype} と初期値の有無を確認することが重要である。
+\code{a} は浮動小数点へそろえられる。これに対して \code{b} は \code{dtype.kind == "U"}、つまり Unicode 文字列の配列であり、数値演算には使えない。\code{tmp} は 0 で初期化されないため、読み出し前に全要素へ値を代入する。配列の生成方法に応じて、\code{dtype} と初期化の有無を確認する。
 
 \subsection{コピーとビュー}
 
-NumPy は便利だが、配列をむやみにコピーすると逆に重くなる。一方で、意図せずビューを通じて元配列を書き換えてしまうこともある。この違いを理解せずに値を書き換えると、意図しない副作用や余分なメモリ使用を招く。
+配列のコピーは独立したメモリを使用するため、大きな配列を繰り返しコピーするとメモリ使用量と転送時間が増える。一方、ビューは元配列とメモリを共有するため、ビューを通じた代入が元配列も変更する。各操作がコピーとビューのどちらを返すかを区別する必要がある。
 
 \begin{lstlisting}[language=Python]
 a = np.arange(6)
@@ -495,7 +495,7 @@ copy[:] = 99
 safe = a.copy()
 \end{lstlisting}
 
-この例では、スライスで作った \code{view} は元の \code{a} とデータを共有するので、\code{view[:] = -1} とすると \code{a} も変わる。これに対して、整数配列やブール配列による取り出しは新しい配列を返すので、\code{copy[:] = 99} としても元の \code{a} は変わらない。\code{reshape} や \code{ravel} も可能ならビューを返すため、「独立した配列が欲しい」ときは \code{copy()} を明示した方が安全である。
+この例では、スライスで作った \code{view} は元の \code{a} とデータを共有するので、\code{view[:] = -1} とすると \code{a} も変わる。これに対して、整数配列やブール配列による取り出しは新しい配列を返すので、\code{copy[:] = 99} としても元の \code{a} は変わらない。\code{reshape} や \code{ravel} も可能ならビューを返す。元配列から独立したデータ領域が必要な場合は、\code{copy()} を明示する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 a after view = [ 0 -1 -1 -1  4  5]
@@ -507,7 +507,7 @@ safe         = [ 0 -1 -1 -1  4  5]
 
 \subsection{浮動小数点数の比較}
 
-浮動小数点数の丸め誤差にも注意が必要である。理論上は等しいはずの値でも、計算手順によって最後の数桁がずれることがある。そのため、\code{a == b} のような直接比較より、許容誤差を設けた比較を使う方が安全なことが多い。
+浮動小数点数では、計算手順による丸め誤差のため、数学的に等しい値がビット単位では一致しない場合がある。許容する相対誤差と絶対誤差を定められる場合は、直接比較の代わりに \code{np.isclose} または \code{np.allclose} を用いる。
 
 \begin{lstlisting}[language=Python]
 a = 0.1 + 0.2
@@ -524,7 +524,7 @@ True
 
 \subsection{解析で NumPy を使うときの視点}
 
-大規模データでは、型を適切に選ばないとメモリを無駄に使う。たとえば、識別子や時刻差なら \code{int64} が自然だが、カテゴリ番号が小さい範囲なら \code{int16} や \code{int32} でも十分なことがある。大規模データでは、この積み重ねが効いてくる。
+大規模データでは、必要以上に大きな型を選ぶとメモリ使用量が増える。たとえば、識別子や時刻差には \code{int64} が必要となる場合がある一方、範囲の狭いカテゴリ番号は \code{int16} や \code{int32} で表せる。要素数を \(N\)、1 要素のバイト数を \(b\) とすれば、配列本体には少なくとも \(Nb\) バイトが必要であるため、型の差は要素数に比例して総使用量へ反映される。
 
 また、平均や分散だけでなく、差分、閾値判定、並べ替え、ヒストグラムまで NumPy の中で一貫して処理できると、コードの往復が減り、解析の流れを追いやすくなる。
 
@@ -533,6 +533,7 @@ True
 解析では、まず時刻順に並べ、次に差分を取り、その後で条件を掛けて分布を見る、という流れがよく現れる。NumPy ではこの流れをほぼそのまま式として書ける。
 
 \begin{lstlisting}[language=Python]
+times = np.array([10, 15, 23, 41, 42])
 order = np.argsort(times)
 sorted_times = times[order]
 deltas = np.diff(sorted_times)
@@ -549,9 +550,9 @@ deltas       = [ 5  8 18  1]
 peak_bin     = 0
 \end{lstlisting}
 
-\subsection{線形代数の入口}
+\subsection{\code{numpy.linalg} による連立一次方程式の求解}
 
-NumPy は単なる配列操作だけでなく、線形代数の入口としても重要である。小規模な連立方程式や座標変換なら、まず NumPy の \code{linalg} を使うだけで十分なことが多い。
+\code{numpy.linalg} は、連立一次方程式、行列分解、固有値などの線形代数演算を提供する。次の例では、2 元連立一次方程式 \(A\boldsymbol{x}=\boldsymbol{b}\) を \code{solve} で解く。
 
 \begin{lstlisting}[language=Python]
 A = np.array([[1.0, 1.0],
@@ -560,11 +561,11 @@ b = np.array([3.0, 1.0])
 x = np.linalg.solve(A, b)
 \end{lstlisting}
 
-校正係数の決定、座標変換、最小二乗法の前処理などでは、こうした線形代数の操作が自然に現れる。大規模で高度な最適化は後の SciPy 章で扱うが、入口は NumPy で十分に理解できる。
+行列演算は、校正係数の決定、座標変換、最小二乗法の前処理に現れる。制約付き最適化や疎行列など、\code{numpy.linalg} の範囲を越える機能は SciPy 章で扱う。
 
 \subsubsection{Python リストで要素ごとに計算する場合}
 
-Python の標準リストは異なる型のオブジェクトを同じ容器に保持できる。一方、同じ数値演算を大量の要素へ適用する場合は、各要素について Python の演算を呼び出す必要がある。次の例では、100 万個の整数を 2 倍する処理を内包表記で記述している。
+Python の標準リストは異なる型のオブジェクトを同じリストに保持できる。一方、同じ数値演算を大量の要素へ適用する場合は、各要素について Python の演算を呼び出す必要がある。次の例では、100 万個の整数を 2 倍する処理を内包表記で記述している。
 
 \begin{lstlisting}[language=Python]
 # 100万個のリストを作る
@@ -583,13 +584,13 @@ NumPy 配列では、\code{int64} や \code{float64} のような共通の型に
 \begin{lstlisting}[language=Python]
 import numpy as np
 
-# 1. リストから NumPy アレイへの変換（メモリ上にきれいに並べ直す）
+# 1. Python リストから共通 dtype の NumPy 配列を作る
 np_array = np.array(py_list)
 
-# 2. アレイはベクトル演算が可能（for文を書かなくても全要素を一気に計算できる）
+# 2. 配列全体の演算を NumPy の内部ループへ渡す
 doubled_array = np_array * 2
 
-# 3. アレイからリストへ戻すことも可能だが、重いので通常は最後だけにする
+# 3. 必要な出力形式がリストの場合にだけ変換する
 back_to_list = doubled_array.tolist()
 \end{lstlisting}
 
@@ -607,7 +608,7 @@ df = pd.DataFrame(np_array, columns=["Value"])
 values_array = df["Value"].to_numpy()
 \end{lstlisting}
 
-\code{to\_numpy()} がコピーを作るかどうかは、列の型、列数、必要な型変換に依存する。単一の数値列では元データとメモリを共有する場合もあるが、常に共有されるとは限らない。コピーの有無が性能や書換えに影響する場面では、\code{np.shares\_memory()} で確認し、必要なら \code{to\_numpy(copy=True)} で独立した配列を要求する。
+\code{to\_numpy()} がコピーを作るかどうかは、列の型、列数、必要な型変換に依存する。単一の数値列では元データとメモリを共有する場合もあるが、常に共有されるとは限らない。コピーの有無が性能や書き換えに影響する場面では、\code{np.shares\_memory()} で確認し、必要なら \code{to\_numpy(copy=True)} で独立した配列を要求する。
 
 \subsection{公式資料の使い方}
 
@@ -627,11 +628,11 @@ times = np.array([720.0, 0.0, 60.0, 4200.0, 180.0, 780.0])
 小規模入力では、整列後の時刻が \code{[0., 60., 180., 720., 780., 4200.]}、\(\Delta t\) が \code{[60., 120., 540., 60., 3420.]} になる。\code{np.sort()} が返す配列と \code{np.diff()} が返す配列について、\code{shape}、\code{dtype}、要素数が 1 減る理由を説明せよ。
 
 \item \textbf{NumPy による発生間隔の基本統計とヒストグラム}。
-\(\Delta t\) 配列に対して、平均値、0 秒超だけに絞った要素数、\([0, 60)\,\mathrm{s}\)、\([60, 600)\,\mathrm{s}\)、\([600, 3600)\,\mathrm{s}\) の 3 区間の個数を求めよ。さらに \code{np.histogram} を用いて 0 秒から 3600 秒までを等間隔ビンに分け、最も多いビンの範囲を報告せよ。
-小規模入力の平均値は 840 秒であり、0 秒超の要素数は 5 である。3 区間の個数は順に 0、4、1 になる。区間の右端を含めるかどうかが条件式と一致していることを確認し、\code{np.histogram()} が返す \code{counts} と \code{bin\_edges} の長さの関係も説明せよ。
+\(\Delta t\) 配列に対して、平均値、0 秒超だけに絞った要素数、\([0, 60)\,\mathrm{s}\)、\([60, 600)\,\mathrm{s}\)、\([600, 3600)\,\mathrm{s}\) の 3 区間の個数を求めよ。さらに、\code{edges = np.arange(0.0, 3600.0 + 600.0, 600.0)} として 600 秒幅の境界を作り、\code{np.histogram} によって各ビンの個数と最頻ビンの範囲を求めよ。
+小規模入力の平均値は 840 秒であり、0 秒超の要素数は 5 である。3 区間の個数は順に 0、4、1 になる。600 秒幅のヒストグラムでは、\([0,600)\,\mathrm{s}\) が 4 件で最頻ビンとなり、最後の \([3000,3600]\,\mathrm{s}\) が 1 件となる。区間の右端を含めるかどうかが条件式と一致していることを確認し、\code{np.histogram()} が返す \code{counts} と \code{bin\_edges} の長さの関係も説明せよ。
 
 \item \textbf{発展課題}。
-発生間隔は短時間側に密集し、長時間側にはまばらに点が残ることが多い。そのため、等間隔ビンだけでは短時間側の構造が見えにくいことがある。たとえば \code{np.logspace(np.log10(1), np.log10(3600), 30)} のようにビン境界を作り、\(\Delta t\) のヒストグラムを対数ビンで作り直して、固定幅ビンの場合と見え方を比較せよ。余裕があれば、日本近海データを別に取得して同じ処理を行い、全球データとの違いも比較せよ。
+発生間隔は短時間側に密集し、長時間側には少数の値が残る場合がある。そのため、等間隔ビンだけでは短時間側の差を分解できないことがある。たとえば \code{np.logspace(np.log10(1), np.log10(3600), 30)} のようにビン境界を作り、\(\Delta t\) のヒストグラムを対数ビンで作り直せ。固定幅ビンと対数ビンについて、ビン幅、空のビンの数、最短値から最長値までを収めるビン数を比較せよ。発展課題では、日本近海の範囲を緯度・経度で定義してデータを別に取得し、同じ集計条件による全球データとの分布差を比較せよ。
 \end{enumerate}
 
-NumPy 配列は同じ型の数値を計算する場合に適している。一方、観測時刻、検出器名、信号値のように、意味と型が異なる列をまとめて扱うには表形式の構造が適している。次章では、NumPy の列演算を土台として、pandas の列名、欠損値、グループ集計、結合を扱う。
+NumPy 配列は、配列全体で一つの \code{dtype} を共有する。一方、観測時刻、検出器名、信号値のように型の異なる列を一つの記録として保持するには、列ごとに型を持つ表形式の構造を用いる。次章では、pandas の列名、欠損値、グループ集計、結合を扱う。

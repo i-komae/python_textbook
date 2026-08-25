@@ -5,7 +5,7 @@
 
 \section{サーバーへの SSH 接続と鍵認証}
 
-SSH は、離れたマシンへ安全に接続してコマンドを実行するための仕組みである。研究室や計算サーバーへ入り、大きなデータ処理や長時間ジョブを回すときによく使う。GitHub へ SSH で接続するときにも同じ仕組みを使うが、GitHub はシェルへログインする相手ではなく、Git 操作の認証先である点は区別しておいた方がよい。
+SSH は、離れた計算機との通信を暗号化し、その計算機上でコマンドを実行するための仕組みである。研究室や計算サーバーに接続し、大規模なデータ処理や長時間ジョブを実行する場合に利用する。GitHub への SSH 接続も同じ認証方式を用いるが、GitHub は対話的なシェルの接続先ではなく、Git 操作の認証先である。
 
 \subsection{サーバーへの接続}
 \index{ssh command@\code{ssh}|textbf}
@@ -22,20 +22,20 @@ $ ssh user@server.example.jp
 $ ssh -p 2222 user@server.example.jp
 \end{lstlisting}
 
-接続後は、ローカルのターミナルと似た形でコマンドを打てる。ただし、そこで見えているファイルは自分の手元ではなく、サーバー側のファイルである。この区別が曖昧になると事故の原因になるので、\code{hostname}、\code{whoami}、\code{pwd} を見て今どこにいるかを確かめる習慣を持った方がよい。
+接続後に入力したコマンドは、原則として接続先の計算機上で実行される。表示されるファイルも接続先にあるため、ローカルファイルとの取り違えは意図しない変更や削除につながる。作業を始める前に \code{hostname}、\code{whoami}、\code{pwd} を実行すれば、接続先、利用者名、作業ディレクトリを確認できる。
 
 \subsection{SSH 鍵の作成}
 \index{ssh-keygen@\code{ssh-keygen}|textbf}
 \index{こうかいかぎ@公開鍵|textbf}
 \index{ひみつかぎ@秘密鍵|textbf}
 
-毎回パスワードを打つ代わりに、SSH 鍵を使うことが多い。鍵は公開鍵と秘密鍵の 2 つ 1 組であり、公開鍵をサーバーへ登録し、秘密鍵は自分だけが持つ。
+公開鍵認証では、公開鍵と秘密鍵の対を使用する。公開鍵をサーバーへ登録し、秘密鍵は接続元の計算機から外部へ渡さない。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh-keygen -t ed25519 -C "your_email@example.com"
 \end{lstlisting}
 
-既定値のまま進めると、多くの場合は \code{\textasciitilde/.ssh/id\_ed25519} が秘密鍵、\code{\textasciitilde/.ssh/id\_ed25519.pub} が公開鍵になる。\code{.pub} が付いている方だけを相手へ渡す。\code{.pub} が付いていない方は秘密鍵なので、決して共有してはいけない。
+既定の保存先を選ぶと、\code{\textasciitilde/.ssh/id\_ed25519} が秘密鍵、\code{\textasciitilde/.ssh/id\_ed25519.pub} が公開鍵になる。サーバーへ登録するのは \code{.pub} が付いた公開鍵だけである。\code{.pub} が付かない秘密鍵は共有しない。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -l ~/.ssh
@@ -52,7 +52,7 @@ $ chmod 644 ~/.ssh/id_ed25519.pub
 \subsection{サーバーへの公開鍵登録}
 \index{ssh-copy-id@\code{ssh-copy-id}|textbf}
 
-公開鍵をサーバーへ登録する最も簡単な方法は \code{ssh-copy-id} である。
+\code{ssh-copy-id} は、公開鍵を接続先の \code{authorized\_keys} へ追加するコマンドである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh-copy-id user@server.example.jp
@@ -91,29 +91,33 @@ $ ssh-add ~/.ssh/id_ed25519
 \subsection{\code{\textasciitilde/.ssh/config} による接続設定}
 \index{ssh config@\code{\textasciitilde/.ssh/config}|textbf}
 
-接続先が増えると、毎回長いホスト名やポート番号や鍵ファイル名を書くのは面倒になる。そこで \code{\textasciitilde/.ssh/config} を使う。設定ファイルの中身は次のようになる。
+\code{\textasciitilde/.ssh/config} には、接続先ごとのホスト名、利用者名、ポート番号、秘密鍵ファイルを記録できる。次の設定では、これらの接続条件に \code{labserver} という名前を付ける。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={\textasciitilde/.ssh/config}]
 Host labserver
     HostName server.example.jp
-    User ikomae
+    User student
     Port 2222
     IdentityFile ~/.ssh/id_ed25519
 \end{lstlisting}
 
-これを書いておけば、以後は次のように短く書ける。
+この設定を保存すると、次のコマンドが同じ接続条件を参照する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh labserver
 \end{lstlisting}
 
-\code{config} ファイル自体も秘密情報に近いので、\code{chmod 600 \textasciitilde/.ssh/config} としておく方が安全である。
+この設定ファイルには接続先、利用者名、秘密鍵ファイルの場所が記録されるが、秘密鍵そのものは含まれない。ただし、第三者による書き換えを防ぐため、所有者だけが読み書きできる権限を設定する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ chmod 600 ~/.ssh/config
+\end{lstlisting}
 
 \subsection{GitHub への SSH 鍵登録}
 
 通常のサーバーとは違って、GitHub には \code{ssh-copy-id} を使わない。GitHub はシェル接続先ではなく、アカウント設定に公開鍵を登録する相手だからである。
 
-最も確実なのは、GitHub の設定画面の \code{SSH and GPG keys} へ公開鍵を登録する方法である。もし GitHub CLI \code{gh} を使うなら、認証時に SSH 鍵の作成や登録を案内させることもできる。
+GitHub の設定画面にある \code{SSH and GPG keys} へ公開鍵を登録する。GitHub CLI \code{gh} を使う場合は、認証手順の中で既存鍵の登録または新規鍵の作成を選択できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ gh auth login --git-protocol ssh --web
@@ -123,7 +127,7 @@ GitHub CLI を使う場合は、既存の鍵を検出してアップロードす
 
 \section{\code{scp}・\code{rsync} によるファイル転送}
 
-小さなファイルを 1 回だけ送るなら \code{scp} でもよいが、解析ではディレクトリ全体を何度も同期することが多い。その場合は \code{rsync} を使う方が自然である。
+\code{scp} は指定したファイルまたはディレクトリを転送する。\code{rsync} は送信元と転送先の差分を調べ、除外条件や中断後の部分ファイルの保持を指定できる。単発の転送には \code{scp}、同じディレクトリの反復同期には \code{rsync} を用いる。
 
 \subsection{\code{scp} の最小例}
 \index{scp@\code{scp}|textbf}
@@ -135,12 +139,12 @@ $ scp result.csv user@server.example.jp:~/work/
 $ scp user@server.example.jp:~/work/result.csv .
 \end{lstlisting}
 
-1 行目は手元からサーバーへ送り、2 行目はサーバーから手元へ持ってくる。ディレクトリごと送りたい場合は \code{-r} を付ける。
+1 行目はローカルからサーバーへ送信し、2 行目はサーバーからローカルへ受信する。ディレクトリ全体を転送する場合は \code{-r} を付ける。
 
-\subsection{\code{rsync} を推奨する理由}
+\subsection{差分同期に \code{rsync} を用いる理由}
 \index{rsync@\code{rsync}|textbf}
 
-\code{rsync} は、差分だけを転送し、途中で止まっても再開しやすく、除外パターンも柔軟に書ける。そのため、解析用ディレクトリやコード一式をサーバーへ送る用途では \code{scp} より向いている。
+\code{rsync} は、送信元と転送先の差分を転送し、\code{--partial} で中断時の部分ファイルを保持し、\code{--exclude} で転送対象を除外できる。解析用ディレクトリやコード一式を反復同期する場合は、変更のないファイルも再転送する \code{scp} より転送量を抑えられる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rsync -aP ./analysis/ user@server.example.jp:~/work/analysis/
@@ -167,7 +171,7 @@ $ rsync -aPv \
   ./analysis/ user@server.example.jp:~/work/analysis/
 \end{lstlisting}
 
-仮想環境、キャッシュ、ビルド成果物はサーバー側で作り直せることが多いので、転送から外した方が軽くなる。
+この例では、依存関係の定義やソースコードから転送先で再生成できる仮想環境、キャッシュ、ビルド成果物を除外し、転送量を減らしている。
 
 \subsubsection{末尾のスラッシュによる転送結果の違い}
 \index{rsync@\code{rsync}!まつびのすらっしゅ@末尾のスラッシュ}

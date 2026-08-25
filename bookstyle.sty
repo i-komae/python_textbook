@@ -13,6 +13,12 @@
 
 \AtBeginDocument{\color{BookText}}
 
+% 3 桁のページ番号と長い節名が重ならないように、目次の番号欄を広げる。
+\makeatletter
+\renewcommand{\@pnumwidth}{3em}
+\renewcommand{\@tocrmarg}{4em}
+\makeatother
+
 % --------------------------------------------------
 % jlreq ネイティブページスタイル設定（ヘッダー・フッター）
 % --------------------------------------------------

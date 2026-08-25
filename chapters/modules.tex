@@ -1,43 +1,42 @@
 \chapter{自作モジュールの作成と再利用}
 \label{ch:modules}
 
-解析コードは最初、1 本のスクリプトとして書き始めることが多い。しかし、同じ処理を別の日のデータにも使いたくなり、さらに別のプロジェクトからも呼びたくなると、単発スクリプトのままでは管理しにくい。こういうときは、処理を自作モジュール\index{もじゅーる@モジュール|textbf}として切り出し、必要ならパッケージとしてインストールできる形へ整理した方がよい。
+一つのスクリプトに記述した処理を複数のデータやプロジェクトから利用する場合、コピーによる再利用では修正内容が分岐する。再利用する処理を自作モジュール\index{もじゅーる@モジュール|textbf}へ分離し、パッケージとしてインストールできる構成にすると、実装とテストを一か所で管理できる。
 
-ここでいう「モジュール」は、\code{plotting.py} や \code{models.py} のような一つの Python ファイルを指す。一方、パッケージ\index{ぱっけーじ@パッケージ|textbf}は、複数のモジュールをディレクトリへまとめ、\code{import} できる形にした単位である。本章では、\code{uv}\index{uv@\code{uv}|textbf} によるパッケージの作成と、\code{pip install} および \code{pip install -e} による導入を扱う。
+ここでいう「モジュール」は、\code{plotting.py} や \code{models.py} のような一つの Python ファイルを指す。一方、パッケージ\index{ぱっけーじ@パッケージ|textbf}は、複数のモジュールをディレクトリへまとめ、\code{import} できる形にした単位である。本章では、\code{uv}\index{uv@\code{uv}|textbf} によるライブラリ用パッケージの作成と、通常インストールおよび editable install を扱う。
 
 \section{解析処理を再利用可能な部品へ分ける理由}
 
-処理をモジュールへ分ける利点は、単にファイル数が増えることではない。役割ごとに分離でき、テストしやすくなり、エディタから補完やドキュメントも見やすくなる。特に解析では、次のような部品が再利用されやすい。
+処理を役割ごとのモジュールへ分けると、各公開関数に対して独立したテスト、型情報、docstring を用意できる。解析コードで複数の入力やプロジェクトから共有する対象には、次のものがある。
 
 \begin{itemize}
-\item データ読込み関数
+\item データ読み込み関数
 \item フィルタ条件やカットの判定関数
 \item 図を作成して保存する関数
 \item フィット関数やモデル関数
 \end{itemize}
 
-こうした処理を \code{main.py} の中へすべて書いてしまうと、別スクリプトから流用するときにコピーペーストが増える。コピー元とコピー先がずれると、片方だけバグ修正される、といった問題も起こりやすい。自作モジュールへ切り出して \code{from histfit\_tools import save\_histogram\_with\_fit} のように呼べる形にしておけば、修正箇所は 1 か所で済む。
+同じ処理を複数のスクリプトへコピーすると、それぞれが独立した実装となり、修正内容が一致しなくなる場合がある。自作モジュールから \code{from histfit\_tools import save\_histogram\_with\_fit} のように import すれば、呼び出し側を複製せずに一つの実装を共有できる。
 
 \section{\code{uv} によるパッケージ開発の初期化}
 
 \subsection{最初の初期化}
 \index{src layout@src レイアウト|textbf}
 
-本書では、単発スクリプトではなく「後で \code{import} される部品」として育てるため、\code{uv init --package} から始める。次の 2 コマンドで、ヒストグラム作図用パッケージの初期構成を作成できる。
+本書では、他のコードから \code{import} するライブラリを作るため、\code{uv init --lib} を用いる。次のコマンドによって、ヒストグラム作図用ライブラリの初期構成と依存関係を作成する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir histfit_tools
 $ cd histfit_tools
-$ uv init --package
+$ uv init --lib
 $ uv add numpy matplotlib scipy
 $ uv add --dev pytest ruff
 $ uv sync
 \end{lstlisting}
 
-\code{uv add} で追加した \code{numpy}、\code{matplotlib}、\code{scipy} は、このパッケージを使うときにも必要な実行時依存関係である。一方、\code{pytest} や \code{ruff} は開発者だけが使う道具なので、\code{--dev} 付きで追加する。たとえば \code{pytest} は、本章で後から示す \code{tests/test\_models.py} のように、\code{linear} が期待通りの値を返すか、未知のモデル名で \code{ValueError} が正しく送出されるかなどのテストを行う際に使用する。\code{ruff} は、\code{uv run ruff check .} として実行し、未使用 import や単純な書式崩れを commit 前に見つけるための道具である。
-\code{pytest}\index{pytest@\code{pytest}|textbf} や \code{ruff}\index{ruff@\code{ruff}|textbf} によるテストは必須ではないが、将来的にパッケージを公開する予定があるなら早い段階で実装しておくことが好ましい。
+\code{uv add} で追加した \code{numpy}、\code{matplotlib}、\code{scipy} は、このパッケージの実行時依存関係である。\code{pytest} と \code{ruff} は開発時にだけ使うため、\code{--dev} 付きで追加する。\code{pytest} は公開関数の戻り値と例外を検証し、\code{ruff} は \code{uv run ruff check .} によって未使用 import や規則違反を変更記録前に検出する。本章では、公開関数のテストをパッケージ構成の一部として扱う。
 
-最終的なディレクトリ構成は、少なくとも次のように整理したい。
+この例で作成するディレクトリ構成を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={histfit\_tools/ の例}]
 .gitignore
@@ -47,17 +46,18 @@ pyproject.toml
 src/
 `-- histfit_tools/
     |-- __init__.py
+    |-- py.typed
     |-- models.py
     `-- plotting.py
 tests/
 `-- test_models.py
 \end{lstlisting}
 
-ここで \code{src/} の下にパッケージを置く構成を \code{src} レイアウトという。これは、作業ディレクトリ直下にあるファイルをたまたま import してしまう事故を防ぎやすい。パッケージとして配布する前提なら、この構成にしておく方が後で困りにくい。
+ここで \code{src/} の下にパッケージを置く構成を \code{src} レイアウトという。プロジェクトのルートをカレントディレクトリにしただけでは \code{src/histfit\_tools} を直接 import できないため、インストールされていない作業ツリーを誤って読み込む問題を検出しやすい。\code{py.typed} は、配布したパッケージの型情報を型検査器が利用できることを示す。
 
 \subsection{\code{pyproject.toml} の役割}
 
-パッケージ開発では、\code{pyproject.toml}\index{pyproject.toml@\code{pyproject.toml}|textbf} が中心になる。ここにはパッケージ名、Python バージョン条件、依存関係\index{いそんかんけい@依存関係|textbf}、ビルド方法などを書く。上の例なら、少なくとも次のような内容になる。
+パッケージ開発では、\code{pyproject.toml}\index{pyproject.toml@\code{pyproject.toml}|textbf} が中心になる。ここにはパッケージ名、Python バージョン条件、依存関係\index{いそんかんけい@依存関係|textbf}、ビルド方法などを書く。次は各項目の役割を示す簡略例であり、\code{uv init --lib} と \code{uv add} が生成する下限バージョンは実行時の解決結果によって異なる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={pyproject.toml}]
 [project]
@@ -67,25 +67,25 @@ description = "Histogram plotting and fitting utilities."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "matplotlib>=3.10",
-  "numpy>=2.0",
-  "scipy>=1.15",
+  "matplotlib",
+  "numpy",
+  "scipy",
 ]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-  "pytest>=8.3",
-  "ruff>=0.11",
+  "pytest",
+  "ruff",
 ]
 \end{lstlisting}
 
-\code{dependencies} に書いた内容は、このパッケージを \code{pip install} したときに一緒に解決される。ここへ列挙したライブラリは、パッケージの実行に必要な依存関係として記録される。
+\code{dependencies} に列挙したライブラリは、このパッケージをインストールするときに実行時依存関係として解決される。実際に生成された \code{pyproject.toml} の \code{[build-system]} には、\code{uv} と互換性のある \code{uv\_build} のバージョン範囲も記録されるため、その範囲を理由なく削除しない。
 
-一方、\code{uv.lock} は開発側で環境を厳密にそろえるためのファイルである。自分のリポジトリへ戻ってきたときや、共同研究者が同じ環境を再現したいときには \code{uv lock} や \code{uv sync} が役に立つ。しかし、利用者が \code{pip install} するときに参照するのは基本的に \code{pyproject.toml} であり、\code{uv.lock} ではない。この違いは重要である。
+\code{uv.lock} は、リポジトリ内の開発・検証環境で解決した依存関係を記録する。\code{uv sync} は \code{pyproject.toml} と \code{uv.lock} に基づいて環境を同期する。一方、一般的なビルドフロントエンドがライブラリをインストールするときには、\code{pyproject.toml} のプロジェクト情報と依存関係を参照し、\code{uv.lock} を配布パッケージの依存関係としては用いない。
 
 \section{具体例: ヒストグラムとフィットをまとめたパッケージ}
 
@@ -159,7 +159,7 @@ def resolve_model(model: str | ModelFunc) -> ModelFunc:
         raise ValueError(f"Unknown model: {model}. Choose from {names}.") from exc
 \end{lstlisting}
 
-モデル関数を別ファイルへ置いておくと、作図ロジックと数学的なモデルが分離される。その結果、後で指数減衰やローレンツ関数を追加したくなったときも、\code{plotting.py} を大きく書き換えずに済む。
+モデル関数を別ファイルへ置くと、作図処理と数学的なモデルが分離される。指数減衰やローレンツ関数を追加する場合も、\code{plotting.py} の変更箇所をモデルの選択と呼び出しに限定できる。
 
 \subsection{\code{pytest} による最小テスト}
 
@@ -191,7 +191,7 @@ def test_resolve_model_rejects_unknown_name() -> None:
         resolve_model("lorentzian")
 \end{lstlisting}
 
-最初のテストは、一次関数の実装が式通りかを直接確かめている。2 つ目は、ガウス関数が平均値の位置で最大になり、左右対称になることを見ている。3 つ目は、誤ったモデル名を黙って通さず、利用者へ早い段階でエラーを返すことを確かめるテストである。
+最初のテストは一次関数の出力を既知の値と比較する。2 つ目は、ガウス関数が平均値の位置で最大となり、平均値から等距離にある 2 点で同じ値を返すことを検証する。3 つ目は、登録されていないモデル名に対して \code{ValueError} が発生することを検証する。
 
 テストは次のコマンドで実行できる。
 
@@ -200,7 +200,7 @@ $ uv run pytest
 $ uv run ruff check .
 \end{lstlisting}
 
-ここで \code{pytest} は関数の振る舞いを確かめ、\code{ruff} は未使用 import や単純な書式の乱れを確認する。今回のような小さなパッケージでも、この 2 つがあるだけで「動いているつもり」の状態を減らしやすい。
+\code{pytest} は関数の出力と例外条件を検証し、\code{ruff} は未使用 import や設定した規則への違反を検出する。実行結果と静的検査を分けることで、テストされていない動作と、実行前に検出できる記述上の問題を区別できる。
 
 \subsection{ヒストグラムの作成・保存関数}
 
@@ -208,6 +208,7 @@ $ uv run ruff check .
 
 \begin{lstlisting}[language=Python, title={src/histfit\_tools/plotting.py}]
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -216,6 +217,17 @@ from numpy.typing import ArrayLike
 from scipy.optimize import curve_fit
 
 from .models import ModelFunc, resolve_model
+
+
+@dataclass(frozen=True)
+class HistogramFitResult:
+    """保存先、ヒストグラム、フィット結果を保持する。"""
+
+    output_path: Path
+    counts: np.ndarray
+    bin_edges: np.ndarray
+    parameters: np.ndarray | None
+    covariance: np.ndarray | None
 
 
 def _make_bin_edges(
@@ -231,7 +243,9 @@ def _make_bin_edges(
         low = float(np.min(values))
         high = float(np.max(values))
     else:
-        low, high = data_range
+        low, high = map(float, data_range)
+        if not np.isfinite([low, high]).all() or low >= high:
+            raise ValueError("data_range must contain finite low < high.")
 
     if low == high:
         high = low + 1.0
@@ -245,9 +259,16 @@ def _make_bin_edges(
         bins = 40
 
     if isinstance(bins, int):
+        if bins <= 0:
+            raise ValueError("bins must be positive.")
         return np.linspace(low, high, bins + 1)
 
-    return np.asarray(bins, dtype=float)
+    bin_edges = np.asarray(bins, dtype=float)
+    if bin_edges.ndim != 1 or bin_edges.size < 2:
+        raise ValueError("bins must contain at least two edges.")
+    if not np.isfinite(bin_edges).all() or np.any(np.diff(bin_edges) <= 0):
+        raise ValueError("bin edges must be finite and strictly increasing.")
+    return bin_edges
 
 
 def save_histogram_with_fit(
@@ -263,7 +284,7 @@ def save_histogram_with_fit(
     xlabel: str = "x",
     ylabel: str = "Counts",
     title: str | None = None,
-) -> Path:
+) -> HistogramFitResult:
     """ヒストグラムと誤差棒を描き、必要ならフィット線も重ねて保存する。
 
     Args:
@@ -280,11 +301,15 @@ def save_histogram_with_fit(
         title: 図タイトル。
 
     Returns:
-        保存したファイルの Path。
+        保存先、ヒストグラム、フィット結果をまとめたオブジェクト。
     """
     values = np.asarray(data, dtype=float)
     if values.ndim != 1:
         raise ValueError("data must be one-dimensional.")
+    if values.size == 0:
+        raise ValueError("data must not be empty.")
+    if not np.isfinite(values).all():
+        raise ValueError("data must contain only finite values.")
 
     bin_edges = _make_bin_edges(values, bins, bin_width, data_range)
     counts, bin_edges = np.histogram(values, bins=bin_edges)
@@ -294,10 +319,12 @@ def save_histogram_with_fit(
     fig, ax = plt.subplots()
     ax.errorbar(centers, counts, yerr=errors, fmt="o", capsize=3, label="data")
 
+    fit_params = None
+    fit_cov = None
     if fit:
         model = resolve_model(fit_model)
         sigma = np.where(errors > 0, errors, 1.0)
-        params, _ = curve_fit(
+        fit_params, fit_cov = curve_fit(
             model,
             centers,
             counts,
@@ -307,7 +334,7 @@ def save_histogram_with_fit(
             maxfev=10000,
         )
         x_fit = np.linspace(bin_edges[0], bin_edges[-1], 400)
-        y_fit = model(x_fit, *params)
+        y_fit = model(x_fit, *fit_params)
         ax.plot(x_fit, y_fit, label="fit")
 
     ax.set_xlabel(xlabel)
@@ -320,7 +347,13 @@ def save_histogram_with_fit(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    return output_path
+    return HistogramFitResult(
+        output_path=output_path,
+        counts=counts,
+        bin_edges=bin_edges,
+        parameters=fit_params,
+        covariance=fit_cov,
+    )
 \end{lstlisting}
 
 この関数では、ビン境界の決定と作図本体を分けている。こうしておくと、ビン幅指定のロジックだけを単独にテストしやすい。また、\code{fit\_model} が文字列なら既定のモデル群から選び、callable ならそのまま使うので、利用者は既定モデルと自作モデルを同じ引数で扱える。
@@ -328,16 +361,17 @@ def save_histogram_with_fit(
 \subsection{\code{\_\_init\_\_.py} による公開インタフェースの整理}
 \index{こうかいapi@公開 API|textbf}
 
-パッケージの外から使ってほしい関数は、\code{\_\_init\_\_.py} でまとめて再公開しておくとよい。
+パッケージの公開 API に含める関数とクラスは、\code{\_\_init\_\_.py} で再公開する。
 
 \begin{lstlisting}[language=Python, title={src/histfit\_tools/\_\_init\_\_.py}]
 """Histogram plotting and fitting utilities."""
 
 from .models import gaussian, linear, power_law, quadratic
-from .plotting import save_histogram_with_fit
+from .plotting import HistogramFitResult, save_histogram_with_fit
 
 __all__ = [
     "gaussian",
+    "HistogramFitResult",
     "linear",
     "power_law",
     "quadratic",
@@ -361,7 +395,7 @@ from histfit_tools import save_histogram_with_fit
 rng = np.random.default_rng(42)
 data = rng.normal(loc=5.0, scale=1.2, size=4000)
 
-save_histogram_with_fit(
+fit_result = save_histogram_with_fit(
     data,
     Path("figures/gaussian_fit.png"),
     bins=35,
@@ -370,6 +404,11 @@ save_histogram_with_fit(
     xlabel="signal [mV]",
     title="Gaussian fit example",
 )
+
+if fit_result.parameters is not None and fit_result.covariance is not None:
+    parameter_errors = np.sqrt(np.diag(fit_result.covariance))
+    print(fit_result.parameters)
+    print(parameter_errors)
 
 save_histogram_with_fit(
     data,
@@ -382,7 +421,7 @@ save_histogram_with_fit(
 
 1 つ目はガウス関数でフィットし、2 つ目は \code{fit=False} としてヒストグラムだけを保存している。ビン数指定とビン幅指定の両方が動くことも、この 2 例で確認できる。
 
-1 つ目の呼出しで保存される図の例を図~\ref{fig:histfit-module-example} に示す。ヒストグラムは入力した 4000 個の信号値を表し、曲線はビンごとの度数へ当てはめたガウス関数である。この入力は平均 5.0 mV、標準偏差 1.2 mV の正規分布から生成しているため、凡例に示した推定値が生成条件に近いことを確認できる。図を保存できるだけでなく、既知の入力に対して妥当なパラメータが得られることまで確かめる必要がある。
+1 つ目の呼び出しで保存される図の例を図~\ref{fig:histfit-module-example} に示す。ヒストグラムは入力した 4000 個の信号値を表し、曲線はビンごとの度数へ当てはめたガウス関数である。この入力は平均 5.0 mV、標準偏差 1.2 mV の正規分布から生成している。戻り値の \code{parameters} と \code{covariance} を調べれば、推定した中心と幅、および各パラメータの標準誤差を生成条件と比較できる。図の保存だけでなく、既知の入力に対して推定結果が妥当かどうかも検証する。
 
 \begin{figure}[H]
 \centering
@@ -391,7 +430,7 @@ save_histogram_with_fit(
 \label{fig:histfit-module-example}
 \end{figure}
 
-\code{fit\_model} には、あらかじめ登録した名前だけでなく、同じ呼出し規約を持つ自作関数も渡せる。指数減衰関数を渡す例を次に示す。
+\code{fit\_model} には、あらかじめ登録した名前だけでなく、同じ呼び出し規約を持つ自作関数も渡せる。指数分布から生成したデータのヒストグラムへ、指数減衰関数を当てはめる例を次に示す。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -408,32 +447,36 @@ def exponential_decay(
     return amplitude * np.exp(-x / tau) + offset
 
 
+rng = np.random.default_rng(42)
+decay_data = rng.exponential(scale=3.0, size=4000)
+
 save_histogram_with_fit(
-    data,
+    decay_data,
     "figures/custom_fit.png",
     bin_width=0.25,
+    data_range=(0.0, 15.0),
     fit_model=exponential_decay,
-    p0=[120.0, 3.0, 5.0],
+    p0=[300.0, 3.0, 0.0],
 )
 \end{lstlisting}
 
-このように、\code{fit\_model} へ callable を渡せるようにしておけば、パッケージ側は柔軟性を保ちつつ、利用者側は自分の解析に必要なモデルを差し込める。
+\code{fit\_model} は、登録済みのモデル名に加えて、同じ呼び出し規約を持つ callable を受け取る。これにより、パッケージ本体を変更せずに利用者定義のモデルを渡せる。
 
 \section{docstring、型ヒント、README}
 
-自作モジュールは、動くだけでは不十分である。後から自分で使うときにも、他人が使うときにも、「何を受け取り、何を返すか」がすぐ分かる形で書いておく方がよい。そのために有効なのが docstring、型ヒント、README である。
+自作モジュールには、入力、返り値、例外条件、導入方法を記述する必要がある。関数単位の情報は docstring と型ヒント、パッケージ全体の情報は README が担う。
 
 \subsection{docstring と型ヒント}
 
-基礎編で見た docstring\index{docstring@docstring|textbf} だが、パッケージではその重要性がさらに増す。特に、引数の意味や既定値、返り値、例外条件まで書いておくと、\code{help()} だけでなくエディタの補完でも内容が見やすくなる。
+docstring\index{docstring@docstring|textbf} には、引数の意味と既定値、返り値、例外条件を記述する。\code{help()} と、docstring 表示に対応したエディタの補完機能は、この情報を参照する。
 
 \code{save\_histogram\_with\_fit} には、\code{data: ArrayLike}、\code{output\_path: str | Path}、\code{fit: bool = True} のような型ヒント\index{かたひんと@型ヒント|textbf}が付いている。VS Code などのエディタでは、関数名にカーソルを合わせたときや補完候補を開いたときに、これらの型ヒントと docstring の先頭が表示されることが多い。したがって、docstring は文書であると同時に、コーディング中に参照できる説明でもある。
 
-そのため、docstring の最初の 1 行には、関数の役割を簡潔に書く方がよい。たとえば「ヒストグラムと誤差棒を描き、必要ならフィット線も重ねて保存する。」のように書けば、補完欄を見ただけでも関数の用途が分かる。
+docstring の第 1 行には、関数の役割を一文で記述する。たとえば「ヒストグラムと誤差棒を描き、必要ならフィット線も重ねて保存する。」と書き、その後に引数、返り値、例外条件を続ける。
 
 \subsection{README に書くべきこと}
 
-\code{README.md} は、リポジトリを開いた人が最初に読む文書である。少なくとも次の 4 点は入れておきたい。
+\code{README.md} には、パッケージ全体の目的と導入方法を記述する。この例では次の 4 点を含める。
 
 \begin{itemize}
 \item このパッケージが何をするか
@@ -452,7 +495,7 @@ Histogram plotting and fitting utilities for analysis scripts.
 ## Installation
 
 ```bash
-pip install .
+uv pip install .
 ```
 
 ## Example
@@ -462,55 +505,53 @@ from histfit_tools import save_histogram_with_fit
 ```
 \end{lstlisting}
 
-README があれば、GitHub や研究室内で共有した際に、導入方法と使用例をリポジトリの入口で確認できる。docstring は関数単位、README はパッケージ全体の説明を担う。
+README はパッケージ全体の目的、導入方法、最小使用例を示し、docstring は関数単位の入出力契約を示す。両者の対象範囲を分け、同じ情報を重複して保守しない。
 
-\section{\code{pip install .} と \code{pip install -e .}}
+\section{\code{uv pip} による通常インストールと editable install}
 
 \subsection{通常インストール}
 
-作ったパッケージを別の環境から使いたいときは、パッケージのルートディレクトリで \code{pip install .}\index{pip@\code{pip}!install@\code{install}|textbf} を実行する。
+現在のプロジェクト用仮想環境へパッケージを通常インストールするには、パッケージのルートディレクトリで \code{uv pip install .}\index{pip@\code{pip}!install@\code{install}|textbf} を実行する。\code{uv pip} は pip 互換のインターフェースであり、仮想環境内に \code{pip} コマンドがインストールされていない場合にも利用できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ source .venv/bin/activate
-$ pip install .
+$ uv pip install .
 \end{lstlisting}
 
-これは「いまのソースコードのスナップショットを環境へインストールする」操作である。したがって、後から \code{src/histfit\_tools/plotting.py} を編集しても、その変更は自動では反映されない。もう一度 \code{pip install .} し直す必要がある。
+これは現在のソースからビルドしたパッケージを環境へインストールする操作である。後から \code{src/histfit\_tools/plotting.py} を編集しても、その変更はインストール済みのパッケージへ自動では反映されない。変更後に \code{uv pip install .} を再実行する。
 
 \subsection{editable install}
 \index{editable install@editable install|textbf}
 
-開発中は、\code{pip install -e .}\index{pip@\code{pip}!install -e@\code{install -e}|textbf} の方が便利である。
+開発中は、\code{uv pip install -e .}\index{pip@\code{pip}!install -e@\code{install -e}|textbf} による editable install を利用できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ source .venv/bin/activate
-$ pip install -e .
+$ uv pip install -e .
 \end{lstlisting}
 
-\code{-e} は editable の略であり、環境にコピーを置く代わりに、手元のソースディレクトリを参照する形でインストールする。つまり、Python ファイルを編集した結果がすぐ import 側へ反映される。関数定義や docstring を調整しながら試す段階では、こちらを使う方が自然である。
+\code{-e} は editable の略であり、インストール先から手元のソースディレクトリを参照できる形でパッケージを登録する。したがって、Python ソースの変更を再インストールせずに import 側へ反映できる。関数定義や docstring を反復して変更する開発環境で用いる。
 
-ただし、editable install は「何もかも自動で再ビルドされる」という意味ではない。\code{pyproject.toml} の依存関係を書き換えたときや、後述する pybind11 のような C++ 拡張を編集したときは、再インストールや再ビルドが必要になることがある。この点は覚えておいた方がよい。
+ただし、editable install が自動的に反映する範囲は、ビルドバックエンドと変更内容に依存する。\code{pyproject.toml} の依存関係を変更した場合や、後述する pybind11 のような C++ 拡張を編集した場合には、環境の同期、再インストール、再ビルドが必要になる。
 
 \subsection{インストール確認}
 
 インストール後は、短い import テストでパッケージを読み込めることを確認する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python -c "from histfit_tools import save_histogram_with_fit; print(save_histogram_with_fit)"
+$ uv run python -c "from histfit_tools import save_histogram_with_fit; print(save_histogram_with_fit)"
 \end{lstlisting}
 
-\code{ImportError} が出なければ、少なくともパッケージとして見つかっている。さらに依存関係も含めて確認したいなら、短い実データや乱数データで関数を 1 回実行して、図ファイルが保存されることまで確認すると確実である。
+この import テストは、パッケージ名と公開関数を解決できることを確認する。依存関係、計算、ファイル出力を含む動作は、既知の小規模入力で関数を実行し、戻り値と保存ファイルを検証する統合テストで確認する。
 
 \section{Git リポジトリによるパッケージの共有}
 
-研究室内や共同研究で共有するなら、Git リポジトリとして管理しておく方がよい。\code{uv init --package} は既定では \code{.git/} も作るので、通常は改めて \code{git init} し直す必要はない。
+研究室内や共同研究で共有する場合は、Git リポジトリによってソース、テスト、設定の変更履歴を管理できる。\code{uv init --lib} は、外側に既存の Git リポジトリがなく、\code{--vcs none} も指定していなければ、初期化対象に \code{.git/} を作る。
 
-GitHub\index{github@GitHub|textbf} で共有する場合は、まず GitHub の Web 画面で空のリポジトリを 1 つ作る。ここではリポジトリ名と公開範囲だけを決めればよい。README や \code{.gitignore} は手元ですでに用意しているので、最初は GitHub 側で追加しない方が流れが単純である。
+GitHub\index{github@GitHub|textbf} で共有する場合は、GitHub の Web 画面でコミットを持たない空のリポジトリを作る。リポジトリ名と公開範囲を指定し、手元にある README と \code{.gitignore} は GitHub 側で重複して作成しない。
 
-その準備ができたら、手元では次のように進めればよい。
+空のリモートリポジトリを作成した後、記録対象を確認して次のコマンドを実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ git add pyproject.toml README.md src tests .python-version
+$ git add pyproject.toml uv.lock README.md src tests .python-version
 $ git commit -m "Create histfit_tools package"
 $ git remote add origin git@github.com:username/histfit_tools.git
 $ git push -u origin main
@@ -518,25 +559,25 @@ $ git push -u origin main
 
 \code{uv init --vcs none} のように Git 初期化を明示的に無効化して始めた場合には、最初に \code{git init} が必要になる。
 
-\code{.venv/} や \code{\_\_pycache\_\_/} はコミットしないので、\code{.gitignore} に書いておくのがよい。Git の詳細については付録~\ref{app:git} を参照されたい。
+\code{.venv/} や \code{\_\_pycache\_\_/} を追跡対象から除外する規則は、\code{.gitignore} に記述する。Git の状態確認、ステージング、コミット、リモート接続は付録~\ref{app:git} で扱う。
 
 GitHub などに置いたリポジトリを別環境から直接インストールするコマンドは、次のとおりである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ pip install "git+ssh://git@github.com/username/histfit_tools.git"
+$ uv pip install "git+ssh://git@github.com/username/histfit_tools.git"
 \end{lstlisting}
 
 タグやコミットを固定したいなら、URL の末尾に \code{@v0.1.0} や \code{@9f3c1a2} を付ける。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
+$ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 \end{lstlisting}
 
-これは再現性のために重要である。研究ノートや論文用メモには、「どのタグを入れたか」まで残しておく方が後で確実である。
+タグまたはコミットハッシュを URL に含めると、後日の再インストールでも同じリビジョンを指定できる。研究ノートには、インストールに用いた URL とリビジョンを記録する。
 
 \section{実行時依存関係と開発用依存関係}
 
-最後に、依存関係の考え方を整理しておく。パッケージでは「いま自分の環境で動く」ことより、「利用者の環境でも必要なものが入る」ことの方が重要である。そのため、次の 3 種類を区別するとよい。
+依存関係は、利用者に必要な実行時依存関係、開発者だけが使う開発用依存関係、開発・検証環境を再現するロックファイルの三つに分ける。
 
 \begin{description}
 \item[実行時依存関係] パッケージを import して使うだけで必要なもの。今回なら \code{numpy}、\code{matplotlib}、\code{scipy} がこれに当たる。
@@ -544,7 +585,7 @@ $ pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 \item[ローカル環境の固定] 開発者どうしで完全に同じ環境を再現したいときの情報。これは \code{uv.lock} が担う。
 \end{description}
 
-ライブラリとして配布するなら、\code{dependencies} にはあまり厳しすぎる固定を入れない方がよい。たとえば \code{numpy==2.0.0} のように完全固定すると、利用者側の既存環境と衝突しやすい。むしろ \code{numpy>=2.0} のように「必要な下限」を書き、自分の開発環境の厳密な再現は \code{uv.lock} に任せる方が扱いやすい。
+ライブラリの \code{dependencies} には、実装とテストによって確認した互換範囲を記述する。根拠なく \code{numpy==2.0.0} のような完全固定を行うと、利用者側の他の依存関係と両立しない場合がある。下限だけを検証した場合は \code{numpy>=2.0} のように記述し、非互換の上限が判明している場合はその上限も記述する。リポジトリ内の開発・検証環境は \code{uv.lock} で再現する。
 
 開発中には、Jupyter、Sphinx、mkdocs など、利用者には不要でも開発者には必要な道具が増える。これらをすべて実行時依存関係へ含めると、利用者のインストール量と依存関係の衝突リスクが増す。公開 API と実行時依存関係は必要最小限に保ち、開発用の道具は開発用依存関係へ分ける。
 
@@ -552,7 +593,7 @@ $ pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 
 \begin{enumerate}
 \item \textbf{最小パッケージの作成}。
-空の作業ディレクトリで \code{uv init --package signal\_tools} を実行し、生成された \code{pyproject.toml} と \code{src/signal\_tools/\_\_init\_\_.py} を確認せよ。\code{--package} を付けた理由、\code{src} レイアウトで import 事故を防ぎやすい理由、\code{pyproject.toml} の \code{name} と \code{requires-python} の意味を説明せよ。
+空の作業ディレクトリで \code{uv init --lib signal\_tools} を実行し、生成された \code{pyproject.toml} と \code{src/signal\_tools/\_\_init\_\_.py} を確認せよ。\code{--lib} を付けた理由、\code{src} レイアウトで未インストールの作業ツリーを誤って import する問題を検出しやすい理由、\code{pyproject.toml} の \code{name} と \code{requires-python} の意味を説明せよ。
 
 \item \textbf{公開関数とテストの追加}。
 \code{src/signal\_tools/statistics.py} に、数値列を受け取って算術平均を返す \code{mean\_signal(values)} を作れ。空列では \code{ValueError} を送出せよ。\code{\_\_init\_\_.py} から再公開し、\code{from signal\_tools import mean\_signal} で呼び出せる状態にせよ。\code{tests/test\_statistics.py} に通常入力と空入力のテストを書き、\code{uv run pytest} の末尾で \code{2 passed} と表示されることを確認せよ。
@@ -561,7 +602,7 @@ $ pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 \code{mean\_signal()} に型ヒントと複数行 docstring を追加し、\verb|uv run python -c "from signal_tools import mean_signal; help(mean_signal)"| で表示せよ。docstring の要約、引数、返り値、例外条件がそれぞれどの行に表示されたかを確認せよ。
 
 \item \textbf{通常インストールと editable install の比較}。
-別の仮想環境を 2 つ作り、一方では \code{pip install .}、もう一方では \code{pip install -e .} を実行せよ。インストール後に関数の戻り値を変更し、どちらの環境で変更が直ちに反映されるかを確認せよ。\code{-e} が何を省略する指定なのではなく、ソースディレクトリを参照可能な形で登録する指定であることを説明せよ。
+別の仮想環境を 2 つ作り、一方では \code{uv pip install .}、もう一方では \code{uv pip install -e .} を実行せよ。インストール後に関数の戻り値を変更し、どちらの環境で変更が直ちに反映されるかを確認せよ。\code{-e} はソースディレクトリを参照可能な形で登録する指定であり、依存関係の解決やビルド処理をすべて省略する指定ではない。
 
 \item \textbf{依存関係と生成物の分類}。
 NumPy を実行時依存関係、pytest と ruff を開発用依存関係として追加し、\code{pyproject.toml} の該当箇所を示せ。さらに \code{.gitignore} に \code{.venv/}、\code{\_\_pycache\_\_/}、\code{.pytest\_cache/}、\code{dist/} を書き、\code{git status --short} にこれらが現れないことを確認せよ。\code{uv.lock} をコミットするかどうかはプロジェクトの運用方針によるため、本課題では自分の判断と理由を記述せよ。

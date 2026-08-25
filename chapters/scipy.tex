@@ -1,13 +1,13 @@
 \chapter{SciPy による数値計算とフィット}
 \label{chap:scipy}
 
-SciPy\index{scipy@SciPy|textbf} は、NumPy を土台にして数値計算の道具をまとめたライブラリ群である。pandas が表、Matplotlib が図を担当するのに対して、SciPy は統計、補間、信号処理、最適化、積分といった「計算そのもの」を担う。本章では、分布モデル、パラメータ推定、曲線フィット、補間、信号処理と、その適用範囲の判断を扱う。
+SciPy\index{scipy@SciPy|textbf} は、NumPy 配列を入力として統計、補間、信号処理、最適化、数値積分を行うライブラリ群である。本章では、分布モデル、パラメータ推定、曲線フィット、補間、信号処理と、それぞれの適用条件を扱う。
 
 \section{分布モデルとパラメータ推定}
 
-\subsection{NumPy の上にある専門道具箱}
+\subsection{NumPy 配列を入力とする専門計算機能}
 
-SciPy の多くの関数は、NumPy 配列を入力に取り、NumPy 配列やスカラーを返す。したがって、SciPy を理解するには NumPy の \code{ndarray} と配列演算に慣れていることが前提になる。その上で、「平均や標準偏差を出したいのか」「曲線を当てたいのか」「ピークを探したいのか」に応じて、適切な subpackage を選ぶ。
+SciPy の多くの関数は NumPy 配列を入力とし、NumPy 配列またはスカラーを返す。したがって、入力の \code{shape} と \code{dtype}、返り値の意味を NumPy の配列操作と対応付ける。目的と subpackage の対応は次のとおりである。
 
 \begin{itemize}
 \item \code{scipy.stats}\index{SciPy!stats@\code{scipy.stats}|textbf}: 分布、検定、要約統計
@@ -18,26 +18,19 @@ SciPy の多くの関数は、NumPy 配列を入力に取り、NumPy 配列や�
 \item \code{scipy.constants}\index{SciPy!constants@\code{scipy.constants}|textbf}: 物理定数
 \end{itemize}
 
-何でも SciPy で解くのではなく、「NumPy だけで足りるか」「SciPy のどの subpackage が自然か」を切り分けることが重要である。
+要素ごとの演算や基本的な集計には NumPy を用い、確率分布、最適化、補間、信号処理などの専用アルゴリズムが必要な場合に、対応する SciPy の subpackage を選ぶ。
 
 \subsection{関数形の仮定とパラメータ推定}
 
-SciPy が特に役立つのは、図や配列を「見た目」で終わらせず、数値へ落とし込む場面である。ヒストグラムから幅を取りたい、減衰曲線から時定数を取りたい、ノイズの多い波形からピーク時刻を取りたい、といった場面では、NumPy の基本操作だけでは足りないことが多い。
+分布の幅、減衰曲線の時定数、波形のピーク時刻を推定するには、それぞれモデル推定、非線形最小二乗、ピーク検出の条件を定める必要がある。SciPy は、これらの計算と推定結果の評価に用いる関数を提供する。
 
-ヒストグラムを描いただけでは、分布の特徴を定量化できないことがある。そこで、ある関数形を仮定してパラメータを求める。これがフィットである。フィットは万能ではない。まず、なぜその関数形を選ぶのかという物理的、統計的な理由が必要である。さらに、ヒストグラムの範囲、ビン幅、外れ値処理によって見え方が変わるため、「フィット結果が出た」ことと「解釈してよい」ことは別である。
+フィットでは、仮定した関数形のパラメータをデータから推定する。関数形の選択には物理的または統計的な根拠が必要であり、推定値の解釈にはフィット範囲、ビン幅、外れ値処理、残差、不確かさの確認が必要となる。
 
-フィットの目的は、曲線をきれいに重ねることではない。分布の中心、幅、時定数などを、比較可能な量として取り出すことが目的である。したがって、フィット前に図を見ておくこと、フィット後に残差やずれを確認することが重要になる。
+フィットの目的は、仮定したモデルのパラメータをデータから推定することである。分布の中心、幅、時定数などを比較可能な量として得るには、推定値だけでなく、不確かさ、フィット範囲、残差、モデルの適用条件も確認する。
 
-\subsection{この本でよく使う分布}
+\subsection{正規分布と指数分布}
 
-データ解析では、ガウシアンと指数分布がよく現れる。
-
-\begin{itemize}
-\item ガウシアン: 時刻差のばらつき
-\item 指数分布: 待ち時間や発生間隔
-\end{itemize}
-
-もちろん、実際のデータがいつもきれいな理想分布になるとは限らない。重要なのは「なぜその関数を当てようとしたのか」を説明することである。分布の名前を覚えるだけでなく、どの量に対して自然に現れるかを知ることも重要である。ガウシアンは独立なばらつきの和として、指数分布はランダムな待ち時間として現れやすい。こうした背景を知っていると、単なる形合わせで終わらない。
+多数の独立な微小変動の和は、条件を満たせば正規分布で近似できる。一定の発生率を持つ Poisson 過程では、事象間の待ち時間が指数分布に従う。対象データがこれらの仮定を満たすかは、生成過程、残差、代替モデルとの比較によって検証する。
 
 たとえば、平均 \(\mu\)、標準偏差 \(\sigma\) のガウシアンは
 \[
@@ -49,13 +42,13 @@ p(x) = \frac{1}{\sqrt{2\pi}\sigma}
 p(t) = \frac{1}{\tau} \exp\!\left(-\frac{t}{\tau}\right)
 \qquad (t \ge 0)
 \]
-である。SciPy の分布オブジェクトは、このような確率密度やその積分を関数として評価する道具だと捉えると分かりやすい。
+である。SciPy の分布オブジェクトは、確率密度、累積分布、分位点、乱数生成を共通のインタフェースで提供する。
 
 \section{統計・フィット・補間・信号処理}
 
 \subsection{\code{scipy.stats} による要約統計と分布}
 
-まずは、配列の全体像を数値で確認する方法から始める。
+配列の要素数、中心、広がり、形状を数値で確認する方法を示す。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -65,19 +58,19 @@ values = np.array([1.2, 0.9, 1.5, 1.1, 0.8])
 
 summary = stats.describe(values)
 print(summary.nobs)
-print(summary.mean)
-print(summary.variance)
+print(f"{summary.mean:.3f}")
+print(f"{summary.variance:.3f}")
 \end{lstlisting}
 
 この例では、要素数、平均、分散が順に表示される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 5
-1.1
+1.100
 0.075
 \end{lstlisting}
 
-\code{stats.describe()} は、要素数、平均、分散、最小値、最大値、歪度、尖度をまとめて返す。最初の確認として便利だが、返り値は名前付きタプルなので、何が入っているかを読んで使う必要がある。
+\code{stats.describe()} は、要素数、平均、分散、最小値、最大値、歪度、尖度を名前付きタプルとして返す。各統計量の定義と単位を確認してから利用する。
 
 SciPy の分布オブジェクトは、確率密度関数や累積分布関数を同じ API で扱える。
 
@@ -109,9 +102,7 @@ F(x) = \int_{-\infty}^{x} p(t)\,dt
 
 \subsection{\code{curve\_fit} によるパラメータ推定}
 
-SciPy で最もよく使われる関数の一つが \code{scipy.optimize.curve\_fit} である。モデル関数を自分で定義し、データへ当てる。
-
-SciPy には、分布やフィットのための道具が複数ある。代表的なのは \code{scipy.stats} と \code{scipy.optimize.curve\_fit} である。図~\ref{fig:distribution-examples} のような曲線を重ねると、単に形を見るだけでなく、平均や幅、時定数を数値として比較しやすくなる。単純な場合は、自分で平均や分散を計算するだけでも十分なことがある。一方で、より一般的なモデルや誤差評価をしたいなら SciPy が役立つ。
+\code{scipy.optimize.curve\_fit} は、利用者が定義したモデル関数のパラメータを非線形最小二乗法で推定する。\code{scipy.stats} が実装済みの確率分布に対する密度評価やパラメータ推定を提供するのに対し、\code{curve\_fit} には任意のモデル関数を渡せる。
 
 \begin{lstlisting}[language=Python]
 from scipy.optimize import curve_fit
@@ -122,29 +113,21 @@ def linear_model(x, a, b):
 xdata = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
 ydata = np.array([1.1, 2.0, 3.2, 4.1, 5.1])
 
-params, cov = curve_fit(linear_model, xdata, ydata)
-errors = np.sqrt(np.diag(cov))
+linear_params, linear_cov = curve_fit(linear_model, xdata, ydata)
+linear_errors = np.sqrt(np.diag(linear_cov))
 
-print(params)
-print(errors)
+print(linear_params)
+print(linear_errors)
 \end{lstlisting}
 
-この線形フィットでは、傾きと切片、およびその標準誤差の目安が次のように出る。
+この線形フィットでは、傾きと切片、および共分散行列から求めた標準誤差が次のように得られる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-[1.02 1.04]
-[0.04472136 0.10954451]
+[1.01 1.08]
+[0.02516611 0.06164414]
 \end{lstlisting}
 
-実際の解析では、ガウシアンの平均や幅、指数分布の時定数を次のような形で整理して比較することが多い。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-mean = 3.02
-sigma = 0.79
-tau = 2.47
-\end{lstlisting}
-
-\code{params} は推定パラメータ、\code{cov} は共分散行列である。対角成分の平方根が標準誤差の目安になる。上の例なら \code{params[0]} が傾き、\code{params[1]} が切片に対応する。一方、非対角成分はパラメータ間の相関を表し、値が大きいと「片方を少し動かすと、もう片方で補えてしまう」ような不安定さがあることを示す。重要なのは、\code{curve\_fit()} が単に曲線をきれいに重ねる道具ではなく、「仮定したモデルのパラメータを数値として取り出す道具」だという点である。
+\code{linear\_params} は推定パラメータ、\code{linear\_cov} は共分散行列である。対角成分の平方根が各パラメータの標準誤差に対応する。上の例では \code{linear\_params[0]} が傾き、\code{linear\_params[1]} が切片である。非対角成分はパラメータ間の共分散を表すため、相関を調べる場合は各パラメータの標準偏差で規格化する。\code{curve\_fit()} の出力は、仮定したモデル、残差の定義、\code{sigma} の指定に依存する。
 
 上の直線モデル \(f(x; a, b) = ax + b\) なら、\code{curve\_fit()} は概ね
 \[
@@ -156,11 +139,11 @@ S(\mathbf{p}) = \sum_i \left[y_i - f(x_i; \mathbf{p})\right]^2
 \]
 という残差二乗和を最小化している。
 
-こうした数値が得られたら、次に考えるべきは「図の見た目と整合するか」「別条件のデータと比較して意味があるか」「単位は妥当か」である。数値が出たこと自体より、どう読むかの方が重要である。SciPy を使うときも、ライブラリ名だけを覚えるのではなく、「どの関数が何を入力として何を返すか」を確認する読み方が重要である。
+得られた推定値は、データとモデルを重ねた図、別条件のデータ、単位、残差と照合する。SciPy の各関数についても、入力、返り値、仮定、失敗条件を確認する。
 
 \section{モデル選択・重み付け・残差評価}
 
-実際の解析では、次の順で進めると混乱しにくい。
+モデル推定では、次の項目を順に記録する。
 
 \begin{enumerate}
 \item 作図に基づく候補関数の検討
@@ -170,7 +153,7 @@ S(\mathbf{p}) = \sum_i \left[y_i - f(x_i; \mathbf{p})\right]^2
 \item 推定値と残差の確認
 \end{enumerate}
 
-この順序を踏まずにいきなり \code{curve\_fit()} を呼ぶと、得られた数値が妥当なのか判断しにくい。フィットは関数呼び出しではなく、仮説と検証の手続きとして理解した方がよい。
+モデルの定義とデータの確認を省いて \code{curve\_fit()} を実行しても、推定値の妥当性を判断できない。フィットは、モデルという仮説をデータと残差によって検証する手続きである。
 
 \subsection{初期値、制約、残差}
 
@@ -180,10 +163,15 @@ S(\mathbf{p}) = \sum_i \left[y_i - f(x_i; \mathbf{p})\right]^2
 def exp_model(x, a, tau, c):
     return a * np.exp(-x / tau) + c
 
-params, cov = curve_fit(
+x_decay = np.linspace(0.0, 8.0, 40)
+rng = np.random.default_rng(31)
+y_decay = 4.0 * np.exp(-x_decay / 2.5) + 0.3
+y_decay += rng.normal(loc=0.0, scale=0.05, size=x_decay.size)
+
+exp_params, exp_cov = curve_fit(
     exp_model,
-    xdata,
-    ydata,
+    x_decay,
+    y_decay,
     p0=[5.0, 2.0, 0.0],
     bounds=([0.0, 0.0, -np.inf], [np.inf, np.inf, np.inf]),
 )
@@ -191,14 +179,23 @@ params, cov = curve_fit(
 
 \code{p0}\index{p0@\code{p0}|textbf} は初期値、\code{bounds}\index{bounds@\code{bounds}|textbf} はパラメータ範囲である。どちらも収束を保証するものではないが、物理的にあり得ない範囲を除外する際に有効である。モデルによっては、初期値によって収束先が変わる。また、物理的に非負であるパラメータには、0 を下限とする制約を指定できる。
 
-フィット結果を図へ重ねるときは、関数形と推定パラメータを凡例に書く方が見やすいことが多い。図の上に直接テキストを置くと、データや曲線と重なって読みにくくなりやすい。特に、比較する図が複数ある場合は、凡例の書式をそろえると見通しが良くなる。
+フィット結果の図には、関数形、推定パラメータ、データ系列を識別できる情報を記載する。凡例を用いる場合は、データや曲線を隠さない位置を選び、複数の図で同じ書式を用いる。
 
 \begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+rng = np.random.default_rng(37)
+values = rng.normal(loc=3.0, scale=0.8, size=3000)
+mean, sigma = stats.norm.fit(values)
+x = np.linspace(values.min(), values.max(), 300)
+
 fig, ax = plt.subplots()
 ax.hist(values, bins=40, density=True, alpha=0.7, label="sample")
 ax.plot(
     x,
-    gaussian_pdf(x, mean, sigma),
+    stats.norm.pdf(x, loc=mean, scale=sigma),
     linewidth=2.0,
     label=(
         "fit: "
@@ -211,33 +208,37 @@ ax.plot(
 ax.legend(loc="upper right")
 \end{lstlisting}
 
-図~\ref{fig:distribution-examples} でも、フィット曲線の式と推定パラメータは凡例へ入れている。本文、キャプション、凡例の役割を分けると、図全体が読みやすくなる。
+図~\ref{fig:distribution-examples} では、フィット曲線の式と推定パラメータを凡例へ記載している。本文には推定方法と解釈、キャプションには図の対象と条件、凡例には系列の識別情報を置く。
 
 \begin{lstlisting}[language=Python]
-model_y = linear_model(xdata, *params)
+model_y = linear_model(xdata, *linear_params)
 residual = ydata - model_y
 print(residual)
 \end{lstlisting}
 
-数値が出たことと、解釈してよいことは別である。残差に系統的な構造が残っていないかを見ないまま結論へ進むべきではない。フィットが見た目に良さそうでも、特定の範囲だけ大きくずれていることがあるため、可能なら残差も確認したい。
+最適化が終了して推定値を返したことは、モデルの妥当性を保証しない。残差を横軸に対して表示し、符号や大きさに系統的な構造が残っていないか、特定の範囲だけ偏差が大きくないかを確認する。
 
-また、外れ値や非物理的な領域を含めると、パラメータが不安定になることがある。どの範囲でフィットしたかを書き残すことは、再現性のためにも解釈のためにも重要である。
+外れ値やモデルの適用範囲外にある領域を含めると、推定値が変化する場合がある。フィット範囲と除外条件を推定値とともに記録する。
 
 \begin{lstlisting}[language=Python]
-mask = (xdata >= 0.0) & (xdata <= 10.0)
-params, cov = curve_fit(model, xdata[mask], ydata[mask])
+mask = (xdata >= 0.0) & (xdata <= 3.0)
+range_params, range_cov = curve_fit(
+    linear_model,
+    xdata[mask],
+    ydata[mask],
+)
 \end{lstlisting}
 
-フィット範囲を切るという行為は、都合の悪い部分を隠すことではなく、どの領域でそのモデルが有効だと考えるかを明示することである。したがって、結果を報告するときは範囲も本文に書くべきである。
+フィット範囲は、モデルを適用する領域を定義する解析条件である。範囲をデータ確認後に変更した場合は、その判断基準と変更前後の結果も報告する。
 
 \subsection{\code{sigma} を使った重み付きフィット}
 
-物理の実データでは、各データ点の不確かさが等しいとは限らない。点ごとの標準偏差が既知であり、その大きさが異なる場合は、\code{sigma}\index{sigma@\code{sigma}|textbf} を使って残差を標準偏差で規格化する。\code{sigma} を与えないフィットは全ての点を等しい重みで扱うため、不確かさが点ごとに異なるデータでは目的と一致しない場合がある。
+物理の実データでは、各データ点の不確かさが等しいとは限らない。点ごとの標準偏差が既知であり、その大きさが異なる場合は、\code{sigma}\index{sigma@\code{sigma}|textbf} を使って残差を標準偏差で規格化する。\code{sigma} を与えないフィットはすべての点を等しい重みで扱うため、不確かさが点ごとに異なるデータでは目的と一致しない場合がある。
 
 \begin{lstlisting}[language=Python]
 y_err = np.array([0.2, 0.2, 1.5, 0.2, 0.2])
 
-params, cov = curve_fit(
+weighted_params, weighted_cov = curve_fit(
     linear_model,
     xdata,
     ydata,
@@ -246,7 +247,7 @@ params, cov = curve_fit(
 )
 \end{lstlisting}
 
-\code{sigma} が大きい点は「ずれても仕方がない点」として弱く効く。図~\ref{fig:fit-sigma} は、その差を模式的に示している。
+この定義では、\code{sigma} が大きい点ほど規格化残差が小さくなり、目的関数への寄与が小さくなる。図~\ref{fig:fit-sigma} は、その差を模式的に示している。
 
 \begin{figure}[htbp]
 \centering
@@ -262,7 +263,7 @@ params, cov = curve_fit(
 \frac{y_i - f(x_i; \mathbf{p})}{\sigma_i}
 \right)^2
 \]
-と書けるので、\(\sigma_i\) が大きい点ほど「ずれても仕方ない点」として弱く効き、\(\sigma_i\) が小さい点ほど強く効く。カウント数 \(N\) が十分大きいポワソン統計なら、典型的には \(\sqrt{N}\) を誤差の近似として使う。
+と書けるので、\(\sigma_i\) が大きい点ほど目的関数への寄与は小さく、\(\sigma_i\) が小さい点ほど大きくなる。独立な Poisson 計数で平均値を観測数 \(N\) によって推定し、正規近似が妥当な範囲では、標準偏差を \(\sqrt{N}\) で近似する場合がある。低計数や重み付き計数には、その近似を機械的に適用しない。
 
 \code{absolute\_sigma=True} は、「今渡した \code{sigma} は本当に物理的な標準偏差である」と解釈させる指定である。これを \code{False} のままにすると、\code{sigma} は相対的な重みとしては使われるが、共分散行列の大きさは残差のばらつきに合わせてあとから再スケーリングされる。そのため、推定値の重み付けだけでなく誤差評価まで行いたいなら、\code{sigma} の意味を明確にした上で \code{absolute\_sigma} の設定も意識する必要がある。
 
@@ -270,15 +271,15 @@ params, cov = curve_fit(
 
 \subsection{\code{scipy.interpolate} による補間}
 
-測定点の間を滑らかにつなぎたいときは補間を使う。SciPy には複数の補間法があるが、まずは 1 次元補間の基本を押さえるとよい。
+補間は、測定点の間における値を仮定した関数形から推定する操作である。ここでは、1 次元データに対する区分線形補間を扱う。
 
 \begin{lstlisting}[language=Python]
-from scipy.interpolate import interp1d
+from scipy.interpolate import make_interp_spline
 
 x = np.array([0.0, 1.0, 2.0, 4.0])
 y = np.array([0.0, 2.0, 1.0, 3.0])
 
-linear_interp = interp1d(x, y, kind="linear")
+linear_interp = make_interp_spline(x, y, k=1)
 x_new = np.array([0.5, 1.5, 3.0])
 y_new = linear_interp(x_new)
 
@@ -312,22 +313,22 @@ signal = np.sin(x) + 0.15 * np.random.default_rng(7).normal(size=x.size)
 smooth = savgol_filter(signal, window_length=11, polyorder=3)
 peaks, props = find_peaks(smooth, height=0.7, distance=15)
 
-print(peaks[:5])
-print(props["peak_heights"][:5])
+print(peaks)
+print(np.round(props["peak_heights"], 3))
 \end{lstlisting}
 
 この例では、検出されたピーク位置とその高さが次のように表示される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-[ 15  77 140]
-[0.94402164 1.14918478 1.00061725]
+[ 13  76 138]
+[0.977 1.048 0.994]
 \end{lstlisting}
 
-\code{savgol\_filter()} は局所多項式で平滑化する。\code{find\_peaks()} は高さ、距離、prominence などの条件でピーク候補を探す。ピーク数を自分で数える前に、こうした既製の道具があることを知っておくとよい。
+\code{savgol\_filter()} は局所多項式によって平滑化する。\code{find\_peaks()} は高さ、試料点間の距離、prominence などの条件でピーク候補を抽出する。検出条件をサンプリング間隔と対応付け、既知の合成波形で検出率と誤検出を確認してから実データへ適用する。
 
 \subsection{\code{scipy.integrate} と \code{scipy.constants}}
 
-積分や定数も SciPy でまとめて扱える。
+\code{scipy.integrate} は離散点または関数の数値積分を、\code{scipy.constants} は物理定数の数値と単位情報を提供する。
 
 \begin{lstlisting}[language=Python]
 from scipy import constants
@@ -356,13 +357,13 @@ print(constants.c)
 \[
 c = 299792458\ \mathrm{m\,s^{-1}}
 \]
-を表す定数である。ただし、単位付き計算や時刻系まで含めて厳密に扱いたいなら、次章の Astropy の方が自然な場面も多い。
+を表す定数である。\code{constants.c} 自体は単位を保持しない浮動小数点数なので、単位を演算中も保持する必要がある場合は、次章の Astropy の \code{Quantity} と定数オブジェクトを用いる。
 
 \section{モデル・制約・外挿に関する注意点}
 
 \subsection{モデル選択の理由がないままフィットしない}
 
-ガウシアン、指数、直線のどれを使うかは、物理的・統計的な理由が必要である。見た目がそれらしく重なったという理由だけでモデルを採用すると、パラメータの意味も崩れる。
+ガウシアン、指数、直線の選択には、物理的または統計的な仮定が必要である。曲線がデータ点の近くを通ることだけでは、モデルの生成過程やパラメータの解釈を正当化できない。
 
 \subsection{初期値と制約を無視しない}
 
@@ -370,7 +371,7 @@ c = 299792458\ \mathrm{m\,s^{-1}}
 
 \subsection{補間と外挿を混同しない}
 
-\code{interp1d()} や spline は、観測点の間を埋めるための道具である。測定範囲の外で値を予測すると、もっともらしい数字が出ても根拠は薄い。外側までモデル化したいなら、補間ではなく関数フィットとして考えた方がよい。
+\code{make\_interp\_spline()} などの補間関数は、観測点の間を埋めるための道具である。測定範囲の外まで同じ関係が続く根拠は補間からは得られない。外側を予測する場合は、外挿に用いるモデルと適用範囲を別に検討する。
 
 \subsection{信号処理におけるサンプリング間隔}
 
@@ -431,7 +432,7 @@ USGS カタログのマグニチュード \(M\) について、度数分布と�
 \]
 が成り立つかを調べる。この関係は、地震規模に対するべき乗則を、対数尺度であるマグニチュード \(M\) で表したものである。
 
-累積件数では、隣り合うしきい値の点が同じイベントを共有するため、各点を独立な Poisson 変数とみなして \(\chi^2\) を解釈してはならない。パラメータ推定には、重ならないマグニチュード区間の度数と適切な計数モデルを使うか、個々の \(M\) を用いる尤度法を検討せよ。累積分布は全体像の表示に用い、推定に使った量と区別せよ。日本近海データと全球データのどちらかで始め、対象期間、空間範囲、\(M_c\)、ビン、イベント数、推定方法、不確かさ、残差を明示せよ。
+累積件数の点は同じイベントを共有するため、独立な Poisson 変数として \(\chi^2\) を解釈できない。推定には、重ならないマグニチュード区間の度数に対する計数モデル、または個々の \(M\) に対する尤度法を用いよ。累積分布は表示だけに用い、推定量と区別せよ。日本近海または全球を対象とし、期間、空間範囲、\(M_c\)、ビン、イベント数、推定法、不確かさ、残差を明示せよ。
 \end{enumerate}
 
 SciPy は数値配列に対する計算を担うが、物理単位、時刻系、天球座標の意味までは自動的に補わない。次章では、Astropy によって数値へ単位や座標系を保持し、SciPy や表処理ライブラリとの間で受け渡す方法を扱う。

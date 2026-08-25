@@ -13,12 +13,12 @@
 ターミナルを開くと、シェルはコマンドを入力できる位置に短い文字列を表示する。この文字列をプロンプト\index{ぷろんぷと@プロンプト|textbf}という。表示内容は環境によって異なるが、末尾には \code{\$} が使われることが多い。例えば、実際の画面には次のように表示される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-ikomae@macbook ~ $
+student@host ~ $
 \end{lstlisting}
 
 この表示は、シェルが入力を待っていることを意味する。本書の実行例では、実際のプロンプト全体を省略し、読者が入力する行の先頭に \code{\$} だけを置く。\code{\$} は入力行を見分けるための印であり、読者が入力する文字には含まれない。
 
-ターミナルを開いたときに通常使われるシェルの名前は、次のコマンドで確認できる。
+ログインシェルとして設定されているシェルの名前は、次のコマンドで確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo $SHELL
@@ -32,7 +32,7 @@ $ echo $SHELL
 /bin/zsh
 \end{lstlisting}
 
-macOS では \code{zsh}、Linux や WSL では \code{bash} を使うことが多い。\code{zsh} と \code{bash} はどちらもシェルであり、本書の基本コマンドはほぼ同じように使える。上の \code{/bin/zsh} は、ターミナルを開いたときに使うシェルとして \code{zsh} が設定されていることを表す。この設定をログインシェルという。
+本書では、macOS の例に \code{zsh}、Linux と WSL 上の Ubuntu の例に \code{bash} を用いる。\code{zsh} と \code{bash} はどちらも本章で扱う基本コマンドを実行できるが、起動時に読む設定ファイルや一部のシェル構文は異なる。上の \code{/bin/zsh} は、ログインシェルとして \code{zsh} が設定されていることを表す。
 
 ただし、\code{SHELL} は現在実行中のシェルを必ず示すわけではない。別のシェルを起動した場合などは値が一致しない。現在コマンドを解釈しているシェルは、次のコマンドで確認できる。
 
@@ -45,13 +45,13 @@ zsh
 
 \subsection{Windows における WSL の利用}
 
-本書のコマンド例は macOS や Linux のシェルを前提にしている。Windows では、WSL\index{wsl@WSL|textbf} (Windows Subsystem for Linux) 上の Ubuntu などを利用すると、同じコマンド例を実行しやすい。WSL は、管理者権限で開いた PowerShell から次のコマンドで導入できる。
+本書のコマンド例は macOS や Linux のシェルを前提にしている。Windows では、WSL\index{wsl@WSL|textbf} (Windows Subsystem for Linux) 上の Ubuntu などを利用すると、同じコマンド例を実行しやすい。WSL は、管理者権限で開いた PowerShell から次のコマンドで導入できる。PowerShell のプロンプトは、本書の UNIX シェル用プロンプトと区別して示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ wsl --install
+PS C:\> wsl --install
 \end{lstlisting}
 
-WSL を使う利点は、単にコマンド名がそろうことだけではない。後半で扱う並列処理や周辺ツールの中には、Linux 系環境での利用を前提としているものがある。OS ごとの差でつまずくより、最初から UNIX 系の作法へ寄せた方が、解析そのものに集中しやすい。
+WSL 上では、本書の Linux 用コマンドとディレクトリ構造を Windows 上で利用できる。また、後半で扱う並列処理や周辺ツールには Linux 系環境を前提とするものがあるため、Windows のコマンドプロンプトや PowerShell とは実行環境を分けて説明する。
 
 \section{コマンド・オプション・引数とヘルプ}
 
@@ -66,11 +66,11 @@ $ cp data/raw.txt backup/raw.txt
 
 1 行目では、\code{ls} がコマンド本体、\code{-l} がオプション、\code{results} が引数である。2 行目では、\code{cp} がコマンド本体で、\code{data/raw.txt} と \code{backup/raw.txt} が引数である。一般に、オプションは動作を変え、引数は対象のファイル名やディレクトリ名を与える。
 
-オプションには短い書き方（\code{-} の後に1文字）と、長い書き方（\code{--} の後に英単語）が用意されていることが多い。たとえば、使い方を表示するオプションとしては \code{-h} と \code{--help} の両方がサポートされていることが多い。
+多くのコマンドには、\code{-} と 1 文字からなる短いオプション、または \code{--} と英単語からなる長いオプションがある。ただし、オプション名と動作はコマンドごとに定義される。
 
 \subsection{\code{--help} と \code{man} による使用法の確認}
 
-コマンドの使い方を丸暗記する必要はない。\code{--help} は単独で入力するコマンドではなく、調べたいコマンド名の後ろに付ける指定である。例えば \code{python3 --help} を実行すると、\code{python3} が受け付ける指定と書式が画面に表示される。\code{-h} も同じ目的で使われることが多い。
+\code{--help} は単独のコマンドではなく、対象のコマンド名に続けて指定するオプションである。例えば \code{python3 --help} は、\code{python3} が受け付けるオプションと引数の書式を表示する。\code{python3} では \code{-h} も同じ説明を表示する。
 
 \code{man} は、コンピュータに収録されている説明書を表示するコマンドである。\code{man} の後ろに調べたいコマンド名を置く。例えば \code{man rsync} を実行すると、\code{rsync} の説明書が開く。実際の入力例は次のとおりである。
 
@@ -106,18 +106,18 @@ SYNOPSIS
                ... source ... directory
 \end{lstlisting}
 
-\code{NAME} はそのコマンドが何をするものかを 1 行で示す欄である。\code{SYNOPSIS} は、「このコマンドをどういう形で呼び出せるか」を要約した欄である。ここで角括弧 \code{[...]} に入っているものは省略可能であり、すべてを書かなければならないわけではない。この例では、末尾の \code{source ... directory} を見れば、コピー元を並べて最後にコピー先を書くことが分かる。全オプションを暗記する必要はない。\code{--exclude} や \code{-a} のように、必要なものだけを後ろの節や \code{man} から確認して使えば十分である。
+\code{NAME} はコマンド名と機能の要約、\code{SYNOPSIS} は呼び出し書式を示す。角括弧 \code{[...]} 内は省略可能である。この例の末尾にある \code{source ... directory} は、一つ以上のコピー元に続けてコピー先を書く構造を表す。必要なオプションの綴りと意味は、後続の説明または \code{man} で確認する。
 
 \code{--help} や \code{-h} は、そのコマンドが受け付けるオプションや引数の書式を短く表示することが多い。ただし、どのコマンドでも両方を使えるとは限らない。例えば macOS の \code{ls} は \code{--help} を受け付けない。その場合は、\code{man ls}、\code{man ssh}、\code{man rsync} のように、\code{man} の後ろへ調べたいコマンド名を置く。
 \code{man} を開いたあとは、上下キーや \code{Space} で移動し、\code{/pattern} で検索できる。\code{q} を押せば終了する。
 
-検索エンジンや AI を用いてコマンドの使い方を調べることもできるが、同じ名前のコマンドでもバージョンや OS によって使い方が異なる場合がある。インターネット上の説明と手元の動作が食い違う場合は、利用できる方の \code{コマンド名 --help} または \code{man コマンド名} が表示する内容を確認せよ。
+検索エンジンや AI を用いてコマンドの使い方を調べることもできるが、同じ名前のコマンドでもバージョンや OS によって使い方が異なる場合がある。インターネット上の説明と手元の動作が食い違う場合は、手元のコマンドに \code{--help} を付けた出力、または \code{man} で開いた説明書を基準とする。
 
 \section{現在位置・一覧・パス・ディレクトリ操作}
 
 \subsection{現在位置の確認と項目の一覧: \code{pwd} と \code{ls}}
 
-シェルでは、いま作業しているディレクトリが基準になる。この基準となるディレクトリをカレントディレクトリという。まずは、現在どこで作業しているのか、そしてその場所に何があるのかを確認できるようになろう。そのためによく使うのが、次の \code{pwd} と \code{ls} である。
+シェルでは、現在作業しているディレクトリがパス解釈の基準となる。このディレクトリをカレントディレクトリという。現在位置は \code{pwd}、その場所にある項目は \code{ls} で確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pwd
@@ -131,35 +131,35 @@ $ ls -lah
 \code{pwd}\index{pwd@\code{pwd}|textbf} は、現在のカレントディレクトリの絶対パスを表示する。\code{ls}\index{ls@\code{ls}|textbf} は、そのディレクトリにあるファイルやディレクトリの一覧を表示する。たとえば \code{pwd} の結果が次のようであれば、
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-/Users/ikomae/analysis
+/Users/student/analysis
 \end{lstlisting}
 
-現在の作業場所は \code{/Users/ikomae/analysis} である。この状態で \code{ls} を実行すると、その中にある項目が表示される。
+現在の作業場所は \code{/Users/student/analysis} である。この状態で \code{ls} を実行すると、その中にある項目が表示される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls
 data	scripts
 \end{lstlisting}
 
-この結果から、\code{/Users/ikomae/analysis} の中には \code{data} と \code{scripts} という2つのディレクトリがあることが分かる。
+この結果から、\code{/Users/student/analysis} の中には \code{data} と \code{scripts} という 2 つのディレクトリがあることが分かる。
 
-\code{ls} にはさまざまなオプションがあり、表示内容を切り替えられる。まず、\code{-l} オプションを付けると、一覧を詳細表示にできる。
+\code{ls} の表示内容はオプションで変更できる。\code{-l} は、各項目の種別、アクセス権、リンク数、所有者、グループ、サイズ、最終更新日時、名前を表示する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -l
 total 0
-drwxr-xr-x  3 ikomae  staff  96  4月 12 23:19 data
-drwxr-xr-x  3 ikomae  staff  96  4月 12 23:19 scripts
+drwxr-xr-x  3 student  staff  96  4月 12 23:19 data
+drwxr-xr-x  3 student  staff  96  4月 12 23:19 scripts
 \end{lstlisting}
 
-\code{ls -l} の最初の行に表示される \code{total 0} は、この一覧に表示されている項目が使用しているブロック数の合計を表している。\code{total} の単位は環境によって見え方が分かりにくいため、ここでは「一覧に表示されている項目全体についての使用量をまとめて示したもの」と理解しておけばよい。
+\code{ls -l} の先頭にある \code{total} は、表示対象へ割り当てられたファイルシステムブロック数の合計である。1 ブロックを表示上何バイトと数えるかは実装や環境変数で異なるため、ファイルごとのバイト数には各行のサイズ欄、ディスク使用量には \code{du} を用いる。
 
 \code{ls -l} の出力では、その下の各行が1つのファイルまたはディレクトリに対応しており、左から順に次の情報が表示される。
 
 \begin{itemize}
   \item \code{drwxr-xr-x}：ファイル種別とアクセス権
   \item \code{3}：リンク数
-  \item \code{ikomae}：所有者
+  \item \code{student}：所有者
   \item \code{staff}：グループ
   \item \code{96}：サイズ
   \item \code{4月 12 23:19}：最終更新日時
@@ -168,53 +168,51 @@ drwxr-xr-x  3 ikomae  staff  96  4月 12 23:19 scripts
 
 先頭の1文字は種別を表し、\code{d} ならディレクトリ、\code{-} なら通常のファイルである。続く \code{rwxr-xr-x} はアクセス権を表している。アクセス権の詳しい意味は第~\ref{subsec:mod}~節で説明する。
 
-リンク数は、ファイルやディレクトリに対して、ファイルシステムの中でいくつ参照があるかを表す値である。通常のファイルでは、ふつうに作成したものであれば多くの場合は \code{1} であり、入門の段階ではあまり深く気にしなくてよい。
-ディレクトリでは意味が少し異なる。 ディレクトリ構造により値が変化するが、その定義は環境によって異なるため、通常のファイルのように単純には読めない。
-したがって、リンク数については、通常のファイルでは多くの場合 \code{1} であり、ディレクトリでは構造に関係する値が表示される、と理解しておけば十分である。
+リンク数は、同じ inode を参照するハードリンクの数を表す。通常ファイルを新規作成した直後は一般に 1 であり、\code{ln} でハードリンクを追加すると増える。ディレクトリのリンク数はファイルシステムとサブディレクトリ構造に依存し、ディレクトリ内の項目数そのものではない。
 
-\code{ls -l} で表示されるサイズの欄は、通常はバイト単位で表示される。したがって、ファイルが大きくなると数値も大きくなり、ぱっと見ただけでは大きさをつかみにくいことがある。そこで、サイズを見やすく表示したいときには \code{-h} オプションを併用する。\code{h} は human-readable の略で、サイズを \code{K}、\code{M}、\code{G} などの読みやすい単位で表示する。
+\code{ls -l} のサイズ欄はバイト単位である。\code{-h} を併用すると、同じ値が \code{K}、\code{M}、\code{G} などの接頭辞付きで表示される。表示の丸めを避けて正確なバイト数を記録する場合は、\code{-h} を付けない出力を用いる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -lh
 total 0
-drwxr-xr-x  3 ikomae  staff    96B  4月 12 23:19 data
-drwxr-xr-x  3 ikomae  staff    96B  4月 12 23:19 scripts
+drwxr-xr-x  3 student  staff    96B  4月 12 23:19 data
+drwxr-xr-x  3 student  staff    96B  4月 12 23:19 scripts
 \end{lstlisting}
 
-この例ではサイズが \code{96B} と表示されているが、これはディレクトリ項目そのものの大きさであって、その中に入っているファイル全体の容量を表しているわけではない。ディレクトリのサイズ欄は、通常のファイルのサイズ欄とは同じ感覚では読めない点に注意が必要である。
+この例の \code{96B} はディレクトリ項目そのものの大きさであり、配下のファイルサイズの合計ではない。ディレクトリ以下のディスク使用量を調べる場合は、\code{du} を用いる。
 
-通常のファイルに対して \code{ls -lh} を使うと、サイズは \code{12K} や \code{3.4M} のように読みやすい単位で表示される。そのため、特にファイルの大きさを確認したいときには \code{ls -lh} を使うことが多い。
+通常のファイルに対して \code{ls -lh} を使うと、バイト数は \code{12K} や \code{3.4M} のように SI 接頭語に似た接尾辞付きで表示される。正確なバイト数が必要な場合は、OS に応じて \code{stat} または \code{wc -c} を用いる。
 
-一方、\code{-a} オプションを付けると、隠しファイルも含めて表示できる。
+一方、\code{-a} オプションを付けると、ドットで始まる隠し項目も含めて表示できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -a
 .	..	.config	data	scripts
 \end{lstlisting}
 
-ファイル名やディレクトリ名が \code{.}（ドット）で始まるものは隠しファイルとして扱われ、通常の \code{ls} では表示されない。たとえば \code{.config}、\code{.gitignore}、\code{.bashrc} などがこれにあたる。設定ファイルのように、ふだんは一覧に見えなくてよいものを隠しファイルにしておくことが多い。
+名前が \code{.}（ドット）で始まるファイルやディレクトリは隠し項目として扱われ、通常の \code{ls} では表示されない。たとえば \code{.config}、\code{.gitignore}、\code{.bashrc} などがこれにあたる。設定ファイルなど、通常の一覧に常時表示する必要のない項目にこの命名が用いられる。
 
 上の \code{ls -a} に現れる \code{.} と \code{..} にも意味がある。\code{.} は現在のディレクトリ自身を表し、\code{..} は1つ上の親ディレクトリを表す。これらは後でディレクトリ移動をするときにも重要になる。
 
-詳細表示、隠しファイル表示、読みやすいサイズ表示をまとめて使うこともできる。たとえば \code{-lah} を指定すると、詳細情報を隠しファイル込みで、人が読みやすい単位で表示できる。
+\code{-lah} は、詳細表示の \code{-l}、隠し項目を含める \code{-a}、サイズに接尾辞を付ける \code{-h} を組み合わせた指定である。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -lah
 total 96
-drwxr-xr-x  5 ikomae  staff   160B  4月 12 23:20 .
-drwxr-xr-x  5 ikomae  staff   160B  4月 12 23:18 ..
--rw-r--r--  1 ikomae  staff    47K  4月 12 23:22 .config
-drwxr-xr-x  3 ikomae  staff    96B  4月 12 23:19 data
-drwxr-xr-x  3 ikomae  staff    96B  4月 12 23:19 scripts
+drwxr-xr-x  5 student  staff   160B  4月 12 23:20 .
+drwxr-xr-x  5 student  staff   160B  4月 12 23:18 ..
+-rw-r--r--  1 student  staff    47K  4月 12 23:22 .config
+drwxr-xr-x  3 student  staff    96B  4月 12 23:19 data
+drwxr-xr-x  3 student  staff    96B  4月 12 23:19 scripts
 \end{lstlisting}
 
-この例では \code{.config} という通常のファイルも表示されており、\code{ls -l} のときとは \code{total} の値が異なっている。\code{total} は各行の「サイズ」欄を単純に足したものではなく、表示対象が使用しているブロック数に基づいて表示される点に注意したい。
+この例では \code{.config} という通常のファイルも表示されており、\code{ls -l} の場合とは \code{total} の値が異なる。\code{total} は各行のサイズ欄の合計ではなく、表示対象へ割り当てられたファイルシステムブロック数に基づく。
 
-このように、\code{ls} はオプションを組み合わせることで、必要な情報を見やすく確認できる。まずは、現在位置を確認する \code{pwd}、項目を一覧する \code{ls}、詳細を見る \code{ls -l}、隠しファイルも含めて確認する \code{ls -a}、サイズを読みやすく表示する \code{ls -lh} や \code{ls -lah} を使い分けられるようになるとよい。
+\code{pwd} は現在位置、\code{ls} は項目名、\code{ls -l} は権限や更新時刻を含む詳細、\code{ls -a} は隠し項目を含む一覧を表示する。\code{-h} を \code{-l} と組み合わせると、ファイル容量が単位付きで表示される。必要な情報に応じて、これらのオプションを選択する。
 
 \subsection{ディレクトリの移動: \code{cd}}
 
-\code{cd}\index{cd@\code{cd}|textbf} はカレントディレクトリを変更するためのコマンドである。\code{ls} や \code{cat}、\code{cp} など多くのコマンドは「いまいる場所」を基準に動くため、\code{cd} を正しく読めるようになると、その後のファイル操作も理解しやすくなる。次のようなディレクトリ構成を例に考える。
+\code{cd}\index{cd@\code{cd}|textbf} はカレントディレクトリを変更するコマンドである。\code{ls}、\code{cat}、\code{cp} などへ相対パスを渡すと、そのパスはカレントディレクトリを基準に解釈される。次のディレクトリ構成を例に、移動前後でパスの指す対象を確認する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 analysis/
@@ -224,11 +222,11 @@ analysis/
     `-- plot.py
 \end{lstlisting}
 
-いま \code{/Users/ikomae/analysis} にいるとする。まず \code{pwd} と \code{ls} を実行すると、現在位置とその場にある項目は次のように分かる。
+いま \code{/Users/student/analysis} にいるとする。まず \code{pwd} と \code{ls} を実行すると、現在位置とその場にある項目は次のように分かる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pwd
-/Users/ikomae/analysis
+/Users/student/analysis
 $ ls
 data	scripts
 \end{lstlisting}
@@ -238,49 +236,49 @@ data	scripts
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd data
 $ pwd
-/Users/ikomae/analysis/data
+/Users/student/analysis/data
 $ ls
 events.txt
 \end{lstlisting}
 
-\code{data} は相対パスなので、「いまいる \code{analysis} から見て \code{data} に入る」という意味になる。
+\code{data} は相対パスなので、カレントディレクトリ \code{/Users/student/analysis} を基準とする \code{/Users/student/analysis/data} を指す。
 
 次に \code{cd ..} を実行すると、1 つ上の親ディレクトリへ戻る。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ..
 $ pwd
-/Users/ikomae/analysis
+/Users/student/analysis
 \end{lstlisting}
 
 ここで使っている \code{..} は、\code{ls -a} でも見た「親ディレクトリ」を表す特別な名前である。
 
-絶対パスを使って直接移動することもできる。たとえば \code{\textasciitilde} はホームディレクトリを表すので、次のように書けば現在位置に関係なく \code{scripts} へ移動できる。
+カレントディレクトリに依存しない指定で直接移動することもできる。\code{\textasciitilde} は、シェルがホームディレクトリのパスへ展開する記号である。次の指定では、現在位置に関係なく \code{scripts} へ移動できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ~/analysis/scripts
 $ pwd
-/Users/ikomae/analysis/scripts
+/Users/student/analysis/scripts
 $ ls
 plot.py
 \end{lstlisting}
 
-また、\code{cd -} は 1 つ前にいた場所へ戻る。たとえば上の状態で実行すると、直前にいた \code{/Users/ikomae/analysis} へ戻る。
+また、\code{cd -} は 1 つ前にいた場所へ戻る。たとえば上の状態で実行すると、直前にいた \code{/Users/student/analysis} へ戻る。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd -
-/Users/ikomae/analysis
+/Users/student/analysis
 \end{lstlisting}
 
-さらに、引数なしの \code{cd} はホームディレクトリへ戻る。深い階層まで移動したあとで基準位置を戻したいときに便利である。
+引数なしの \code{cd} は、現在位置にかかわらずホームディレクトリへ移動する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd
 $ pwd
-/Users/ikomae
+/Users/student
 \end{lstlisting}
 
-このように、\code{cd} では「相対パスでたどる」「絶対パスで直接飛ぶ」「\code{..} や \code{-} で戻る」という使い分けが重要になる。慣れないうちは、移動した直後に \code{pwd} や \code{ls} を実行して、本当に意図した場所へ来ているかを確かめるとよい。
+\code{cd} には、相対パスによる移動、絶対パスによる移動、\code{..} による親ディレクトリへの移動、\code{-} による直前のディレクトリへの移動がある。移動後に \code{pwd} と \code{ls} を実行すれば、現在位置とその内容を確認できる。
 
 \subsection{絶対パスと相対パス}
 
@@ -295,7 +293,7 @@ $ pwd
 表記 & 意味 \\
 \midrule
 \code{/abs/data.txt} & 絶対パス。\code{/} から始まり、どこにいても同じ場所を指す \\
-\code{\textasciitilde/analysis} & 絶対パス。\code{\textasciitilde} はホームディレクトリ \\
+\code{\textasciitilde/analysis} & ホームディレクトリからのパス。実行前にシェルが展開する \\
 \code{data.txt} & 相対パス。今いるディレクトリを基準に解釈される \\
 \code{./x.txt} & 相対パス。\code{.} は現在のディレクトリ \\
 \code{../x.txt} & 相対パス。\code{..} は 1 つ上のディレクトリ \\
@@ -303,7 +301,7 @@ $ pwd
 \end{tabular}
 \end{table}
 
-表~\ref{tab:path-notation} は、シェルを読み始めた直後に最低限区別したい表記をまとめたものである。特に重要なのは、絶対パスは \code{/} や \code{\textasciitilde} から始まり、相対パスは現在のカレントディレクトリを基準に読む、という違いである。
+表~\ref{tab:path-notation} は、シェルを読み始めた直後に最低限区別したい表記をまとめたものである。絶対パスは \code{/} から始まる。\code{\textasciitilde/analysis} はシェルによる展開後にホームディレクトリ下の絶対パスとなり、カレントディレクトリには依存しない。
 
 次のディレクトリ構成を考える。
 
@@ -315,22 +313,22 @@ analysis/
     `-- plot.py
 \end{lstlisting}
 
-現在位置が \code{/Users/ikomae/analysis} なら、次の 2 つのコマンドは同じファイルを指している。
+現在位置が \code{/Users/student/analysis} なら、次の 2 つのコマンドは同じファイルを指している。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pwd
-/Users/ikomae/analysis
+/Users/student/analysis
 $ cat data/events.txt
-$ cat /Users/ikomae/analysis/data/events.txt
+$ cat /Users/student/analysis/data/events.txt
 \end{lstlisting}
 
-1 つ目の \code{data/events.txt} は相対パスであり、「いまいる \code{analysis} の中にある \code{data} の中にある \code{events.txt}」という意味である。2 つ目の \code{/Users/ikomae/analysis/data/events.txt} は絶対パスなので、どこにいても同じ \code{events.txt} を指す。
+1 つ目の \code{data/events.txt} は、カレントディレクトリ \code{/Users/student/analysis} を基準とする相対パスである。2 つ目の \code{/Users/student/analysis/data/events.txt} は絶対パスであり、カレントディレクトリに依存しない。この状態では、両者とも同じファイルを指す。
 
-一方で、現在位置が \code{/Users/ikomae/analysis/scripts} に変わると、同じ相対パスでも意味が変わる。
+一方で、現在位置が \code{/Users/student/analysis/scripts} に変わると、同じ相対パスでも意味が変わる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pwd
-/Users/ikomae/analysis/scripts
+/Users/student/analysis/scripts
 $ cat data/events.txt
 cat: data/events.txt: No such file or directory
 $ cat ../data/events.txt
@@ -339,7 +337,7 @@ $ cat ../data/events.txt
 この場所で \code{data/events.txt} と指定すると、シェルは \code{scripts/data/events.txt} を探す。そのファイルは存在しないため、\code{data/events.txt: No such file or directory} というエラー文が表示される。
 相対パスで \code{events.txt} を指定するには、1 つ上へ戻る \code{..} を使って \code{../data/events.txt} と書く必要がある。
 
-同様に、\code{./plot.py} は「現在のディレクトリにある \code{plot.py}」、\code{../data} は「1 つ上にある \code{data} ディレクトリ」を表す。相対パスは短く書ける反面、現在位置を読み違えると別の場所を指してしまう。したがって、コマンドを読むときは「今どこにいるか」と「そのパスが絶対か相対か」を必ずセットで考える必要がある。
+同様に、\code{./plot.py} は現在のディレクトリにある \code{plot.py}、\code{../data} は一つ上のディレクトリにある \code{data} を表す。相対パスが指す対象はカレントディレクトリによって変わるため、コマンドの実行前に \code{pwd} と対象パスを確認する。
 
 \subsection{ディレクトリの作成: \code{mkdir}}
 
@@ -382,13 +380,13 @@ analysis/
         `-- 04/
 \end{lstlisting}
 
-解析では、観測日ごとの出力先や、\code{figures/summary/} のような途中ディレクトリを一度に作ることが多い。このような場面では \code{mkdir -p} を用いるのが便利である。
+観測日ごとの出力先や \code{figures/summary/} のような階層を一度に作る場合は、\code{mkdir -p} を用いる。\code{-p} は必要な親ディレクトリも作成し、指定したディレクトリがすでに存在する場合にはエラーにしない。
 
 \section{コピー、移動、削除}
 
 \subsection{ファイル・ディレクトリのコピー: \code{cp}}
 
-\code{cp}\index{cp@\code{cp}|textbf} は元のファイルやディレクトリを残したまま複製を作るコマンドである。最後の引数が既存のディレクトリならその中へ同じ名前でコピーされ、ファイル名ならその名前で複製が作られる。まずは次のようなディレクトリ構造を考える。
+\code{cp}\index{cp@\code{cp}|textbf} は元のファイルやディレクトリを残したまま複製を作るコマンドである。最後の引数が既存のディレクトリならその中へ同じ名前でコピーされ、ファイル名ならその名前で複製が作られる。以下のディレクトリ構造を例とする。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
@@ -415,7 +413,7 @@ work/
     `-- events.txt
 \end{lstlisting}
 
-このように、\code{cp} は元ファイルを消さない。\code{raw/events.txt} はそのまま残り、コピー先だけが増える。バックアップを取るときや、元データを残したまま加工用のファイルを作るときによく使う。
+\code{cp} の実行後も \code{raw/events.txt} は残り、コピー先に独立したファイルが作成される。元データを保持したまま加工用ファイルを作る場合は、入力と出力のパスを分ける。
 
 ディレクトリごと複製したい場合は \code{-r} を付ける。
 
@@ -434,7 +432,7 @@ work/
     `-- events.txt
 \end{lstlisting}
 
-\code{-r} は再帰的にコピーする、という意味である。ディレクトリの中にさらにファイルやサブディレクトリがあっても、その構造ごと複製される。なお、既存ファイルへの上書きが心配なときは \code{-i} を付けて確認しながらコピーすると安全である。
+\code{-r} は、指定したディレクトリ以下を再帰的にコピーする。コピー先に同名の項目が存在する可能性がある場合、\code{-i} を指定すると上書き前に確認が表示される。自動処理では対話入力に依存させず、出力先の存在を事前に検査する。
 
 \subsection{移動と名前の変更: \code{mv}}
 
@@ -482,7 +480,7 @@ work/
 
 \subsection{ファイル・ディレクトリの削除: \code{rm}}
 
-\code{rm}\index{rm@\code{rm}|textbf} はファイルやディレクトリを削除するコマンドである。重要なのは、通常の \code{rm} はゴミ箱へ移すのではなく、その場で削除するという点である。Finder での削除と違って、あとから気軽に戻すことはできない。したがって、慣れないうちは削除前に \code{pwd} や \code{ls} で場所と対象を確認する方がよい。
+\code{rm}\index{rm@\code{rm}|textbf} はファイルやディレクトリを削除するコマンドである。通常の \code{rm} は対象をゴミ箱へ移さず、その場で削除する。そのため、実行前に \code{pwd} や \code{ls} で場所と対象を確認する。
 
 たとえば、次のような状態を考える。
 
@@ -496,23 +494,17 @@ work/
 ここで使う基本形は次の通りである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ rm result_old.txt
 $ rm -i result_old.txt
-$ rm -r old_output
 $ rm -ri old_output
 \end{lstlisting}
 
-\code{rm result\_old.txt} は通常のファイルを削除する。\code{rm -i result\_old.txt} は削除前に確認を出すので、うっかり消したくないときに有用である。\code{rm -r old\_output} はディレクトリを中身ごと再帰的に削除する。\code{rm -ri old\_output} のように \code{-r} と \code{-i} を組み合わせれば、ディレクトリ削除でも確認しながら進められる。
+\code{rm -i result\_old.txt} は通常のファイルを削除する前に確認を表示する。\code{rm -ri old\_output} は、ディレクトリの内部を再帰的にたどり、各対象の削除前に確認する。確認が不要で対象を確定できている場合は、それぞれ \code{-i} を外した \code{rm result\_old.txt} または \code{rm -r old\_output} を用いる。これらは別々の初期状態に対する代替例であり、同じ対象に順番に実行するものではない。
 
-% \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-% work/
-% \end{lstlisting}
-
-特に \code{rm -r} は強力である。対象のパスを誤ると大きな被害になるので、削除前に \code{ls old\_output} や \code{ls result\_old.txt} のように対象を一度表示してから実行すると安全である。
+\code{rm -r} は、指定したディレクトリ以下を再帰的に削除する。対象パスの誤指定による削除範囲の拡大を防ぐため、実行前に \code{ls old\_output} や \code{ls result\_old.txt} で対象を確認する。内容を個別に確認する場合は \code{rm -ri} を用いる。
 
 \subsection{ワイルドカード}
 
-複数のファイルを一度に指定したいときは、ワイルドカードが役に立つ。よく使うのは \code{*} であり、これは「0 文字以上の任意の文字列」を表す。重要なのは、\code{cat} や \code{rm} が \code{*} を理解しているのではなく、シェルが先に実際のファイル名へ展開してから各コマンドへ渡しているという点である。
+ワイルドカードは、パターンに一致する複数のパスを指定する記法である。\code{*} は、ディレクトリ区切りを除く 0 文字以上の文字列に一致する。\code{cat} や \code{rm} の実行前にシェルがパターンを実際のパスへ展開し、その結果を各コマンドの引数として渡す。
 
 たとえば、次のような構成を考える。
 
@@ -533,23 +525,23 @@ data/
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls data/*.csv
 $ cp data/*.csv backup/
-$ rm test_*.csv
+$ rm data/test_*.csv
 \end{lstlisting}
 
 \code{data/*.csv} は、\code{data} ディレクトリ直下にある \code{.csv} ファイルすべてを意味する。したがって、この例では \code{run01.csv} と \code{run02.csv} は対象になるが、\code{subdir/run04.csv} は含まれない。\code{*} は \code{/} をまたいで階層全体を探すわけではないからである。
 
-\code{cp data/*.csv backup/} とすると、条件に合う複数の CSV をまとめてコピーできる。\code{rm test\_*.csv} なら、\code{test\_001.csv} や \code{test\_old.csv} のように同じ接頭辞を持つファイルを一括削除できる。
+\code{cp data/*.csv backup/} とすると、条件に合う複数の CSV をまとめてコピーできる。\code{rm data/test\_*.csv} なら、\code{data/test\_001.csv} や \code{data/test\_20260413.csv} のように同じ接頭辞を持つファイルを一括削除できる。
 
-ただし、ワイルドカード\index{わいるどかーど@ワイルドカード|textbf}は便利な反面、想定より多くのファイルへ一致することもある。特に削除系のコマンドでは、先に \code{ls test\_*.csv} のように実際の対象を表示してから \code{rm test\_*.csv} を実行する方が安全である。また、一致しないときの振る舞いはシェル設定によって異なることがあるので、その意味でもまず \code{ls} で確認する習慣が有用である。
+ただし、ワイルドカード\index{わいるどかーど@ワイルドカード|textbf}は想定より多くのファイルへ一致することがある。特に削除系のコマンドでは、先に \code{ls data/test\_*.csv} で実際の対象を表示してから \code{rm data/test\_*.csv} を実行する。また、一致する項目がない場合の振る舞いはシェル設定によって異なるため、削除前の一覧表示はその確認にもなる。
 
 
 \section{ファイルの内容確認とデータ抽出}
 
-解析では、データを読む前にまず中身を確認する。そのための基本コマンドと、最低限覚えておきたいオプションを最初に表へまとめる。
+データを処理する前には、ファイル形式と内容の一部を確認する。表~\ref{tab:file-inspection-commands} に、内容表示、行抽出、列処理に用いるコマンドと主要なオプションを示す。
 
 \begin{table}[hbtp]
 \centering
-\caption{中身確認と抽出でよく使うコマンドと主要オプション}
+\caption{内容表示・行抽出・列処理のコマンドと主要オプション}
 \label{tab:file-inspection-commands}
 \begin{tabular}{p{0.14\linewidth}p{0.28\linewidth}p{0.44\linewidth}}
 \toprule
@@ -561,16 +553,16 @@ $ rm test_*.csv
 \code{tail} & \code{-n N}, \code{-f} & 末尾の数行を見る、ログの追記を監視する \\
 \code{wc} & \code{-l}, \code{-w}, \code{-c} & 行数、単語数、バイト数を数える \\
 \code{grep} & \code{-i}, \code{-v}, \code{-n}, \code{-A N}, \code{-B N} & 条件に合う行だけを抽出する \\
-\code{awk} & \code{-F}, \code{if (...)}, \code{sum += ...} & 列単位で取り出す、簡単な整形や集計を行う \\
+\code{awk} & \code{-F}, \code{if (...)}, \code{sum += ...} & 列単位の抽出、整形、集計を行う \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-表~\ref{tab:file-inspection-commands} は、ファイルの確認と抽出で頻繁に使うコマンドを一望するためのものである。最初は全てを暗記する必要はないが、「中身を見る」「条件で抜く」「列ごとに整形する」という役割の違いは押さえたい。ここからは、各コマンドの役割と主要なオプションを順に説明する。
+表~\ref{tab:file-inspection-commands} は、ファイルの確認と抽出に用いるコマンドを役割別に示したものである。「内容の表示」「条件に合う行の抽出」「列単位の整形」を区別し、必要な操作に対応するコマンドを選ぶ。以下では、各コマンドの入力、出力、主要なオプションを順に説明する。
 
 \subsection{\code{cat}}
 
-\code{cat}\index{cat@\code{cat}|textbf} はファイルの中身をそのまま標準出力へ流す。短い設定ファイルや、数行だけの確認用テキストを一気に見たいときに向く。複数のファイルを並べて渡すと、内容を順に連結して表示できる。
+\code{cat}\index{cat@\code{cat}|textbf} は、指定したファイルの内容を順に標準出力へ送る。複数のファイルを渡すと、引数の順に内容を連結する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cat data/events.txt
@@ -579,35 +571,35 @@ $ cat log/*.log
 $ cat -n config.txt
 \end{lstlisting}
 
-3 行目のように、前節のワイルドカードを使えば複数のログファイルをまとめて連結して表示できる。ただし、巨大なログや観測データへそのまま使うと画面が一気に流れて読めない。つまり、\code{cat} は「短い内容を一気に見る」道具だと考えるとよい。長いファイルは、次に述べる \code{less} や \code{head}、\code{tail} に切り替える。
+3 行目のように、ワイルドカードを使えば複数のログファイルを連結して表示できる。ただし、長いログや観測データでは出力が画面の範囲を超える。短いファイルの全体表示には \code{cat}、長いファイルの閲覧や一部表示には \code{less}、\code{head}、\code{tail} を用いる。
 
 \begin{description}
-\item[\code{-n}] 行番号を付けて表示する。設定ファイルやログの何行目に何があるかを確認したいときに便利である。
+\item[\code{-n}] 各行に行番号を付ける。設定ファイルやログの位置を行番号で参照できる。
 \end{description}
 
 \subsection{\code{less}}
 
-\code{less}\index{less@\code{less}|textbf} は長いファイルをスクロールしながら読むためのコマンドである。大きなデータを「まず中身だけ見たい」ときには、最初に \code{less} を使うことが多い。
+\code{less}\index{less@\code{less}|textbf} は、ファイルを画面単位で表示し、開いたまま移動と検索を行うコマンドである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ less data/events.txt
 $ less -N data/events.txt
 \end{lstlisting}
 
-\code{less} は単なる表示コマンドではなく、表示中に検索や移動ができる。ログや観測データの形式を確認するときは、次の操作を覚えておくとよい。
+\code{less} では、ファイルを開いたまま検索と移動を行える。主要な操作を次に示す。
 
 \begin{description}
 \item[\code{-N}] 行番号を表示する。後で「どの行に何があったか」を参照しやすくなる。
 \item[\code{Space}] 1 画面ぶん先へ進む。
 \item[\code{b}] 1 画面ぶん戻る。
-\item[\code{/pattern}] 指定した文字列を前方検索する。たとえば \code{/ERROR} と打てば、\code{ERROR} を含む次の行へ飛べる。
+\item[\code{/pattern}] 指定した文字列を前方検索する。たとえば \code{/ERROR} と入力すると、\code{ERROR} を含む次の行が表示位置となる。
 \item[\code{n}] 直前の検索条件の次の一致へ進む。
 \item[\code{q}] 表示を終了してターミナルへ戻る。
 \end{description}
 
 \subsection{\code{head}}
 
-\code{head}\index{head@\code{head}|textbf} はファイルの先頭だけを見るためのコマンドである。どのような形式のデータが入っているか、ヘッダやコメント行はどのようになっているかを確認したいときに向く。
+\code{head}\index{head@\code{head}|textbf} は、ファイルの先頭から指定した行数を表示する。ヘッダ、コメント行、区切り文字の確認に用いる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ head data/events.txt
@@ -615,12 +607,12 @@ $ head -n 20 data/events.txt
 \end{lstlisting}
 
 \begin{description}
-\item[\code{-n N}] 先頭から N 行だけ表示する。既定では 10 行なので、少し長めに見たいときに使う。
+\item[\code{-n N}] 先頭から \code{N} 行を表示する。指定しない場合は 10 行である。
 \end{description}
 
 \subsection{\code{tail}}
 
-\code{tail}\index{tail@\code{tail}|textbf} はファイルの末尾だけを見るためのコマンドである。ログファイルの最新部分を確認したいときや、計算結果が末尾へ追記される形式のファイルを見るときに使う。
+\code{tail}\index{tail@\code{tail}|textbf} はファイル末尾の行を表示する。ログの直近部分の確認や、末尾へ追記される計算結果の監視に用いる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ tail log.txt
@@ -629,13 +621,13 @@ $ tail -f log.txt
 \end{lstlisting}
 
 \begin{description}
-\item[\code{-n N}] 末尾から N 行だけ表示する。直近 20 行や 30 行だけ見たいときに使う。
-\item[\code{-f}] ファイルの末尾を監視し、追記された内容を続けて表示する。実行中のジョブのログを見るときに有用である。
+\item[\code{-n N}] 末尾から \code{N} 行を表示する。
+\item[\code{-f}] ファイルの末尾を監視し、追記された内容を継続して表示する。実行中の処理がログへ追記する内容を確認できる。
 \end{description}
 
 \subsection{\code{wc}}
 
-\code{wc}\index{wc@\code{wc}|textbf} はファイルの行数、単語数、バイト数などを数えるコマンドである。特に \code{-l} は「何行あるか」を知るためによく使う。データ件数やログの大きさをざっと見積もるときの第一歩になる。
+\code{wc}\index{wc@\code{wc}|textbf} は、ファイルの行数、単語数、バイト数を数える。1 行が 1 レコードに対応する形式では、\code{-l} の結果からヘッダ行とコメント行を除くことでレコード数を確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ wc data/events.txt
@@ -645,14 +637,14 @@ $ wc -c output.bin
 \end{lstlisting}
 
 \begin{description}
-\item[\code{-l}] 行数を数える。最もよく使う。
-\item[\code{-w}] 単語数を数える。自然言語テキストの確認で使うことが多い。
-\item[\code{-c}] バイト数を数える。ファイルサイズを概算したいときに役立つ。
+\item[\code{-l}] 改行の数を行数として表示する。末尾に改行がない最終行の扱いに注意する。
+\item[\code{-w}] 空白で区切られた単語数を表示する。
+\item[\code{-c}] 入力のバイト数を表示する。
 \end{description}
 
 \subsection{\code{grep}}
 
-\code{grep}\index{grep@\code{grep}|textbf} は、条件に合う行だけを抽出するためのコマンドである。ログからエラー行を探す、コメント行を除く、特定の測定条件を含む行だけ取り出す、といった用途で頻繁に使う。
+\code{grep}\index{grep@\code{grep}|textbf} は、指定したパターンに一致する行を出力する。大文字・小文字の無視、非一致行の出力、行番号や前後行の付加をオプションで指定できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ grep "ERROR" log.txt
@@ -664,19 +656,19 @@ $ grep -rn "TODO" src/
 \end{lstlisting}
 
 \begin{description}
-\item[\code{-i}] 大文字と小文字を区別せずに検索する。\code{error} と \code{ERROR} を同じものとして扱いたいときに使う。
-\item[\code{-v}] 一致した行ではなく、一致しなかった行を出す。コメント行やノイズ行を除外したいときに便利である。
-\item[\code{-n}] 一致した行の行番号も表示する。後で元ファイルを見直すときに役立つ。
-\item[\code{-A N}] 一致した行の後ろを N 行ぶん追加で表示する。エラー行の直後にある補足メッセージも一緒に見たいときに便利である。
-\item[\code{-B N}] 一致した行の前を N 行ぶん追加で表示する。エラーの直前に何が起きていたかを見たいときに使う。
-\item[\code{-r}] ディレクトリの中を再帰的に検索する。複数ファイルにまたがって同じ文字列を探したいときに使う。たとえば \code{grep -rn "TODO" src/} と書けば、\code{src/} 以下のすべてのファイルをたどり、\code{TODO} を含む行を行番号付きで表示できる。日常的なログ確認では \code{-A} や \code{-B} の方を先に使うことが多いが、複数ファイル検索ではこちらも重要である。
+\item[\code{-i}] 大文字と小文字を区別せずに検索する。たとえば、\code{error} と \code{ERROR} の両方に一致する。
+\item[\code{-v}] 一致しなかった行を出す。コメント行や除外対象の行を取り除ける。
+\item[\code{-n}] 一致した行とともに、元ファイル内の行番号を表示する。
+\item[\code{-A N}] 一致した行に続く \code{N} 行も表示する。エラー行と直後の補足メッセージを同時に確認できる。
+\item[\code{-B N}] 一致した行より前の \code{N} 行も表示する。エラー行に先行するログを同時に確認できる。
+\item[\code{-r}] 指定したディレクトリ以下を再帰的に検索する。\code{grep -rn "TODO" src/} は、\code{src/} 以下で \code{TODO} を含む行を、ファイル名と行番号付きで表示する。
 \end{description}
 
-\code{grep} では正規表現も使える。たとえば \verb|^| は行頭、\verb|$| は行末を表すので、\verb|grep "^#" data.txt| と書けば「\code{\#} で始まる行」だけを拾える。また、複数のログファイルをまとめて調べたいなら、\code{grep -r "ERROR" log/} のようにディレクトリごと渡せばよい。ここでは最低限の例だけを示したが、\verb|[]| や \verb|.| や \verb|*| まで含めた正規表現の整理は付録~\ref{app:regex} にまとめているので、記号の意味が曖昧になったときはそちらを見返すとよい。
+\code{grep} では正規表現も使用できる。\verb|^| は行頭、\verb|$| は行末を表すため、\verb|grep "^#" data.txt| は \code{\#} で始まる行だけを抽出する。\code{grep -r "ERROR" log/} は、\code{log/} 以下を再帰的に検索する。\verb|[]|、\verb|.|、\verb|*| を含む正規表現の記法は、付録~\ref{app:regex} で説明する。
 
 \subsection{\code{awk}}
 
-\code{awk}\index{awk@\code{awk}|textbf} は、テキストを列データとして扱って抽出や整形を行うコマンドである。空白区切りのログや表形式テキストの処理に適している。
+\code{awk}\index{awk@\code{awk}|textbf} は、入力行を区切り文字で列へ分け、列条件による抽出、列の並べ替え、集計を行うコマンドである。既定の区切りは連続する空白であり、\code{-F} で別の区切り文字を指定できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ awk '{print $1}' data.txt
@@ -686,65 +678,66 @@ $ awk '{ if ($3 > 10) print $1, $3 }' data.txt
 $ awk '{ sum += $3 } END { print sum }' data.txt
 \end{lstlisting}
 
-既定では空白やタブが区切り文字として使われる。そのため、空白区切りの観測データなら \code{\$1} が 1 列目、\code{\$2} が 2 列目という意味になる。条件分岐は \code{if} を明示的に書くこともできるので、「3 列目が 10 より大きい行だけ表示する」といった処理の流れが読みやすい。また、各行で値を足し合わせて最後に合計や平均を出す、といった簡単な計算もそのまま書ける。
+既定では空白やタブが区切り文字として使われる。そのため、空白区切りの観測データでは \code{\$1} が 1 列目、\code{\$2} が 2 列目を表す。条件分岐を \code{if} で明示すれば、「3 列目が 10 より大きい行だけを表示する」という処理を記述できる。各行の値を加算し、最後に合計や平均を出力することもできる。
 
 \begin{description}
 \item[\code{-F}] 区切り文字を指定する。CSV のようにカンマ区切りなら \code{-F,} のように書く。
 \item[\code{\{print \$1\}}] 1 列目を表示する最も基本的な形である。\code{\{print \$1, \$3\}} のようにすれば複数列を並べて出せる。
-\item[\code{\{ if (\$3 > 10) print \$1, \$3 \}}] 条件分岐を明示的に書く形である。最初のうちは、このように \code{if} を書いた方が処理の意味を追いやすい。
-\item[\code{\{ sum += \$3 \} END \{ print sum \}}] 各行で 3 列目を足し上げ、最後に合計を表示する。簡単な集計や平均計算の出発点として便利である。
+\item[\code{\{ if (\$3 > 10) print \$1, \$3 \}}] 3 列目が 10 より大きい行について、1 列目と 3 列目を表示する。
+\item[\code{\{ sum += \$3 \} END \{ print sum \}}] 各行で 3 列目を足し上げ、入力をすべて処理した後に合計を表示する。
 \end{description}
 
 \subsection{パイプ \code{|}}
 
-さらに、強力な手段としてパイプ\index{ぱいぷ@パイプ|textbf}（\code{|}）がある。パイプは、あるコマンドの標準出力を次のコマンドの入力へそのまま流し込む機能である。単機能のコマンドを組み合わせて欲しい結果を得るのが UNIX 環境の流儀である。
+パイプ\index{ぱいぷ@パイプ|textbf}（\code{|}）は、左側のコマンドの標準出力を、右側のコマンドの標準入力へ接続する。中間ファイルを作らずに、抽出、並べ替え、行数の集計などを連結できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ cat log.txt | grep "ERROR"
+$ grep "ERROR" log.txt | head -n 10
 $ grep "ERROR" log.txt | wc -l
-$ cat events.txt | grep -v "noise" | awk '{print $2}'
+$ grep -v "noise" events.txt | awk '{print $2}'
 \end{lstlisting}
 
-1 行目は \code{log.txt} の内容を読み出し、その中から \code{ERROR} を含む行だけを表示する。2 行目では、抽出結果をさらに \code{wc -l} へ渡し、エラー件数を数えている。3 行目では、ノイズ行を除外したうえで 2 列目だけを取り出している。
+1 行目は \code{ERROR} を含む行を抽出し、その先頭 10 行だけを表示する。2 行目は同じ抽出結果を \code{wc -l} へ渡し、件数を数える。3 行目はノイズ行を除外したうえで、2 列目だけを取り出す。
 
-このように、まず全体を見る、次に条件で絞る、最後に列を抜く、という手順を 1 行の中でつなげられる。
+パイプによって、行の抽出、件数の集計、列の選択を左から右の順に一つのコマンド列として記述できる。
 
 \section{\code{curl}・\code{wget} による URL からのファイル取得}
 
-解析では、公開データや設定例、インストーラスクリプトを URL から取得することがある。そのときによく使うのが \code{curl} と \code{wget} である。大きな違いは、\code{curl} は何も付けないと内容を標準出力へ出し、\code{wget} は既定でファイルとして保存する点にある。macOS には \code{curl} が標準で入っているが、\code{wget} は標準では入っていない。必要なら \code{brew install wget} などで追加する。
+解析では、公開データ、設定例、インストール用スクリプトを URL から取得することがある。以下では、受信内容を既定で標準出力へ送る \code{curl} と、URL の末尾から決めた名前でファイルへ保存する \code{wget} を扱う。macOS の標準環境では \code{curl} を利用できるが、\code{wget} の利用には Homebrew などによる追加が必要である。
 
 \subsection{\code{curl}}
 
-\code{curl}\index{curl@\code{curl}|textbf} は、URL の内容を表示したり、保存したり、別のコマンドへ渡したりするときに使う。まずは次の形を覚えておけばよい。
+\code{curl}\index{curl@\code{curl}|textbf} は、URL から受信した内容を標準出力へ出すか、指定したファイルへ保存する。標準出力、URL 末尾の名前、指定した名前という 3 通りの出力先を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ curl https://example.com/config.txt | head -n 2
 $ curl -O https://example.com/data/run001.csv
 $ curl -o events.csv https://example.com/data/run001.csv
 $ curl -L -O https://example.com/latest.csv
-$ curl -fsSL https://pyenv.run | bash
+$ curl -fsSL -o pyenv-installer.sh https://pyenv.run
+$ less pyenv-installer.sh
 \end{lstlisting}
 
-1 行目では、取得した内容をファイルへ保存せず、そのまま画面へ流している。たとえば結果は次のようになる。
+1 行目では、取得した内容をファイルへ保存せず、そのまま標準出力へ送っている。配布元の \code{config.txt} の先頭が次の 2 行であれば、同じ内容が表示される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 threshold=5.0
 window_ns=250
 \end{lstlisting}
 
-2 行目と 3 行目はファイル保存である。2 行目の \code{-O} は URL の末尾にあるファイル名をそのまま使う。3 行目の \code{-o events.csv} は、保存名を自分で決めたいときに使う。4 行目の \code{-L} はリダイレクト先までたどるオプションであり、短縮 URL や配布用リンクを扱うときによく必要になる。5 行目の \code{-fsSL} はインストール手順でよく見る組合せで、\code{-f} は HTTP エラー時に失敗として扱う、\code{-s} は通常の進捗表示を消す、\code{-S} は \code{-s} と併用したときでもエラー文は表示する、\code{-L} はリダイレクトをたどる、という意味である。
+2 行目と 3 行目はファイル保存である。2 行目の \code{-O} は URL の末尾にあるファイル名をそのまま使う。3 行目の \code{-o events.csv} は、保存名を自分で決めたいときに使う。4 行目の \code{-L} はリダイレクト先までたどるオプションである。5 行目は取得したスクリプトをファイルへ保存し、6 行目で実行前に内容を確認する例である。取得内容を直接シェルへ渡すと、確認していないコードが実行されるため、配布元と内容の確認が必要である。\code{-fsSL} の各文字は、\code{-f} が HTTP エラーを失敗として扱い、\code{-sS} が通常の進捗を抑制しつつエラーを表示し、\code{-L} がリダイレクトをたどることを表す。
 
 \begin{description}
-\item[\code{-O}] URL の末尾にある名前で保存する。配布元のファイル名をそのまま使いたいときに向く。
-\item[\code{-o}] 保存名を自分で指定する。長い URL や分かりにくい名前を短く直したいときに使う。
-\item[\code{-L}] リダイレクトをたどる。共有 URL や最新版リンクでは付けた方が安全なことが多い。
-\item[\code{-f}] HTTP エラーを成功扱いにしない。存在しない URL を取ってしまったときの見落としを減らせる。
-\item[\code{-sS}] 通常表示を減らしつつ、エラーだけは見えるようにする。スクリプトから呼ぶときに便利である。
+\item[\code{-O}] URL の末尾にある名前で保存する。保存名を URL と一致させる場合に用いる。
+\item[\code{-o}] 保存名を引数で指定する。URL から保存名を決められない場合にも利用できる。
+\item[\code{-L}] HTTP のリダイレクト応答で示された URL をたどる。リダイレクトを返す URL から転送先の内容を取得する場合に必要となる。
+\item[\code{-f}] HTTP 400 以上の応答を受けた場合に、終了状態を失敗とする。スクリプトから終了状態を検査すれば、エラーページを正常な取得結果として後続処理へ渡すことを防げる。
+\item[\code{-sS}] 進捗表示を抑制し、エラーメッセージは表示する。スクリプト内で出力を制御する場合に用いる。
 \end{description}
 
 \subsection{\code{wget}}
 
-\code{wget}\index{wget@\code{wget}|textbf} は、URL を指定すると既定でファイルへ保存する。大量のファイルを順に取得したいときや、大きなファイルの取得を再開したいときに使いやすい。
+\code{wget}\index{wget@\code{wget}|textbf} は、URL を指定すると既定でファイルへ保存する。\code{-c} を指定すれば、サーバーが範囲指定による取得に対応している場合に、途中まで保存したファイルの続きから取得できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ wget https://example.com/data/run001.csv
@@ -752,44 +745,44 @@ $ wget -O events.csv https://example.com/data/run001.csv
 $ wget -c https://example.com/archive.tar.gz
 \end{lstlisting}
 
-1 行目では、URL の末尾にある \code{run001.csv} という名前で保存される。2 行目の \code{-O} は保存名を自分で決める形であり、\code{curl -o} と同じ発想である。3 行目の \code{-c} は途中で止まったダウンロードを再開するときに使う。回線が不安定な環境やサイズの大きい配布物では便利である。
+1 行目では、URL の末尾にある \code{run001.csv} という名前で保存される。2 行目の \code{-O} は保存名を指定する。3 行目の \code{-c} は、途中まで保存されたファイルがある場合に、その続きから取得を再開する。
 
 \begin{description}
 \item[\code{-O}] 保存名を自分で指定する。既定の名前を使いたくないときに使う。
-\item[\code{-c}] 中断したダウンロードを再開する。大きなファイルで有効である。
-\item[\code{-q}] 表示を減らす。ログを静かにしたいときに使う。
-\item[\code{--show-progress}] 進捗だけは見たいときに使う。静かな実行と相性がよい。
+\item[\code{-c}] 途中まで保存したファイルの続きから取得を試みる。サーバーが範囲指定による取得に対応していなければ、先頭から取得し直す場合がある。
+\item[\code{-q}] 通常のメッセージを表示しない。
+\item[\code{--show-progress}] quiet モードを指定していても、進捗表示を有効にする。
 \end{description}
 
-\code{wget} が手元にない環境では、\code{curl -O} や \code{curl -o} で代用できる。また、画面へ流した内容をそのままパイプで次のコマンドへ渡したいときは、\code{wget} より \code{curl} の方が自然である。
+\code{wget} が手元にない環境でも、\code{curl -O} または \code{curl -o} でファイルへ保存できる。受信内容をパイプで次のコマンドへ渡す場合は、既定で標準出力へ送る \code{curl} をオプションなしで利用できる。
 
 \section{gzip・tar・zip による圧縮と展開}
 
 \subsection{\code{gzip}: 1 ファイルの圧縮}
 
-\code{gzip}\index{gzip@\code{gzip}|textbf} は、基本的には 1 つのファイルを 1 つの圧縮ファイルへ変える道具である。ログ、CSV、設定ファイルのようなテキストを素早く縮めたいときによく使う。
+\code{gzip}\index{gzip@\code{gzip}|textbf} は、1 つのファイルを gzip 形式の 1 つの圧縮ファイルへ変換する。ディレクトリ構造や複数のファイルを一つにまとめる機能は持たない。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ gzip -k events.csv
 $ ls -lh events.csv*
 $ gzip -cd events.csv.gz | head -n 2
-$ gunzip events.csv.gz
+$ gzip -cd events.csv.gz > events_restored.csv
 \end{lstlisting}
 
-1 行目の \code{-k} は元ファイルを残す指定である。付けない場合は、通常 \code{events.csv} が \code{events.csv.gz} に置き換わる。2 行目では圧縮前後のサイズを見比べている。3 行目の \code{-cd} は、「展開した内容をファイルへ戻さず標準出力へ流す」という意味であり、\code{head} や \code{grep} と組み合わせやすい。4 行目の \code{gunzip} は展開用コマンドであり、\code{gzip -d} と同じ目的で使える。
+1 行目の \code{-k} は元ファイルを残す指定である。付けない場合は、通常 \code{events.csv} が \code{events.csv.gz} に置き換わる。2 行目では圧縮前後のサイズを見比べている。3 行目の \code{-cd} は、展開した内容をファイルへ戻さず標準出力へ流す指定であり、\code{head} や \code{grep} と組み合わせられる。4 行目は同じ出力をリダイレクトし、元の \code{events.csv} を残したまま \code{events\_restored.csv} へ展開する。\code{gunzip events.csv.gz} で元の名前へ戻すには、同名の \code{events.csv} が存在しないことが必要である。
 
 \begin{description}
-\item[\code{-k}] 元ファイルを残す。配布物を壊したくないときに安全である。
-\item[\code{-d}] 展開する。圧縮を戻すときの基本である。
-\item[\code{-c}] 結果を画面へ流す。パイプと相性がよい。
-\item[\code{-1} から \code{-9}] 圧縮率と速度のバランスを指定する。数字が大きいほど一般に圧縮率は上がるが時間がかかる。\code{-9} は、少しでも小さくしたい配布用ファイルでは意味があるが、日常的なログ圧縮では既定値のままで十分なことが多い。
+\item[\code{-k}] 圧縮または展開の完了後も入力ファイルを残す。
+\item[\code{-d}] gzip 形式のファイルを展開する。
+\item[\code{-c}] 圧縮または展開した結果を標準出力へ送る。ファイルを作らずに \code{head} や \code{grep} へ渡せる。
+\item[\code{-1} から \code{-9}] 圧縮にかける時間と出力サイズの兼ね合いを指定する。数字を大きくすると、通常は処理時間が長くなる代わりに出力ファイルが小さくなる。実際の差は入力内容に依存するため、必要な場合に同じ入力で処理時間と容量を比較する。
 \end{description}
 
-\code{gzip} 自体は複数ファイルを 1 つに束ねる道具ではない。ディレクトリごとまとめたいときは、次の \code{tar} と組み合わせることが多い。
+\code{gzip} 自体は複数ファイルを 1 つにまとめない。複数ファイルやディレクトリ構造を保持する場合は、次の \code{tar} でアーカイブを作成し、そのアーカイブを gzip で圧縮する。
 
-\subsection{\code{tar}: 複数ファイル・ディレクトリの一括格納}
+\subsection{\code{tar}: tar アーカイブの作成と gzip 圧縮}
 
-\code{tar}\index{tar@\code{tar}|textbf} は、複数のファイルやディレクトリを 1 本のアーカイブへまとめる道具である。\code{gzip} と組み合わせた \code{.tar.gz} 形式が広く使われている。
+\code{tar}\index{tar@\code{tar}|textbf} は、複数のファイルやディレクトリ構造を一つのファイルへ格納する。この格納先を tar アーカイブという。\code{-z} を指定すると、作成した tar アーカイブを gzip で圧縮した \code{.tar.gz} ファイルを作る。ここで用いる \code{-c}、\code{-t}、\code{-x}、\code{-f}、\code{-z} の意味は GNU tar 公式マニュアル~\cite{gnu_tar_manual} に基づく。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ tar -czf archive.tar.gz raw/ notes.txt
@@ -797,9 +790,7 @@ $ tar -tzf archive.tar.gz
 $ tar -xzf archive.tar.gz
 \end{lstlisting}
 
-1 行目は、\code{raw/} と \code{notes.txt} をまとめて \code{archive.tar.gz} にしている。2 行目の \code{-t} は中身一覧の表示であり、展開せずに内容だけ確認したいときに便利である。3 行目の \code{-x} は展開である。つまり、\code{tar} では「作る」「一覧を見る」「展開する」が頻出操作になる。
-\code{tar} では、\code{tar czf archive.tar.gz ...} のように先頭の \code{-} を省いた書き方も広く使われる。ただし、本書では他のコマンドとの対応を分かりやすくするため、\code{tar -czf} のように \code{-} を付けた形で統一する。
-
+1 行目は、\code{raw/} と \code{notes.txt} を \code{archive.tar.gz} へ格納し、gzip で圧縮する。2 行目の \code{-t} は、展開せずに収録項目を表示する。3 行目の \code{-x} は内容を展開する。
 \begin{description}
 \item[\code{-c}] 新しくアーカイブを作る。
 \item[\code{-t}] 中身一覧だけを見る。
@@ -808,11 +799,11 @@ $ tar -xzf archive.tar.gz
 \item[\code{-f}] 直後の文字列をアーカイブ名として扱う。
 \end{description}
 
-\code{tar -czf} のようにオプションが連なって見えにくいときは、\code{c=create}、\code{t=list}、\code{x=extract}、\code{z=gzip}、\code{f=file} と分解して読むと混乱しにくい。
+\code{tar -czf archive.tar.gz ...} の \code{-c} は tar アーカイブの作成、\code{-z} は gzip 圧縮、\code{-f} は直後の \code{archive.tar.gz} をアーカイブ名として扱う指定である。内容一覧には \code{-t}、展開には \code{-x} を用いる。
 
-\subsection{\code{zip}: 配布しやすい形式}
+\subsection{\code{zip}: ZIP アーカイブの作成と展開}
 
-\code{zip}\index{zip@\code{zip}|textbf} も複数ファイルやディレクトリを 1 つにまとめられる。Windows を含む環境で配布しやすいため、共同研究や授業資料では \code{.zip} が使われることも多い。
+\code{zip}\index{zip@\code{zip}|textbf} は、複数のファイルやディレクトリを圧縮し、1 つの ZIP アーカイブへ格納する。\code{tar} とはオプションと展開コマンドが異なるため、ファイル名の拡張子に対応するコマンドを選ぶ。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ zip -r archive.zip raw/ notes.txt
@@ -820,7 +811,7 @@ $ unzip -l archive.zip
 $ unzip archive.zip
 \end{lstlisting}
 
-1 行目の \code{-r} はディレクトリを再帰的にたどってまとめる指定である。2 行目の \code{unzip -l} は展開せずに中身一覧を表示する。3 行目は実際に展開している。したがって、受け取った圧縮ファイルが \code{.zip} なら \code{unzip}、\code{.tar.gz} なら \code{tar -xzf}、\code{.gz} なら \code{gunzip} や \code{gzip -d} を使う、と対応付けて覚えるとよい。
+1 行目の \code{-r} は、指定したディレクトリ以下を再帰的に格納する。2 行目の \code{unzip -l} は展開せずに収録項目を表示し、3 行目は内容を展開する。形式に応じて、\code{.zip} には \code{unzip}、\code{.tar.gz} には \code{tar -xzf}、単一の \code{.gz} ファイルには \code{gunzip} または \code{gzip -d} を用いる。
 
 \section{環境変数と PATH}
 
@@ -837,12 +828,12 @@ $ echo $PATH
 実行結果は、たとえば次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-/Users/ikomae
+/Users/student
 /bin/zsh
 /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 \end{lstlisting}
 
-1 行目はホームディレクトリ、2 行目は通常ログインシェル、3 行目は実行ファイルを探すディレクトリの一覧である。\code{PATH}\index{path@\code{PATH}|textbf} はコロン \code{:} 区切りで並んでおり、シェルは左から順に探して最初に見つかった実行ファイルを使う。後で出てくる \code{PYENV\_ROOT} や \code{DATA\_ROOT} も同じ仲間であり、「プログラムへ外から値を渡す仕組み」と考えると分かりやすい。新たな環境変数は、次の形で設定できる。
+1 行目はホームディレクトリ、2 行目はログインシェル、3 行目は実行ファイルを探索するディレクトリの一覧である。\code{PATH}\index{path@\code{PATH}|textbf} の値はコロン \code{:} で区切られ、シェルは左から順に同名の実行ファイルを探索する。\code{PYENV\_ROOT} や \code{DATA\_ROOT} も環境変数であり、起動するプログラムへ名前付きの値として引き継がれる。新たな環境変数は次の形で設定する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ export DATA_ROOT="$HOME/data/events"
@@ -852,7 +843,7 @@ $ echo $DATA_ROOT
 結果の例は次の通りである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-/Users/ikomae/data/events
+/Users/student/data/events
 \end{lstlisting}
 
 \code{export} 自体は成功しても通常は何も表示しない。続けて \code{echo \$DATA\_ROOT} を実行し、意図した値が入ったことを確認する。ここでは \code{\$HOME} が先に展開され、その結果として絶対パスが保存されている。
@@ -861,7 +852,7 @@ $ echo $DATA_ROOT
 
 \subsection{展開と引用}
 
-シェルでは、コマンドを実行する前に \code{\$HOME} のような変数展開や、\code{\$(pwd)} のようなコマンド置換が行われる。ここで重要なのは、引用符の種類によって展開の有無が変わることである。
+シェルはコマンドの実行前に、\code{\$HOME} のような変数展開と、\code{\$(pwd)} のようなコマンド置換を行う。展開の有無と、展開後の値を一つの引数として保つかどうかは引用符によって異なる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo $HOME
@@ -874,9 +865,9 @@ $ echo "$(pwd)"
 $ echo "`pwd`"
 \end{lstlisting}
 
-1 行目と 2 行目は、どちらも \code{\$HOME} を展開する。多くの場合、\code{HOME} には空白が入らないので、見た目の結果は同じになる。しかし、クォートなしの \code{\$HOME} は展開後に空白で分割されたり、ワイルドカードとして再解釈されたりする可能性がある。これに対して \code{"\$HOME"} は 1 つの引数として保たれるので、安全である。したがって、「変数は基本的にダブルクォートで囲む」と覚えた方がよい。
+1 行目と 2 行目は、どちらも \code{\$HOME} を展開する。\code{HOME} に空白がなければ表示は同じになる。しかし、クォートなしの変数展開は、展開後にフィールド分割とファイル名展開の対象になる。\code{"\$HOME"} は展開結果を一つの引数として保つため、文字列として渡す変数は原則としてダブルクォートで囲む。
 
-3 行目のシングルクォート \code{'...'} は、中の文字列をほぼそのまま扱う。そのため \code{\$HOME} は展開されず、文字どおり \code{\$HOME} と表示される。4 行目と 5 行目の違いは、空白を含む値で見ると分かりやすい。 \code{name="analysis result"} のあとで \code{echo \$name} と書くと、シェルは \code{analysis} と \code{result} を別々の単語として扱う。これに対して \code{echo "\$name"} なら、空白を含んだまま 1 つの値として渡る。6 行目の \code{\$(pwd)} は \code{pwd} の出力で置き換える書き方であり、7 行目のバッククォート記法も同じ目的で使われる。ただし、新しく書くなら \code{\$(...)} の方が読みやすく、入れ子にもできるので自然である。
+3 行目のシングルクォート \code{'...'} 内では変数展開が行われないため、\code{\$HOME} という文字列がそのまま表示される。\code{name="analysis result"} の後に引用符なしで \code{echo \$name} と書くと、展開後の空白によって 2 引数へ分割される。\code{echo "\$name"} では空白を含む値が一つの引数として渡る。\code{\$(pwd)} とバッククォートは、いずれも \code{pwd} の標準出力によるコマンド置換を表す。\code{\$(...)} は入れ子を明示できるため、本書ではこちらを用いる。
 
 この違いは、設定ファイルへ 1 行追記するときに特に重要である。たとえば \code{echo 'export PATH="\$HOME/bin:\$PATH"' >> \textasciitilde/.zshrc} のようにシングルクォートで囲むと、\code{\$HOME} や \code{\$PATH} を展開せず、その文字列をそのまま \code{\textasciitilde/.zshrc} へ追記できる。もしダブルクォートで囲むと、その場で現在の値へ展開されて書き込まれるので、意図とずれることがある。
 
@@ -895,15 +886,15 @@ $ python analyze.py \
   --output result.txt
 \end{lstlisting}
 
-改行は通常その場でコマンドの終わりになるので、\code{\textbackslash} を付けずに改行すると別のコマンドとして解釈される。コマンド例を写すときは、空白、クォート、改行のどれが意味を持っているかを意識した方が安全である。
+引用符や括弧の外にある改行は、通常はコマンドの終端として解釈される。行末の \code{\textbackslash} は直後の改行を除去し、次の物理行を同じコマンドとして継続する。
 
 \subsection{PATH と実行ファイル}
 
 シェルが \code{python3} や \code{ls} を実行できるのは、それらが実行ファイルとして保存されており、しかもシェルがその場所を知っているからである。その探索に使う環境変数が \code{\$PATH} である。実際に実行ファイルがどこから使われているかを探すには、次のコマンドを用いる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ which python3
-$ which ls
+$ command -v python3
+$ command -v ls
 $ echo $PATH
 \end{lstlisting}
 
@@ -915,11 +906,11 @@ $ echo $PATH
 /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 \end{lstlisting}
 
-\code{which python3} は「いま \code{python3} という名前で実際に呼ばれる実行ファイルの場所」を返す。ここでは Homebrew で入れた Python が使われている。\code{which ls} が \code{/bin/ls} なら、\code{ls} は OS 標準のコマンドを使っているという意味である。3 行目の \code{PATH} と見比べると、\code{/opt/homebrew/bin} が \code{/usr/bin} より左にあるため、\code{python3} ではそちらが優先されていることが分かる。
+\code{command -v python3} は、現在のシェルが \code{python3} という名前をどのコマンドに解決するかを表示する。例のようにパスが表示される場合もあれば、エイリアスやシェル関数として定義されている場合もある。\code{PATH} で \code{/opt/homebrew/bin} が \code{/usr/bin} より左にあるため、同名の実行ファイルが両方にあれば前者が優先される。Python 自身が認識する実行ファイルは、\code{python3 -c "import sys; print(sys.executable)"} で別に確認できる。
 
-\code{bin} という名前は、実行ファイルを置くディレクトリによく使われる。後で出てくる \code{.venv/bin} の \code{bin} も、この慣習に従っている。
+\code{bin} は実行ファイルを置くディレクトリに用いられる慣習的な名前である。仮想環境の \code{.venv/bin} にも Python と、その環境へインストールしたコマンドの起動ファイルが置かれる。
 
-自分が作ったシェルスクリプトや実行ファイルを別のディレクトリ（例えば \code{\textasciitilde/my\_scripts}）に置き、どこからでもコマンド名だけで呼び出したい場合は、次のように現在の \code{\$PATH} の先頭に自分のディレクトリを追加して上書きすればよい。これもシェル起動時に毎回行う必要があるなら、\code{\textasciitilde/.zshrc} などに記載しておく。
+独自の実行ファイルを置く \code{\textasciitilde/my\_scripts} をコマンド探索の対象にする例を示す。既存の探索先を保持するために現在の \code{\$PATH} を右辺へ含め、新しいディレクトリを先頭へ追加する。対話シェルの起動時に同じ設定を適用する場合は、利用中のシェルが読み込む設定ファイルに記述する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ export PATH="$HOME/my_scripts:$PATH"
@@ -931,14 +922,14 @@ $ export PATH="$HOME/my_scripts:$PATH"
 
 シェルのコマンドは、単に画面へ文字を出すだけではなく、出力先を切り替えられる。ここで区別したいのは、通常の結果を流す標準出力（standard output, stdout）と、エラーメッセージを流す標準エラー（standard error, stderr）である。
 
-\code{echo} は標準出力へ文字列を出す最も基本的なコマンドであり、動作確認や設定ファイルへの追記でよく使う。
+\code{echo} は、引数として受け取った文字列を標準出力へ送る。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo "hello"
 $ echo "$HOME"
 \end{lstlisting}
 
-1 行目は単に \code{hello} を出力する。2 行目は前節で述べた変数展開により、\code{\$HOME} の値を出力する。ここで重要なのは、\code{echo} 自体は画面へ出しているだけであり、その出力先は次の節のリダイレクトで変えられるという点である。
+1 行目は \code{hello}、2 行目は変数展開後の \code{\$HOME} の値を標準出力へ送る。端末上では標準出力が画面へ接続されているが、次節のリダイレクトによってファイルへ変更できる。
 
 \subsection{\code{>} と \code{>>}}
 
@@ -950,7 +941,7 @@ $ cat notes.txt
 alpha
 \end{lstlisting}
 
-この例では、\code{echo} の結果が画面ではなく \code{notes.txt} に保存される。すでに \code{notes.txt} が存在していた場合も、その内容は新しい内容で置き換わる。したがって、\code{>} は便利だが、うっかり使うと既存ファイルを消してしまう。
+この例では、\code{echo} の結果が画面ではなく \code{notes.txt} に保存される。\code{notes.txt} がすでに存在する場合、その内容は新しい出力で置き換えられる。既存ファイルを保持する必要がある場合は、出力先を確認してから実行する。
 
 \code{>>} は追記であり、既存の内容を残したまま末尾に足す。
 
@@ -962,7 +953,7 @@ alpha
 beta
 \end{lstlisting}
 
-設定ファイルの末尾へ 1 行追加したいときは、この \code{>>} を使う。たとえば \code{\textasciitilde/.zshrc} に環境変数の設定を足すときに自然である。逆に、\code{>} を使うと既存の設定を消してしまうので注意が必要である。
+\code{>>} は既存ファイルを保持して末尾へ追記する。\code{>} は既存内容を置き換えるため、設定ファイルへ行を追加する操作には \code{>>} を用いる。いずれの場合も、実行前に対象パスを確認する。
 
 \subsection{\code{1>} と \code{2>}}
 
@@ -985,14 +976,14 @@ $ python analyze.py > run.log 2>&1
 
 \subsection{\code{tee} による画面表示と保存}
 
-\code{>} や \code{>>} を使うと出力はファイルへ送られ、画面には出なくなる。実行中の様子も見たいが、同時に保存もしたいときは \code{tee}\index{tee@\code{tee}|textbf} が便利である。\code{tee} は標準入力を受け取り、その内容を画面へ出しつつファイルへも書く。
+\code{>} や \code{>>} で出力をファイルへ送ると、その出力は画面に表示されない。\code{tee}\index{tee@\code{tee}|textbf} は標準入力を標準出力へ複製すると同時に、指定したファイルへ保存する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python analyze.py | tee run.log
-$ python analyze.py 2>&1 | tee run.log
+$ python analyze.py | tee stdout.log
+$ python analyze.py 2>&1 | tee combined.log
 \end{lstlisting}
 
-1 行目は標準出力だけを画面と \code{run.log} の両方へ流す。2 行目は標準エラーもまとめてから \code{tee} へ渡しているので、実質的に「全部を見ながら全部を保存する」形になる。処理が数分から数十分かかる場合、進捗を画面で見つつ、あとで見返すためのログも残せるので実用的である。
+1 行目は標準出力だけを画面と \code{stdout.log} の両方へ流す。2 行目は標準エラーもまとめ、画面と \code{combined.log} へ同じ内容を出力する。二つの行は保存対象の違いを示す代替例である。
 
 \code{tee} に \code{-a} を付けると追記になる。
 
@@ -1042,7 +1033,7 @@ $ chmod a+x run_analysis.sh
 \end{tabular}
 \end{table}
 
-表~\ref{table:mod}に示すように、権限は数字で指定することもできる。数字指定では権限を足し算で表す。たとえば \code{7} は \code{rwx}、\code{6} は \code{rw-}、\code{5} は \code{r-x} である。したがって \code{755} は所有者が \code{rwx}、それ以外が \code{r-x} を意味し、\code{644} は所有者が \code{rw-}、それ以外が \code{r--} を意味する。秘密鍵のように本人だけが読めればよいものには \code{600} がよく使われる。設定を変更する例を下に示す。
+表~\ref{table:mod}に示すように、権限は数字でも指定できる。各桁は読み取りを 4、書き込みを 2、実行を 1 として合計した値である。たとえば \code{7} は \code{rwx}、\code{6} は \code{rw-}、\code{5} は \code{r-x} に対応する。したがって、\code{755} は所有者が \code{rwx}、グループとその他の利用者が \code{r-x}、\code{644} は所有者が \code{rw-}、グループとその他の利用者が \code{r--} である。SSH の秘密鍵には、所有者だけに読み書きを許可する \code{600} を指定する。設定例を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod 755 run_analysis.sh
@@ -1061,14 +1052,14 @@ Python スクリプトは \code{python3 hello.py} の形で実行するなら、
 print("hello")
 \end{lstlisting}
 
-ファイルを直接実行するには、シバンに加えて実行権限も必要である。所有者に権限を加える場合は、対象を表す \code{u} を省略できる。
+ファイルを直接実行するには、シバンに加えて実行権限も必要である。次の \code{u+x} は、所有者（user）に実行権限を加える指定である。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ chmod +x hello.py
+$ chmod u+x hello.py
 $ ./hello.py
 \end{lstlisting}
 
-\code{\#!/usr/bin/env python3} は、「\code{python3} を見つけてこのファイルを実行せよ」という意味である。いきなり言葉だけで覚える必要はないが、「直接実行にはシバンと実行権限の両方が必要だ」という構造だけは理解しておいた方がよい。この考え方をシェルスクリプト全体へ広げると、自動化や一括処理を書けるようになる。付録~\ref{app:shell_scripting} では、\code{for} ループや条件分岐を用いた実践的なバッチ処理の書き方をまとめている。
+\code{\#!/usr/bin/env python3} は、\code{env} が \code{PATH} から \code{python3} を探し、その実行ファイルでスクリプトを解釈する指定である。ファイルを \code{./script.py} として直接実行するには、適切なシバンと実行権限の両方が必要になる。付録~\ref{app:shell_scripting} では、同じ仕組みに基づくシェルスクリプトと、\code{for} ループや条件分岐による一括処理を扱う。
 
 \section{USGS カタログの取得・調査・圧縮}
 
@@ -1103,12 +1094,17 @@ $ grep -i "Japan" raw/usgs_global_2024_01.csv | head
 \item \textbf{同じ CSV に対する 3 種類の圧縮形式の比較}。
 \code{gzip}、\code{tar.gz}、\code{zip} をそれぞれ 1 つずつ作り、圧縮前後の容量を確認せよ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ gzip -k raw/usgs_global_2024_01.csv
+$ gzip -c raw/usgs_global_2024_01.csv > compressed/usgs_global_2024_01.csv.gz
 $ tar -czf compressed/usgs_global_2024_01.tar.gz raw/usgs_global_2024_01.csv
-$ zip -r compressed/usgs_global_2024_01.zip raw/usgs_global_2024_01.csv
+$ zip compressed/usgs_global_2024_01.zip raw/usgs_global_2024_01.csv
+$ gzip -cd compressed/usgs_global_2024_01.csv.gz | head -n 2
+$ tar -tzf compressed/usgs_global_2024_01.tar.gz
+$ unzip -l compressed/usgs_global_2024_01.zip
+$ wc -c raw/usgs_global_2024_01.csv compressed/*
 \end{lstlisting}
-\code{gzip -cd}、\code{tar -tzf}、\code{unzip -l} を使って中身を確認し、それぞれのオプションの意味についてまとめよ。
-\code{gzip -k} は元の CSV を残し、\code{tar -czf} は複数ファイルをまとめた書庫を gzip 圧縮し、\code{zip -r} は指定ディレクトリ以下を再帰的に格納する。\code{ls -lh} で各ファイルの容量を表示し、圧縮率を \code{圧縮後の容量 / 圧縮前の容量} として比較せよ。表示単位が丸められるため、厳密な比には \code{ls -l} または \code{stat} のバイト数を用いよ。
+三つの形式に同じ CSV が入っていることは、\code{gzip -cd}、\code{tar -tzf}、\code{unzip -l} の出力で確認する。\code{gzip -c} は元の CSV を変更せず、圧縮結果を標準出力へ書き出す。\code{tar -czf} は指定した CSV を tar アーカイブに格納し、そのアーカイブを gzip で圧縮する。\code{zip} も同じ CSV を ZIP アーカイブに格納する。今回の入力は単一ファイルであるため、ディレクトリを再帰的にたどる \code{zip -r} は使わない。
+
+\code{wc -c} は各ファイルのバイト数を表示する。その値から、\code{容量比 = 圧縮後のバイト数 / 元 CSV のバイト数} をそれぞれ求める。この値が小さいほど、圧縮後の容量が元の容量より小さい。コマンドの各オプションの役割も、本節の説明と対応付けて記録する。
 
 \item \textbf{発展課題}。
 URL の構造について調べよ。
