@@ -1,11 +1,11 @@
-\chapter{自作モジュールを作って再利用する}
+\chapter{自作モジュールの作成と再利用}
 \label{ch:modules}
 
 解析コードは最初、1 本のスクリプトとして書き始めることが多い。しかし、同じ処理を別の日のデータにも使いたくなり、さらに別のプロジェクトからも呼びたくなると、単発スクリプトのままでは管理しにくい。こういうときは、処理を自作モジュール\index{もじゅーる@モジュール|textbf}として切り出し、必要ならパッケージとしてインストールできる形へ整理した方がよい。
 
-ここでいう「モジュール」は、\code{plotting.py} や \code{models.py} のような一つの Python ファイルを指す。一方、パッケージ\index{ぱっけーじ@パッケージ|textbf}は、複数のモジュールをディレクトリへまとめ、\code{import} できる形にした単位である。本章では、\code{uv}\index{uv@\code{uv}|textbf} を使ってパッケージを作り、\code{pip install} と \code{pip install -e} で利用できる状態にするまでを説明する。
+ここでいう「モジュール」は、\code{plotting.py} や \code{models.py} のような一つの Python ファイルを指す。一方、パッケージ\index{ぱっけーじ@パッケージ|textbf}は、複数のモジュールをディレクトリへまとめ、\code{import} できる形にした単位である。本章では、\code{uv}\index{uv@\code{uv}|textbf} によるパッケージの作成と、\code{pip install} および \code{pip install -e} による導入を扱う。
 
-\section{なぜ自作モジュールにするのか}
+\section{解析処理を再利用可能な部品へ分ける理由}
 
 処理をモジュールへ分ける利点は、単にファイル数が増えることではない。役割ごとに分離でき、テストしやすくなり、エディタから補完やドキュメントも見やすくなる。特に解析では、次のような部品が再利用されやすい。
 
@@ -18,12 +18,12 @@
 
 こうした処理を \code{main.py} の中へすべて書いてしまうと、別スクリプトから流用するときにコピーペーストが増える。コピー元とコピー先がずれると、片方だけバグ修正される、といった問題も起こりやすい。自作モジュールへ切り出して \code{from histfit\_tools import save\_histogram\_with\_fit} のように呼べる形にしておけば、修正箇所は 1 か所で済む。
 
-\section{\code{uv} でパッケージ開発を始める}
+\section{\code{uv} によるパッケージ開発の初期化}
 
 \subsection{最初の初期化}
 \index{src layout@src レイアウト|textbf}
 
-本書では、単発スクリプトではなく「後で \code{import} される部品」として育てたいので、\code{uv init --package} から始めるのが自然である。たとえばヒストグラム作図用のパッケージを作るなら、次のように実行する。
+本書では、単発スクリプトではなく「後で \code{import} される部品」として育てるため、\code{uv init --package} から始める。次の 2 コマンドで、ヒストグラム作図用パッケージの初期構成を作成できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir histfit_tools
@@ -89,18 +89,18 @@ dev = [
 
 \section{具体例: ヒストグラムとフィットをまとめたパッケージ}
 
-ここでは、1 次元データを与えると、\code{numpy.histogram} でヒストグラムを作り、\code{matplotlib} の \code{errorbar} で描き、必要なら \code{scipy.optimize.curve\_fit} でフィットした曲線を重ねて保存する関数を作る。要求仕様は次の通りとする。
+本節では、1 次元データを受け取り、\code{numpy.histogram} でヒストグラムを作成し、\code{matplotlib} の \code{errorbar} で描画したうえで、必要に応じて \code{scipy.optimize.curve\_fit} のフィット曲線を重ねて保存する関数の実装を扱う。要求仕様は次のとおりである。
 
 \begin{itemize}
-\item データ列と保存先を受け取る
-\item \code{bins} か \code{bin\_width} のどちらかでビンを指定できる
-\item \code{fit=False} にするとフィットせずにヒストグラムだけ保存する
-\item \code{linear}、\code{quadratic}、\code{power\_law}、\code{gaussian} を名前で選べる
-\item 自分で定義した関数もそのまま渡せる
-\item フィット初期値 \code{p0} も引数から与えられる
+\item 入力: データ列と保存先
+\item ビン指定: \code{bins} または \code{bin\_width}
+\item フィットの切替え: \code{fit=False} ではヒストグラムのみを保存
+\item モデル選択: \code{linear}、\code{quadratic}、\code{power\_law}、\code{gaussian}
+\item ユーザー定義関数の受付
+\item 引数 \code{p0} によるフィット初期値の指定
 \end{itemize}
 
-\subsection{モデル関数を分ける}
+\subsection{モデル関数の分離}
 
 まず、フィット関数群を \code{models.py} へ切り出す。
 
@@ -161,7 +161,7 @@ def resolve_model(model: str | ModelFunc) -> ModelFunc:
 
 モデル関数を別ファイルへ置いておくと、作図ロジックと数学的なモデルが分離される。その結果、後で指数減衰やローレンツ関数を追加したくなったときも、\code{plotting.py} を大きく書き換えずに済む。
 
-\subsection{\code{pytest} で最小のテストを書く}
+\subsection{\code{pytest} による最小テスト}
 
 \code{tests/test\_models.py} は、\code{models.py} の公開関数が最低限期待通りに振る舞うかを確認するためのファイルである。ここでは、式の値そのもの、ガウス関数の基本的な形、未知のモデル名に対する例外の 3 点だけを確かめておく。
 
@@ -193,7 +193,7 @@ def test_resolve_model_rejects_unknown_name() -> None:
 
 最初のテストは、一次関数の実装が式通りかを直接確かめている。2 つ目は、ガウス関数が平均値の位置で最大になり、左右対称になることを見ている。3 つ目は、誤ったモデル名を黙って通さず、利用者へ早い段階でエラーを返すことを確かめるテストである。
 
-実行は次のように行う。
+テストは次のコマンドで実行できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv run pytest
@@ -202,7 +202,7 @@ $ uv run ruff check .
 
 ここで \code{pytest} は関数の振る舞いを確かめ、\code{ruff} は未使用 import や単純な書式の乱れを確認する。今回のような小さなパッケージでも、この 2 つがあるだけで「動いているつもり」の状態を減らしやすい。
 
-\subsection{ヒストグラムを作って保存する関数}
+\subsection{ヒストグラムの作成・保存関数}
 
 次に、実際の主役である \code{save\_histogram\_with\_fit} を \code{plotting.py} に書く。
 
@@ -325,7 +325,7 @@ def save_histogram_with_fit(
 
 この関数では、ビン境界の決定と作図本体を分けている。こうしておくと、ビン幅指定のロジックだけを単独にテストしやすい。また、\code{fit\_model} が文字列なら既定のモデル群から選び、callable ならそのまま使うので、利用者は既定モデルと自作モデルを同じ引数で扱える。
 
-\subsection{公開インタフェースを \code{\_\_init\_\_.py} で整える}
+\subsection{\code{\_\_init\_\_.py} による公開インタフェースの整理}
 \index{こうかいapi@公開 API|textbf}
 
 パッケージの外から使ってほしい関数は、\code{\_\_init\_\_.py} でまとめて再公開しておくとよい。
@@ -501,7 +501,7 @@ $ python -c "from histfit_tools import save_histogram_with_fit; print(save_histo
 
 \code{ImportError} が出なければ、少なくともパッケージとして見つかっている。さらに依存関係も含めて確認したいなら、短い実データや乱数データで関数を 1 回実行して、図ファイルが保存されることまで確認すると確実である。
 
-\section{Git リポジトリへ置いて共有する}
+\section{Git リポジトリによるパッケージの共有}
 
 研究室内や共同研究で共有するなら、Git リポジトリとして管理しておく方がよい。\code{uv init --package} は既定では \code{.git/} も作るので、通常は改めて \code{git init} し直す必要はない。
 
@@ -534,7 +534,7 @@ $ pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 
 これは再現性のために重要である。研究ノートや論文用メモには、「どのタグを入れたか」まで残しておく方が後で確実である。
 
-\section{依存関係をどう書くか}
+\section{実行時依存関係と開発用依存関係}
 
 最後に、依存関係の考え方を整理しておく。パッケージでは「いま自分の環境で動く」ことより、「利用者の環境でも必要なものが入る」ことの方が重要である。そのため、次の 3 種類を区別するとよい。
 
@@ -548,23 +548,23 @@ $ pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 
 また、パッケージを書いていると、Jupyter、Sphinx、mkdocs など「利用者全員には不要だが、自分は使いたい」ものが増えやすい。そのとき全部を実行時依存関係へ入れてしまうと、インストールが重くなる。依存関係は増やすほど便利になる一方で、衝突や管理コストも増える。だからこそ、まずは公開 API を小さく保ち、本当に必要な依存関係だけを残す方がよい。
 
-\section{章末問題}
+\section{解析パッケージの作成と検証}
 
 \begin{enumerate}
-\item \textbf{最小のパッケージを作る}。
-空の作業ディレクトリで \code{uv init --package signal\_tools} を実行し、生成された \code{pyproject.toml} と \code{src/signal\_tools/\_\_init\_\_.py} を確認せよ。\code{--package} を付けた理由、\code{src} レイアウトで import 事故を防ぎやすい理由、\code{pyproject.toml} の \code{name} と \code{requires-python} の意味を説明すること。
+\item \textbf{最小パッケージの作成}。
+空の作業ディレクトリで \code{uv init --package signal\_tools} を実行し、生成された \code{pyproject.toml} と \code{src/signal\_tools/\_\_init\_\_.py} を確認せよ。\code{--package} を付けた理由、\code{src} レイアウトで import 事故を防ぎやすい理由、\code{pyproject.toml} の \code{name} と \code{requires-python} の意味を説明せよ。
 
-\item \textbf{公開関数とテストを追加する}。
-\code{src/signal\_tools/statistics.py} に、数値列を受け取って算術平均を返す \code{mean\_signal(values)} を作れ。空列では \code{ValueError} を送出すること。\code{\_\_init\_\_.py} から再公開し、\code{from signal\_tools import mean\_signal} で呼び出せるようにする。\code{tests/test\_statistics.py} に通常入力と空入力のテストを書き、\code{uv run pytest} の末尾で \code{2 passed} と表示されることを確認せよ。
+\item \textbf{公開関数とテストの追加}。
+\code{src/signal\_tools/statistics.py} に、数値列を受け取って算術平均を返す \code{mean\_signal(values)} を作れ。空列では \code{ValueError} を送出せよ。\code{\_\_init\_\_.py} から再公開し、\code{from signal\_tools import mean\_signal} で呼び出せる状態にせよ。\code{tests/test\_statistics.py} に通常入力と空入力のテストを書き、\code{uv run pytest} の末尾で \code{2 passed} と表示されることを確認せよ。
 
-\item \textbf{引数、返り値、例外を文書化する}。
-\code{mean\_signal()} に型ヒントと複数行 docstring を追加し、\verb|uv run python -c "from signal_tools import mean_signal; help(mean_signal)"| で表示せよ。docstring の要約、引数、返り値、例外条件がそれぞれどの行に表示されたかを確認すること。
+\item \textbf{引数、返り値、例外の文書化}。
+\code{mean\_signal()} に型ヒントと複数行 docstring を追加し、\verb|uv run python -c "from signal_tools import mean_signal; help(mean_signal)"| で表示せよ。docstring の要約、引数、返り値、例外条件がそれぞれどの行に表示されたかを確認せよ。
 
-\item \textbf{通常インストールと editable install を比較する}。
-別の仮想環境を 2 つ作り、一方では \code{pip install .}、もう一方では \code{pip install -e .} を実行する。インストール後に関数の戻り値を変更し、どちらの環境で変更が直ちに反映されるかを確認せよ。\code{-e} が何を省略する指定なのではなく、ソースディレクトリを参照可能な形で登録する指定であることを説明せよ。
+\item \textbf{通常インストールと editable install の比較}。
+別の仮想環境を 2 つ作り、一方では \code{pip install .}、もう一方では \code{pip install -e .} を実行せよ。インストール後に関数の戻り値を変更し、どちらの環境で変更が直ちに反映されるかを確認せよ。\code{-e} が何を省略する指定なのではなく、ソースディレクトリを参照可能な形で登録する指定であることを説明せよ。
 
-\item \textbf{依存関係と生成物を分類する}。
-NumPy を実行時依存関係、pytest と ruff を開発用依存関係として追加し、\code{pyproject.toml} の該当箇所を示せ。さらに \code{.gitignore} に \code{.venv/}、\code{\_\_pycache\_\_/}、\code{.pytest\_cache/}、\code{dist/} を書き、\code{git status --short} にこれらが現れないことを確認せよ。\code{uv.lock} をコミットするかどうかはプロジェクトの運用方針によるため、本課題では自分の判断と理由を記述すること。
+\item \textbf{依存関係と生成物の分類}。
+NumPy を実行時依存関係、pytest と ruff を開発用依存関係として追加し、\code{pyproject.toml} の該当箇所を示せ。さらに \code{.gitignore} に \code{.venv/}、\code{\_\_pycache\_\_/}、\code{.pytest\_cache/}、\code{dist/} を書き、\code{git status --short} にこれらが現れないことを確認せよ。\code{uv.lock} をコミットするかどうかはプロジェクトの運用方針によるため、本課題では自分の判断と理由を記述せよ。
 \end{enumerate}
 
 自作モジュールによって処理を独立した関数へ分けると、各関数の正しさと処理時間を個別に調べられる。次章では、この構造を利用してボトルネックを測定し、計算量、配列演算、メモリ使用量、逐次処理の観点から実装を改善する。

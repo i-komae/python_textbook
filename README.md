@@ -55,7 +55,7 @@ python_textbook/
 ## 章構成
 
 - 本文: `intro.tex` から `assignment.tex`
-- 付録: `appendix_ssh.tex`, `appendix_git.tex`, `appendix_regex.tex`, `appendix_shell_scripting.tex`
+- 付録: `appendix_ssh.tex`, `appendix_git.tex`, `appendix_pybind11.tex`, `appendix_regex.tex`, `appendix_shell_scripting.tex`
 
 ## コンパイル
 

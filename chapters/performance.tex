@@ -1,7 +1,7 @@
 \chapter{Python 解析の高速化}
 \label{chap:performance}
 
-\section{まず測る}
+\section{処理時間の基準測定}
 
 高速化\index{こうそくか@高速化|textbf}を始める前に、どこが遅いのかを測る。読込みが遅いのか、探索が遅いのか、図の作成が遅いのかを区別しないまま最適化しても、効果は見えにくい。
 
@@ -18,7 +18,7 @@ print(f"elapsed = {t1 - t0:.3f} s")
 
 測定するときは、一度だけの結果を絶対視しないことも重要である。キャッシュや OS の状態で多少は揺れるため、条件をそろえ、複数回の傾向を見る方がよい。
 
-\subsection{Jupyter では \code{\%timeit} も使える}
+\subsection{Jupyter の \code{\%timeit} による計測}
 
 ノートブック環境で短い式や関数の速度を見たいときは、Jupyter の \code{\%timeit}\index{timeit@\code{\%timeit}|textbf} や \code{\%\%timeit} も便利である。複数回の実行を自動で繰り返し、平均的な実行時間を表示してくれるため、小さな差を見たいときに役立つ。
 
@@ -172,7 +172,7 @@ def is_symmetric_fast(A):
 
 この例は、「同じオーダーでも速くなる」ことを示している。図~\ref{fig:vectorization-benchmark} の隣接差分フィルタの比較も、基本的にはこの種類の改善である。比較回数そのものを 2 次から 1 次へ落としたのではなく、同じ種類の処理をより効率よく実装しているのである。
 
-\section{実装を軽くする}
+\section{ベクトル化・型・逐次処理による改善}
 
 \subsection{NumPy と pandas による高速化}
 
@@ -260,7 +260,7 @@ print(streaming_mean("values.txt"))
 
 \section{プロファイリングと低レベル実装}
 
-\subsection{プロファイラを使う}
+\subsection{プロファイラによるボトルネックの特定}
 \index{ぼとるねっく@ボトルネック|textbf}
 
 本格的に遅い理由を調べるなら、プロファイラ\index{ぷろふぁいら@プロファイラ|textbf}も役立つ。例えば \code{cProfile}\index{cprofile@\code{cProfile}|textbf} を使うと、どの関数に時間が使われているかを確認できる。
@@ -299,7 +299,7 @@ for (std::size_t i = 0; i < n; ++i) {
 
 この書き換えは、定数倍の改善をもたらすことがある。しかし、比較回数そのものが多すぎるなら本質的な改善ではない。アルゴリズムと実装言語を分けて考える姿勢が必要である。
 
-\subsection{Python から C/C++ を呼び出す}
+\subsection{Python からの C/C++ コード呼び出し}
 \index{cython@Cython|textbf}
 \index{pybind11@pybind11|textbf}
 
@@ -347,9 +347,9 @@ Python 側の呼び出しが単純であれば、内部実装を後から差し�
 
 したがって、高速化のレポートを書くときは、「NumPy にした」「C++ にした」で終わらせない方がよい。何が変わった結果として速くなったのかを、計算量、比較回数、メモリ配置、ループの位置といった観点で説明するべきである。
 
-\section{結果例と報告の仕方}
+\section{高速化前後の比較と測定条件の報告}
 
-高速化の結果は、本文中で比較できる形に整理すると読みやすい。例えば、次のような簡潔な結果でも十分に意味がある。
+高速化の結果は、本文中で比較できる形に整理すると読みやすい。例えば、次は報告形式を示すための仮想的な数値例である。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 slow version : 182.4 s
@@ -357,7 +357,7 @@ vectorized   :  12.7 s
 streaming    :   4.8 s
 \end{lstlisting}
 
-この表現だけでは理由が分からないので、続けて「比較回数を減らした」「Python ループを配列演算へ移した」「全件保持をやめた」といった説明を添える。数値と理由の両方がそろって初めて報告になる。
+実際の報告では、この形式へ自分で測定した値を入れる。この表現だけでは理由が分からないので、続けて「比較回数を減らした」「Python ループを配列演算へ移した」「全件保持をやめた」といった説明を添える。数値と理由の両方がそろって初めて報告になる。
 
 特に、高速化の報告では「$O(N^2)$ から $O(N \log N)$ や $O(N)$ へ落とした改善」と、「同じ $O(N)$ や $O(N^2)$ のまま NumPy, Cython, C++ などで定数倍を詰めた改善」を分けて書くとよい。前者は問題の解き方を変えた改善であり、後者は実装の効率を上げた改善である。この二つを混同しない方が、読者にも自分にも何が効いたのかが伝わりやすい。
 
@@ -372,29 +372,29 @@ count = np.count_nonzero(diffs > 0.25)
 \begin{figure}[tbp]
 \centering
 \includegraphics[width=0.82\linewidth]{vectorization_benchmark.pdf}
-\caption{同じ隣接差分フィルタを、純粋な Python ループ、NumPy、pandas で実行した例。縦軸は実行時間で、対数目盛を使っている。}
+\caption{実行時間の比較方法を示す模式例。値は説明用であり、特定の計算機で得たベンチマーク結果ではない。縦軸には対数目盛を用いている。}
 \label{fig:vectorization-benchmark}
 \end{figure}
 
 図~\ref{fig:vectorization-benchmark} は実行時間の大小を比較するための図であり、結果の正しさまでは保証しない。高速化の前後で同じ \code{count} が得られることをテストし、その上で入力サイズ、反復回数、実行環境、代表値をそろえて時間を比較する必要がある。
 
-\section{章末問題}
+\section{処理時間・メモリ・プロファイルの測定演習}
 
 \begin{enumerate}
-\item \textbf{結果を変えずにベクトル化する}。
-\verb|values = np.arange(1_000_000, dtype=np.float64)| について、各要素を二乗してから総和を求める処理を Python の \code{for} 文と NumPy の列演算で実装せよ。\code{np.isclose()} で結果が一致することを先に確認し、その後で \code{time.perf\_counter()} を使って各方法を 5 回ずつ測定せよ。最小値または中央値を報告し、1 回だけの値を比較しない理由を説明すること。
+\item \textbf{結果を保持したベクトル化}。
+\verb|values = np.arange(1_000_000, dtype=np.float64)| について、各要素を二乗してから総和を求める処理を Python の \code{for} 文と NumPy の列演算で実装せよ。\code{np.isclose()} で結果が一致することを先に確認し、その後で \code{time.perf\_counter()} を使って各方法を 5 回ずつ測定せよ。最小値または中央値を報告し、1 回だけの値を比較しない理由を説明せよ。
 
-\item \textbf{入力サイズと計算量の関係を測る}。
-本文の \code{has\_duplicate\_slow()} と \code{has\_duplicate\_fast()} を使い、重複を含まない入力について \(N=1000, 2000, 4000\) の実行時間を測定せよ。\(N\) を 2 倍にしたときの時間比を求め、\(O(N^2)\) と \(O(N\log N)\) の予想と比較する。計算機や実行時の状態によって時間は変わるため、絶対時間ではなく比と傾向を説明せよ。
+\item \textbf{入力サイズと計算量の関係}。
+本文の \code{has\_duplicate\_slow()} と \code{has\_duplicate\_fast()} を使い、重複を含まない入力について \(N=1000, 2000, 4000\) の実行時間を測定せよ。\(N\) を 2 倍にしたときの時間比を求め、\(O(N^2)\) と \(O(N\log N)\) の予想と比較せよ。計算機や実行時の状態によって時間は変わるため、絶対時間ではなく比と傾向を説明せよ。
 
-\item \textbf{ビューとコピーの影響を確認する}。
-本文の \code{values}、\code{view}、\code{copied} を作り、\code{view[0] = -1} と \code{copied[0] = -2} を実行した後で \code{values[100]} と \code{values[0]} を表示せよ。前者だけが変化する理由を、\code{np.shares\_memory()} の結果と対応させて説明する。さらに \code{float32} と \code{float64} で同じ要素数の \code{nbytes} を比較せよ。
+\item \textbf{ビューとコピーの影響}。
+本文の \code{values}、\code{view}、\code{copied} を作り、\code{view[0] = -1} と \code{copied[0] = -2} を実行した後で \code{values[100]} と \code{values[0]} を表示せよ。前者だけが変化する理由を、\code{np.shares\_memory()} の結果と対応させて説明せよ。さらに \code{float32} と \code{float64} で同じ要素数の \code{nbytes} を比較せよ。
 
-\item \textbf{逐次集計を検証する}。
-1 から 100000 までを 1 行ずつ書いたファイルを作り、本文の \code{streaming\_mean()} で平均を求めよ。期待値は \code{50000.5} である。同じファイルを全件リストへ読み込む実装も作り、結果の一致を確認せよ。両者が保持するデータ量を、入力行数 \(N\) に対するオーダーで説明すること。
+\item \textbf{逐次集計の検証}。
+1 から 100000 までを 1 行ずつ書いたファイルを作り、本文の \code{streaming\_mean()} で平均を求めよ。期待値は \code{50000.5} である。同じファイルを全件リストへ読み込む実装も作り、結果の一致を確認せよ。両者が保持するデータ量を、入力行数 \(N\) に対するオーダーで説明せよ。
 
-\item \textbf{プロファイル結果から改善対象を選ぶ}。
-自分の解析スクリプト、または 1 問目の 2 実装を関数へ分けたスクリプトを \code{python -m cProfile -s cumtime script.py} で測定せよ。出力の \code{ncalls}、\code{tottime}、\code{cumtime} の意味を説明し、累積時間の上位 3 関数を記録する。そのうち改善対象に選ぶ関数と、選ばない関数の理由をそれぞれ述べよ。
+\item \textbf{プロファイル結果に基づく改善対象の選定}。
+自分の解析スクリプト、または 1 問目の 2 実装を関数へ分けたスクリプトを \code{python -m cProfile -s cumtime script.py} で測定せよ。出力の \code{ncalls}、\code{tottime}、\code{cumtime} の意味を説明し、累積時間の上位 3 関数を記録せよ。そのうち改善対象に選ぶ関数と、選ばない関数の理由をそれぞれ述べよ。
 \end{enumerate}
 
-性能改善は、速いコードを書くことだけを目的としない。高速化の前後で同じ結果が得られることを検証し、入力条件と測定方法を記録して初めて、改善を再現できる。次章の総合課題では、同時観測イベントの探索を題材として、読込み、検証、可視化、フィット、性能測定を一つの解析へ統合する。
+性能改善は、速いコードを書くことだけを目的としない。高速化の前後で同じ結果が得られることを検証し、入力条件と測定方法を記録して初めて、改善を再現できる。次章では、同時観測イベントの探索を題材として、読込み、検証、可視化、フィット、性能測定を一つの解析へ統合する。

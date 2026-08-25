@@ -1,9 +1,9 @@
-\chapter{Python 環境を整える}
+\chapter{Python 実行環境の構築}
 \label{chap:setup}
 
 \section{Python の確認と管理方針}
 
-\subsection{何を分けて考えるべきか}
+\subsection{OS の Python・\code{pyenv}・仮想環境の役割}
 
 Python\index{python@Python|textbf} を使い始めるときは、次の 3 つを分けて考える必要がある。
 
@@ -15,9 +15,9 @@ Python\index{python@Python|textbf} を使い始めるときは、次の 3 つを
 
 まず Python 本体が必要であり、そのうえで Python 3.11 と 3.12 を切り替えたいならバージョン管理ツールが必要になる。さらに、同じ Python 3.12 でもプロジェクト A と B で依存ライブラリが違うなら、仮想環境で分ける必要がある。この 3 段階を分けて理解した方が、あとで混乱しにくい。
 
-\subsection{今の Python を確認する}
+\subsection{Python のバージョンと実行ファイルの確認}
 
-macOS でも WSL でも、最初にいま見えている Python を調べておく方がよい。現在利用可能な Python を確認するには、次のように実行する。
+macOS でも WSL でも、最初にシェルから見えている Python を調べておく方がよい。次の 3 コマンドによって、バージョン、シェルが見つけた実行ファイル、その Python 自身が報告する実行ファイルを順に確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python3 --version
@@ -41,7 +41,7 @@ Python 本体の導入と切り替えには \code{pyenv} が分かりやすい�
 
 \subsection{macOS での準備}
 
-\code{pyenv}\index{pyenv@\code{pyenv}|textbf} は Python 本体をビルドして入れるので、macOS では Xcode Command Line Tools が必要になる。すでに Homebrew が正常に動いているなら、Command Line Tools は入っていることが多い。すでにインストールされているかを確認するには次のように実行する。
+\code{pyenv}\index{pyenv@\code{pyenv}|textbf} は Python 本体をビルドして入れるので、macOS では Xcode Command Line Tools が必要になる。すでに Homebrew が正常に動いているなら、Command Line Tools は入っていることが多い。インストール済みかどうかは、次のコマンドで確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ xcode-select -p
@@ -62,7 +62,7 @@ $ xcode-select --install
 
 \subsection{WSL / Ubuntu での準備}
 
-WSL の Ubuntu では、ビルドに必要なライブラリを先に入れておく。一括で導入するには次のコマンドを実行する。
+WSL の Ubuntu では、ビルドに必要なライブラリを先に入れておく。次のコマンドで、パッケージ一覧の更新と必要なライブラリの導入を続けて行える。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ sudo apt update
@@ -98,9 +98,9 @@ Setting up build-essential (12.9ubuntu3) ...
 
 これは各パッケージの設定を進めている段階であり、この表示自体は正常である。最後まで流れたあとでエラーが出ずにシェルのプロンプトへ戻れば、インストールは完了している。
 
-\subsection{\code{pyenv} を入れてシェルへ組み込む}
+\subsection{\code{pyenv} の導入とシェルへの組み込み}
 
-macOS では、まず次のように実行する。
+macOS では、次のコマンドで \code{pyenv} を導入できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ brew install pyenv
@@ -123,7 +123,7 @@ $ curl -fsSL https://pyenv.run | bash
 
 \code{curl ... | bash} の出力は長くなりやすいが、エラーなくシェルへ戻ればインストール自体は完了している。
 
-どちらの方法でも、インストール直後はまだ \code{pyenv} を通常のコマンドとして使える状態にはなっていない。次に、自分のシェルに対応する設定ファイルへ初期化コードを書き込む。設定先は、\code{/bin/zsh} なら \code{\textasciitilde/.zshrc}、\code{/bin/bash} なら \code{\textasciitilde/.bashrc} である。以下では \code{>>} を使って設定ファイルの末尾へ 1 行ずつ追記している。\code{>} ではなく \code{>>} を使うのは、既存の設定を消さないためである。
+どちらの方法でも、インストール直後はまだ \code{pyenv} を通常のコマンドとして使える状態にはなっていない。次に、自分の対話シェルに対応する設定ファイルへ初期化コードを書き込む。ここでは zsh を使う macOS の例として、\code{\textasciitilde/.zshrc} へ設定する。bash を使う場合は、OS と起動方法に応じて \code{\textasciitilde/.bashrc} または \code{\textasciitilde/.bash\_profile} が設定先になる。以下では \code{>>} を使って設定ファイルの末尾へ 1 行ずつ追記している。\code{>} ではなく \code{>>} を使うのは、既存の設定を消さないためである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
@@ -132,9 +132,9 @@ $ echo 'eval "$(pyenv init - zsh)"' >> ~/.zshrc
 $ exec "$SHELL"
 \end{lstlisting}
 
-\code{exec "\$SHELL"} は、いま動いているシェルを \code{\$SHELL} で示されるシェル本体で置き換えて、設定をその場で読み直すためのコマンドである。\code{SHELL} は現在使っているシェルのパスを入れた環境変数であり、\code{zsh} なら通常 \code{/bin/zsh}、\code{bash} なら通常 \code{/bin/bash} が入っている。ここでは \code{\textasciitilde/.zshrc} に追記した内容をすぐ反映させるために実行している。ターミナルをいったん閉じて開き直しても同じ目的は果たせる。
+\code{exec "\$SHELL"} は、いま動いているシェルを、\code{\$SHELL} が示すシェルプログラムで置き換えるコマンドである。\code{SHELL} には通常、ログインシェルとして設定されたプログラムのパスが入り、\code{zsh} なら \code{/bin/zsh}、\code{bash} なら \code{/bin/bash} となる。ただし、\code{SHELL} と現在実行中の対話シェルが常に一致するとは限らない。現在のシェルは \code{ps -p \$\$ -o comm=} でも確認できる。ここでは \code{\textasciitilde/.zshrc} に追記した内容をすぐ反映させるために実行している。ターミナルをいったん閉じて開き直しても同じ目的は果たせる。
 
-\code{echo ... >> ~/.zshrc} 自体は成功しても何も表示しない。確認は、シェルを読み直した後に \code{pyenv} が見えるかで行う。たとえば次のように打つ。
+\code{echo ... >> ~/.zshrc} 自体は成功しても何も表示しない。シェルを読み直した後、次の 2 コマンドで \code{pyenv} のバージョンと所在を確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pyenv --version
@@ -154,9 +154,9 @@ $ echo 'eval "$(pyenv init - bash)"' >> ~/.bashrc
 $ exec "$SHELL"
 \end{lstlisting}
 
-\subsection{バージョンを入れて切り替える}
+\subsection{Python バージョンの導入と切り替え}
 
-\code{pyenv} を使う場合は、\code{pyenv install} でバージョンを追加し、\code{pyenv global}、\code{pyenv local}、\code{pyenv shell} で切り替える。たとえば新しいバージョンを追加して確認するには次のように行う。
+\code{pyenv} を使う場合は、\code{pyenv install} でバージョンを追加し、\code{pyenv global}、\code{pyenv local}、\code{pyenv shell} で切り替える。次の例では、2 系統の Python を追加してから一覧を表示する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pyenv install 3.11.11
@@ -189,7 +189,7 @@ Python 3.12.10
 /Users/ikomae/.pyenv/shims/python
 \end{lstlisting}
 
-\code{pyenv global} は普段使うバージョンを決める。ここで \code{python} の実体が \code{\textasciitilde/.pyenv/shims/python} になっている点が重要である。\code{pyenv} はこの shim を経由して、裏でどのバージョンを起動するかを切り替えている。これに対して \code{pyenv local} は、そのディレクトリだけ別のバージョンを使いたいときに使う。特定のプロジェクト用ディレクトリ内でバージョンを固定するには、次のような手順を踏む。
+\code{pyenv global} は普段使うバージョンを決める。ここで \code{python} の実体が \code{\textasciitilde/.pyenv/shims/python} になっている点が重要である。shim は、指定された名前の Python を直接含むのではなく、\code{pyenv} が選んだ Python へ処理を振り分ける中継用プログラムである。これに対して \code{pyenv local} は、そのディレクトリだけ別のバージョンを使いたいときに使う。特定のプロジェクト用ディレクトリ内でバージョンを固定する手順を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir analysis311
@@ -210,7 +210,7 @@ Python 3.11.11
 
 \code{pyenv shell 3.11.11} は、そのターミナルを閉じるまでの一時的な切り替えである。検証用に 1 回だけ古いバージョンで動かしたいときに便利である。
 
-\section{\code{venv} でプロジェクトごとの仮想環境を作る}
+\section{\code{venv} によるプロジェクト別仮想環境の作成}
 \index{venv@\code{venv}|textbf}
 
 Python 本体のバージョンを決めたら、そのバージョンの上にプロジェクト専用の仮想環境\index{かそうかんきょう@仮想環境|textbf}を作る。依存ライブラリの衝突を避けるためである。仮想環境を作り、そこに入るための基本コマンドは次の通りである。
@@ -264,9 +264,9 @@ Successfully installed numpy-2.3.0 pandas-2.3.0 scipy-1.15.0
 
 \section{解析用ライブラリと JupyterLab}
 
-\subsection{JupyterLab を併用する}
+\subsection{JupyterLab との併用}
 
-対話的に試しながら解析したいときは、JupyterLab\index{jupyterlab@JupyterLab|textbf} も便利である。小さなコード片をその場で動かし、数値や図をすぐ確認できるため、探索的な作業では特に役立つ。これを導入・起動するには次のように実行する。
+対話的に試しながら解析したいときは、JupyterLab\index{jupyterlab@JupyterLab|textbf} も便利である。小さなコード片をその場で動かし、数値や図をすぐ確認できるため、探索的な作業では特に役立つ。次の 2 コマンドは、JupyterLab の導入と起動にそれぞれ対応する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pip install jupyterlab
@@ -297,7 +297,7 @@ $\Delta t$ の分布を確認する
 
 \section{プロジェクト管理ツール \code{uv} の利用}
 
-\code{uv}\index{uv@\code{uv}|textbf} は Python 本体の導入もできるが、本書ではそれよりも「プロジェクト単位の管理」に使う道具として位置付ける方が自然である。特に、依存関係\index{いそんかんけい@依存関係|textbf}、ロックファイル、\code{.python-version}、Git 管理、パッケージ化、ワークスペース管理といった、プロジェクト全体の整理で力を発揮する。
+\code{uv}\index{uv@\code{uv}|textbf} は Python 本体の導入もできるが、本書では「プロジェクト単位の管理」に用いる。特に、依存関係\index{いそんかんけい@依存関係|textbf}、解決したパッケージの正確なバージョンを記録するロックファイル、\code{.python-version}、Git 管理、パッケージ化、ワークスペース管理をまとめて扱える。
 
 \subsection{プロジェクトの初期化}
 
@@ -323,10 +323,10 @@ pyproject.toml
 つまり、\code{uv init} は単に Python ファイルを 1 つ置くだけではなく、Git 管理の土台までまとめて用意する。この点が \code{venv} 単体との大きな違いである。まずはこの既定構成を理解すれば十分であり、以下のオプションは「最初から構成を変えたい事情がある場合」にだけ見ればよい。
 
 \begin{itemize}
-\item \code{uv init --bare}: \code{pyproject.toml}\index{pyproject.toml@\code{pyproject.toml}|textbf} だけを作る
-\item \code{uv init --vcs none}: Git 初期化をしない
-\item \code{uv init --no-pin-python}: \code{.python-version} を作らない
-\item \code{uv init --package} や \code{uv init --lib}: スクリプトではなくパッケージやライブラリとして始める
+\item \code{uv init --bare}: \code{pyproject.toml}\index{pyproject.toml@\code{pyproject.toml}|textbf} のみを作成
+\item \code{uv init --vcs none}: Git 初期化を省略
+\item \code{uv init --no-pin-python}: \code{.python-version} の作成を省略
+\item \code{uv init --package}、\code{uv init --lib}: パッケージまたはライブラリ向けの初期構成
 \end{itemize}
 
 特に、コードを再利用可能なモジュールやライブラリとして育てたいなら、\code{--package} や \code{--lib} を意識した方がよい。単発スクリプトで終わるのか、将来 \code{import} される部品になるのかで、適切な初期構成は変わる。
@@ -335,7 +335,7 @@ pyproject.toml
 \index{uv.lock@\code{uv.lock}|textbf}
 \index{ろっくふぁいる@ロックファイル|textbf}
 
-\code{uv add} は依存ライブラリを追加し、\code{pyproject.toml} とロック情報を更新する。複数同時に指定する場合は次のようにする。
+\code{uv add} は依存ライブラリを追加し、\code{pyproject.toml} とロック情報を更新する。次の例では、7 個の解析用ライブラリをまとめて追加する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv add numpy pandas polars matplotlib scipy astropy tqdm
@@ -416,7 +416,7 @@ Python には、最初から使える標準ライブラリと、自分で追加�
 
 ここまでで Python 本体、仮想環境、プロジェクト管理の役割を見たので、次はその環境へ何を入れるのかを整理する。標準ライブラリは Python 本体に含まれている。外部ライブラリは、目的に応じて自分で追加する。解析では外部ライブラリが非常に重要だが、まずは「何が標準で、何が追加なのか」を区別しておくことが大切である。
 
-\subsection{解析用のライブラリを入れる}
+\subsection{解析用ライブラリの導入}
 
 本書の後半で使う主なライブラリを表~\ref{tab:packages} に示す。
 
@@ -470,7 +470,7 @@ Installed 7 packages in 0.31s
 
 \section{引数・設定ファイルとコードの分離}
 
-\subsection{コマンドライン引数と設定ファイルを使い分ける}
+\subsection{コマンドライン引数と設定ファイルの使い分け}
 
 同じ解析スクリプトを何度も使うなら、入力ディレクトリや出力先をコードに埋め込むより、コマンドライン引数で渡す方がよい。Python では \code{argparse} が標準で使える。もっともシンプルな構成例を下に示す。
 
@@ -503,7 +503,7 @@ data/run001 results/figures
 \begin{description}
 \item[コマンドライン引数] 実行ごとに変わる値を置く。入力ディレクトリ、出力先、日付範囲、並列数などが典型である。
 \item[設定ファイル] プロジェクト単位では固定だが、将来変更し得る値を置く。較正ファイルのパス、検出器 ID、閾値、図の保存形式などが当てはまる。
-\item[環境変数] マシン依存の値や秘密情報を置く。\code{DATA\_ROOT}、API トークン、認証情報などが典型である。
+\item[環境変数] マシン依存の値や秘密情報を置く。\code{DATA\_ROOT}、外部サービスの認証トークン、認証情報などが典型である。
 \item[コード内の定数] 定義として固定したい値や単位変換を書く。\code{NS\_PER\_SECOND} や物理定数のように、意味が仕様として決まっているものを置く。
 \end{description}
 
@@ -543,24 +543,24 @@ print(window_ns)
 
 
 
-\code{250} や \code{3600} のような数値が説明なしにコードへ裸で出てくると、後から読んだ人は意味を判断しにくい。このような数値はマジックナンバーと呼ばれる。詳しくは第~\ref{sec:magic-number}節で述べるが、意味のある数値には名前を付け、実行条件なら引数や設定ファイルへ出す、という整理を早い段階で身に付けた方がよい。
+\code{250} や \code{3600} のような数値が説明なしにコードへ裸で出てくると、後から読んだ人は意味を判断しにくい。このような数値はマジックナンバーと呼ばれる。詳しくは第~\ref{sec:magic-number}~節で述べるが、意味のある数値には名前を付け、実行条件なら引数や設定ファイルへ出す、という整理を早い段階で身に付けた方がよい。
 
-\section{章末問題}
+\section{Python 環境と設定ファイルの検証}
 
-この章の課題では、コマンドだけでなく、作成されたファイルと実際に選ばれた Python を確認する。バージョン番号は環境によって異なるため、特定の番号との一致ではなく、各コマンドの出力が互いに矛盾していないかを検証する。
+この章の課題の確認対象は、コマンドだけでなく、作成されたファイルと実際に選ばれた Python までを含む。バージョン番号は環境によって異なるため、特定の番号との一致ではなく、各コマンドの出力が互いに矛盾していないかを検証せよ。
 
 \begin{enumerate}
-\item \textbf{\code{uv} を使って地震データ解析用の新しいプロジェクトを作る}。
+\item \textbf{\code{uv} による地震データ解析用プロジェクトの作成}。
 \code{earthquake\_practice} の下に \code{usgs\_project} を作り、\code{uv init} を実行せよ。その後で、手元で使える Python を 1 つ選んで \code{uv python pin ...} で固定し、\code{uv add numpy matplotlib scipy} を実行せよ。その後で \code{uv run python --version} と \code{uv run python -c "import numpy, matplotlib, scipy"} を実行し、どの Python とどの仮想環境が使われているかを確認せよ。
-\code{uv init} 後には少なくとも \code{pyproject.toml} が作られ、Python を固定すると \code{.python-version} が作られる。\code{uv add} 後には依存関係が \code{pyproject.toml} へ記録され、通常は \code{uv.lock} と \code{.venv/} も作られる。\code{uv run python -c "import sys; print(sys.executable)"} を追加で実行し、表示されたパスがプロジェクトの \code{.venv} 以下にあることを確認せよ。\code{-c} が後続文字列を Python コードとして実行するオプションであることも説明すること。
+\code{uv init} 後には少なくとも \code{pyproject.toml} が作られ、Python を固定すると \code{.python-version} が作られる。\code{uv add} 後には依存関係が \code{pyproject.toml} へ記録され、通常は \code{uv.lock} と \code{.venv/} も作られる。\code{uv run python -c "import sys; print(sys.executable)"} を追加で実行し、表示されたパスがプロジェクトの \code{.venv} 以下にあることを確認せよ。\code{-c} が後続文字列を Python コードとして実行するオプションであることも説明せよ。
 
-\item \textbf{\code{pyenv} と \code{venv} で別の作り方も試す}。
+\item \textbf{\code{pyenv} と \code{venv} による別方式の環境構築}。
 \code{earthquake\_practice} の下に \code{usgs\_venv} を作り、必要なら \code{pyenv local ...} で Python を切り替えてから \code{python -m venv .venv} を実行せよ。活性化の前後で \code{which python}、\code{python --version}、\code{pip --version} がどう変わるかを記録せよ。
-活性化後のプロンプト先頭に通常は \code{(.venv)} が現れ、\code{which python} は \code{usgs\_venv/.venv/bin/python} を指す。\code{pip --version} の出力にも同じ \code{.venv} 以下のパスが含まれることを確認せよ。最後に \code{deactivate} を実行し、\code{which python} が活性化前の場所へ戻ることも記録する。\code{python -m venv .venv} の \code{-m} と最後の \code{.venv} がそれぞれ何を指定するかを説明せよ。
+活性化後のプロンプト先頭に通常は \code{(.venv)} が現れ、\code{which python} は \code{usgs\_venv/.venv/bin/python} を指す。\code{pip --version} の出力にも同じ \code{.venv} 以下のパスが含まれることを確認せよ。最後に \code{deactivate} を実行し、\code{which python} が活性化前の場所へ戻ることも記録せよ。\code{python -m venv .venv} の \code{-m} と最後の \code{.venv} がそれぞれ何を指定するかを説明せよ。
 
 \item \textbf{発展課題}。
-この課題では、同じコマンド名 \code{python} でもディレクトリごとに別の実体を指せることを確かめる。手元で 2 系統以上の Python が使えるなら、別ディレクトリを 2 つ作り、それぞれで \code{pyenv local} を設定して \code{python --version}、\code{which python}、\code{cat .python-version} を比較せよ。さらに片方のディレクトリで \code{uv run python --version} も実行し、\code{pyenv} による切り替えと \code{uv} による固定がどう重なるかを整理せよ。
-比較結果には、シェルが最初に見つけた \code{python}、\code{pyenv local} が選ぶバージョン、\code{uv} がプロジェクト仮想環境で使うバージョンを区別して記述する。\code{which python} だけで実体を断定せず、\code{python -c "import sys; print(sys.executable); print(sys.version)"} でも確認せよ。
+この発展課題の目的は、同じコマンド名 \code{python} でもディレクトリごとに別の実体を指せることの確認である。手元で 2 系統以上の Python が使えるなら、別ディレクトリを 2 つ作り、それぞれで \code{pyenv local} を設定して \code{python --version}、\code{which python}、\code{cat .python-version} を比較せよ。さらに片方のディレクトリで \code{uv run python --version} も実行し、\code{pyenv} による切り替えと \code{uv} による固定がどう重なるかを整理せよ。
+比較結果には、シェルが最初に見つけた \code{python}、\code{pyenv local} が選ぶバージョン、\code{uv} がプロジェクト仮想環境で使うバージョンを区別して記述せよ。\code{which python} だけで実体を断定せず、\code{python -c "import sys; print(sys.executable); print(sys.version)"} でも確認せよ。
 \end{enumerate}
 
-ここまでで、シェルから呼び出される Python の実体と、プロジェクトごとのライブラリ環境を区別できるようになった。次章では、この環境でインタラクティブモードとスクリプトを実行し、値、条件分岐、反復、関数を用いて処理を組み立てる。
+ここまでで、シェルから呼び出される Python の実体と、プロジェクトごとのライブラリ環境を区別できるようになった。次章では、この環境で対話的に式を評価する方法とスクリプトの実行方法を示し、値、条件分岐、反復、関数を用いた処理の組立てを扱う。

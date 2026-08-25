@@ -1,11 +1,11 @@
 \chapter{Astropy による時刻・単位・\mbox{天体データ処理}}
 \label{chap:astropy}
 
-Astropy\index{astropy@Astropy|textbf} は、天文学や宇宙物理の解析で頻出する「単位付き物理量」「時刻系」「座標系」「FITS」「天文向け表」を安全に扱うためのライブラリである。NumPy や SciPy だけでも数値計算はできるが、単位や時刻系を自前で文字列管理すると、解釈違いや換算ミスが入りやすい。本章では、Astropy の考え方、最小限のコード例、落とし穴、解析へのつながりを整理する。
+Astropy\index{astropy@Astropy|textbf} は、天文学や宇宙物理の解析で頻出する「単位付き物理量」「時刻系」「座標系」「FITS」「天文向け表」を安全に扱うためのライブラリである。NumPy や SciPy だけでも数値計算はできるが、単位や時刻系を自前で文字列管理すると、解釈違いや換算ミスが入りやすい。本章では、単位、時刻、座標を数値とともに保持し、表や FITS へ保存する方法を扱う。
 
-\section{Astropy の考え方}
+\section{数値と単位・時刻・座標の一体管理}
 
-\subsection{数値だけでなく意味も持たせる}
+\subsection{数値への単位・時刻・座標情報の付与}
 
 Astropy の中心的な発想は、「数値そのもの」ではなく「何の単位で、どの時刻系で、どの座標系なのか」までオブジェクトへ持たせることである。例えば 100 という値だけでは、100 ns なのか 100 ms なのか分からない。Astropy の \code{Quantity}\index{quantity@\code{Quantity}|textbf} を使えば、この曖昧さを減らせる。
 
@@ -39,7 +39,7 @@ d = v \Delta t
 
 観測データでは、UTC、TAI、TT、MJD、JD、Unix time が混在することがある。これを自前の文字列処理でつなぐと、秒境界やうるう秒で破綻しやすい。Astropy の \code{Time} と \code{SkyCoord} は、こうした表現を専用オブジェクトとして扱う。
 
-\section{最小限のコード例}
+\section{単位・時刻・座標・表・FITS の操作}
 
 \subsection{\code{units} と \code{Quantity}}
 
@@ -261,7 +261,7 @@ test
 
 \code{fits.open()} は HDU のリストを返す。画像なら \code{PrimaryHDU}、表なら \code{BinTableHDU} である。最初は「どの HDU に何が入っているか」を確認し、その後で必要なデータだけ読む方が混乱しにくい。
 
-\subsection{ASCII や ECSV も読める}
+\subsection{ASCII・ECSV 形式の読み込み}
 
 Astropy の表入出力は FITS だけではない。\code{Table.read()} は ASCII、CSV、ECSV などにも対応している。
 
@@ -275,7 +275,7 @@ print(len(tbl))
 
 \code{Table.read()} の第 1 引数は入力パス、\code{format="ascii.ecsv"} は ECSV として解釈する指定である。例えば 3 行で \code{time} と \code{signal} の 2 列を持つ表なら、\code{['time', 'signal']} と \code{3} が表示される。ECSV は単位やメタデータを持たせやすいので、テキスト形式のまま情報を落としにくい。共同研究や中間生成物の受け渡しでは便利である。保存するときは \code{table.write("events.ecsv", format="ascii.ecsv", overwrite=True)} と書ける。\code{overwrite=True} は同名ファイルの置換を許可する指定である。
 
-\section{よくある落とし穴}
+\section{単位情報・時刻系・座標系を失わないための注意}
 
 \subsection{\code{.value} を早く使い過ぎない}
 
@@ -285,15 +285,15 @@ print(len(tbl))
 
 \code{Time("2026-04-12 12:00:00")} とだけ書くと、どの format と scale を想定しているのかが曖昧になる。特に UTC、TAI、TT をまたぐときは、\code{format=} と \code{scale=} を明示した方が安全である。
 
-\subsection{座標変換には観測条件が必要なことがある}
+\subsection{座標変換に必要な観測条件}
 
 赤道座標から銀河座標への変換だけなら比較的単純だが、地平座標へ変換するには観測地点や観測時刻が必要になる。座標系だけを変えているつもりでも、背後では時刻と場所が意味を持つことがある。
 
-\subsection{DataFrame への変換で情報が落ちる}
+\subsection{DataFrame への変換に伴う情報の欠落}
 
 Astropy Table を pandas や Polars へ変換すると、単位、マスク、時刻系、メタデータが薄まることがある。逆に pandas の強い groupby や join を使いたいからといって、何でも最初から DataFrame にするべきではない。まず何を保存したいのかを決める方がよい。
 
-\section{解析へのつながり}
+\section{SciPy・pandas とのデータ受け渡し}
 
 Astropy を使うべき場面は、数値とともに単位、時刻系、座標系、天文形式の情報を保持する必要がある場合である。代表的な用途を次に示す。
 
@@ -307,24 +307,24 @@ Astropy を使うべき場面は、数値とともに単位、時刻系、座標
 
 一方で、巨大な表の集計や複雑な join を高速に回すなら、pandas や Polars の方が便利である。実務では、まず Astropy で単位と時刻を正しく解釈し、その後に必要な部分だけを pandas や Polars へ渡して集計し、最後に Matplotlib や SciPy へつなぐことが多い。
 
-ここまでの内容を公式資料で引き直すなら、まず Getting Started~\cite{astropy_getting_started} と User Guide~\cite{astropy_user_guide} を入口にするとよい。その上で、単位は Units and Quantities~\cite{astropy_units}、時刻は Time and Dates~\cite{astropy_time}、座標は Coordinates~\cite{astropy_coordinates}、表は Tables~\cite{astropy_table}、FITS は FITS File Handling~\cite{astropy_fits} が対応している。本章では、それらの中でも観測データ解析で頻繁に使う順に絞って説明した。
+ここまでの内容を公式資料で引き直すなら、まず Getting Started~\cite{astropy_getting_started} と User Guide~\cite{astropy_user_guide} を入口にするとよい。その上で、単位は Units and Quantities~\cite{astropy_units}、時刻は Time and Dates~\cite{astropy_time}、座標は Coordinates~\cite{astropy_coordinates}、表は Tables~\cite{astropy_table}、FITS は FITS File Handling~\cite{astropy_fits} が対応している。本章の記述範囲は、そのうち観測データ解析で使用頻度の高い機能に限った。
 
-\section{章末問題}
+\section{単位付き観測データの処理}
 
 \begin{enumerate}
-\item \textbf{単位を保ったまま時間窓を比較する}。
+\item \textbf{単位を保持した時間窓の比較}。
 \code{window = 250 * u.ns} とし、\code{dt = np.array([120, 220, 250, 251, 800]) * u.ns} の各要素が時間窓以内かを判定せよ。真になる要素は 120、220、250 ns の 3 個である。境界の 250 ns を含めるために \code{<} ではなく \code{<=} を使う理由と、\code{u.ns} を付けずに比較した場合の問題を説明せよ。
 
-\item \textbf{秒境界をまたぐ時刻差を求める}。
-\code{2026-04-12T11:59:59.999999900} と \code{2026-04-12T12:00:00.000000120} を UTC の \code{Time} として作り、差を ns で表示せよ。結果は約 220 ns になり、250 ns 以内である。\code{format="isot"}、\code{scale="utc"}、\code{to\_value("ns")} の役割を説明すること。
+\item \textbf{秒境界をまたぐ時刻差の計算}。
+\code{2026-04-12T11:59:59.999999900} と \code{2026-04-12T12:00:00.000000120} を UTC の \code{Time} として作り、差を ns で表示せよ。結果は約 220 ns になり、250 ns 以内である。\code{format="isot"}、\code{scale="utc"}、\code{to\_value("ns")} の役割を説明せよ。
 
-\item \textbf{UTC と TAI を区別して同一時刻を表す}。
+\item \textbf{UTC と TAI による同一時刻の表現}。
 同じ \code{Time} オブジェクトについて \code{utc.iso} と \code{tai.iso} を表示し、文字列表現が異なっても同じ瞬間を表していることを確認せよ。文字列を直接引き算する方法が不適切である理由を、時刻系とうるう秒の観点から説明せよ。
 
-\item \textbf{単位付き表を ECSV と FITS へ保存する}。
-\code{time}、\code{signal}、\code{detector} を持つ \code{QTable} を作り、\code{time} に ns、\code{signal} に mV を付ける。ECSV へ保存して読み戻し、各列の単位と行数を表示せよ。さらに同じ信号値を FITS 画像として保存し、\code{fits.open()} で形状とヘッダを確認せよ。\code{overwrite=True} を付ける場合の挙動も説明すること。
+\item \textbf{単位付き表の ECSV と FITS への保存}。
+\code{time}、\code{signal}、\code{detector} を持つ \code{QTable} を作り、\code{time} に ns、\code{signal} に mV を付けよ。ECSV へ保存して読み戻し、各列の単位と行数を表示せよ。さらに同じ信号値を FITS 画像として保存し、\code{fits.open()} で形状とヘッダを確認せよ。\code{overwrite=True} を付ける場合の挙動も説明せよ。
 
-\item \textbf{座標系を明示して変換する}。
+\item \textbf{座標系を明示した変換}。
 赤経 150 度、赤緯 20 度を ICRS の \code{SkyCoord} として作り、銀河座標へ変換せよ。銀河経度は約 213.801 度、銀河緯度は約 50.264 度になる。\code{ra}、\code{dec}、\code{frame} の意味を述べ、地平座標への変換では観測時刻と観測地点が追加で必要になる理由を説明せよ。
 \end{enumerate}
 

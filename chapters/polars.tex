@@ -1,9 +1,9 @@
 \chapter{Polars による高速な表処理}
 \label{chap:polars}
 
-Polars\index{polars@Polars|textbf} は、列指向の DataFrame 処理を高速に行うためのライブラリである。pandas と同じく表形式データを扱うが、index を持たず、式を組み合わせて列変換を書く点が異なる。さらに、\code{LazyFrame}\index{lazyframe@LazyFrame|textbf} では、実行前にクエリ全体を最適化できる。本章では、Polars の考え方、最小限の書き方、落とし穴、解析で使う場面を整理する。
+Polars\index{polars@Polars|textbf} は、列指向の DataFrame 処理を高速に行うためのライブラリである。pandas と同じく表形式データを扱うが、index を持たず、式を組み合わせて列変換を書く点が異なる。さらに、\code{LazyFrame}\index{lazyframe@LazyFrame|textbf} では、実行前に処理全体を最適化できる。本章では、ライブラリが利用者へ提供する操作の体系（API）を、直ちに処理する eager API と、処理を蓄えてから実行する lazy API に分けて説明し、集計、結合、入出力を扱う。
 
-\section{Polars の考え方}
+\section{式と遅延実行による表処理}
 
 \subsection{index を持たない DataFrame}
 
@@ -41,7 +41,7 @@ shape: (4, 3)
 
 この出力でも、重要なのは \code{shape: (4, 3)} と列名である。Polars は「何行目を label で指すか」よりも、「どの列にどの式を適用するか」を中心に据えている。
 
-\subsection{式で列変換を書く}
+\subsection{式による列変換}
 
 Polars の中心概念は expression\index{expression@expression|textbf} である。\code{pl.col("signal")} は「signal 列を参照する式」であり、これを四則演算や比較で組み合わせる。
 
@@ -56,7 +56,7 @@ print(expr)
 \index{polars@Polars!eager api@eager API}
 \index{polars@Polars!lazy api@lazy API}
 
-Polars には、すぐ実行する eager API と、最後まで式をためて最適化してから実行する lazy API がある。
+Polars には、命令ごとに結果を返す eager API と、処理を実行計画として蓄え、最後に最適化して実行する lazy API がある。
 
 \begin{lstlisting}[language=Python]
 eager_df = pl.read_csv("events.csv")
@@ -65,7 +65,7 @@ lazy_df = pl.scan_csv("events.csv")
 
 \code{read\_csv()} はすぐに DataFrame を作るが、\code{scan\_csv()} は \code{LazyFrame} を返す。lazy API を使うと、必要な列だけ読む、不要な行を早い段階で落とす、といった最適化が入りやすい。巨大なログを扱うときは、この違いがそのまま待ち時間の差になる。
 
-\section{最小限のコード例}
+\section{列変換・集計・結合・入出力}
 
 \subsection{\code{select()} と \code{filter()}}
 
@@ -102,7 +102,7 @@ shape: (2, 3)
 
 \code{df["signal"]} のような書き方もできるが、Polars では「表に対する操作」を \code{select()} や \code{filter()} の文脈で書く方が自然である。特に複数列をまとめて変換したいときは、この違いが大きく効く。
 
-\subsection{\code{with\_columns()} で列を増やす}
+\subsection{\code{with\_columns()} による列の追加}
 
 新しい列は \code{with\_columns()}\index{with_columns@\code{with\_columns}|textbf} で追加する。複数列を同時に書けるので、Polars の式ベース設計と相性が良い。
 
@@ -327,7 +327,7 @@ print(type(result).__name__)
 
 \code{read\_csv()} と \code{write\_parquet()} は eager API、\code{scan\_csv()} は lazy API の入口である。pandas と同じ名前の関数もあるが、遅延実行では処理を式として蓄積してから \code{collect()} で評価する点が異なる。
 
-\section{よくある落とし穴}
+\section{pandas との違いと遅延実行の注意点}
 
 \subsection{pandas の書き方をそのまま持ち込まない}
 
@@ -342,11 +342,11 @@ Polars の利点は、式が query optimizer に見えることにある。Pytho
 
 \code{scan\_csv()} や \code{scan\_parquet()} は \code{LazyFrame} を返す。ここで \code{print(lf)} としても、実データではなく計画しか見えない。結果が欲しいなら \code{collect()} が必要である。
 
-\subsection{欠損値は \code{null} と \code{NaN} を区別する}
+\subsection{欠損値における \code{null} と \code{NaN} の区別}
 
 Polars は型に厳密である。欠損をまとめて扱っているつもりでも、実際には \code{null} と \code{NaN} が混ざっていることがある。フィルタや集計の前に、どちらが入っているかを確認した方が安全である。
 
-\section{解析へのつながり}
+\section{大規模表処理と可視化への受け渡し}
 
 Polars が特に有効なのは、次のような場面である。
 
@@ -361,24 +361,24 @@ Polars が特に有効なのは、次のような場面である。
 
 Polars の公式資料では、Concepts~\cite{polars_concepts}、Expressions and contexts~\cite{polars_expressions}、Lazy API~\cite{polars_lazy}、IO~\cite{polars_io}、Coming from Pandas~\cite{polars_from_pandas} が土台になる。本章もその流れを踏まえているが、解析で必要な判断が先に見えるように並べ替えてある。式の書き方で迷ったときは expression、遅い処理をまとめて最適化したいときは lazy API、pandas との違いを整理したいときは migration guide を見返すとよい。
 
-\section{章末問題}
+\section{検出器別集計と遅延実行}
 
-前章の \code{events.csv} を使う。ファイルがない場合は、第~\ref{chap:pandas}章の章末問題に示した 6 行の CSV を作成する。
+共通入力には前章の \code{events.csv} を用いよ。ファイルがない場合は、第~\ref{chap:pandas}~章の章末問題に示した 6 行の CSV を作成せよ。
 
 \begin{enumerate}
-\item \textbf{式を組み立てて列と行を選ぶ}。
+\item \textbf{列式による列選択と行抽出}。
 \code{pl.read\_csv()} で表を読み、\code{select()} で \code{detector} と \code{signal} だけを選べ。次に、\code{signal} が \code{null} でなく 12.0 以上である行を \code{filter()} せよ。結果は A が 2 行、B が 1 行の計 3 行になる。\code{pl.col()} が値ではなく式を返すことと、\code{is\_not\_null()} を条件に明示する理由を説明せよ。
 
-\item \textbf{列追加と集計を一つのクエリにする}。
-\code{with\_columns()} で各検出器の平均からの差 \code{signal\_centered} を作る。この計算には \code{pl.col("signal").mean().over("detector")} を使う。その後、\code{group\_by()} と \code{agg()} で件数、平均、最大値を求め、検出器名で並べ替えよ。\code{over("detector")} と \code{group\_by("detector")} の違いを、出力行数に着目して説明せよ。
+\item \textbf{列追加と集計を含む単一クエリ}。
+\code{with\_columns()} で各検出器の平均からの差 \code{signal\_centered} を作成せよ。この計算には \code{pl.col("signal").mean().over("detector")} を用いよ。その後、\code{group\_by()} と \code{agg()} で件数、平均、最大値を求め、検出器名で並べ替えよ。\code{over("detector")} と \code{group\_by("detector")} の違いを、出力行数に着目して説明せよ。
 
-\item \textbf{lazy API の計画と結果を分けて確認する}。
-\code{pl.scan\_csv("events.csv")} から始め、必要な 2 列の選択、欠損除去、検出器別平均を記述せよ。\code{collect()} の前に \code{explain()} を表示し、その後に \code{collect()} した DataFrame を表示する。\code{LazyFrame} と \code{DataFrame} のどちらが実データを保持するかを説明せよ。
+\item \textbf{lazy API の実行計画と結果の確認}。
+\code{pl.scan\_csv("events.csv")} から始め、必要な 2 列の選択、欠損除去、検出器別平均を記述せよ。\code{collect()} の前に \code{explain()} を表示し、その後に \code{collect()} した DataFrame を表示せよ。\code{LazyFrame} と \code{DataFrame} のどちらが実データを保持するかを説明せよ。
 
-\item \textbf{結合と縦横変換を確認する}。
-検出器と較正係数を持つ表を作り、\code{join(..., on="detector", how="left")} で結合して較正後信号を計算せよ。さらに、検出器を行、\code{valid} を列、件数を値とする表を \code{group\_by()} と \code{pivot()} で作れ。結合キーが重複している場合に出力行数が増える理由も説明すること。
+\item \textbf{結合と縦横変換}。
+検出器と較正係数を持つ表を作り、\code{join(..., on="detector", how="left")} で結合して較正後信号を計算せよ。さらに、検出器を行、\code{valid} を列、件数を値とする表を \code{group\_by()} と \code{pivot()} で作れ。結合キーが重複している場合に出力行数が増える理由も説明せよ。
 
-\item \textbf{pandas と結果を照合する}。
+\item \textbf{pandas との結果照合}。
 前章の検出器別集計と同じ統計量を Polars で求め、CSV に保存して pandas で読み戻せ。平均値が一致することを許容誤差付きで確認し、処理速度だけでなく、欠損値、列型、行順序も比較項目になる理由を述べよ。
 \end{enumerate}
 

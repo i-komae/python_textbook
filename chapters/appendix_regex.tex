@@ -4,7 +4,7 @@
 
 正規表現は、文字列の集合を短く記述するための書き方である。\code{grep}、\code{awk}、Python の \code{re} モジュールなどで共通して使われ、ログの抽出、ファイル名の検査、検出器 ID の選別、時刻文字列の確認といった場面で役に立つ。ここでは、本文で触れた \code{grep} や \code{awk} の延長として、解析で本当に必要になる範囲をまとめる。
 
-\section{正規表現とは何か}
+\section{文字列パターンを表す正規表現}
 
 \subsection{文字どおりの一致とメタ文字}
 \index{めたもじ@メタ文字|textbf}
@@ -52,7 +52,7 @@ $
 
 表~\ref{tab:wildcard-vs-regex} は、見た目が似ていて混同しやすい 2 つの記法を並べたものである。この違いを混同すると、\code{grep "*.txt"} のように書いて期待通りに動かない。シェルが展開する記法なのか、正規表現エンジンが読む記法なのかを意識することが重要である。
 
-\section{よく使う部品}
+\section{アンカー・文字クラス・量指定子}
 
 \subsection{アンカー（行頭と行末）}
 \index{あんかー@アンカー（正規表現）|textbf}
@@ -118,7 +118,7 @@ for text in ["12", "-3.5", "+0.25", "1.2.3"]:
 
 \section{物理・データ解析での具体例}
 
-\subsection{ログから必要な行だけを探す}
+\subsection{ログからの対象行抽出}
 
 実験ログやジョブログでは、まず異常行や特定の run だけを抜き出したい。アンカーと文字クラスを組み合わせると、かなり具体的な条件を書ける。
 
@@ -130,7 +130,7 @@ $ grep -E '^(WARN|ERROR)' run.log
 
 3 行目では \code{grep -E} を使って \code{|} による選択を書いている。拡張正規表現を使うと括弧や \code{+} を素直に書けるので、条件が少し複雑になったらこちらの方が読みやすい。
 
-\subsection{検出器 ID やセンサー名を選別する}
+\subsection{検出器 ID・センサー名の選別}
 
 検出器名が \code{det\_A}, \code{det\_B}, \code{det\_C} のように並んでいるなら、文字クラスや選択を使って対象を絞れる。
 
@@ -141,7 +141,7 @@ $ awk '$1 ~ /^det_[AB]$/ {print $1, $3}' summary.txt
 
 \code{awk} では \code{\$1 ~ /.../} の形で、1 列目がその正規表現に一致するかどうかを判定できる。列を見ながら条件を書くときは \code{grep} より \code{awk} の方が自然なことが多い。
 
-\subsection{Python で抽出と変換を同時に行う}
+\subsection{Python による抽出と変換}
 
 正規表現は「一致したかどうか」だけでなく、「どの部分が一致したか」を取り出すのにも向いている。Python では \code{re.search} や \code{re.fullmatch} の戻り値から、必要部分を取り出せる。
 
@@ -160,7 +160,7 @@ if match:
 
 \section{Python の \code{re} と \code{grep}/\code{awk} の使い分け}
 
-\subsection{Python では raw string を使う}
+\subsection{Python の raw string によるパターン記述}
 \index{raw string@raw string|textbf}
 \index{re module@\code{re} モジュール|textbf}
 
@@ -175,7 +175,7 @@ print(bool(pattern.fullmatch("det_A12")))
 
 raw string を使わないと、\texttt{"\textbackslash\textbackslash d+"} のようにバックスラッシュを二重に書かなければならない。正規表現の意図が見えにくくなるので、特別な事情がなければ raw string を選ぶ方がよい。
 
-\subsection{\code{search}, \code{match}, \code{fullmatch} を使い分ける}
+\subsection{\code{search}, \code{match}, \code{fullmatch} の使い分け}
 \index{re module@\code{re} モジュール!search@\code{search}}
 \index{re module@\code{re} モジュール!match@\code{match}}
 \index{re module@\code{re} モジュール!fullmatch@\code{fullmatch}}

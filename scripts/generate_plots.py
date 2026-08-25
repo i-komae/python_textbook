@@ -139,7 +139,8 @@ plt.close(fig)
 
 # 1. Basic histogram example
 np.random.seed(7)
-values = np.random.normal(loc=0.0, scale=1.2, size=2500)
+rng = np.random.default_rng(7)
+values = rng.normal(loc=0.0, scale=1.2, size=2500)
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.hist(values, bins=40, alpha=0.8, color="#4C72B0")
 ax.set_xlabel("value")

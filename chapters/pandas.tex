@@ -1,9 +1,9 @@
 \chapter{pandas による表形式データ解析}
 \label{chap:pandas}
 
-pandas\index{pandas@pandas|textbf} は、行と列からなる表形式データを扱うための代表的なライブラリである。観測ログ、イベント一覧、較正表、集計結果のように「1 行が 1 件の記録」であるデータは、まず pandas の \code{DataFrame} として読むのが自然である。本章では、DataFrame の意味、最小限の操作、落とし穴、解析へのつながりを順に整理する。
+pandas\index{pandas@pandas|textbf} は、行と列からなる表形式データを扱うための代表的なライブラリである。観測ログ、イベント一覧、較正表、集計結果のように「1 行が 1 件の記録」であるデータは、pandas の \code{DataFrame} に適している。本章では、列名と型の確認、条件抽出、欠損値処理、集計、表変形、入出力を扱う。
 
-\section{pandas の考え方}
+\section{DataFrame の構造と列指向処理}
 
 \subsection{Series と DataFrame}
 
@@ -90,7 +90,7 @@ pandas が速くなりやすいのは、列単位でデータを処理し、内�
 
 ただし、すべての場面で pandas が最適とは限らない。行ごとに複雑な条件分岐を大量に行う場合や、データ構造自体を細かく制御したい場合には、NumPy や自作構造の方が向くこともある。したがって、「とりあえず pandas を使う」よりも、「列として扱える問題かどうか」を考える方が重要である。表として整理できるなら pandas は強力だが、近傍探索や状態遷移のように行どうしの関係が複雑になると、別の設計の方が自然なこともある。
 
-\section{最小限のコード例}
+\section{抽出・変換・集計・入出力}
 
 \subsection{列選択と行抽出}
 
@@ -125,7 +125,7 @@ print(strong)
 
 ブール配列で行を絞る操作は NumPy と似ているが、pandas では列名を介して意味を保ったまま書ける。\code{events["signal"] > 11.0} の結果は行ごとの真偽値であり、それを \code{loc} に渡すと条件に合う行だけが残る。
 
-\subsection{列を追加する}
+\subsection{列の追加}
 
 解析では、元の列から比や差、フラグ列を作ることが多い。pandas では列全体に対する式として書くのが自然である。
 
@@ -246,7 +246,7 @@ B             2        12.25    3.606245            0.5
 
 \code{groupby()} は「検出器ごと」「日ごと」「run ごと」に同じ集計を繰り返したいときの基本である。\code{agg()} に名前付き集計を書くと、列名が分かりやすくなる。
 
-\subsection{表の形を変える}
+\subsection{表形式の変換}
 \index{pandas!merge@\code{merge()}}
 \index{pandas!concat@\code{concat()}}
 \index{pandas!pivot_table@\code{pivot\_table()}}
@@ -369,7 +369,7 @@ df = pd.read_csv(
 
 巨大なテキストファイルを何度も読むより、一度整形したら Parquet にして再利用する方がよい。特に \code{read\_parquet()} は列選択と相性が良く、反復的な解析で待ち時間を減らせる。日々の解析では、この「最初に 1 回だけテキストを整理して、以後は Parquet を読む」という流れを作るだけで、待ち時間が大きく減る。
 
-ここで区別したいのは、Parquet がファイル形式の名前であり、\code{pyarrow} はその読み書きを実装するライブラリだという点である。したがって、\code{to\_parquet()} や \code{read\_parquet()} が失敗したときは、「Parquet が壊れている」のではなく、「必要な実装がまだ入っていない」ことがある。
+ここで区別したいのは、Parquet がファイル形式の名前であり、\code{pyarrow} はその読書きを担当するライブラリだという点である。\code{to\_parquet()} や \code{read\_parquet()} がライブラリ不足を示すエラーで失敗した場合は、Parquet ファイルの破損ではなく、\code{pyarrow} などの対応ライブラリが環境に入っていない可能性がある。
 
 列同士の演算をそのまま式として書ける点も pandas の強みである。
 
@@ -380,7 +380,7 @@ selected = df[df["ratio"] > 1.5]
 
 行ごとの \code{for} ループを書く前に、列単位で表現できないかを考える習慣を持つとよい。
 
-\subsection{大きな CSV を分割して集計する}
+\subsection{大規模 CSV の分割集計}
 \index{pandas!chunksize@\code{chunksize}}
 \index{ぶんかつよみこみ@分割読込み|textbf}
 
@@ -426,9 +426,9 @@ B           2.0  12.250000
 
 \code{chunksize=2} は、反復ごとに最大 2 行の DataFrame を返す指定である。実データでは 10 万行など、利用可能なメモリと処理時間を見ながら値を決める。\code{Series.add(..., fill\_value=0)} は、あるチャンクに片方の検出器しか含まれない場合にも、存在しない集計値を 0 として足す。平均値をチャンク平均の単純平均として求めると、チャンクごとの件数が違う場合に誤るため、全体の合計を全体の件数で割っている。
 
-分割処理が適するのは、総和、件数、最小値、最大値のようにチャンクごとの結果を統合できる計算である。全行を同時に並べ替える処理、全行どうしを結合する処理、全データに依存する順位計算では、単純な分割だけでは同じ結果にならない。その場合は、必要列を減らす、Parquet を使う、Polars の lazy API やデータベースを使うといった別の方法も検討する。
+分割処理が適するのは、総和、件数、最小値、最大値のようにチャンクごとの結果を統合できる計算である。全行を同時に並べ替える処理、全行どうしを結合する処理、全データに依存する順位計算では、単純な分割だけでは同じ結果にならない。その場合は、必要列を減らす、Parquet を使う、次章で説明する Polars の遅延実行やデータベースを使うといった別の方法も検討する。
 
-\subsection{表を LaTeX へ出力する}
+\subsection{表の LaTeX 出力}
 \index{pandas!to_latex@\code{to\_latex()}}
 
 集計結果をレポートへ貼るときは、手で打ち直さずに \code{to\_latex()} を使う方が再現性が高い。
@@ -450,7 +450,7 @@ with open("tables/detector_summary.tex", "w", encoding="utf-8") as f:
 
 \code{groupby()}、\code{agg()}、\code{to\_latex()} をつなぎ、最後にファイルへ保存して本ドキュメント側で \verb|\input| すれば、解析スクリプトからレポート用表までを自動化できる。表を手で打ち直さないことは、再現性の面でも大きい。
 
-\subsection{\code{plot()} は確認用として使う}
+\subsection{\code{plot()} による簡易確認}
 
 pandas にも \code{plot()} があるが、これは Matplotlib の薄いラッパである。
 
@@ -458,9 +458,9 @@ pandas にも \code{plot()} があるが、これは Matplotlib の薄いラッ�
 summary.plot(kind="bar", y="mean_signal")
 \end{lstlisting}
 
-手早い確認には便利だが、最終的な提出図や論文用図では、Matplotlib の \code{Figure} と \code{Axes} を明示して描く方が制御しやすい。本書でも最終的な作図は第~\ref{sec:matplotlib-object}節以降の方法を基準とする。
+手早い確認には便利だが、最終的な提出図や論文用図では、Matplotlib の \code{Figure} と \code{Axes} を明示して描く方が制御しやすい。本書でも最終的な作図は第~\ref{sec:matplotlib-object}~節以降の方法を基準とする。
 
-\section{よくある落とし穴}
+\section{コピー・型・行処理に関する注意点}
 
 \subsection{\code{SettingWithCopy} と \code{loc}}
 \index{settingwithcopy@SettingWithCopy|textbf}
@@ -483,11 +483,11 @@ events.loc[events["signal"] > 11.0, "flag"] = True
 
 見た目が数値でも、空白や記号が混ざると \code{object} 型で読まれることがある。そのまま足し算や比較をすると、文字列連結や例外が起きる。大きなファイルでは \code{read\_csv()} の \code{dtype=} を使い、読込み直後に \code{dtypes} を確かめる方が安全である。
 
-\subsection{行ループは最後の手段である}
+\subsection{行ループを適用する前の検討事項}
 
 pandas の DataFrame では、同じ処理でも列演算と行単位の Python 関数で実行時間が大きく異なることがある。特に、\code{iterrows()}、\code{apply(axis=1)}、並列化の使い分けは、処理内容と測定結果に基づいて判断する必要がある。
 
-\subsubsection{Step 1: \code{iterrows()} の限界}
+\subsubsection{\code{iterrows()} による行ループの負担}
 \index{pandas!iterrows@\code{iterrows()}}
 \index{pandas!itertuples@\code{itertuples()}}
 
@@ -505,7 +505,7 @@ df["value_sq"] = results
 
 この書き方は、pandas が DataFrame の列をまとめて処理できる利点を活かしにくい。さらに \code{iterrows()} は各行を毎回 \code{Series} として作り直すため、列ごとの型情報が崩れやすく、オブジェクト生成コストも大きい。行ループが避けられない場合は、\code{itertuples()} の方が軽いことが多い。それでも、まず列演算や既存のベクトル化メソッドで表現できないかを確認する。
 
-\subsubsection{Step 2: \code{apply(axis=1)} と列演算}
+\subsubsection{\code{apply(axis=1)} と列演算の比較}
 
 行ごとに処理を適用したい場合、pandas が用意している \code{apply()} メソッドを使うと、コードを DataFrame の処理として記述できる。\code{axis=1} は「各行へ関数を適用する」という意味であり、\code{axis=0} なら各列に適用する。
 
@@ -521,7 +521,7 @@ df["value_sq"] = df["value"] ** 2
 
 \code{apply()} は「列演算だけでは書きにくいが、まだ pandas の文脈の中で処理したい」場合の中間手段として理解する方が正確である。まず列演算、次に \code{apply()}、それでも重ければ並列化、という順で判断すると迷いにくい。
 
-\subsubsection{Step 3: 並列化と \code{pandarallel}}
+\subsubsection{\code{pandarallel} による行処理の並列化}
 
 通常の \code{apply()} は、Python 関数を行ごとに順番に呼び出す。本当に計算が重く、列演算や既存の NumPy 関数へ置き換えられない場合に、マルチプロセスによる並列化が選択肢に入る。
 
@@ -546,25 +546,25 @@ df["value_sq"] = df.parallel_apply(
 
 \code{pandarallel} は、DataFrame を複数プロセスへ分割して送り、\code{apply()} に近い書き方のまま並列化するためのライブラリである。つまり、「既存の pandas コードを大きく壊さずに、\code{parallel\_apply()} へ置き換えて試せる」ことが利点である。一方で、背後ではプロセス生成やデータコピーが起きるため、軽い処理ではほとんど得をしない。
 
-\code{pandarallel} は Linux 系環境での利用が比較的安定している一方で、ネイティブの Windows 環境では設定や挙動で悩みやすいことがある。Windows で本書の流れを再現するなら、前章で触れた WSL を使う方が混乱しにくい。
+\code{pandarallel} は複数の Python プロセスを起動するため、OS によってプロセスの開始方法や必要な設定が異なる。Windows で本書の Linux 系コマンドと実行条件をそろえる場合は、第~\ref{chap:shell}~章で説明した WSL を利用できる。
 
-並列化は魔法の杖ではない。\code{pandarallel} は背後で「データを複数のプロセスにコピーして分配する」ため、通信オーバーヘッドがかかる。「単純な足し算」などのすぐに終わる軽い処理を \code{parallel\_apply()} にかけると、計算時間よりもコピー時間の方が長くなり、かえって遅くなる。\textbf{CPU 1 コアでは時間がかかりすぎる重い処理}でのみ並列化を採用するという見極めが必要である。
+\code{pandarallel} は DataFrame を複数プロセスへ分配するため、プロセスの起動、データの受渡し、結果の結合にも時間がかかる。単純な加算のように 1 行当たりの処理が短い場合は、この付加時間が計算時間を上回り、逐次処理より遅くなることがある。並列化の採否は、同じ入力に対する逐次処理と並列処理を測定して判断する。
 
 \subsection{欠損値と比較演算を混同しない}
 
 \code{NaN == NaN} は \code{False} である。欠損判定に \code{==} を使わず、\code{isna()} を使う。また、\code{None}、\code{NaN}、\code{NA} の違いは列型によって見え方が変わるので、「欠損をどう表現しているのか」を確認した方がよい。
 
-\section{解析へのつながり}
+\section{観測表の集計と可視化への受け渡し}
 
 観測データの解析では、pandas はしばしば次の流れの中心になる。
 
 \begin{enumerate}
-\item テキストや CSV を \code{read\_csv()} で読む
-\item \code{head()} と \code{dtypes} で構造を確認する
-\item 必要な列だけを残し、欠損や異常値を整理する
-\item \code{groupby()} や \code{merge()} で集計・結合する
-\item Matplotlib へ渡して図を描く
-\item 集計表を \code{to\_latex()} で書き出す
+\item \code{read\_csv()} によるテキスト・CSV の読込み
+\item \code{head()} と \code{dtypes} による表構造の確認
+\item 必要な列の選択と、欠損値・異常値の整理
+\item \code{groupby()} と \code{merge()} による集計・結合
+\item Matplotlib への受渡しと作図
+\item \code{to\_latex()} による集計表の書出し
 \end{enumerate}
 
 この流れが成立するのは、pandas が「列名と型を保ったまま処理を書ける」からである。NumPy だけで済む問題もあるが、観測条件、検出器 ID、run 名、欠損フラグのような異種の列が混ざると、DataFrame の方が自然である。
@@ -575,9 +575,9 @@ df["value_sq"] = df.parallel_apply(
 
 ここまでの内容を自分で確かめ直したくなったら、公式資料へ戻るとよい。入口としては Getting started tutorials~\cite{pandas_tutorials} と 10 minutes to pandas~\cite{pandas_10min} が分かりやすい。本章はそれらを解析向けの順序へ並べ替えて説明している。列選択や代入で迷ったときは Indexing~\cite{pandas_indexing}、欠損値処理は Missing data~\cite{pandas_missing}、表の結合は Merge, join, concatenate and compare~\cite{pandas_merging}、時刻列は Time series / date functionality~\cite{pandas_timeseries} を見ると対応する話題に戻りやすい。
 
-\section{章末問題}
+\section{検出器別の表集計}
 
-次の CSV を \code{events.csv} として保存し、すべての課題で共通して使う。
+次の CSV を \code{events.csv} として保存し、すべての課題の共通入力とせよ。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={events.csv}]
 detector,time_ns,signal,valid
@@ -590,20 +590,20 @@ B,2050,13.2,true
 \end{lstlisting}
 
 \begin{enumerate}
-\item \textbf{読込み直後の表を検査する}。
+\item \textbf{読込み直後の表の検査}。
 \code{pd.read\_csv()} で読み、\code{shape}、\code{columns}、\code{dtypes}、\code{head(3)}、\code{isna().sum()} を表示せよ。行数は 6、列数は 4、\code{signal} の欠損数は 1 になる。\code{head(3)} の \code{3} と、\code{isna().sum()} の \code{sum()} がどの方向に集計しているかを説明せよ。
 
-\item \textbf{条件抽出と列追加を行う}。
+\item \textbf{条件抽出と列追加}。
 \code{valid} が真で \code{signal >= 12.0} の行を \code{loc} で抽出し、\code{signal / signal.mean()} を \code{signal\_ratio} 列として追加せよ。抽出行は 3 件になる。複数条件を括弧で囲み、\code{and} ではなく \code{\&} を使う理由を説明せよ。
 
-\item \textbf{検出器ごとに集計して別表と結合する}。
-\code{groupby("detector")} と \code{agg()} を使い、有効な信号の件数、平均、標準偏差を求めよ。平均は A が約 12.8333、B が 11.5 になる。さらに、A と B の較正係数を持つ DataFrame を作り、\code{merge(..., on="detector", how="left")} で結合せよ。\code{on} と \code{how} の役割を説明すること。
+\item \textbf{検出器別集計と別表の結合}。
+\code{groupby("detector")} と \code{agg()} を使い、有効な信号の件数、平均、標準偏差を求めよ。平均は A が約 12.8333、B が 11.5 になる。さらに、A と B の較正係数を持つ DataFrame を作り、\code{merge(..., on="detector", how="left")} で結合せよ。\code{on} と \code{how} の役割を説明せよ。
 
-\item \textbf{一括読込みと分割読込みを比較する}。
+\item \textbf{一括読込みと分割読込みの比較}。
 本文の \code{chunksize=2} の方法で件数と平均を求め、一括読込みから得た結果と \code{pd.testing.assert\_frame\_equal()} または \code{np.allclose()} で一致を確認せよ。チャンク平均の単純平均が一般には誤る理由を、件数が異なる 2 チャンクの例を使って説明せよ。
 
-\item \textbf{結果を再利用できる形式で保存する}。
+\item \textbf{再利用可能な形式への保存}。
 集計表を CSV と Parquet の両方へ保存し、読み戻して列名と値を確認せよ。\code{index=False} を付けた場合に何が保存されないかを説明し、Parquet の読込みに追加ライブラリが必要な環境では、表示された例外名も記録せよ。
 \end{enumerate}
 
-pandas で表処理の基本と結果の検証方法を確認した後は、同じ処理を別の DataFrame 実装で書くと、設計上の違いが明確になる。次章では Polars を用い、index に依存しない表、列式、遅延実行による処理を扱う。
+pandas で表処理の基本と結果の検証方法を確認した後は、同じ処理を別の DataFrame 実装で書くと、設計上の違いが明確になる。次章では、Polars による index 非依存の表処理、列式、遅延実行を扱う。
