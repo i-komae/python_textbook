@@ -33,7 +33,7 @@ Python 3.12.10
 /opt/homebrew/Cellar/python@3.12/3.12.10/bin/python3.12
 \end{lstlisting}
 
-1 行目は、いま \code{python3} で呼ばれるバージョンを表す。2 行目は、シェルが実際に見つけた \code{python3} という名前の実行ファイルである。3 行目は、その Python の内部から見た実行ファイルの実体であり、シンボリックリンクの先まで含めて表示されることがある。2 行目と 3 行目が完全に同じ文字列でなくても問題はないが、「どちらも同じ系列の Python を指しているか」は確認した方がよい。複数バージョンを切り替えるようになると、この確認は非常に重要になる。
+1 行目は、\code{python3} で起動する Python のバージョンを表す。2 行目は、シェルが \code{python3} という名前から見つけた実行ファイルである。3 行目は、起動した Python 自身が認識している実行ファイルの位置であり、シンボリックリンクの参照先まで含む場合がある。2 行目と 3 行目が同じ文字列である必要はないが、両者が同じ系列の Python を指していることは確認しておきたい。複数バージョンを切り替える環境では、この対応関係が実行環境を特定する手掛かりになる。
 
 \section{\code{pyenv} による複数バージョンの管理}
 
@@ -54,7 +54,7 @@ $ xcode-select -p
 \end{lstlisting}
 
 このようにパスが表示されれば、Command Line Tools はインストール済みである。逆に、エラー文が出て何も表示されなければ未導入の可能性が高い。
-未導入の場合は、次のコマンドを実行してインストールする。
+未導入の場合のインストールコマンドは次のとおりである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ xcode-select --install
@@ -78,7 +78,7 @@ Building dependency tree... Done
 Reading state information... Done
 \end{lstlisting}
 
-\code{apt install} でも多くの行が流れる。今回の例では \code{-y} を付けているので、通常は確認なしで続行する。\code{-y} を外して実行した場合は、途中で次のような確認が出ることがある。
+\code{apt install} でも多くの行が流れる。このコマンド例には \code{-y} を付けているため、通常は確認なしで続行する。\code{-y} を外した場合は、途中で次のような確認が出ることがある。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Need to get 48.2 MB of archives.
@@ -174,7 +174,7 @@ $ pyenv versions
 
 \code{system} は、\code{pyenv} で切り替えない場合に OS 側が標準で見せる Python である。\code{3.11.11} と \code{3.12.10} が一覧に出ていれば、そのバージョンはインストール済みである。先頭の \code{*} は、いま有効になっている系統を示す印であり、この段階ではまだ \code{system} のままでも問題はない。
 
-その後、システム全体で普段使う標準のバージョンを決めるなら、次のように \code{pyenv global} を実行する。
+システム全体で普段使うバージョンは、\code{pyenv global} で指定する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pyenv global 3.12.10
@@ -282,7 +282,7 @@ $ jupyter lab
 
 この URL は、ブラウザから接続するためのアドレスである。\code{localhost:8888} は「いま使っているマシン上で待ち受けている」ことを意味し、\code{token=...} は最初の接続確認に使う一時的な鍵である。ブラウザが自動で開かなかった場合も、この URL を開けば JupyterLab へ入れる。
 
-JupyterLab の利点は、コードを実行できるだけでなく、その前後に説明文、数式、図の読み方を書き添えられる点にある。解析の途中経過を他人へ見せるときも、自分で後から読み返すときも、コードと説明が同じノートブックに並んでいる方が理解しやすい。たとえば次のような書式で Markdown セルを書くことができる。
+JupyterLab の利点は、コードを実行できるだけでなく、その前後に説明文、数式、図の読み方を書き添えられる点にある。解析の途中経過を共有するときも、後から読み返すときも、コードと説明が同じノートブックに並んでいると処理の意図を追いやすい。Markdown セルの記述例を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 # 解析メモ
@@ -301,7 +301,7 @@ $\Delta t$ の分布を確認する
 
 \subsection{プロジェクトの初期化}
 
-多くの人は、まずシンプルに \code{uv init} を使えばよい。オプションは後から必要になったときに足せばよい。新しいプロジェクトを始めるには、次のようにディレクトリを作ってから初期化する。
+基本的なプロジェクトは \code{uv init} で作成でき、追加のオプションは必要に応じて指定する。新しいディレクトリを作成して初期化する手順は次のとおりである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir analysis_uv
@@ -384,9 +384,9 @@ $ uv run python -m pytest
 Python 3.12.10
 \end{lstlisting}
 
-この 1 行は、「いまのプロジェクト設定に従って起動された Python が 3.12.10 である」ことを示している。実行対象が Python スクリプトそのものであるなら、\code{uv run main.py} と書けばよい。わざわざ \code{python} を挟む必要はない。一方で、\code{-m} を使いたいときや、Python 本体へオプションを渡したいときは \code{uv run python ...} と書く。
+この 1 行は、現在のプロジェクト設定に従って起動された Python が 3.12.10 であることを示している。Python スクリプトは \code{uv run main.py} で直接実行できる。一方、\code{-m} を使う場合や Python 本体へオプションを渡す場合には、\code{uv run python ...} と記述する。
 
-ここまでは「その環境でどう実行するか」を見た。次は「そのプロジェクトがどの Python を使うか」を固定する。
+ここまでの説明では、プロジェクト環境でコマンドを実行する方法を扱った。次項では、プロジェクトが用いる Python のバージョンを固定する。
 
 \code{uv} もプロジェクト単位で Python バージョンを固定できる。\code{pyenv} がシェル全体の切り替えを担当し、\code{uv} がプロジェクト側の固定を担当する、と分けて考えると分かりやすい。固定や一発実行のコマンド例は次の通りである。
 
@@ -414,7 +414,7 @@ Python には、最初から使える標準ライブラリと、自分で追加�
 \item 外部ライブラリの例: \code{numpy}, \code{pandas}, \code{polars}, \code{matplotlib}, \code{scipy}, \code{astropy}
 \end{itemize}
 
-ここまでで Python 本体、仮想環境、プロジェクト管理の役割を見たので、次はその環境へ何を入れるのかを整理する。標準ライブラリは Python 本体に含まれている。外部ライブラリは、目的に応じて自分で追加する。解析では外部ライブラリが非常に重要だが、まずは「何が標準で、何が追加なのか」を区別しておくことが大切である。
+標準ライブラリは Python 本体に含まれ、外部ライブラリは目的に応じて環境へ追加する。両者を区別すると、別環境で再現する際に追加すべき依存関係が明確になる。
 
 \subsection{解析用ライブラリの導入}
 
@@ -439,7 +439,7 @@ tqdm & 進捗表示 \\
 \end{tabular}
 \end{table}
 
-\code{venv} を使うなら \code{pip install}、\code{uv} を使うなら \code{uv add} と書けばよい。まず \code{venv} を使う場合は、次のように書く。
+\code{venv} で管理する環境には \code{pip install}、\code{uv} で管理するプロジェクトには \code{uv add} を用いる。\code{venv} を使う場合のコマンドを次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pip install numpy pandas polars matplotlib scipy astropy tqdm
@@ -453,7 +453,7 @@ Successfully installed astropy-7.0.0 matplotlib-3.10.0 numpy-2.3.0 pandas-2.3.0
 
 ここでは、指定した主要ライブラリがその仮想環境へ入ったことが分かる。バージョン番号まで表示されるので、レポートや再現用メモではこの情報も残しておくと役に立つ。
 
-同じライブラリを \code{uv} 管理のプロジェクトへ追加するなら、次のように書く。
+同じライブラリを \code{uv} 管理のプロジェクトへ追加するコマンドは次のとおりである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv add numpy pandas polars matplotlib scipy astropy tqdm
@@ -466,7 +466,7 @@ Resolved 18 packages in 0.42s
 Installed 7 packages in 0.31s
 \end{lstlisting}
 
-\code{pip install} と違って、\code{uv add} は環境へ入れるだけでなく、\code{pyproject.toml} に依存関係を記録する点が重要である。つまり、「いまだけ入った」のではなく、「このプロジェクトはこれらのライブラリに依存している」と宣言したことになる。
+\code{pip install} と異なり、\code{uv add} はライブラリを環境へ導入するとともに、\code{pyproject.toml} にプロジェクトの依存関係として記録する。
 
 \section{引数・設定ファイルとコードの分離}
 
@@ -485,7 +485,7 @@ args = parser.parse_args()
 print(args.input_dir, args.outdir)
 \end{lstlisting}
 
-このスクリプトを \code{analyze.py} として保存し、次のように実行するとする。
+このスクリプトを \code{analyze.py} として保存した場合の実行例を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python analyze.py data/run001

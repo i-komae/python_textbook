@@ -41,11 +41,11 @@ $ ps -p $$ -o comm=
 zsh
 \end{lstlisting}
 
-設定ファイルを編集するときは、シェル名だけでなく OS と起動方法も確認する。zsh の対話シェルでは通常 \code{\textasciitilde/.zshrc} を使う。bash では Linux の対話シェルなら \code{\textasciitilde/.bashrc}、macOS のログインシェルなら \code{\textasciitilde/.bash\_profile} が使われることが多い。
+設定ファイルは、シェル名だけでなく OS と起動方法によっても異なる。zsh の対話シェルでは通常 \code{\textasciitilde/.zshrc} を使う。bash では Linux の対話シェルなら \code{\textasciitilde/.bashrc}、macOS のログインシェルなら \code{\textasciitilde/.bash\_profile} が使われることが多い。
 
 \subsection{Windows における WSL の利用}
 
-本書のコマンド例は macOS や Linux のシェルを前提にしている。そのため、Windows で読み進める場合は、コマンドプロンプトや PowerShell をそのまま使うより、WSL\index{wsl@WSL|textbf} (Windows Subsystem for Linux) を入れて Ubuntu などの Linux 環境を使う方が混乱しにくい。管理者権限で開いた PowerShell では、次のコマンドで WSL を導入できる。
+本書のコマンド例は macOS や Linux のシェルを前提にしている。Windows では、WSL\index{wsl@WSL|textbf} (Windows Subsystem for Linux) 上の Ubuntu などを利用すると、同じコマンド例を実行しやすい。WSL は、管理者権限で開いた PowerShell から次のコマンドで導入できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ wsl --install
@@ -305,7 +305,7 @@ $ pwd
 
 表~\ref{tab:path-notation} は、シェルを読み始めた直後に最低限区別したい表記をまとめたものである。特に重要なのは、絶対パスは \code{/} や \code{\textasciitilde} から始まり、相対パスは現在のカレントディレクトリを基準に読む、という違いである。
 
-先ほどと同じく、次のディレクトリ構成を考える。
+次のディレクトリ構成を考える。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 analysis/
@@ -336,7 +336,7 @@ cat: data/events.txt: No such file or directory
 $ cat ../data/events.txt
 \end{lstlisting}
 
-この場所で \code{data/events.txt} と書くと \code{scripts/data/events.txt} を探しに行くことになるが、そのようなファイルは存在しないので \code{data/events.txt: No such file or directory} というエラー文が表示される。
+この場所で \code{data/events.txt} と指定すると、シェルは \code{scripts/data/events.txt} を探す。そのファイルは存在しないため、\code{data/events.txt: No such file or directory} というエラー文が表示される。
 相対パスで \code{events.txt} を指定するには、1 つ上へ戻る \code{..} を使って \code{../data/events.txt} と書く必要がある。
 
 同様に、\code{./plot.py} は「現在のディレクトリにある \code{plot.py}」、\code{../data} は「1 つ上にある \code{data} ディレクトリ」を表す。相対パスは短く書ける反面、現在位置を読み違えると別の場所を指してしまう。したがって、コマンドを読むときは「今どこにいるか」と「そのパスが絶対か相対か」を必ずセットで考える必要がある。
@@ -363,7 +363,7 @@ data	output
 
 1 行目では、現在のカレントディレクトリの直下に \code{output} が新しくできる。2 行目の \code{ls} で、それが確認できる。
 
-一方、\code{output/2026/04} のように深い階層をまとめて作りたい場面もある。途中の \code{output/2026} がまだ無い場合、単純に \code{mkdir output/2026/04} のように書くとエラーが表示される。 \code{-p} オプションを付けると、足りない親ディレクトリも含めてまとめて作ることができる。
+一方、\code{output/2026/04} のような深い階層をまとめて作る場合もある。途中の \code{output/2026} がまだ無ければ、\code{mkdir output/2026/04} だけではエラーになる。\code{-p} オプションを付けると、存在しない親ディレクトリも含めて作成される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir output/2026/04
@@ -676,7 +676,7 @@ $ grep -rn "TODO" src/
 
 \subsection{\code{awk}}
 
-\code{awk}\index{awk@\code{awk}|textbf} は、テキストを列データとして扱って抽出や整形を行うコマンドである。空白区切りのログや表形式テキストを扱うときには非常に強力である。
+\code{awk}\index{awk@\code{awk}|textbf} は、テキストを列データとして扱って抽出や整形を行うコマンドである。空白区切りのログや表形式テキストの処理に適している。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ awk '{print $1}' data.txt
@@ -789,7 +789,7 @@ $ gunzip events.csv.gz
 
 \subsection{\code{tar}: 複数ファイル・ディレクトリの一括格納}
 
-\code{tar}\index{tar@\code{tar}|textbf} は、本来は複数ファイルやディレクトリを 1 本のアーカイブへ束ねる道具である。\code{gzip} と組み合わせて \code{.tar.gz} を作る形が非常によく使われる。
+\code{tar}\index{tar@\code{tar}|textbf} は、複数のファイルやディレクトリを 1 本のアーカイブへまとめる道具である。\code{gzip} と組み合わせた \code{.tar.gz} 形式が広く使われている。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ tar -czf archive.tar.gz raw/ notes.txt
@@ -973,7 +973,7 @@ $ python analyze.py > output.log
 $ python analyze.py 1> output.log 2> error.log
 \end{lstlisting}
 
-1 行目では通常の出力だけが \code{output.log} に入り、エラーメッセージは画面に残る。2 行目では、通常の出力を \code{output.log} に、エラーメッセージを \code{error.log} に分けて保存している。長い処理を回すときは、「結果は保存したいが、失敗したときの原因も別に残したい」ということが多いので、この書き方は有用である。
+1 行目では通常の出力だけが \code{output.log} に入り、エラーメッセージは画面に残る。2 行目では、通常の出力を \code{output.log} に、エラーメッセージを \code{error.log} に分けて保存している。長時間の処理では、両者を分けると失敗原因を追跡しやすい。
 
 標準出力と標準エラーを同じファイルへまとめたいときは、\code{2>\&1} を使う。
 
@@ -1018,8 +1018,7 @@ $ python analyze.py 2>&1 | tee -a run.log
 文字と権限の対応は表~\ref{table:mod}のとおりである。
 
 権限の変更には、\code{chmod}\index{chmod@\code{chmod}|textbf} コマンドを用いる。
-所有者（\code{user}）に実行権限（\code{x}）を付与したければ\code{u+x}、その他の利用者（\code{other}）の読み込み権限（\code{r}）と書き込み権限（\code{w}）を剥奪したければ\code{o-rw}、グループ（\code{group}）とその他（\code{other}）の権限を読み取り（\code{r}）のみにしたければ\code{go=r}のように指定すればよい。
-\code{a+x}のようにして、すべてのユーザー（\code{all}）の権限を変更することもできる。
+所有者（\code{user}）に実行権限（\code{x}）を加える指定は \code{u+x} である。その他の利用者（\code{other}）から読み取り権限（\code{r}）と書き込み権限（\code{w}）を除く指定には \code{o-rw} を用いる。グループ（\code{group}）とその他の利用者の権限を読み取りだけにする指定は \code{go=r} である。\code{a+x} の \code{a}（\code{all}）は、すべての利用者を対象とする。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod u+x my_script.sh
@@ -1062,8 +1061,7 @@ Python スクリプトは \code{python3 hello.py} の形で実行するなら、
 print("hello")
 \end{lstlisting}
 
-このように記述した上で、ファイルそのものに対して直接実行できるようにするため、実行権限を付与する。
-所有者に対して権限を付与する場合は、付与の対象（\code{u}）を省略することができる。
+ファイルを直接実行するには、シバンに加えて実行権限も必要である。所有者に権限を加える場合は、対象を表す \code{u} を省略できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod +x hello.py

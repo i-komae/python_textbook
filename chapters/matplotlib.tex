@@ -223,7 +223,7 @@ fig.savefig("scatter_bad.png", dpi=150)
 
 \subsubsection{2 次元ヒストグラムによる密度の計数}
 
-点が潰れるなら、「その領域にいくつ点があるか」を色で表現する2次元ヒストグラム（\code{hist2d}）が有効である。
+点が重なって密度を読み取れない場合には、領域ごとの点数を色で表す 2 次元ヒストグラム（\code{hist2d}）が有効である。
 
 \begin{lstlisting}[language=Python]
 fig, ax = plt.subplots(figsize=(6, 5))
@@ -235,15 +235,15 @@ fig.savefig("hist2d_linear_bad.pdf")
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.6\linewidth]{hist2d_linear_bad.pdf}
-\caption{線形スケールを用いた2Dヒストグラム。最も集中した中心部だけが目立ち、周辺が潰れる。}
+\caption{線形カラースケールを用いた 2 次元ヒストグラム。中心部の高密度領域に色範囲の大半が割り当てられ、低密度領域の差を識別しにくい。}
 \label{fig:hist2d-linear}
 \end{figure}
 
-図~\ref{fig:hist2d-linear}は中心部が明るくなっているため、散布図よりはマシに見える。しかし、極端に集中している一部（例: 2万カウント）の色に引っ張られ、10カウント、100カウントといった周囲のノイズや裾野の広がりがすべて濃紺に塗りつぶされてしまっている。
+図~\ref{fig:hist2d-linear} では中心部の密度を読み取れるが、最大値が約 2 万カウントに達するため、10 カウントや 100 カウント程度の領域には近い色が割り当てられる。この線形カラースケールでは、周辺部の密度差や裾の広がりを識別しにくい。
 
 \subsubsection{\code{LogNorm} による広い密度範囲の表示}
 
-現実の物理イベントは、頻度が「1, 10, 100, 1000」のように桁単位で変化することが多い。この何桁にもまたがる広がりを一つの図に収めるための判断基準が\textbf{「カウントのカラーバーを対数（log）にするべきか否か」}である。\index{Matplotlib!LogNorm@\code{LogNorm}|textbf}
+物理イベントの頻度が 1、10、100、1000 のように数桁にわたる場合には、線形カラースケールだけでは低密度領域の差を表しにくい。カウントを対数に変換して色へ割り当てる \code{LogNorm} は、このような分布に適している。\index{Matplotlib!LogNorm@\code{LogNorm}|textbf}
 
 \begin{lstlisting}[language=Python]
 import matplotlib.colors as mcolors
@@ -266,10 +266,10 @@ fig.savefig("hist2d_lognorm_good.pdf")
 
 \subsection{複数の図を並べる (subplots)}
 
-レポートや論文では、関連する分布を左右や上下に並べて比較することが多い。この場合、1枚のキャンバス（\code{Figure}\index{Matplotlib!Figure@\code{Figure}|textbf}）の中に複数のパネル（\code{Axes}\index{Matplotlib!Axes@\code{Axes}|textbf}）を配置する機能を利用する。
+レポートや論文では、関連する分布を左右や上下に並べて比較することが多い。この場合、1 枚のキャンバス（\code{Figure}\index{Matplotlib!Figure@\code{Figure}|textbf}）の中に複数のパネル（\code{Axes}\index{Matplotlib!Axes@\code{Axes}|textbf}）を配置する機能を利用する。
 
 \begin{lstlisting}[language=Python]
-# 1行2列（左右に2つ）のパネルを作成する。
+# 1 行 2 列（左右に 2 つ）のパネルを作成する。
 # fig はキャンバス全体、axes は2つのパネル（配列）を表す。
 fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
@@ -287,7 +287,7 @@ fig.tight_layout()
 fig.savefig("subplots_example.pdf")
 \end{lstlisting}
 
-単純な \code{plt.plot()} ばかり使っていると、この「特定のパネル（\code{axes[0]}）に対して描画を命令する」という書き方に慣れるのに少し時間がかかるが、複雑な比較図を作る上では避けて通れない技法である。\code{Figure} や \code{Axes} についての詳細は、第~\ref{sec:matplotlib-object}~節以降で述べる。
+複数パネルの図では、\code{axes[0]} のように描画先の \code{Axes} を明示する。これにより、各処理がどのパネルに作用するかをコード上で追跡できる。\code{Figure} と \code{Axes} の役割は、第~\ref{sec:matplotlib-object}~節以降で詳しく説明する。
 
 \subsection{単純な横並び以外: \code{subplot\_mosaic} と \code{GridSpec}}
 
@@ -347,9 +347,9 @@ fig.tight_layout()
 fig.savefig("subplots_example.pdf")
 \end{lstlisting}
 
-この例では、\code{axes} は二つの \code{Axes} を並べた配列であり、\code{for ax in axes:} の部分で「凡例位置をそろえる」という共通処理を両パネルへまとめて適用している。\code{sharey=True} を付けると図~\ref{fig:subplots-example} のように縦軸の尺度がそろうため、左右の高さをそのまま比較しやすい。ここでは各パネルに系列が一つしかないため、凡例はやや大げさに見えるかもしれないが、後からフィット曲線や参照線を重ねるとそのまま拡張できる書き方である。
+この例では、\code{axes} は二つの \code{Axes} を並べた配列であり、\code{for ax in axes:} の部分で凡例位置をそろえる処理を両パネルへ適用している。\code{sharey=True} を付けると図~\ref{fig:subplots-example} のように縦軸の尺度がそろうため、左右の高さを直接比較できる。各パネルの系列が一つだけでも凡例を用意しておけば、後からフィット曲線や参照線を追加しても同じ構成を保てる。
 
-\code{tight\_layout} は余白調整の基本であるが、すべてを自動で完璧に直してくれるわけではない。タイトルや長いラベルが多い場合は、図のサイズや余白を自分で調整した方がよい。複数パネルの図では、どのパネルを比較させたいのかを意識して配置することが大切である。
+\code{tight\_layout} は余白を自動調整するが、すべての文字やパネルの重なりを解消するとは限らない。タイトルや長いラベルが多い場合には、図のサイズや余白を追加で調整する。複数パネルの配置は、比較対象の対応関係が読み取れるかどうかで判断する。
 
 凡例がデータを隠すなら、\code{loc="best"} で自動配置に任せるか、\code{bbox\_to\_anchor} を使って枠の外へ逃がす。レイアウト調整は「自動で整うかどうか」ではなく、「比較したい情報が隠れていないかどうか」で判断する方が実践的である。
 
@@ -362,7 +362,7 @@ fig.savefig("subplots_example.pdf")
 
 \subsection{エラーバーと対数軸（log-logプロット）}
 
-実際の物理データの多くは測定誤差を伴うため、単なる散布図ではなくエラーバー付きのプロットが必要になる。また、横軸や縦軸のスケールが指数関数的に落ち幅を変える場合、対数\index{たいすうじく@対数軸|textbf}（log）のグラフでプロットしなければ分布の様子が潰れてしまうことが多い。
+測定値の不確かさを図に示すには、点とともにエラーバーを描く。値が数桁にわたって変化する場合には、対数軸\index{たいすうじく@対数軸|textbf}を用いると分布形状を比較しやすい。ただし、対数軸では 0 以下の値を表示できないため、データ範囲を事前に確認する必要がある。
 
 図~\ref{fig:errorbar-example} にエラーバーと対数プロットの例を示す。
 
@@ -374,7 +374,7 @@ fig.savefig("subplots_example.pdf")
 \end{figure}
 
 \begin{lstlisting}[language=Python]
-fig, axes = plt.subplots(1, 2, figsize=(10, 4)) # 横10インチ、縦4インチで 1行2列のパネルを作成
+fig, axes = plt.subplots(1, 2, figsize=(10, 4)) # 横 10 インチ、縦 4 インチで 1 行 2 列のパネルを作成
 
 # 左のパネル (axes[0]) へのプロット
 # x_val, y_val を点ごとにエラー y_err でプロット。
@@ -407,11 +407,11 @@ fig.savefig("errorbar_example.pdf")
 
 \subsection{画像フォーマットの選択：ラスタとベクタ}\index{Matplotlib!savefig@\code{savefig()}}
 
-解析図を保存する際、適切な画像フォーマットを選ぶことは極めて重要である。
+解析図の保存形式は、図の要素数、出力先、必要な拡大率に応じて選ぶ。
 
 \begin{itemize}
-    \item \textbf{ベクタ形式 (\code{.pdf}, \code{.svg}, \code{.eps})}：どれだけ拡大しても線や文字がぼやけない。論文やレポートで図を用いる場合、文字やプロット点を高品質なまま印刷できるためこれが基本となる。関数 \code{savefig("plot.pdf")} で保存できる。
-    \item \textbf{ラスタ形式 (\code{.png}, \code{.jpg})}：ピクセル（点）の集まりで画像を描画する。拡大するとジャギ（ピクセルのギザギザ）が見える。ただし、例えば数十万点に及ぶ密集した散布図や、ヒートマップのような巨大な2次元データをベクタ形式で保存すると、点の一つ一つがファイルに記録されるためファイルサイズがギガバイトを超え、PDFビューアがフリーズする原因になる。そのような複雑な図の場合は、\code{savefig("plot.png", dpi=150)} のように解像度（dpi）を指定して PNG で出力する方が適切である。
+    \item \textbf{ベクタ形式 (\code{.pdf}, \code{.svg}, \code{.eps})}：線や文字を図形要素として保存するため、拡大しても輪郭がぼやけない。線図や要素数の少ない散布図を論文やレポートへ掲載する場合に適している。\code{savefig("plot.pdf")} のように保存する。
+    \item \textbf{ラスタ形式 (\code{.png}, \code{.jpg})}：図をピクセルの集合として保存するため、拡大率によっては輪郭に画素が見える。ベクタ形式では各点が個別要素となるので、密集した散布図や大きな格子画像ではファイルサイズと描画負荷が増える。この場合は、\code{savefig("plot.png", dpi=150)} のように解像度を指定した PNG が適している。
 \end{itemize}
 
 \begin{lstlisting}[language=Python]
@@ -437,7 +437,7 @@ Matplotlib の初学者が最も混乱しやすいのは、\code{Figure} と \co
 \item[\code{Figure}] 図全体である。1 つの PDF や PNG、1 つの表示ウィンドウに相当する。\code{savefig}、\code{suptitle}、図全体の凡例や colorbar などは主に Figure 側の仕事である。
 \item[\code{Axes}] データを実際に描く 1 つのパネルである。\code{plot}、\code{hist}、\code{scatter}、\code{set\_xlabel}、\code{legend} など、日常的な作図命令の多くは Axes のメソッドとして呼ぶ。
 \item[\code{Axis} (\code{x Axis, y Axis})] 目盛り、目盛りラベル、スケールを管理する部品である。通常は \code{ax.set\_xscale("log")} や \code{ax.set\_xlim(...)} のように Axes 経由で触るが、内部には \code{ax.xaxis} と \code{ax.yaxis} がある。
-\item[\code{Artist}] 図の中に描かれるすべての要素の総称である。線は \code{Line2D}、文字は \code{Text}、凡例は \code{Legend}、ヒストグラムの棒は \code{Rectangle} といった Artist として管理される。以下なども Artist に含まれる。
+\item[\code{Artist}] 図の中に描かれる要素の総称である。線は \code{Line2D}、文字は \code{Text}、凡例は \code{Legend}、ヒストグラムの棒は \code{Rectangle} という Artist として管理される。代表的な要素を次に示す。
   \begin{itemize}
     \item \code{Title}, \code{Legend}: 図のタイトル、および各系列を示す凡例。
     \item \code{Grid}, \code{Spine}: グリッド線と、座標系を囲む枠線。
@@ -468,7 +468,7 @@ Figure
 \label{fig:anatomy-example}
 \end{figure}
 
-\noindent この対応を、実際の Python オブジェクトの型で確かめる短いコードを次に示す。
+\noindent この対応を実際の Python オブジェクトの型で示すコードを次に掲げる。
 
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
@@ -505,7 +505,7 @@ Legend
 
 最後の \code{1} は、この Figure の中に Axes が 1 枚だけ入っていることを表す。もし \code{plt.subplots(2, 2)} と書けば、Figure は 1 つのままで、Axes が 4 枚入る。
 
-\code{Artist} という言葉も、線だけを指すわけではない。タイトルや軸ラベルは \code{Text}、ヒストグラムの各棒は \code{Rectangle} として管理される。次のコードで、どの型が返るかを確かめる。
+\code{Artist} は線だけを指す名称ではない。タイトルや軸ラベルは \code{Text}、ヒストグラムの各棒は \code{Rectangle} として管理される。次のコードは、それぞれの返り値の型を表示する。
 
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
@@ -532,7 +532,7 @@ Rectangle
 
 ここで \code{bars} 全体は \code{BarContainer} であり、その中の 1 本 1 本は \code{Rectangle} である。したがって、「ヒストグラムの棒だけ色を変える」といった細かい調整は、最終的には Artist を触る操作だと理解できる。
 
-Figure 側の要素も、コードで見ると役割が分かりやすい。図全体タイトル \code{suptitle} や colorbar は、特定の Axes だけでなく Figure 全体の見た目に関わることが多い。次のコードでは、その型を確認する。
+Figure 側の要素も、コード上の型を見ると役割を区別しやすい。図全体タイトル \code{suptitle} や colorbar は、特定の Axes だけでなく Figure 全体の構成に関わる。次のコードは、これらの型を表示する。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -576,7 +576,7 @@ ax.set_xscale("log")
 \item 特定の線だけ色や太さを変える、凡例や文字を細かく調整する: Artist
 \end{itemize}
 
-この区別が付くと、「保存はなぜ \code{fig.savefig(...)} なのか」「凡例はなぜ \code{ax.legend()} なのか」「対数軸はなぜ \code{ax.set\_xscale("log")} で変えるのか」が自然につながる。Matplotlib を使い始めたら、まず \code{fig} と \code{ax} のどちらへ命令しているのかを追うだけでも、コードの見通しはかなり良くなる。
+保存には \code{fig.savefig(...)}、凡例には \code{ax.legend()}、対数軸には \code{ax.set\_xscale("log")} を用いるのは、それぞれの操作対象が Figure または Axes だからである。各メソッドの呼出し元が \code{fig} と \code{ax} のどちらかを追うと、処理対象を判別しやすい。
 
 \subsection{オブジェクト指向 API による描画}
 
@@ -628,7 +628,7 @@ fig.savefig("subplots_example.pdf")
 
 \section{ラベル・凡例・色・スタイルの管理}
 
-図を読みやすくするには、少なくとも次の点を意識する。
+図の可読性に関わる主な要素は次のとおりである。
 
 \begin{itemize}
 \item 量と単位を含む軸ラベル
@@ -663,12 +663,12 @@ ax.plot(
 \item \code{color}: 線や点の色を決める。
 \end{itemize}
 
-図~\ref{fig:style-reference-example} は、よく使う marker、line style、既定の color cycle を並べたものである。見た目の違いを先に知っておくと、コード中の短い記号だけを見ても何が起きるかを想像しやすい。
+図~\ref{fig:style-reference-example} は、よく使うマーカー、線種、既定の色循環を並べたものである。各指定と描画結果の対応を知っておくと、コード中の短い記号から線や点の形を判別できる。
 
 \begin{figure}[tbp]
 \centering
 \includegraphics[width=0.92\linewidth]{style_reference_example.pdf}
-\caption{marker、line style、既定色の例。短い指定でも見た目はかなり変わるので、まず代表的なものだけ覚えて使い分けるとよい。}
+\caption{マーカー、線種、既定色の代表例。各指定と描画結果の対応を示す。}
 \label{fig:style-reference-example}
 \end{figure}
 
@@ -781,9 +781,9 @@ Categorical & \code{tab10} & 離散的な系列の識別 \\
 
 \subsection{設定ファイル (.mplstyle) による描画設定の共通化}\index{Matplotlib!.mplstyle@\code{.mplstyle}|textbf}
 
-しかし、解析テーマごとに作図スクリプトが増えていくと、すべての Python ファイルの先頭に上記の長い辞書をコピーするのは冗長である。Matplotlib では、これらの設定をプレーンテキストに切り出し、まとめて読み込める。
+解析テーマごとに作図スクリプトが増えると、各 Python ファイルの先頭へ同じ設定辞書をコピーする方法は保守しにくい。Matplotlib では、これらの設定をプレーンテキストへ分離し、まとめて読み込める。
 
-作業ディレクトリに \code{my\_style.mplstyle} という名前で、次のような設定ファイルを作成する。
+作業ディレクトリに置く \code{my\_style.mplstyle} の記述例を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 font.family: serif
@@ -797,7 +797,7 @@ axes.linewidth: 1.2
 legend.frameon: False
 \end{lstlisting}
 
-そして、各解析スクリプトの先頭でこれを一度だけ呼び出せばよい。本テキストに含まれる図も、すべてこの設定ファイル（スタイルシート）を読み込んで生成されている。
+各解析スクリプトの先頭でこの設定ファイルを読み込むと、以降の図に共通の設定が適用される。
 
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
@@ -809,7 +809,7 @@ plt.style.use("./my_style.mplstyle")
 fig, ax = plt.subplots(figsize=(6, 4))
 \end{lstlisting}
 
-このように設定をファイルに分離しておくことで、新しい解析スクリプトを書くたびにフォントやグリッドの有無がバラバラになる事態を防ぐことができる。また、学会発表用の大きなフォント設定といった別のファイルを容易に切り替えることも可能になる。
+設定をファイルへ分離すると、解析スクリプトごとのフォントやグリッドの不統一を防げる。学会発表用に文字を大きくした別の設定へも容易に切り替えられる。
 
 \subsection{共通スタイルの部分的な上書き}
 
@@ -890,7 +890,7 @@ ax.plot(x_str, y, marker="o")
 
 \subsection{公式資料における作図例の検索}
 
-ここまでで、基本的な描画、レイアウト、オブジェクトの役割、保存まで一通り見た。実際の作図では、その先で「似た例をどこから探すか」が次の問題になる。Matplotlib は機能が広いため、作りたい図の名前が分からなくても、公式資料から近いものを探す方が早いことが多い。特に次の 4 つは参照頻度が高い。
+ここまでの各節では、基本的な描画、レイアウト、オブジェクトの役割、保存方法を説明した。実際の作図では、目的に近い例を公式資料から探すと、利用できる図種や引数を把握しやすい。特に次の 4 つは参照頻度が高い。
 
 \begin{itemize}
 \item Quick start~\cite{matplotlib_quick_start}

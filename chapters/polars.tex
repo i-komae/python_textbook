@@ -50,7 +50,7 @@ expr = pl.col("signal") / pl.col("signal").mean()
 print(expr)
 \end{lstlisting}
 
-表示されるのは、概ね \code{[(col("signal")) / (col("signal").mean())]} のような式であり、4 行分の数値ではない。この段階では、まだ計算結果ではなく「どう計算するか」を表している。実際の値を得るには、\code{df.select(expr.alias("signal\_ratio"))} のように DataFrame の文脈へ式を渡す。Polars の公式ドキュメント~\cite{polars_expressions} でも、まず expression を理解することが最重要とされている。\code{select()}、\code{with\_columns()}、\code{filter()}、\code{group\_by()} の多くは、式を受け取る API で統一されている。
+表示されるのは、概ね \code{[(col("signal")) / (col("signal").mean())]} のような式であり、4 行分の数値ではない。この段階では、まだ計算結果ではなく「どう計算するか」を表している。実際の値を得るには、\code{df.select(expr.alias("signal\_ratio"))} のように DataFrame の文脈へ式を渡す。Polars の公式ドキュメント~\cite{polars_expressions} でも、expression は列処理を構成する基本概念として説明されている。\code{select()}、\code{with\_columns()}、\code{filter()}、\code{group\_by()} の多くは、式を受け取る API で統一されている。
 
 \subsection{eager と lazy}
 \index{polars@Polars!eager api@eager API}

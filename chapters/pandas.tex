@@ -251,7 +251,7 @@ B             2        12.25    3.606245            0.5
 \index{pandas!concat@\code{concat()}}
 \index{pandas!pivot_table@\code{pivot\_table()}}
 
-Getting started tutorials~\cite{pandas_tutorials} でも、表を縦長から横長へ変える操作、複数表を結合する操作が重視されている。解析でも、観測値と較正値を結び付けたり、日別表をまとめたりする場面で必ず使う。
+Getting started tutorials~\cite{pandas_tutorials} でも、表を縦長から横長へ変える操作や、複数表を結合する操作が扱われている。解析では、観測値と較正値を結び付けたり、日別表をまとめたりする場面で用いる。
 
 \begin{lstlisting}[language=Python]
 gain = pd.DataFrame(
@@ -348,7 +348,7 @@ small = pd.read_parquet("events.parquet", columns=["detector", "signal"])
 
 この例は、ヘッダ付きのカンマ区切り CSV を gzip 圧縮した \code{events.csv.gz} を想定している。第 1 引数は入力パス、\code{compression="gzip"} は圧縮方式、\code{usecols} は読み込む列、\code{dtype} は列ごとの型である。\code{to\_parquet()} は表全体を Parquet へ保存し、\code{read\_parquet(..., columns=...)} は指定した 2 列だけを読み込む。
 
-\code{read\_csv()} を使うときは、必要な列だけ読む、型を指定する、コメント行を飛ばす、といった工夫が重要である。たとえば次のように書くと、圧縮付きの空白区切りファイルから必要列だけを型付きで読める。
+\code{read\_csv()} では、必要な列、列の型、コメント行の扱いを入力時に指定できる。次の例は、gzip 圧縮された空白区切りファイルから、必要な列だけを指定した型で読み込む。
 
 \begin{lstlisting}[language=Python]
 df = pd.read_csv(
@@ -363,13 +363,13 @@ df = pd.read_csv(
 )
 \end{lstlisting}
 
-このように列を絞るだけでも、読込み時間とメモリ消費はかなり変わる。さらに \code{dtype=} を指定しておくと、読込み後の型変換を減らせる。列数や行数が大きいデータでは、どの列が本当に必要かを考えるだけで、後続の処理全体が軽くなる。読込みは解析の最初の一歩だが、同時に最適化の出発点でもある。
+必要な列だけを読み込むと、読込み時間とメモリ消費を減らせる場合がある。さらに \code{dtype=} を指定すれば、読込み後の型変換も減らせる。列数や行数が大きいデータでは、必要な列を入力段階で選ぶことが後続処理の負荷軽減につながる。
 
 2 つ目の例は、ヘッダのない空白区切りファイルを想定している。\verb|sep=r"\s+"| は 1 個以上の空白を区切りとし、\verb|comment="#"| は \code{\#} から始まる行の残りをコメントとして扱う。\code{header=None} は列名行がないことを示し、\code{names} が読み込んだ 4 列へ名前を付ける。\code{usecols=[0, 1, 2, 3]} の番号は入力ファイル中の列位置であり、0 から数える。
 
 巨大なテキストファイルを何度も読むより、一度整形したら Parquet にして再利用する方がよい。特に \code{read\_parquet()} は列選択と相性が良く、反復的な解析で待ち時間を減らせる。日々の解析では、この「最初に 1 回だけテキストを整理して、以後は Parquet を読む」という流れを作るだけで、待ち時間が大きく減る。
 
-ここで区別したいのは、Parquet がファイル形式の名前であり、\code{pyarrow} はその読書きを担当するライブラリだという点である。\code{to\_parquet()} や \code{read\_parquet()} がライブラリ不足を示すエラーで失敗した場合は、Parquet ファイルの破損ではなく、\code{pyarrow} などの対応ライブラリが環境に入っていない可能性がある。
+Parquet はファイル形式の名前であり、\code{pyarrow} はその読み書きを担うライブラリである。\code{to\_parquet()} や \code{read\_parquet()} がライブラリ不足を示すエラーで失敗した場合は、Parquet ファイルの破損ではなく、\code{pyarrow} などの対応ライブラリが環境に入っていない可能性がある。
 
 列同士の演算をそのまま式として書ける点も pandas の強みである。
 

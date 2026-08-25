@@ -197,7 +197,7 @@ esac
 \subsection{配列やリストの要素に対する \code{for} ループ}
 \index{bash@Bash!for@\code{for} ループ}
 
-指定した値のリストや、定義した配列の全要素に対して処理を繰り返す場合は以下のように書く。
+指定した値のリストや、配列の全要素に対して処理を繰り返す \code{for} 文の例を次に示す。
 
 \begin{lstlisting}[language=bash]
 #!/bin/bash
@@ -260,7 +260,7 @@ for filepath in "$INPUT_DIR"/*.csv; do
 done
 \end{lstlisting}
 
-この例では、入力ファイルごとに拡張子を除いた名前を作り、対応する出力パスを組み立てている。実際に解析コマンドを有効にする前に、\code{echo} で入力と出力の対応を表示し、同名ファイルを上書きしないことを確認する。
+この例では、入力ファイルごとに拡張子を除いた名前を作り、対応する出力パスを組み立てている。解析コマンドを有効にする前に、\code{echo} で表示される入出力の対応を確認すれば、意図しない上書きを防げる。
 
 \section{\code{sed} を用いたテンプレート書き換えと動的実行}
 \index{sed@\code{sed}|textbf}
@@ -271,9 +271,7 @@ done
 
 \subsection{テンプレートファイルの準備}
 
-パラメータ部分をユニークなプレースホルダー文字
-（例: \verb|__THRESHOLD__| や \verb|__OUTFILENAME__| のように、ファイル内の他の場所には現れない文字列）
-にした上で保存しておく。
+テンプレートでは、書き換えるパラメータをファイル内の他の場所に現れないプレースホルダーへ置き換える。次の例では、\verb|__THRESHOLD__| と \verb|__OUTFILENAME__| を用いる。
 
 \begin{lstlisting}[numbers=none, title={config\_template.ini}]
 [Simulation]
@@ -286,7 +284,7 @@ OutputFile = __OUTFILENAME__
 
 シェルスクリプト内で条件値を順に取り出し、\code{sed} で置換した設定ファイルを生成して実行プログラムへ渡す。
 
-\code{sed 's/置換前文字列/置換後文字列/g' 入力ファイル > 出力ファイル} の形式を取る。この際、\code{sed} で変数を展開したい場合はシングルクォートではなく、\textbf{ダブルクォート (\code{"..."})} で囲む必要がある点に注意する。
+基本形は \code{sed 's/置換前文字列/置換後文字列/g' 入力ファイル > 出力ファイル} である。\code{sed} の置換式でシェル変数を展開するには、シングルクォートではなく\textbf{ダブルクォート（\code{"..."}）}で囲む必要がある。
 
 \begin{lstlisting}[language=bash]
 #!/bin/bash
@@ -310,7 +308,7 @@ for thresh in "${thresholds[@]}"; do
     # 置換された設定の内容を出力して確認 (または直接プログラムを走らせる)
     cat "$run_config"
 
-    # 以下で実際のプログラムを呼び出す
+    # 生成した設定ファイルを実行プログラムへ渡す
     # ./my_simulation_app --config "$run_config"
 
 done

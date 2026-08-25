@@ -83,7 +83,7 @@ dev = [
 ]
 \end{lstlisting}
 
-\code{dependencies} に書いた内容は、このパッケージを \code{pip install} したときに一緒に解決される。つまり、「自分の環境でたまたま入っているから動く」のではなく、「このパッケージを使うにはこれが必要だ」と宣言していることになる。
+\code{dependencies} に書いた内容は、このパッケージを \code{pip install} したときに一緒に解決される。ここへ列挙したライブラリは、パッケージの実行に必要な依存関係として記録される。
 
 一方、\code{uv.lock} は開発側で環境を厳密にそろえるためのファイルである。自分のリポジトリへ戻ってきたときや、共同研究者が同じ環境を再現したいときには \code{uv lock} や \code{uv sync} が役に立つ。しかし、利用者が \code{pip install} するときに参照するのは基本的に \code{pyproject.toml} であり、\code{uv.lock} ではない。この違いは重要である。
 
@@ -204,7 +204,7 @@ $ uv run ruff check .
 
 \subsection{ヒストグラムの作成・保存関数}
 
-次に、実際の主役である \code{save\_histogram\_with\_fit} を \code{plotting.py} に書く。
+ヒストグラムの作成、フィット、保存を担う \code{save\_histogram\_with\_fit} の実装を \code{plotting.py} に置く。
 
 \begin{lstlisting}[language=Python, title={src/histfit\_tools/plotting.py}]
 from collections.abc import Sequence
@@ -427,7 +427,7 @@ save_histogram_with_fit(
 
 基礎編で見た docstring\index{docstring@docstring|textbf} だが、パッケージではその重要性がさらに増す。特に、引数の意味や既定値、返り値、例外条件まで書いておくと、\code{help()} だけでなくエディタの補完でも内容が見やすくなる。
 
-先ほどの \code{save\_histogram\_with\_fit} には、\code{data: ArrayLike}、\code{output\_path: str | Path}、\code{fit: bool = True} のような型ヒント\index{かたひんと@型ヒント|textbf}が付いている。VS Code などのエディタでは、関数名にカーソルを合わせたときや補完候補を開いたときに、これらの型ヒントと docstring の先頭がそのまま表示されることが多い。つまり、docstring は文書であると同時に、普段のコーディング画面そのものへ表示される説明でもある。
+\code{save\_histogram\_with\_fit} には、\code{data: ArrayLike}、\code{output\_path: str | Path}、\code{fit: bool = True} のような型ヒント\index{かたひんと@型ヒント|textbf}が付いている。VS Code などのエディタでは、関数名にカーソルを合わせたときや補完候補を開いたときに、これらの型ヒントと docstring の先頭が表示されることが多い。したがって、docstring は文書であると同時に、コーディング中に参照できる説明でもある。
 
 そのため、docstring の最初の 1 行には、関数の役割を簡潔に書く方がよい。たとえば「ヒストグラムと誤差棒を描き、必要ならフィット線も重ねて保存する。」のように書けば、補完欄を見ただけでも関数の用途が分かる。
 
@@ -462,7 +462,7 @@ from histfit_tools import save_histogram_with_fit
 ```
 \end{lstlisting}
 
-将来 GitHub へ置いたり、研究室内で URL を共有したりするときも、README があるだけで入口がかなり分かりやすくなる。docstring は関数単位の説明、README はパッケージ全体の説明、と役割を分けると整理しやすい。
+README があれば、GitHub や研究室内で共有した際に、導入方法と使用例をリポジトリの入口で確認できる。docstring は関数単位、README はパッケージ全体の説明を担う。
 
 \section{\code{pip install .} と \code{pip install -e .}}
 
@@ -493,7 +493,7 @@ $ pip install -e .
 
 \subsection{インストール確認}
 
-インストール後は、短い import テストを必ずしておく方がよい。
+インストール後は、短い import テストでパッケージを読み込めることを確認する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python -c "from histfit_tools import save_histogram_with_fit; print(save_histogram_with_fit)"
@@ -520,7 +520,7 @@ $ git push -u origin main
 
 \code{.venv/} や \code{\_\_pycache\_\_/} はコミットしないので、\code{.gitignore} に書いておくのがよい。Git の詳細については付録~\ref{app:git} を参照されたい。
 
-GitHub などへ置いたリポジトリは、別環境からそのまま \code{pip install} できる。たとえば次のように書く。
+GitHub などに置いたリポジトリを別環境から直接インストールするコマンドは、次のとおりである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pip install "git+ssh://git@github.com/username/histfit_tools.git"
@@ -546,7 +546,7 @@ $ pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 
 ライブラリとして配布するなら、\code{dependencies} にはあまり厳しすぎる固定を入れない方がよい。たとえば \code{numpy==2.0.0} のように完全固定すると、利用者側の既存環境と衝突しやすい。むしろ \code{numpy>=2.0} のように「必要な下限」を書き、自分の開発環境の厳密な再現は \code{uv.lock} に任せる方が扱いやすい。
 
-また、パッケージを書いていると、Jupyter、Sphinx、mkdocs など「利用者全員には不要だが、自分は使いたい」ものが増えやすい。そのとき全部を実行時依存関係へ入れてしまうと、インストールが重くなる。依存関係は増やすほど便利になる一方で、衝突や管理コストも増える。だからこそ、まずは公開 API を小さく保ち、本当に必要な依存関係だけを残す方がよい。
+開発中には、Jupyter、Sphinx、mkdocs など、利用者には不要でも開発者には必要な道具が増える。これらをすべて実行時依存関係へ含めると、利用者のインストール量と依存関係の衝突リスクが増す。公開 API と実行時依存関係は必要最小限に保ち、開発用の道具は開発用依存関係へ分ける。
 
 \section{解析パッケージの作成と検証}
 

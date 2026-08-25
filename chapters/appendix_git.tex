@@ -3,7 +3,7 @@
 \index{git@Git|textbf}
 \index{github@GitHub|textbf}
 
-\section{Git の基本概念}
+\section{リポジトリ・ステージング・コミットの関係}
 
 Git は、手元のファイルの変更履歴を記録するためのソフトウェアである。これに対して GitHub は、Git リポジトリを置いて共有するためのサービスである。
 
@@ -21,12 +21,12 @@ Git は、手元のファイルの変更履歴を記録するためのソフト�
 リポジトリは、コード、データ、履歴をまとめて管理する単位である。GitHub へ置く場合は、公開範囲も意識する必要がある。
 
 \begin{itemize}
-\item public: 誰でも見られる
-\item private: 明示的に許可した人だけが見られる
-\item internal: 組織内だけで見られる。主に GitHub Enterprise の文脈で使う
+\item 公開（\code{public}）: 誰でも閲覧できる
+\item 非公開（\code{private}）: 明示的に許可された利用者だけが閲覧できる
+\item 組織内（\code{internal}）: 組織内の利用者だけが閲覧できる。主に GitHub Enterprise で用いられる
 \end{itemize}
 
-授業用の配布物、研究中のコード、機密データを含むリポジトリでは、公開範囲の設定を誤ると問題になる。GitHub で新しいリポジトリを作るときは、まず visibility を確認した方がよい。
+授業用の配布物、研究中のコード、機密データを含むリポジトリでは、公開範囲の誤設定が情報漏えいにつながる。GitHub で新しいリポジトリを作成する際には、公開範囲（visibility）の確認が必要である。
 
 \subsection{Git で何をしているのか}
 \index{すてーじんぐえりあ@ステージングエリア|textbf}
@@ -45,9 +45,9 @@ Git は、ファイルを 1 回で全部自動保存してくれるわけでは�
 最初はここが見えにくいので、次の 3 層に分けて考えるとよい。
 
 \begin{itemize}
-\item working tree: いま自分がエディタで直接書き換えている実ファイル
-\item staging area (index): 次のコミットへ入れる予定の変更を一時的に集めた場所
-\item commit history: すでに確定して履歴へ残った状態
+\item 作業ツリー（working tree）: エディタで直接編集しているファイル
+\item ステージングエリア（staging area、index）: 次のコミットへ入れる変更を一時的に集めた領域
+\item コミット履歴（commit history）: 確定済みの変更が記録された履歴
 \end{itemize}
 
 たとえば、ファイルを編集した直後は変更は working tree にしかない。\code{git add} を実行すると、その時点の内容が staging area へコピーされる。\code{git commit} は、その staging area の内容を履歴として確定する操作である。したがって、\code{git add} の後にさらにファイルを編集すると、「ステージ済みの内容」と「作業中の内容」がずれることがある。
@@ -69,7 +69,7 @@ $ git config --global user.email "your_email@example.com"
 \subsection{新しいリポジトリの作成}
 \index{git init@\code{git init}|textbf}
 
-まだ Git 管理されていないディレクトリなら、\code{git init} で始める。
+まだ Git で管理されていないディレクトリを初期化するコマンドが \code{git init} である。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir analysis_work
@@ -78,7 +78,7 @@ $ git init
 $ git status
 \end{lstlisting}
 
-\code{git status} は最重要コマンドである。今どのファイルが未追跡か、どれが変更済みか、何がコミット待ちかを確認できる。迷ったらまず \code{git status} を見る、という習慣を付けるとよい。
+\code{git status} は、未追跡、変更済み、コミット待ちのファイルを一覧できる。編集やコミットの前後で実行すると、各変更がどの段階にあるかを確認できる。
 
 \subsection{編集、確認、記録の流れ}
 \index{git status@\code{git status}|textbf}
@@ -97,16 +97,16 @@ $ git commit -m "Add first analysis script"
 $ git log --oneline
 \end{lstlisting}
 
-\code{git diff} は、まだ \code{add} していない変更を見る。\code{git diff --cached} は、\code{add} 済みで次のコミットへ入る変更を見る。\code{git log --oneline} は、これまでのコミット履歴を短く確認する。
+\code{git diff} は、作業ツリーとステージングエリアの差分を表示する。\code{git diff --cached} は、ステージングエリアと直前のコミットの差分を表示する。\code{git log --oneline} は、コミット履歴を 1 件 1 行で表示する。
 
 \subsubsection{\code{git status} の読み方}
 
 \code{git status} は、少なくとも次の 3 種類を見分けられるようになるとよい。
 
 \begin{itemize}
-\item untracked: まだ Git が追跡していない新規ファイル
-\item modified: 追跡中だが、まだ \code{add} していない変更
-\item changes to be committed: \code{add} 済みで、次のコミットへ入る変更
+\item 未追跡（untracked）: まだ Git が追跡していない新規ファイル
+\item 変更済み（modified）: 追跡中だが、変更内容をまだ \code{add} していないファイル
+\item コミット予定（changes to be committed）: \code{add} 済みで、次のコミットへ入る変更
 \end{itemize}
 
 つまり、\code{git status} は「いま何がどの段階にあるか」を示す画面である。
@@ -121,7 +121,7 @@ $ git add analyze.py
 $ git diff --cached
 \end{lstlisting}
 
-この 2 回の \code{diff} を見分けられるようになると、Git の挙動がかなり分かりやすくなる。
+この 2 種類の \code{diff} を区別すると、作業ツリーと次のコミット候補の差を把握できる。
 
 \subsection{\code{.gitignore} による除外設定}
 \index{gitignore@\code{.gitignore}|textbf}
@@ -164,7 +164,7 @@ $ git commit -m "Stop tracking generated files"
 \subsection{既存リポジトリの取得}
 \index{git clone@\code{git clone}|textbf}
 
-他人のプロジェクトや GitHub 上の教材は、\code{git clone} で手元へコピーする。
+\code{git clone} は、GitHub 上のプロジェクトや教材を履歴ごと手元へ複製するコマンドである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git clone git@github.com:example/project.git
@@ -276,7 +276,7 @@ SSH 鍵を使えない事情があり、HTTPS で GitHub を使う場合は、�
 \begin{enumerate}
 \item GitHub の \code{Settings} への移動
 \item \code{Developer settings} から \code{Personal access tokens} への移動
-\item fine-grained token または classic token の作成
+\item Fine-grained token または classic token の作成
 \item 対象リポジトリと必要最小限の権限の選択
 \item 発行済みトークンの安全な保管
 \end{enumerate}
