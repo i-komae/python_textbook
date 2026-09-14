@@ -13,7 +13,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>>
 \end{lstlisting}
 
-この章の前半には、インタラクティブモードへの入力と、その直後に表示される値を対にして示す。
+この章の前半には、インタラクティブモードへの入力と、その直後に表示される値を対にして示す。\code{\$}、\code{>>>}、継続行の \code{...} は入力待ちを表すプロンプトであり、入力するコードには含めない。複数行の処理は空行で確定し、\code{exit()} で Python を終了する。スクリプトでは、式だけを書いても値は表示されず、\code{print()} などによる出力が必要になる。
 
 \subsection{変数と基本型}\index{へんすう@変数|textbf}\index{かた@型|textbf}\index{せいすう@整数}\index{ふどうしょうすうてんすう@浮動小数点数}\index{もじれつ@文字列}\index{しんぎち@真偽値}
 
@@ -62,6 +62,8 @@ Python では、変数名に型を宣言してから値を代入する必要は�
 
 また、\code{=} は「左辺と右辺が等しい」という意味ではなく、「右辺の値を左辺の変数名へ結び付ける」という代入の記号である。条件の比較に用いる \code{==} とは役割が異なる。条件式については、第~\ref{subsec:if}~節で詳しく説明する。
 
+\code{None} は「値がない」ことを表す特別な値であり、0、空文字列、\code{False} とは異なる。\code{value is None} で判定する。関数に \code{return} がない場合や、\code{return} に値を付けない場合にも \code{None} が返る。
+
 \subsection{数値と演算子}\index{えんざんし@演算子|textbf}\index{しそくえんざん@四則演算}\index{べきじょう@べき乗}\index{じょうよ@剰余}\index{せいすうじょざん@整数除算}
 
 対話モードでは、式を入力するたびに評価結果が表示される。四則演算、べき乗、剰余、床除算の例を次に示す。
@@ -100,13 +102,13 @@ $ python3
 
 この例では、\code{7 // 3} と \code{int(7 / 3)} はどちらも \code{2} になるが、計算規則は異なる。\code{//} は床除算であり、\code{int(7 / 3)} はまず浮動小数点数の除算を行い、その結果を 0 方向へ切り捨てて整数へ変換している。正の値だけでは差が見えないため、負の値を含む処理では両者を混同してはならない。
 
-浮動小数点数の多くは 2 進数で有限桁に表現できないため、表示値と内部値が数学的に厳密には一致しない場合がある。この丸め誤差は、後の章で扱う統計量とフィット結果の比較にも影響する。
+十進数の 0.1 などは、二進数では有限桁で表現できない。Python の通常の浮動小数点数は有限桁の二進数で保持されるため、こうした入力は近い値に丸められる~\cite{python_floatingpoint}。たとえば \code{0.1 + 0.2 == 0.3} は \code{False} になる。この丸め誤差は、後の章で扱う統計量とフィット結果の比較にも影響する。
 
 \subsection{文字列}\index{もじれつ@文字列|textbf}\index{fもじれつ@f文字列}
 
 ファイル名、日付時刻、ヘッダ、ラベルなど、解析コードでは文字列を扱う場面が多い。
 Python では、\code{"} や \code{'} で挟まれたものを文字列として認識する。
-文字列には、分割、検索、置換、前後の空白除去などの操作を適用できる。各メソッドの入力と返り値を対話モードで確認する。
+文字列には、分割、検索、置換、前後の空白除去などの操作を適用できる。メソッドは、\code{name.upper()} のように、値に結び付けて呼び出す関数である。括弧内には引数を指定し、引数がなくても呼び出しには括弧が必要になる。一方、\code{array.shape} のように括弧なしで参照する情報を属性という。各メソッドの入力と返り値を対話モードで確認する。
 
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> name = "detector_A"
@@ -126,7 +128,7 @@ Python では、\code{"} や \code{'} で挟まれたものを文字列として
 
 文字列では、\code{split()}\index{もじれつ@文字列!split@\code{split()}|textbf}、\code{replace()}\index{もじれつ@文字列!replace@\code{replace()}|textbf}、\code{strip()}\index{もじれつ@文字列!strip@\code{strip()}|textbf} のような操作が、ファイル読み込みの前処理で頻繁に現れる。特に \code{split()} は、空白区切りやカンマ区切りの 1 行を各列へ分ける最初の手段となる。\code{strip()} は、行末の改行と前後の空白を取り除く。
 
-f 文字列\index{もじれつ@文字列!fもじれつ@f文字列|textbf}を用いると、変数の値と書式指定を文字列へ埋め込める。解析コードでは、ログ、図の保存名、結果ファイル名、単位付きの数値表示などに利用する。
+f文字列\index{もじれつ@文字列!fもじれつ@f文字列|textbf}を用いると、変数の値と書式指定を文字列へ埋め込める。解析コードでは、ログ、図の保存名、結果ファイル名、単位付きの数値表示などに利用する。
 
 \section{リスト・タプル・辞書・集合}
 
@@ -168,10 +170,38 @@ f 文字列\index{もじれつ@文字列!fもじれつ@f文字列|textbf}を用�
 
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> point[0] = 15
+Traceback (most recent call last):
+  ...
 TypeError: 'tuple' object does not support item assignment
 \end{lstlisting}
 
 座標のように、複数の成分を一組の値として保持し、作成後に要素を変更しない場合にはタプルが向く。ラベルや処理対象ファイルの一覧など、要素を追加、削除、更新する場合にはリストが向く。辞書は、列名や設定名などのキーによって値を参照する場合に、対応関係を明示できる。
+
+\subsection{集合と要素の所属}
+\index{しゅうごう@集合|textbf}\index{set@\code{set}|textbf}\index{len@\code{len()}|textbf}
+集合（\code{set}）は、重複を持たない要素の集まりである。要素の表示順序や添字による位置は保証されない。\code{in} は要素が含まれるかを判定し、\code{len()} は要素数を返す。両者はリストや辞書などにも使え、辞書に対する \code{in} はキーの存在を調べる。
+\begin{lstlisting}[language=Python]
+detectors = {"A", "B", "A"}
+print(len(detectors))                 # 2
+print("A" in detectors)               # True
+print(detectors & {"B", "C"})          # {'B'}
+empty_set = set()
+\end{lstlisting}
+\code{\&} は共通部分、\code{|} は和集合、\code{-} は差集合を求める。空の集合は \code{set()} で作る。\code{\{\}} は空の辞書である。集合の要素と辞書のキーには、文字列や整数など、ハッシュ値を持つ値を使う。リストはそのままでは使えない。
+
+\subsection{代入とコピー}
+\index{こぴー@コピー!りすと@リスト}
+\code{b = a} は、\code{a} が参照する値に別の名前を付ける代入であり、リストのコピーを作る操作ではない。
+\begin{lstlisting}[language=Python]
+a = [1, 2]
+b = a
+b.append(3)
+print(a)                       # [1, 2, 3]
+c = a.copy()
+c.append(4)
+print(a)                       # [1, 2, 3]
+\end{lstlisting}
+\code{copy()} は外側のリストを複製する浅いコピーである。入れ子になったリストなどの要素は共有される。タプルは要素の差し替えができないが、その中にあるリスト自体の変更までは禁止しない。
 
 \subsection{リストのメソッド}\index{めそっど@メソッド|textbf}\index{append@\code{append()}|textbf}\index{sort@\code{sort()}|textbf}\index{sorted@\code{sorted()}|textbf}\index{pop@\code{pop()}|textbf}
 
@@ -202,7 +232,7 @@ TypeError: 'tuple' object does not support item assignment
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> values = [3, 1, 4]
 >>> result = values.sort()
->>> result
+>>> print(result)
 None
 >>> values
 [1, 3, 4]
@@ -319,6 +349,8 @@ True
 \end{lstlisting}
 
 否定が重なる条件や、複数の \code{and} と \code{or} が混在する条件では、括弧で評価順序を明示するか、意味を表す一時変数に分割する。条件式には、境界値と真偽の組み合わせを検証するテストを用意する。
+
+\code{if} などの末尾のコロン \code{:} に続く処理のまとまりをブロックと呼ぶ。Python では、行頭の空白による字下げ（インデント）でブロックを表し、同じ深さの処理をそろえる。通常は 1 段につき空白 4 個を使い、タブと空白を混在させない。
 
 \subsection{反復処理}
 
@@ -502,7 +534,7 @@ print(good_append(2))
 [2]
 \end{lstlisting}
 
-この動作は関数呼び出しの間で状態を共有するため、意図しない結果になりやすい。変更可能な既定値を避けることで防止できる。
+\code{bad\_append()} は引数を省略した呼び出しの間でリストを共有する。\code{good\_append()} は省略時に毎回新しいリストを作るため、その共有を避けられる。ただし、呼び出し側がリストを明示的に渡した場合は、そのリストを変更する。
 
 \subsubsection{モジュールと \code{import}}\index{もじゅーる@モジュール|textbf}\index{import@\code{import}|textbf}
 
@@ -574,6 +606,18 @@ if __name__ == "__main__":
 \end{lstlisting}
 
 import した場合は関数定義だけが読み込まれ、\code{main()} は呼び出されない。ファイルを直接実行した場合は条件が真となり、\code{main()} が呼び出される。
+
+\subsection{短い関数と値の展開}
+\index{lambda@\code{lambda}|textbf}\index{あんぱっく@アンパック|textbf}
+\code{lambda 引数: 式} は、式の値を返す名前のない短い関数を作る。複数の処理が必要な場合は \code{def} で名前付きの関数を定義する。
+\begin{lstlisting}[language=Python]
+rows = [("A", 3.0), ("B", 1.0)]
+print(sorted(rows, key=lambda row: row[1]))
+# [('B', 1.0), ('A', 3.0)]
+name, value = rows[0]
+print(name, value)                  # A 3.0
+\end{lstlisting}
+\code{name, value = rows[0]} は、二つの要素を二つの変数へ分けるアンパックである。また、関数呼び出しの \code{f(*params)} は、リストやタプルの要素を位置引数として展開する。たとえば \code{params = (2, 3)} なら \code{f(*params)} は \code{f(2, 3)} と同じ呼び出しになる。
 
 \section{例外・docstring・命名・設定値}
 
@@ -701,7 +745,17 @@ except ValueError:
 
 たとえば \code{text = "abc"} のような文字列に対して \code{float(text)} を呼ぶと、\code{ValueError} が起きる。すべての例外を \code{except:} で捕捉すると、本来停止すべき不具合まで隠れる。捕捉する例外を明示し、失敗した入力の記録、処理を中止する条件、除外して継続する条件をあらかじめ定める。
 
-\section{イベントデータを用いた基本構文の演習}
+入力が関数の条件を満たさない場合は、\code{raise} で例外を発生させる。
+\begin{lstlisting}[language=Python]
+def positive_seconds(value):
+    seconds = float(value)
+    if seconds <= 0:
+        raise ValueError("seconds must be positive")
+    return seconds
+\end{lstlisting}
+この例は正の有限値だけを保証する検査ではなく、\code{nan} や \code{inf} も入力し得る場合には \code{math.isfinite(seconds)} による検査を追加する。命名や字下げの慣例は Python のスタイルガイド PEP 8~\cite{pep8} にまとめられている。
+
+\section{章末課題：イベントデータと基本構文}
 
 この章の課題は、次の小さなイベント列だけで実行できる。前章までのファイルは必要ない。
 

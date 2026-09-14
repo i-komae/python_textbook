@@ -9,11 +9,11 @@ LATEXMK := latexmk
 MAKEINDEX_STYLE := $(abspath styles/index.ist)
 MAKEINDEX_CMD := upmendex -g -s "$(MAKEINDEX_STYLE)" %O -o %D %S
 LATEXMK_MAKEINDEX_FLAG := -e '$$makeindex=q{$(MAKEINDEX_CMD)}'
-LATEXMK_FLAGS := -f -lualatex -synctex=1 -interaction=nonstopmode -file-line-error -output-directory=$(BUILD_DIR) $(LATEXMK_MAKEINDEX_FLAG)
+LATEXMK_FLAGS := -lualatex -synctex=1 -interaction=nonstopmode -file-line-error -output-directory=$(BUILD_DIR) $(LATEXMK_MAKEINDEX_FLAG)
 LATEXMK_FORCE_FLAGS := -f -gg -lualatex -synctex=1 -interaction=nonstopmode -file-line-error -output-directory=$(BUILD_DIR) $(LATEXMK_MAKEINDEX_FLAG)
 OPEN_PDF := sh scripts/open_pdf.sh
 
-SOURCES := $(MAIN).tex $(wildcard .latexmkrc) $(wildcard chapters/*.tex) $(wildcard assets/figures/*) $(wildcard styles/*)
+SOURCES := $(MAIN).tex $(wildcard *.sty) $(wildcard .latexmkrc) $(wildcard chapters/*.tex) $(wildcard assets/figures/*) $(wildcard styles/*)
 
 .PHONY: all pdf clean distclean
 

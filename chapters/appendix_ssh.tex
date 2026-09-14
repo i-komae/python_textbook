@@ -5,9 +5,11 @@
 
 \section{サーバーへの SSH 接続と鍵認証}
 
-SSH は、離れた計算機との通信を暗号化し、その計算機上でコマンドを実行するための仕組みである。研究室や計算サーバーに接続し、大規模なデータ処理や長時間ジョブを実行する場合に利用する。GitHub への SSH 接続も同じ認証方式を用いるが、GitHub は対話的なシェルの接続先ではなく、Git 操作の認証先である。
+SSH（Secure Shell）は、離れた計算機との通信を暗号化し、その計算機上でコマンドを実行するための仕組みである。研究室や計算サーバーに接続し、大規模なデータ処理や長時間ジョブを実行する場合に利用する。GitHub への SSH 接続も同じ認証方式を用いるが、GitHub は対話的なシェルの接続先ではなく、Git 操作の認証先である。
 
 \subsection{サーバーへの接続}
+
+初回の SSH 接続では、接続先のホスト鍵の指紋（fingerprint）を確認することがある。これは接続先サーバーを識別するためのもので、自分の認証用公開鍵とは異なる。管理者など信頼できる経路から得た指紋と照合して登録する。ホスト鍵が変わったという警告では、再構築などの理由を確認してから更新する。詳細は OpenSSH の資料~\cite{openssh_manual} を参照する。
 \index{ssh command@\code{ssh}|textbf}
 
 最も基本的な形は次である。
@@ -180,7 +182,9 @@ $ rsync -aPv \
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rsync -aP analysis user@server:~/work/
-$ rsync -aP analysis/ user@server:~/work/analysis/
+$ rsync -aP analysis/ user@server:~/work/
 \end{lstlisting}
 
 1 行目は \code{analysis} というディレクトリごと送り、2 行目は \code{analysis} の中身を送る。末尾のスラッシュを取り違えると転送先の階層が 1 段ずれる。初回の転送前には、\code{--dry-run} を加えた実行で転送対象を確認できる。
+
+転送条件やオプションの詳細は rsync の公式マニュアル~\cite{rsync_manual} で確認できる。

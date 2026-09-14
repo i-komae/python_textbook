@@ -12,6 +12,7 @@
 \usepackage{cite}
 \usepackage{luatexja-fontspec}
 \usepackage{bookstyle}
+\hypersetup{pdftitle={Pythonによるデータ解析と高速化},pdfauthor={Ichiro KOMAE},pdfsubject={自然科学のためのPython入門}}
 
 \IfFontExistsTF{HackGen35 Console NF}{
     \setmonofont{HackGen35 Console NF}[Scale=MatchLowercase]
@@ -60,34 +61,11 @@
 }
 \renewcommand{\lstlistingname}{リスト}
 \renewcommand{\indexname}{索引}
+\providecommand{\bibname}{参考文献}
 \renewcommand{\seename}{$\rightarrow$}
 \newcommand{\code}[1]{\texttt{#1}}
 \graphicspath{{assets/figures/}}
 \makeindex
-
-%% --- see 参照（別名 → 主項目）---
-% 図の概念 → 関数名（概念で引いたら関数名へ飛ばす）
-\index{さんぷず@散布図|see{\code{scatter()}}}
-\index{せんず@線図|see{\code{plot()}}}
-\index{ひーとまっぷ@ヒートマップ|see{\code{imshow()}}}
-\index{えらーばー@エラーバー|see{\code{errorbar()}}}
-\index{はんれい@凡例|see{\code{legend()}}}
-\index{からーばー@カラーバー|see{\code{colorbar()}}}
-\index{さんしょうせん@参照線|see{\code{axvline()}}}
-% データ構造（英語 → 日本語: 教科書は日本語で説明しているため）
-\index{list|see{リスト}}
-\index{dict|see{辞書}}
-\index{dictionary|see{辞書}}
-\index{tuple|see{タプル}}
-\index{はいれつ@配列|see{\code{ndarray}}}
-% 操作（日本語/英語 → 関数名）
-\index{fitting|see{\code{curve\_fit}}}
-\index{フィッティング|see{\code{curve\_fit}}}
-\index{broadcast|see{ブロードキャスト}}
-\index{slice|see{スライス}}
-\index{しょきち@初期値|see{\code{p0}}}
-\index{オーダー|see{Big-O 記法}}
-
 
 \begin{document}
 \frontmatter
@@ -127,6 +105,31 @@
 
 \mainmatter
 
+%% --- see 参照（別名 → 主項目）---
+% 図の概念 → 関数名（概念で引いたら関数名へ飛ばす）
+\index{さんぷず@散布図|see{Matplotlib, scatter}}
+\index{せんず@線図|see{Matplotlib, plot}}
+\index{ひーとまっぷ@ヒートマップ|see{Matplotlib, imshow}}
+\index{えらーばー@エラーバー|see{Matplotlib, errorbar}}
+\index{はんれい@凡例|see{Matplotlib, legend}}
+\index{からーばー@カラーバー|see{Matplotlib, colorbar}}
+\index{さんしょうせん@参照線|see{Matplotlib, axvline}}
+% データ構造（英語 → 日本語: 教科書は日本語で説明しているため）
+\index{list|see{リスト}}
+\index{dict|see{辞書}}
+\index{dictionary|see{辞書}}
+\index{tuple|see{タプル}}
+\index{はいれつ@配列|see{\code{ndarray}}}
+% 操作（日本語/英語 → 関数名）
+\index{fitting|see{SciPy, curve\_fit}}
+\index{ふぃってぃんぐ@フィッティング|see{SciPy, curve\_fit}}
+\index{broadcast|see{ブロードキャスト}}
+\index{slice|see{スライス}}
+\index{しょきち@初期値|see{\code{p0}}}
+\index{おーだー@オーダー|see{Big-O 記法}}
+
+
+
 \input{chapters/intro.tex}
 \input{chapters/usage.tex}
 \input{chapters/shell.tex}
@@ -149,6 +152,7 @@
 \input{chapters/appendix_pybind11.tex}
 \input{chapters/appendix_regex.tex}
 \input{chapters/appendix_shell_scripting.tex}
+\backmatter
 \input{chapters/references.tex}
 \cleardoublepage
 \phantomsection

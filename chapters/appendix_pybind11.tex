@@ -183,3 +183,5 @@ Python へ公開する関数を限定し、その関数の引数、返り値、�
 \end{itemize}
 
 Python 側には引数検証を含む公開 API とワークフローを置き、C++ 側には測定上のボトルネックとなった計算コアを置く。この分離により、C++ のビルドが必要な範囲と、Python から検証する公開契約を限定できる。
+
+ビルド設定と Python/C++ 間の型変換の詳細は、pybind11~\cite{pybind11_docs} と scikit-build-core~\cite{skbuild_docs} の公式資料を参照する。

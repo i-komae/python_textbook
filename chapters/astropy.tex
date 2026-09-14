@@ -14,17 +14,17 @@ import astropy.units as u
 
 time_window = 250 * u.ns
 speed = 299792458 * u.m / u.s
-distance = speed * time_window
+distance = (speed * time_window).to(u.m)
 
-print(distance)
-print(distance.to(u.m))
+print(f"{distance.to_value(u.m):.7f} m")
+print(f"{distance.to_value(u.km):.10f} km")
 \end{lstlisting}
 
 この計算では、単位付きのまま距離が評価され、次のように表示される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 74.9481145 m
-74.9481145 m
+0.0749481145 km
 \end{lstlisting}
 
 この例では、\code{250 * u.ns} という時点で「250 ns」という意味が値に埋め込まれている。式の途中で単位を落とさない限り、単位換算はライブラリが引き受ける。
@@ -38,6 +38,8 @@ d = v \Delta t
 \subsection{時刻系・座標系を属性として保持する理由}
 
 観測データでは、UTC、TAI、TT、MJD、JD、Unix time が混在することがある。文字列の分解だけで相互変換すると、時刻系のオフセットとうるう秒が計算に反映されず、時刻差を誤る可能性がある。Astropy の \code{Time} は、時刻形式と時刻系を属性として保持する。
+
+UTC（協定世界時）、TAI（国際原子時）、TT（地球時）は時刻系であり、同じ瞬間に付ける数値の基準が異なる。一方、JD（ユリウス日）、MJD（修正ユリウス日）、Unix time は時刻の表現形式である。\(\mathrm{MJD}=\mathrm{JD}-2400000.5\) であり、どの時刻系で表した値かを併記する。時刻系の指定と、日時を文字列や日数で表示する形式の指定は別の操作である~\cite{astropy_time}。
 
 \section{単位・時刻・座標・表・FITS の操作}
 
@@ -53,7 +55,7 @@ time = 12.5 * u.ns
 velocity = length / time
 
 print(velocity)
-print(velocity.to(u.m / u.s))
+print(f"{velocity.to_value(u.m / u.s):.1f} m / s")
 \end{lstlisting}
 
 単位変換の結果は次の通りである。
@@ -165,6 +167,8 @@ print(f"{dt.to_value('ns'):.3f}")
 \]
 である。\code{Time} どうしの減算は \code{TimeDelta} を返すため、時刻系に基づく差分と単位情報が結果に保持される。
 
+Astropy の \code{Time} は内部で時刻を二つの浮動小数点数に分けて保持する。\code{t.unix} などを単一の浮動小数点数として取り出すと、元の時間分解能が失われる場合がある。ns 程度の差を調べるときは \code{Time} のまま減算してから単位変換する。また、表示桁数は計算精度とは別であり、\code{t.precision = 9} などで変更できる。
+
 \subsection{\code{SkyCoord} による座標変換}
 
 Astropy の \code{coordinates} は、天球上の座標系を変換する。\code{SkyCoord}\index{skycoord@\code{SkyCoord}|textbf} はその中心となるクラスである。
@@ -187,13 +191,13 @@ print(f"{gal.b.deg:.6f}")
 50.263718
 \end{lstlisting}
 
-\code{ra} と \code{dec} には単位を付ける。これにより、入力角度が度またはラジアンのどちらで与えられたかが \code{SkyCoord} に保持される。
+\code{ra} は赤経（right ascension）、\code{dec} は赤緯（declination）を表し、\code{icrs} は国際天球基準座標系を指定する。\code{ra} と \code{dec} には単位を付ける。これにより、入力角度が度またはラジアンのどちらで与えられたかが \code{SkyCoord} に保持される。
 
 この操作は、赤道座標 \((\alpha, \delta)\) から銀河座標 \((l, b)\) への変換に対応する。天球上の回転そのものは自分で式を書かなくても、入力座標系と出力座標系を明示すれば Astropy が一貫して扱える。
 
 \subsection{\code{Table} と \code{QTable}}
 
-Astropy には表処理のために \code{Table}\index{table@\code{Table}|textbf} と \code{QTable}\index{qtable@\code{QTable}|textbf} がある。\code{QTable} は列へ単位を保持できる。
+Astropy には表処理のために \code{Table}\index{table@\code{Table}|textbf} と \code{QTable}\index{qtable@\code{QTable}|textbf} がある。\code{Table} も列の単位をメタデータとして保持できるが、\code{QTable} は単位付きの列を \code{Quantity} として保持し、単位を考慮した演算に使える。
 
 \begin{lstlisting}[language=Python]
 from astropy.table import QTable
@@ -233,7 +237,7 @@ print(df)
 
 \subsection{\code{astropy.io.fits} による FITS の読み書き}
 
-天文データでは FITS\index{fits@FITS|textbf} が標準的である。Astropy なら NumPy 配列やヘッダをそのまま扱える。
+天文データでは FITS（Flexible Image Transport System）\index{fits@FITS|textbf} が広く用いられる。HDU（Header/Data Unit）はヘッダとデータをまとめた単位であり、一つの FITS ファイルは複数の HDU を持てる。Astropy なら NumPy 配列やヘッダをそのまま扱える。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -245,8 +249,8 @@ hdu.header["OBJECT"] = "test"
 hdu.writeto("image.fits", overwrite=True)
 
 with fits.open("image.fits") as hdul:
-    data = hdul[0].data
-    header = hdul[0].header
+    data = hdul[0].data.copy()
+    header = hdul[0].header.copy()
 
 print(data.shape)
 print(header["OBJECT"])
@@ -268,12 +272,13 @@ Astropy の表入出力は FITS だけではない。\code{Table.read()} は ASC
 \begin{lstlisting}[language=Python]
 from astropy.table import Table
 
+table.write("events.ecsv", format="ascii.ecsv", overwrite=True)
 tbl = Table.read("events.ecsv", format="ascii.ecsv")
 print(tbl.colnames)
 print(len(tbl))
 \end{lstlisting}
 
-\code{Table.read()} の第 1 引数は入力パス、\code{format="ascii.ecsv"} は ECSV として解釈する指定である。3 行で \code{time} と \code{signal} の 2 列を持つ表なら、\code{['time', 'signal']} と \code{3} が表示される。ECSV は、列の単位、データ型、表のメタデータをテキストとともに保存できるため、中間生成物の受け渡しに利用できる。保存時は \code{table.write("events.ecsv", format="ascii.ecsv", overwrite=True)} と書く。\code{overwrite=True} は同名ファイルの置換を許可する指定である。
+\code{Table.read()} の第 1 引数は入力パス、\code{format="ascii.ecsv"} は ECSV として解釈する指定である。上で作った 3 行・3 列の表を保存して読み直すと、\code{['time', 'signal', 'detector']} と \code{3} が表示される。ECSV は、列の単位、データ型、表のメタデータをテキストとともに保存できるため、中間生成物の受け渡しに利用できる。保存時は \code{table.write("events.ecsv", format="ascii.ecsv", overwrite=True)} と書く。\code{overwrite=True} は同名ファイルの置換を許可する指定である。
 
 \section{単位情報・時刻系・座標系を失わないための注意}
 
@@ -309,7 +314,7 @@ Astropy を使うべき場面は、数値とともに単位、時刻系、座標
 
 全体の導入は Getting Started~\cite{astropy_getting_started} と User Guide~\cite{astropy_user_guide}、単位は Units and Quantities~\cite{astropy_units}、時刻は Time and Dates~\cite{astropy_time}、座標は Coordinates~\cite{astropy_coordinates}、表は Tables~\cite{astropy_table}、FITS は FITS File Handling~\cite{astropy_fits} に記載されている。本章は、そのうち観測データ解析で用いる機能を扱った。
 
-\section{単位付き観測データの処理}
+\section{章末課題：単位付き観測データの処理}
 
 \begin{enumerate}
 \item \textbf{単位を保持した時間窓の比較}。

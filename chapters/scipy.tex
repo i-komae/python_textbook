@@ -10,12 +10,12 @@ SciPy\index{scipy@SciPy|textbf} は、NumPy 配列を入力として統計、補
 SciPy の多くの関数は NumPy 配列を入力とし、NumPy 配列またはスカラーを返す。したがって、入力の \code{shape} と \code{dtype}、返り値の意味を NumPy の配列操作と対応付ける。目的と subpackage の対応は次のとおりである。
 
 \begin{itemize}
-\item \code{scipy.stats}\index{SciPy!stats@\code{scipy.stats}|textbf}: 分布、検定、要約統計
-\item \code{scipy.optimize}: 最適化、非線形最小二乗、\code{curve\_fit}\index{SciPy!curve\_fit@\code{curve\_fit}|textbf}
-\item \code{scipy.interpolate}\index{SciPy!interpolate@\code{scipy.interpolate}|textbf}: 補間
-\item \code{scipy.signal}\index{SciPy!signal@\code{scipy.signal}|textbf}: フィルタ、ピーク検出、相関、スペクトル処理
-\item \code{scipy.integrate}\index{SciPy!integrate@\code{scipy.integrate}|textbf}: 数値積分
-\item \code{scipy.constants}\index{SciPy!constants@\code{scipy.constants}|textbf}: 物理定数
+\item \code{scipy.stats}\index{scipy@SciPy!stats@\code{scipy.stats}|textbf}: 分布、検定、要約統計
+\item \code{scipy.optimize}: 最適化、非線形最小二乗、\code{curve\_fit}\index{scipy@SciPy!curve\_fit@\code{curve\_fit}|textbf}
+\item \code{scipy.interpolate}\index{scipy@SciPy!interpolate@\code{scipy.interpolate}|textbf}: 補間
+\item \code{scipy.signal}\index{scipy@SciPy!signal@\code{scipy.signal}|textbf}: フィルタ、ピーク検出、相関、スペクトル処理
+\item \code{scipy.integrate}\index{scipy@SciPy!integrate@\code{scipy.integrate}|textbf}: 数値積分
+\item \code{scipy.constants}\index{scipy@SciPy!constants@\code{scipy.constants}|textbf}: 物理定数
 \end{itemize}
 
 要素ごとの演算や基本的な集計には NumPy を用い、確率分布、最適化、補間、信号処理などの専用アルゴリズムが必要な場合に、対応する SciPy の subpackage を選ぶ。
@@ -70,7 +70,7 @@ print(f"{summary.variance:.3f}")
 0.075
 \end{lstlisting}
 
-\code{stats.describe()} は、要素数、平均、分散、最小値、最大値、歪度、尖度を名前付きタプルとして返す。各統計量の定義と単位を確認してから利用する。
+\code{stats.describe()} は、要素数、平均、分散、最小値、最大値、歪度、尖度を名前付きタプルとして返す。分散の既定は \code{ddof=1} であり、NumPy の \code{var()} の既定とは異なる。各統計量の定義と単位を確認してから利用する。
 
 SciPy の分布オブジェクトは、確率密度関数や累積分布関数を同じ API で扱える。
 
@@ -92,7 +92,7 @@ print(cdf)
  0.9986501 ]
 \end{lstlisting}
 
-\code{pdf}、\code{cdf}、\code{rvs}、\code{ppf} がそろっているので、理論分布との比較、乱数生成、しきい値計算を統一的に書ける。
+\code{pdf} は確率密度関数、\code{cdf} は累積分布関数、\code{rvs} は乱数生成、\code{ppf} は累積確率から分位点を求める逆関数に対応する。正規分布では \code{loc} は平均、\code{scale} は標準偏差であるが、これらの引数の意味は分布ごとに確認する。
 
 ここで \code{pdf} は確率密度 \(p(x)\)、\code{cdf} はその積分
 \[
@@ -208,7 +208,7 @@ ax.plot(
 ax.legend(loc="upper right")
 \end{lstlisting}
 
-図~\ref{fig:distribution-examples} では、フィット曲線の式と推定パラメータを凡例へ記載している。本文には推定方法と解釈、キャプションには図の対象と条件、凡例には系列の識別情報を置く。
+図~\ref{fig:distribution-examples} では、フィットした分布名と推定パラメータを凡例へ記載している。左パネルは上の正規乱数と同じ入力を用い、右パネルは同じ乱数生成器で続けて生成した時定数 2.5 s、3000 個の指数乱数を用いる。本文には推定方法と解釈、キャプションには図の対象と条件、凡例には系列の識別情報を置く。
 
 \begin{lstlisting}[language=Python]
 model_y = linear_model(xdata, *linear_params)
@@ -265,9 +265,11 @@ weighted_params, weighted_cov = curve_fit(
 \]
 と書けるので、\(\sigma_i\) が大きい点ほど目的関数への寄与は小さく、\(\sigma_i\) が小さい点ほど大きくなる。独立な Poisson 計数で平均値を観測数 \(N\) によって推定し、正規近似が妥当な範囲では、標準偏差を \(\sqrt{N}\) で近似する場合がある。低計数や重み付き計数には、その近似を機械的に適用しない。
 
-\code{absolute\_sigma=True} は、「今渡した \code{sigma} は本当に物理的な標準偏差である」と解釈させる指定である。これを \code{False} のままにすると、\code{sigma} は相対的な重みとしては使われるが、共分散行列の大きさは残差のばらつきに合わせてあとから再スケーリングされる。そのため、推定値の重み付けだけでなく誤差評価まで行いたいなら、\code{sigma} の意味を明確にした上で \code{absolute\_sigma} の設定も意識する必要がある。
+\code{absolute\_sigma=True} は、共分散の計算に \code{sigma} の絶対的な大きさを使う指定である。渡した値が適切な標準偏差かどうかを、この設定が検証するわけではない。これを \code{False} のままにすると、\code{sigma} は相対的な重みとしては使われるが、共分散行列の大きさは残差のばらつきに合わせてあとから再スケーリングされる。そのため、推定値の重み付けだけでなく誤差評価まで行いたいなら、\code{sigma} の意味を明確にした上で \code{absolute\_sigma} の設定も意識する必要がある。
 
 図~\ref{fig:fit-sigma} は、点ごとの不確かさを重みに反映した場合と、全点を等しい重みで扱った場合の違いを示している。どちらを採用するかは、\code{sigma} が測定の標準偏差を表すか、各点を同じ重みで比較する解析なのかによって決まる。
+
+\code{curve\_fit()} の共分散とその対角成分から求める標準誤差は、解の近傍での線形近似に依存する~\cite{scipy_curvefit}。強い非線形性やパラメータ間の縮退がある場合には信頼できないことがある。1 次元の \code{sigma} による上の式は各点の誤差を独立とする。相関を扱うには共分散行列を渡す方法があり、通常の呼び出しは横軸 \code{xdata} の測定誤差を考慮しない。
 
 \subsection{\code{scipy.interpolate} による補間}
 
@@ -281,7 +283,7 @@ y = np.array([0.0, 2.0, 1.0, 3.0])
 
 linear_interp = make_interp_spline(x, y, k=1)
 x_new = np.array([0.5, 1.5, 3.0])
-y_new = linear_interp(x_new)
+y_new = linear_interp(x_new, extrapolate=False)
 
 print(y_new)
 \end{lstlisting}
@@ -292,13 +294,13 @@ print(y_new)
 [1.  1.5 2. ]
 \end{lstlisting}
 
-補間は「元データの間をつなぐ」操作であり、「外側まで正しく予測する」操作ではない。外挿まで含めて解釈すると危険である。
+入力の \code{x} は重複がなく、昇順に並んでいる必要がある。区分線形補間は測定点を通る連続関数だが、接続点で傾きが不連続になり得る。上の \code{extrapolate=False} は入力範囲の外で \code{NaN} を返し、外挿を行わない指定である。範囲外まで同じ傾向が続くとは限らない。
 
 線形補間では、各区間 \(x_i \le x \le x_{i+1}\) で
 \[
 y(x) = y_i + \frac{y_{i+1}-y_i}{x_{i+1}-x_i}(x-x_i)
 \]
-という一次式を使っている。したがって、測定点の間では滑らかにつながるが、測定範囲の外ではこの式をそのまま信じる根拠はない。
+という一次式を使っている。したがって、測定点の間では直線でつながるが、測定範囲の外ではこの式をそのまま信じる根拠はない。
 
 \subsection{\code{scipy.signal} による平滑化とピーク検出}
 
@@ -395,7 +397,7 @@ SciPy は、入力配列の物理的意味や、採用すべきモデルを自�
 
 本文を読み終えた後で関数名や引数を確認したいときは、SciPy User Guide~\cite{scipy_user_guide} を起点にすると探しやすい。分布や検定は Statistics~\cite{scipy_stats}、フィットや最適化は Optimization~\cite{scipy_optimize}、補間は Interpolation~\cite{scipy_interpolate}、波形処理は Signal processing~\cite{scipy_signal}、数値積分は Integration~\cite{scipy_integrate} が対応している。本章は、それらを解析で使う順に並べ替えて説明した。
 
-\section{分布モデルとフィットの演習}
+\section{章末課題：分布モデルとフィットの演習}
 
 この章の課題は、既知の分布による API と結果の読み方の検証、および実データに対するモデルの検討という二段階からなる。次のコードが検証用データを生成する。乱数シードを固定しているため、同じライブラリ環境では同じ入力を再現できる。
 
@@ -414,7 +416,7 @@ y_obs = y_true + rng.normal(scale=sigma)
 
 \begin{enumerate}
 \item \textbf{既知の指数分布による推定方法の検証}。
-\code{scipy.stats.expon.fit(synthetic\_dt, floc=0)} で指数分布のパラメータを推定せよ。\code{floc=0} は位置母数を 0 に固定する指定であり、戻り値は \code{loc} と \code{scale} の順である。推定された \code{scale} が生成時の 120 秒に近いことを確認し、標本平均とも比較せよ。許容範囲を 115 秒から 125 秒として自動確認する \code{assert} も記述せよ。
+\code{scipy.stats.expon.fit(synthetic\_dt, floc=0)} で指数分布のパラメータを推定せよ。\code{floc=0} は位置母数を 0 に固定する指定であり、返り値は \code{loc} と \code{scale} の順である。推定された \code{scale} が生成時の 120 秒に近いことを確認し、標本平均とも比較せよ。許容範囲を 115 秒から 125 秒として自動確認する \code{assert} も記述せよ。
 
 \item \textbf{重み付き直線フィットと残差の確認}。
 \code{curve\_fit()} を使い、\code{y\_obs} を \(y=ax+b\) へフィットせよ。\code{sigma=sigma}、\code{absolute\_sigma=True} を指定し、推定値 \code{popt} と共分散行列 \code{pcov} を受け取る。傾きが 2.3 から 2.7、切片が 0.7 から 1.7 の範囲に入ることを確認せよ。\code{np.sqrt(np.diag(pcov))} が各パラメータの標準不確かさを与えること、\code{y\_obs - model(x, *popt)} が残差になることを説明し、データ、フィット線、残差を 2 段の図へ保存せよ。
@@ -425,7 +427,9 @@ y_obs = y_true + rng.normal(scale=sigma)
 \item \textbf{解析上の選択に対する感度評価}。
 3 問目と少なくとも 1 条件を変えて推定を繰り返せ。ビン幅、フィット範囲、短時間側の扱い、重み、関数形などから選び、推定値と不確かさがどの程度変化したかを表にまとめよ。結果が変わったという事実だけでなく、どのデータ点の寄与が変化したためかを図と残差から説明せよ。
 
-\item \textbf{発展課題: マグニチュード分布のべき乗則}。
+実データでは、検索期間・地域、使用したイベント種別、マグニチュードの型を記録する。USGS の CSV には \code{magType} などの列があり~\cite{usgs_csv}、異なる尺度や検出能力の地域を混ぜると単一のモデルで説明できない場合がある。
+
+\item \textbf{発展課題：マグニチュード分布と Gutenberg--Richter 関係}。
 USGS カタログのマグニチュード \(M\) について、度数分布と累積件数 \(N(\geq M)\) を作り、カタログが十分に完全とみなせる下限 \(M_c\) を検討せよ。\(M\geq M_c\) の範囲で Gutenberg--Richter 関係~\cite{gutenberg_richter_1944}
 \[
 \log_{10}N(\geq M)=a-bM

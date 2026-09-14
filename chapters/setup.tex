@@ -53,12 +53,18 @@ $ xcode-select -p
 /Library/Developer/CommandLineTools
 \end{lstlisting}
 
-このようにパスが表示されれば、Command Line Tools はインストール済みである。逆に、エラー文が出て何も表示されなければ未導入の可能性が高い。
+このように開発ツールのパスが表示されれば、選択された場所を確認できる。Xcode 本体を導入した環境では、そのアプリケーション内のパスが表示されることもある。パスの代わりにエラーが出る場合は、未導入または設定不備の可能性がある。
 未導入の場合のインストールコマンドは次のとおりである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ xcode-select --install
 \end{lstlisting}
+
+以下の macOS の手順は Homebrew を利用する。未導入なら、Homebrew の公式案内~\cite{homebrew_docs} に従って導入し、\code{brew --version} が表示されることを確認する。pyenv による Python のビルドには追加のライブラリも必要になるため、pyenv のビルド環境の案内~\cite{pyenv_build} に従って用意する。代表的な macOS 用の指定は次のとおりである。
+\begin{lstlisting}[language=bash]
+brew install openssl@3 readline sqlite3 xz tcl-tk@8 libb2 zstd zlib pkgconfig
+\end{lstlisting}
+必要なパッケージや追加設定は、導入する Python と OS の版によって異なる。
 
 \subsection{WSL / Ubuntu での準備}
 
@@ -260,8 +266,9 @@ Successfully installed numpy-2.3.0 pandas-2.3.0 scipy-1.15.0
 JupyterLab\index{jupyterlab@JupyterLab|textbf} は、短いコード片を対話的に実行し、数値、表、図を同じ文書内で確認できる環境である。探索的解析に用いる場合の導入と起動のコマンドを次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ pip install jupyterlab
-$ jupyter lab
+$ source .venv/bin/activate
+$ python -m pip install jupyterlab
+$ python -m jupyterlab
 \end{lstlisting}
 
 \code{jupyter lab} を実行すると、ターミナルにはたとえば次のような行が出る。
@@ -286,9 +293,20 @@ $\Delta t$ の分布を確認する
 
 JupyterLab のノートブックは、コード、説明、出力、図を実行順とともに一つのファイルへ保存する。一方、同じ処理を多数の入力へ反復する場合や、対話操作なしで再実行する場合には、入出力を引数で指定する Python スクリプトと自動テストを用意する。次節では、ノートブックとスクリプトの双方が参照するプロジェクト環境を \code{uv} で管理する方法を扱う。
 
+上の起動例は、前節で作ったプロジェクトのディレクトリで実行する。セルを実行する Python のプロセスをカーネルという。ノートブック内で \code{import sys; print(sys.executable)} を実行し、使用する環境を確認する。セルは表示順と異なる順序でも実行できるため、結果を保存する前にはカーネルを再起動して全セルを上から実行する。サーバーを終了するときは、起動した端末で Ctrl+C を押し、終了確認に従う。
+
 \section{プロジェクト管理ツール \code{uv} の利用}
 
 \code{uv}\index{uv@\code{uv}|textbf} は Python 本体の導入もできるが、本書では「プロジェクト単位の管理」に用いる。特に、依存関係\index{いそんかんけい@依存関係|textbf}、解決したパッケージの正確なバージョンを記録するロックファイル、\code{.python-version}、Git 管理、パッケージ化、ワークスペース管理をまとめて扱える。
+
+\subsection{uv の導入}
+macOS と WSL/Linux では、uv の公式インストーラー~\cite{uv_install} を利用できる。次の例は、スクリプトを保存して内容を確認してから実行する手順である。
+\begin{lstlisting}[language=bash]
+curl -fLsS https://astral.sh/uv/install.sh -o uv-install.sh
+less uv-install.sh
+sh uv-install.sh
+\end{lstlisting}
+インストーラーの案内に従って新しい端末を開き、\code{uv --version} で導入を確認する。以降の初期構成は uv 0.12 以降を基準とする。古い版では既定のひな形が異なるため、ここではパッケージを作る \code{--package} を明示する。
 
 \subsection{プロジェクトの初期化}
 
@@ -297,7 +315,7 @@ JupyterLab のノートブックは、コード、説明、出力、図を実行
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir analysis_uv
 $ cd analysis_uv
-$ uv init
+$ uv init --package --python 3.11
 \end{lstlisting}
 
 現在の \code{uv init} は、既定でコマンドラインアプリケーションとして配布できる構成を作る。\code{ls -a} と \code{find src -maxdepth 2 -type f} で確認できる主要な項目を次に示す。外側に既存の Git リポジトリがある場合など、Git 関連項目の有無は実行場所によって異なる。
@@ -369,6 +387,7 @@ Installed 18 packages in 0.54s
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv run analysis-uv
 $ uv run python --version
+$ uv add --dev pytest
 $ uv run python -m pytest
 \end{lstlisting}
 
@@ -398,6 +417,8 @@ Python 3.11.11
 \end{lstlisting}
 
 1 行目は、\code{uv python pin 3.12} によってプロジェクトの既定が 3.12 系になっていることを示す。2 行目は、\code{--python 3.11} を指定した実行に限って 3.11 系を使用した結果である。\code{pin} はプロジェクトの既定値を設定し、\code{--python} は個別のコマンドに対して使用する Python を指定する。
+
+\code{3.12} の指定は 3.12 系を選ぶものであり、パッチ版まで固定する指定ではない。必要なら \code{uv python pin 3.12.10} のように版を完全に指定する。また、\code{--python 3.11} は \code{pyproject.toml} の \code{requires-python} が 3.11 を許す場合にだけ使用できる。異なる版で実行すると、プロジェクトの仮想環境が作り直される場合がある。ロックファイルとともに、実際の Python と OS の版も記録する。テストファイルをまだ作っていない場合、\code{pytest} はテストを収集できず、通常は終了ステータス 5 を返す。テストの作成は第~\ref{ch:modules}~章で扱う。
 
 \subsection{標準ライブラリと外部ライブラリ}
 
@@ -520,7 +541,7 @@ data/run001 results/figures
 import json
 from pathlib import Path
 
-config = json.loads(Path("config.json").read_text())
+config = json.loads(Path("config.json").read_text(encoding="utf-8"))
 window_ns = config["coincidence_window_ns"]
 print(window_ns)
 \end{lstlisting}
@@ -537,7 +558,7 @@ print(window_ns)
 
 \code{250} や \code{3600} のような数値が説明や名前なしにコードへ直接記述されていると、その意味や単位を判断しにくい。このような数値はマジックナンバーと呼ばれる。詳しくは第~\ref{sec:magic-number}~節で扱う。値が仕様上の定数なら意味と単位を表す名前を付け、実行条件なら引数または設定ファイルへ分離する。
 
-\section{Python 環境と設定ファイルの検証}
+\section{章末課題：Python 環境と設定ファイルの検証}
 
 この章の課題の確認対象は、コマンドだけでなく、作成されたファイルと実際に選ばれた Python までを含む。バージョン番号は環境によって異なるため、特定の番号との一致ではなく、各コマンドの出力が互いに矛盾していないかを検証せよ。
 

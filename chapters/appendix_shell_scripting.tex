@@ -48,7 +48,7 @@ Hello, Shell Scripting!
 
 # 二つの位置引数が渡されたことを確認する
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <input_file> <output_file>"
+    echo "Usage: $0 <input_file> <output_file>" >&2
     exit 1
 fi
 
@@ -157,17 +157,17 @@ fi
 FILE="$1"
 
 if [ -z "$FILE" ]; then
-    echo "エラー: ファイル名が指定されていません"
+    echo "エラー: ファイル名が指定されていません" >&2
     exit 1
 fi
 
 if [ -f "$FILE" ]; then
     echo "ファイル $FILE を発見しました。処理を開始します。"
 elif [ -d "$FILE" ]; then
-    echo "エラー: $FILE はディレクトリです。ファイルを指定してください。"
+    echo "エラー: $FILE はディレクトリです。ファイルを指定してください。" >&2
     exit 1
 else
-    echo "エラー: $FILE が存在しません。"
+    echo "エラー: $FILE が存在しません。" >&2
     exit 1
 fi
 \end{lstlisting}
@@ -227,6 +227,8 @@ for num in 10 20 30; do
 done
 \end{lstlisting}
 
+\code{if} は直後のコマンドの終了ステータスが 0 なら条件成立とする。\code{[ ... ]} も条件を調べるコマンドであり、括弧の内側の空白が必要である。\code{command1 \&\& command2} は前段が成功した場合だけ、\code{command1 || command2} は失敗した場合だけ後段を実行する。エラーを表示するだけでは処理は止まらないため、必要な箇所で \code{exit 1} を使う。詳細は Bash の公式資料~\cite{bash_manual} を参照する。
+
 \subsection{複数ファイルの入出力パス生成と一括処理}
 \index{ばっちしょり@バッチ処理|textbf}
 
@@ -242,15 +244,14 @@ OUTPUT_DIR="data/output"
 
 # 出力先が存在しなければ作成する
 if [ ! -d "$OUTPUT_DIR" ]; then
-    mkdir -p "$OUTPUT_DIR"
+    mkdir -p "$OUTPUT_DIR" || exit 1
 fi
 
 # INPUT_DIR の中にあるすべての .csv ファイルに対して反復
 for filepath in "$INPUT_DIR"/*.csv; do
-    # 該当するファイルが存在しない場合はそのままループが回ってしまうのでチェックする
+    # 一致がない場合や、名前が .csv で終わるディレクトリは処理しない
     if [ ! -f "$filepath" ]; then
-        echo "No CSV files found in $INPUT_DIR"
-        break
+        continue
     fi
 
     echo "Found raw file: $filepath"

@@ -35,7 +35,7 @@ run 3: 14.8
 
 第 1 引数の \code{path} は開くファイルの場所、\code{"r"} は読み込みモード、\code{encoding="utf-8"} は文字を UTF-8 として解釈する指定である。\code{as f} によって、開いたファイルを表すオブジェクトを変数 \code{f} で参照する。\code{for line in f} は全行を一度にメモリへ置かず、1 行ずつ取り出す。
 
-\code{read} はファイル全体を一度に読み込む。入力容量に比例したメモリを要するため、大きなテキストファイルは反復処理によって 1 行ずつ読み込む。
+引数なしの \code{read()} は、現在の読み取り位置から末尾までを一度に読み込む。開いた直後ならファイル全体が対象になる。入力容量に比例したメモリを要するため、大きなテキストファイルは反復処理によって 1 行ずつ読み込む。
 
 このとき、\code{line} には行末文字が含まれる。\verb|rstrip("\r\n")| は CR と LF だけを末尾から取り除き、データに含まれる通常の空白は残す。引数なしの \code{rstrip()} は末尾の空白も削除するため、空白自体がデータである場合には区別が必要である。
 
@@ -86,9 +86,9 @@ with open("out.txt", "w", encoding="utf-8") as f:
     f.write("hello\n")
 \end{lstlisting}
 
-\code{readline()} の戻り値には末尾の改行が含まれる。\code{write()} は書き込んだ文字数を返すが、改行を自動では補わないため、行末が必要なら \verb|"\n"| を明示する。この例を実行すると、\code{out.txt} の内容は \code{hello} と改行になる。
+\code{readline()} の返り値には末尾の改行が含まれる。\code{write()} は書き込んだ文字数を返すが、改行を自動では補わないため、行末が必要なら \verb|"\n"| を明示する。この例を実行すると、\code{out.txt} の内容は \code{hello} と改行になる。
 
-\code{readline} は現在位置から 1 行を読み、\code{write} は指定した文字列をファイルへ書く。大きな入力では、全体を読み込む前に \code{readline} や後述するシェルコマンドで先頭数行を確認できる。
+\code{readline} は現在位置から 1 行を読み、\code{write} は指定した文字列をファイルへ書く。大きな入力では、全体を読み込む前に \code{readline} や第~\ref{chap:shell}~章のシェルコマンドで先頭数行を確認できる。
 
 \subsubsection{複数ファイルの収集}
 
@@ -118,9 +118,26 @@ data/2026/run02.txt
 
 \code{glob.glob} の返す順序を処理条件として仮定せず、時系列や連番を順に処理する場合は \code{sorted} で順序を明示する。これにより、処理順序とログの順序を実行環境に依存させずに再現できる。
 
+\subsection{Python での標準入出力}
+\index{sys@\code{sys}|textbf}\index{ひょうじゅんにゅうりょく@標準入力!Python}\index{ひょうじゅんしゅつりょく@標準出力!Python}\index{ひょうじゅんえらーしゅつりょく@標準エラー出力!Python}
+Python では、\code{sys.stdin}、\code{sys.stdout}、\code{sys.stderr} が三つの標準的な経路に対応する~\cite{python_sys}。\code{print()} は既定で標準出力へ書き込み、\code{file=} で別の経路を指定できる。次の内容を \code{uppercase.py} に保存する。
+\begin{lstlisting}[language=Python]
+import sys
+
+n_lines = 0
+for line in sys.stdin:
+    print(line.rstrip("\r\n").upper())
+    n_lines += 1
+print(f"Processed {n_lines} lines", file=sys.stderr)
+\end{lstlisting}
+\begin{lstlisting}[language=bash]
+python uppercase.py < sample.txt > converted.txt 2> conversion.log
+\end{lstlisting}
+変換した本文は \code{converted.txt} に、処理行数は \code{conversion.log} に保存される。\code{input()} は標準入力から 1 行を読み、末尾の改行を除いた文字列を返す関数である。引数に案内文を渡すと標準出力へ表示するため、データをパイプで受け渡すプログラムでは案内文の混入に注意する。
+
 \section{文字列データの解析と整形}
 
-\subsection{CSV 規則に従った列名付きデータの読み込み}
+\subsection{CSV 規則に従った列名付きデータの読み込み}\label{sec:csv-reader}
 
 CSV\index{csv@CSV|textbf} では、引用符で囲まれたフィールド内にカンマや改行を含められる。\code{line.split(",")} はこの規則を解釈できないため、標準ライブラリの \code{csv} でレコードとフィールドを読み取る。
 
@@ -272,7 +289,7 @@ print(loaded_result["values"])
 
 \code{"wb"} と \code{"rb"} の \code{b} はバイナリモードを意味する。JSON と違って内容をテキストとして確認できないが、Python オブジェクトの構造を保存できる。ただし、別の Python やライブラリのバージョンで常に復元できる保証はなく、他言語との交換にも向かない。長期保存や共同研究の交換形式ではなく、生成環境と入力を記録したローカルな作業用キャッシュとして用いる。
 
-ここでいう危険性は、壊れたファイルによる読み込みエラーだけではない。\code{pickle.load()} は、オブジェクトを復元する過程で任意のコードを実行する可能性がある。出所と生成過程を確認できない \code{.pkl} は読み込まず、自分で生成したもの、または信頼できる相手から安全な経路で受け取ったものだけを対象とする。
+Pickle の読み込みには、コード実行に関する注意も必要である。\code{pickle.load()} は、オブジェクトを復元する過程で任意のコードを実行する可能性がある。出所と生成過程を確認できない \code{.pkl} は読み込まず、自分で生成したもの、または信頼できる相手から安全な経路で受け取ったものだけを対象とする。
 
 \section{日時データの変換と保存形式の選択}
 
@@ -281,16 +298,18 @@ print(loaded_result["values"])
 日付や時刻を比較し、差を計算する場合は、文字列を時刻オブジェクトまたは数値表現へ変換する。標準ライブラリの \code{datetime}\index{datetime@\code{datetime}|textbf} を用いた例を次に示す。
 
 \begin{lstlisting}[language=Python]
-from datetime import datetime
+from datetime import datetime, timezone
 
 text = "2026-04-04 12:34:56.123456"
 dt = datetime.strptime(text, "%Y-%m-%d %H:%M:%S.%f")
+# 入力の時刻が UTC であることを確認した上で指定する
+dt = dt.replace(tzinfo=timezone.utc)
 unix_time = dt.timestamp()
 print(dt)
 print(unix_time)
 \end{lstlisting}
 
-\code{strptime()} の第 1 引数は変換する文字列、第 2 引数は文字列の形式である。\code{\%Y}、\code{\%m}、\code{\%d} は年、月、日を表し、\code{\%f} はマイクロ秒を表す。\code{timestamp()} は Unix epoch（1970 年 1 月 1 日 00:00:00 UTC）からの秒数を返すが、タイムゾーン情報を持たない \code{datetime} の解釈は実行環境のローカルタイムゾーンに依存する。UTC のログでは、タイムゾーンを明示するか、後述する Astropy の \code{Time} を使う必要がある。
+\code{strptime()} の第 1 引数は変換する文字列、第 2 引数は文字列の形式である。\code{\%Y}、\code{\%m}、\code{\%d} は年、月、日を表し、\code{\%H}、\code{\%M}、\code{\%S} は時、分、秒、\code{\%f} はマイクロ秒を表す。\code{timestamp()} は Unix epoch（1970 年 1 月 1 日 00:00:00 UTC）からの秒数を返すが、タイムゾーン情報を持たない \code{datetime} の解釈は実行環境のローカルタイムゾーンに依存する。UTC のログでは、タイムゾーンを明示するか、後述する Astropy の \code{Time} を使う必要がある。
 
 時刻差を保持する単位は、必要な時間分解能と値域に基づいて選ぶ。別の表現へ変換する場合は、基準時刻、時刻系、単位、丸め方法を記録する。
 
@@ -324,11 +343,11 @@ CSV はテキストとして内容を確認できる一方、読み込み時に�
 
 Parquet は保存形式の名前であり、\code{pyarrow} は pandas が Parquet の読み書きに利用できる実装の一つである。\code{read\_parquet()} と \code{to\_parquet()} の実行には、pandas が対応するエンジンを利用できる環境が必要となる。
 
-\section{USGS カタログの読み込みと要約}
+\section{章末課題：USGS カタログの読み込みと要約}
 
-第~\ref{chap:shell}~章で USGS の CSV を取得していない場合は、次の内容を \code{raw/usgs\_global\_2024\_01.csv} として保存すれば、同じ課題を小規模な入力で実行できる。
+第~\ref{chap:shell}~章で USGS の CSV を取得していない場合は、\code{raw} ディレクトリを作り、次の内容を \code{raw/usgs\_example.csv} として保存すれば、同じ課題を小規模な入力で実行できる。その場合は課題中の入力パスを読み替える。人工データは、取得済みの実カタログとは別のファイルへ保存する。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={raw/usgs\_global\_2024\_01.csv}]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={raw/usgs\_example.csv}]
 time,latitude,longitude,mag,place
 2024-01-01T00:00:00.000Z,35.0,140.0,3.2,"Offshore, Japan"
 2024-01-01T00:05:00.000Z,36.0,141.0,,Japan
@@ -346,7 +365,7 @@ time,latitude,longitude,mag,place
 \item 最後のイベント時刻
 \item マグニチュードの最小値と最大値
 \end{itemize}
-出力には \code{pathlib} と \code{json.dump} を用いよ。
+空欄の \code{mag} は数値集計から除き、その件数も記録せよ。有効な値が一つもない場合は、最小値・最大値を \code{None} として保存する。出力には \code{pathlib} と \code{json.dump} を用いよ。
 \code{Path.mkdir(parents=True, exist\_ok=True)} で出力ディレクトリを作り、\code{json.dump(..., indent=2)} の各引数が何を指定するかも説明せよ。保存後に \code{json.load()} で読み戻し、辞書の内容を表示して検証せよ。
 
 \item \textbf{解析用中間データの Pickle への保存}。
@@ -354,7 +373,7 @@ CSV の先頭 200 行から \code{time}、\code{latitude}、\code{longitude}、\
 小規模入力を使った場合、要素数は 3 であり、先頭辞書の \code{time} は \code{2024-01-01T00:00:00.000Z} になる。\code{"wb"} と \code{"rb"} の \code{b} の意味を説明し、この PKL を信頼できない相手から受け取った場合に読み込んではならない理由も述べよ。
 
 \item \textbf{発展課題}。
-CSV の中には空欄や想定外の値が入り得る。空欄の \code{mag} をスキップする処理を自分で足し、何件スキップしたかを \code{results/skipped\_rows.txt} へ書き出せ。\code{DictReader} では空欄セルは空文字列として読まれるので、たとえば \code{if row["mag"] == ""} のような判定を入れればよい。
+CSV の中には空欄や想定外の値が入り得る。空欄に加えて数値へ変換できない \code{mag} もスキップし、何件スキップしたかを \code{results/skipped\_rows.txt} へ書き出せ。\code{DictReader} では空欄セルは空文字列として読まれるので、たとえば \code{if row["mag"] == ""} のような判定を入れればよい。
 小規模入力に対するスキップ件数は 1 件となる。\code{float(row["mag"])} が失敗する場合も \code{ValueError} として数えられるようにし、空欄と不正な文字列を区別して記録せよ。
 \end{enumerate}
 

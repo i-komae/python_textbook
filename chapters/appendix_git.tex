@@ -12,7 +12,7 @@ Git は、手元のファイルの変更履歴を記録するためのソフト�
 \item GitHub: Git リポジトリをホストし、共有、Issue、Pull Request などを提供するサービス
 \end{itemize}
 
-したがって、\code{git init}、\code{git add}、\code{git commit} は Git の話であり、\code{git push} で GitHub へ送る段階になって初めて GitHub が関係してくる。
+したがって、\code{git init}、\code{git add}、\code{git commit} は Git の話であり、GitHub 上のリポジトリを \code{clone} で取得したり、\code{push} で送ったりする段階で GitHub が関係する。
 
 \subsection{リポジトリと公開範囲}
 \index{りぽじとり@リポジトリ|textbf}
@@ -23,7 +23,7 @@ Git は、手元のファイルの変更履歴を記録するためのソフト�
 \begin{itemize}
 \item 公開（\code{public}）: 誰でも閲覧できる
 \item 非公開（\code{private}）: 明示的に許可された利用者だけが閲覧できる
-\item 組織内（\code{internal}）: 組織内の利用者だけが閲覧できる。主に GitHub Enterprise で用いられる
+\item 内部（\code{internal}）: 主に GitHub Enterprise で、同じ Enterprise に属するメンバーへ公開する。単一の Organization 内だけに限定する設定とは異なる
 \end{itemize}
 
 授業用の配布物、研究中のコード、機密データを含むリポジトリでは、公開範囲の誤設定が情報漏えいにつながる。GitHub で新しいリポジトリを作成する際には、公開範囲（visibility）の確認が必要である。
@@ -193,13 +193,14 @@ GitHub 側で README や LICENSE を作成した場合、リモートリポジ�
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git branch -M main
 $ git remote add origin git@github.com:owner/project.git
-$ git pull origin main --allow-unrelated-histories
+$ git fetch origin
+$ git merge --allow-unrelated-histories origin/main
 $ git push -u origin main
 \end{lstlisting}
 
-\code{--allow-unrelated-histories} が必要なのは、手元のリポジトリと GitHub 側のリポジトリが別々に作られており、履歴の出発点が一致していないからである。この \code{pull} によって、GitHub 側の README や LICENSE のコミットを自分の履歴へ取り込んでから、その続きとして push できるようになる。
+\code{--allow-unrelated-histories} が必要なのは、手元のリポジトリと GitHub 側のリポジトリが別々に作られており、履歴の出発点が一致していないからである。この \code{fetch} と \code{merge} によって、GitHub 側の README や LICENSE のコミットを自分の履歴へ取り込んでから、その続きとして push できるようになる。
 
-ローカルとリモートの双方で同じ名前の README や LICENSE を作成している場合、\code{git pull} によって競合が生じることがある。競合箇所を編集し、\code{git add} と \code{git commit} で統合結果を記録してから、\code{git push -u origin main} を実行する。
+ローカルとリモートの双方で同じ名前の README や LICENSE を作成している場合、\code{git merge} によって競合が生じることがある。競合箇所を編集し、\code{git add} と \code{git commit} で統合結果を記録してから、\code{git push -u origin main} を実行する。
 
 \subsubsection{接続先の登録と最初の push}
 
@@ -301,3 +302,5 @@ SAML SSO を利用する組織では、SSH 鍵や PAT に組織リソースへ�
 \end{enumerate}
 
 この流れは、教材の取得、\code{uv} プロジェクトの再現、共同研究でのコード共有に共通する。\code{git add} と \code{git commit} の前後で \code{status} と \code{diff} を確認し、記録対象と実際の差分を一致させる。
+
+公開範囲やアクセス条件の詳細は、GitHub のリポジトリに関する公式資料~\cite{github_visibility} を参照する。

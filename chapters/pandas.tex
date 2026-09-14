@@ -62,7 +62,7 @@ print(events.dtypes)
 2        B     1055    14.8  False
 3        B     1244     9.7   True
 (4, 4)
-detector     object
+detector        str
 time_ns       int64
 signal      float64
 valid          bool
@@ -70,6 +70,8 @@ dtype: object
 \end{lstlisting}
 
 \code{shape} は行数と列数、\code{dtypes} は各列の型である。\code{object} 型は任意の Python オブジェクトを格納できるため、その表示だけでは列が文字列だけで構成されるか、複数の型が混在するかを判定できない。数値として演算する列が \code{object} 型なら、実際の値と変換条件を確認する。
+
+上の型表示は pandas 3 系の例である。文字列だけの列は既定で \code{str} と推定され、pandas 2 系の既定では \code{object} となる~\cite{pandas_migration3}。表示の違いと、数値型への変換の要否は分けて確認する。
 
 \subsection{index と列名の役割}
 \index{pandas!index@index}
@@ -124,6 +126,8 @@ print(strong)
 \end{lstlisting}
 
 ブール配列で行を絞る操作は NumPy と似ているが、pandas では列名を介して意味を保ったまま書ける。\code{events["signal"] > 11.0} の結果は行ごとの真偽値であり、それを \code{loc} に渡すと条件に合う行だけが残る。
+
+\code{loc} は行ラベルや列名で選択し、ラベルのスライスでは終点も含む。\code{iloc} は 0 から始まる位置で選択し、Python の通常のスライスと同じく終点を含まない。また、Series を列へ代入すると、通常は位置ではなく index のラベルで対応付けられる。
 
 \subsection{列の追加}
 
@@ -190,7 +194,7 @@ print(df["signal"].fillna(df["signal"].mean()))
 3  False   False    False
    id  signal comment
 0   1    12.4      ok
-2   3    14.8    None
+2   3    14.8     NaN
 3   4     9.7      ok
 0    12.400000
 1    12.300000
@@ -246,6 +250,8 @@ B             2        12.25    3.606245            0.5
 
 \code{groupby()} は、検出器、日、run などのカテゴリごとに同じ集計を適用する。\code{agg()} の名前付き集計では、出力列の名前、入力列、集計関数を対応付けて記述できる。上の数値は、この節の \code{events} を pandas で計算した出力例である。pandas のバージョンによって空白や型の表示形式は変わる場合があるが、数値は同じ入力と計算定義に対応していなければならない。
 
+欠損値を含む列の平均や標準偏差は、既定では欠損値を除いて計算する。\code{groupby().size()} は行数を、列に対する \code{count()} は非欠損値の個数を数える。\code{std()} の既定は \code{ddof=1} であり、有効値が 1 個だけの群では標準偏差は \code{NaN} になる。未知の文字列は必ずしも欠損値として認識されない。\code{pd.to\_numeric(..., errors="coerce")} で変換できなかった値を欠損にする場合は、その件数と元の値を記録する。平均値による補完は分散などを変えるため、解析上の根拠なしに適用しない。
+
 \subsection{表形式の変換}
 \index{pandas!merge@\code{merge()}}
 \index{pandas!concat@\code{concat()}}
@@ -261,7 +267,8 @@ gain = pd.DataFrame(
     }
 )
 
-merged = events.merge(gain, on="detector", how="left")
+merged = events.merge(gain, on="detector", how="left", validate="many_to_one")
+assert len(merged) == len(events)
 stacked = pd.concat([events.iloc[:2], events.iloc[2:]], ignore_index=True)
 
 long_df = pd.DataFrame(
@@ -277,7 +284,7 @@ print(merged[["detector", "signal", "gain"]])
 print(wide)
 \end{lstlisting}
 
-次の出力は、\code{merge()} による較正係数列の追加と、\code{pivot()} による検出器名から列への変換を示す。
+次の出力は、\code{merge()} による較正係数列の追加と、\code{pivot()} による種別 \code{kind} の値から列への変換を示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
   detector  signal  gain
@@ -292,6 +299,8 @@ B         14.4  14.8
 \end{lstlisting}
 
 \code{merge()} はキー列に基づいて表を結合し、\code{concat()} は表を行方向または列方向に連結する。\code{pivot()} と \code{pivot\_table()} は縦長データを横長形式へ変換し、\code{melt()} は横長データを縦長形式へ変換する。
+
+結合先のキーが重複していると、一つの観測行に複数の行が対応し、結合後の行数が増える。上の \code{validate="many\_to\_one"} は較正表側のキーの一意性を検査する。結合できなかったキーでは較正値が欠損するため、行数に加えて欠損件数も確認する。\code{pivot()} は同じ行キーと列キーの組合せが重複するとエラーになる。重複を集計する場合は \code{pivot\_table(..., aggfunc="mean")} のように集計方法を明示する。
 
 \subsection{時刻、文字列、カテゴリ}
 \index{pandas!datetime@datetime}
@@ -308,6 +317,7 @@ log = pd.DataFrame(
     }
 )
 
+# 元のタイムゾーンなし文字列が UTC を表すと確認した場合
 log["timestamp"] = pd.to_datetime(log["timestamp"], utc=True)
 log["date"] = log["timestamp"].dt.date
 log["prefix"] = log["run_name"].str.extract(r"^(run_[A-Z])")
@@ -322,7 +332,7 @@ print(log[["timestamp", "date", "prefix", "detector"]])
                   timestamp        date prefix detector
 0 2026-04-01 12:00:00+00:00  2026-04-01  run_A        A
 1 2026-04-01 12:00:05+00:00  2026-04-01  run_A        A
-2 2026-04-02 09:30:00+00:00  2026-04-02   None        B
+2 2026-04-02 09:30:00+00:00  2026-04-02    NaN        B
 \end{lstlisting}
 
 \code{to\_datetime()} で日時型へ変換すると、時刻差、日付成分、時刻順を日時の演算として扱える。文字列列には \code{str.contains()}、\code{str.extract()}、\code{str.strip()} などのベクトル化メソッドがある。カテゴリ型は、有限個のカテゴリ値と整数コードを分けて保持し、カテゴリの順序も定義できる。
@@ -380,6 +390,8 @@ selected = df[df["ratio"] > 1.5]
 
 行ごとの \code{for} ループを導入する前に、同じ処理を列演算、集計、結合として表せるかを検討する。
 
+Parquet の例には、たとえば \code{python -m pip install pyarrow} で導入できるエンジンが必要である。後の \code{to\_latex()} には Jinja2 が必要なので、\code{python -m pip install jinja2} で導入する。uv のプロジェクトではそれぞれ \code{uv add} を用いる。
+
 \subsection{大規模 CSV の分割集計}
 \index{pandas!chunksize@\code{chunksize}}
 \index{ぶんかつよみこみ@分割読み込み|textbf}
@@ -434,9 +446,13 @@ B           2.0  12.250000
 \code{to\_latex()} で集計結果から表を生成すれば、DataFrame の値と LaTeX 表の値を同じ処理から出力できる。
 
 \begin{lstlisting}[language=Python]
+from pathlib import Path
+
+Path("tables").mkdir(parents=True, exist_ok=True)
 tex_table = summary.reset_index().to_latex(
     index=False,
     caption="検出器ごとの平均信号",
+    escape=True,
     label="tab:detector-summary",
     float_format="%.3f",
 )
@@ -445,23 +461,23 @@ with open("tables/detector_summary.tex", "w", encoding="utf-8") as f:
     f.write(tex_table)
 \end{lstlisting}
 
-ここで \code{index=False} は左端の連番インデックスを出力しない指定であり、\code{reset\_index()} は groupby 結果の index を通常の列へ戻す操作である。セルに含まれる TeX の特殊文字は既定の設定でエスケープする。検証済みの TeX 記法を意図的に埋め込む場合に限り、入力内容を限定したうえで \code{escape=False} を指定する。
+ここで \code{index=False} は左端の連番インデックスを出力しない指定であり、\code{reset\_index()} は groupby 結果の index を通常の列へ戻す操作である。ここでは \code{escape=True} によってセル中の TeX の特殊文字をエスケープする。pandas 2.0 以降では既定値に頼るとエスケープされない場合がある~\cite{pandas_latex}。検証済みの TeX 記法を意図的に埋め込む場合に限り、入力内容を限定したうえで \code{escape=False} を指定する。
 
-\code{groupby()}、\code{agg()}、\code{to\_latex()} を順に適用し、保存したファイルを本ドキュメントから \verb|\input| すれば、集計結果をレポート用の表へ直接反映できる。この構成では、集計条件を変更した場合も同じ処理から表を再生成でき、転記による値の不一致を避けられる。
+\code{groupby()}、\code{agg()}、\code{to\_latex()} を順に適用し、保存したファイルをレポートから \verb|\input| すれば、集計結果をレポート用の表へ直接反映できる。この構成では、集計条件を変更した場合も同じ処理から表を再生成でき、転記による値の不一致を避けられる。
 
 \subsection{\code{plot()} による簡易確認}
 
 pandas の \code{plot()} は、DataFrame または Series の内容を Matplotlib へ渡す簡易作図インターフェースである。
 
 \begin{lstlisting}[language=Python]
-summary.plot(kind="bar", y="mean_signal")
+summary.plot(kind="bar", y="mean")
 \end{lstlisting}
 
 \code{DataFrame.plot()} は表から概形を確認する場合に用いる。提出図や論文用図では、軸、凡例、余白、保存形式を明示するため、Matplotlib の \code{Figure} と \code{Axes} を直接扱う。本書では第~\ref{sec:matplotlib-object}~節以降の方法を基準とする。
 
 \section{コピー・型・行処理に関する注意点}
 
-\subsection{\code{SettingWithCopy} と \code{loc}}
+\subsection{部分表の変更と \code{loc}}
 \index{settingwithcopy@SettingWithCopy|textbf}
 
 DataFrame の一部を切り出した後の代入では、元の DataFrame を更新するのか、独立した表を作るのかを明示する必要がある。
@@ -471,7 +487,7 @@ subset = events[events["signal"] > 11.0]
 subset["flag"] = True
 \end{lstlisting}
 
-この書き方では \code{SettingWithCopyWarning} が出ることがある。元の表の条件に合う行へ代入する場合は、次のように行条件と列名を \code{loc} の一つの添字指定へまとめる。
+pandas 2 系の従来の動作では、この書き方で \code{SettingWithCopyWarning} が出ることがある。独立した部分表が必要なら抽出後に \code{.copy()} を付け、意図を明示する。pandas 3 系は Copy-on-Write が標準であり、部分表の変更は元の表へ反映されない~\cite{pandas_cow}。元の表の条件に合う行へ代入する場合は、次のように行条件と列名を \code{loc} の一つの添字指定へまとめる。
 
 \begin{lstlisting}[language=Python]
 events.loc[events["signal"] > 11.0, "flag"] = True
@@ -493,6 +509,8 @@ pandas の DataFrame では、同じ処理でも列演算と行単位の Python 
 DataFrame の行を一つずつ取り出す処理は記述しやすいが、列単位の演算よりオーバーヘッドが大きくなる場合がある。
 
 \begin{lstlisting}[language=Python]
+df = pd.DataFrame({"value": [1.0, 2.0, 3.0]})
+
 def heavy_computation(val):
     return val ** 2
 
@@ -519,6 +537,8 @@ df["value_sq"] = df["value"] ** 2
 \end{lstlisting}
 
 \code{apply()} は、既存の列演算や NumPy 関数では表しにくい処理に Python 関数を適用する手段である。列演算、\code{apply()}、並列化の候補について、同じ入力と同じ出力条件で処理時間を測定して選ぶ。
+
+以下の \code{pandarallel} は追加ライブラリであり、使用する環境に \code{python -m pip install pandarallel} などで導入する。二乗程度の軽い処理では並列化の起動・転送コストが支配的になり得るため、この例自体が高速化の推奨例というわけではない。
 
 \subsubsection{\code{pandarallel} による行処理の並列化}
 
@@ -574,7 +594,7 @@ df["value_sq"] = df.parallel_apply(
 
 基本操作の公式資料として Getting started tutorials~\cite{pandas_tutorials} と 10 minutes to pandas~\cite{pandas_10min} がある。列選択と代入は Indexing~\cite{pandas_indexing}、欠損値処理は Missing data~\cite{pandas_missing}、表の結合は Merge, join, concatenate and compare~\cite{pandas_merging}、時刻列は Time series / date functionality~\cite{pandas_timeseries} に詳しい。本章は、これらの機能を解析手順に沿って再構成した。
 
-\section{検出器別の表集計}
+\section{章末課題：検出器別の表集計}
 
 次の CSV を \code{events.csv} として保存し、すべての課題の共通入力とせよ。
 

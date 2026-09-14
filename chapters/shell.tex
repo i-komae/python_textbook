@@ -560,6 +560,17 @@ $ rm data/test_*.csv
 
 表~\ref{tab:file-inspection-commands} は、ファイルの確認と抽出に用いるコマンドを役割別に示したものである。「内容の表示」「条件に合う行の抽出」「列単位の整形」を区別し、必要な操作に対応するコマンドを選ぶ。以下では、各コマンドの入力、出力、主要なオプションを順に説明する。
 
+\subsection{標準入力・標準出力・標準エラー出力}
+\label{sec:standard-streams}
+\index{ひょうじゅんにゅうりょく@標準入力|textbf}\index{ひょうじゅんしゅつりょく@標準出力|textbf}\index{ひょうじゅんえらーしゅつりょく@標準エラー出力|textbf}
+\index{stdin|see{標準入力}}\index{stdout|see{標準出力}}\index{stderr|see{標準エラー出力}}
+
+コマンドには、データを受け渡すための三つの標準的な経路がある。標準入力（standard input, stdin）は入力データを受け取る経路、標準出力（standard output, stdout）は通常の結果を送る経路、標準エラー出力（standard error, stderr）はエラーや警告、進捗などの診断情報を送る経路である。Unix 系の OS では、これらをそれぞれファイル記述子という番号 0、1、2 で識別する。
+
+端末で通常どおり実行すると、標準入力はキーボードからの入力に、二つの出力は端末の画面に接続される。このため、画面の表示だけでは stdout と stderr を区別できない。経路はファイルや別のコマンドにも接続でき、必ずしもキーボードや画面を意味しない。結果と診断情報を分けておけば、数値データのファイルに警告文が混入するのを防げる。
+
+引数と標準入力も別物である。\code{wc -l data.txt} では、文字列 \code{data.txt} を引数として渡し、\code{wc} がそのファイルを開く。\code{wc -l < data.txt} では、シェルが \code{<} によってファイルを標準入力へ接続し、\code{wc} はそこからデータを読む。どちらも同じファイルの改行数を数えるが、後者の出力には入力ファイル名が付かない。
+
 \subsection{\code{cat}}
 
 \code{cat}\index{cat@\code{cat}|textbf} は、指定したファイルの内容を順に標準出力へ送る。複数のファイルを渡すと、引数の順に内容を連結する。
@@ -686,6 +697,8 @@ $ awk '{ sum += $3 } END { print sum }' data.txt
 \item[\code{\{ if (\$3 > 10) print \$1, \$3 \}}] 3 列目が 10 より大きい行について、1 列目と 3 列目を表示する。
 \item[\code{\{ sum += \$3 \} END \{ print sum \}}] 各行で 3 列目を足し上げ、入力をすべて処理した後に合計を表示する。
 \end{description}
+
+ここでの \code{awk -F,} は、カンマを単純な区切りとして扱う。引用符で囲まれた値にカンマや改行を含む一般の CSV は正しく解析できない。その場合は第~\ref{sec:csv-reader}~節の \code{csv} モジュールや pandas を使う。
 
 \subsection{パイプ \code{|}}
 
@@ -848,7 +861,7 @@ $ echo $DATA_ROOT
 
 \code{export} 自体は成功しても通常は何も表示しない。続けて \code{echo \$DATA\_ROOT} を実行し、意図した値が入ったことを確認する。ここでは \code{\$HOME} が先に展開され、その結果として絶対パスが保存されている。
 
-ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値なら、対話シェルが読み込む設定ファイルに \code{export ...} を書いておく。第~\ref{SEC:shell}~章で述べたように、\code{echo \$SHELL} でログインシェルを、\code{ps -p \$\$ -o comm=} で現在のシェルを確認できる。zsh では通常 \code{\textasciitilde/.zshrc}、bash では環境に応じて \code{\textasciitilde/.bashrc} または \code{\textasciitilde/.bash\_profile} に追記する。
+ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値なら、対話シェルが読み込む設定ファイルに \code{export ...} を書いておく。第~\ref{SEC:shell}~節で述べたように、\code{echo \$SHELL} でログインシェルを、\code{ps -p \$\$ -o comm=} で現在のシェルを確認できる。zsh では通常 \code{\textasciitilde/.zshrc}、bash では環境に応じて \code{\textasciitilde/.bashrc} または \code{\textasciitilde/.bash\_profile} に追記する。
 
 \subsection{展開と引用}
 
@@ -867,7 +880,7 @@ $ echo "`pwd`"
 
 1 行目と 2 行目は、どちらも \code{\$HOME} を展開する。\code{HOME} に空白がなければ表示は同じになる。しかし、クォートなしの変数展開は、展開後にフィールド分割とファイル名展開の対象になる。\code{"\$HOME"} は展開結果を一つの引数として保つため、文字列として渡す変数は原則としてダブルクォートで囲む。
 
-3 行目のシングルクォート \code{'...'} 内では変数展開が行われないため、\code{\$HOME} という文字列がそのまま表示される。\code{name="analysis result"} の後に引用符なしで \code{echo \$name} と書くと、展開後の空白によって 2 引数へ分割される。\code{echo "\$name"} では空白を含む値が一つの引数として渡る。\code{\$(pwd)} とバッククォートは、いずれも \code{pwd} の標準出力によるコマンド置換を表す。\code{\$(...)} は入れ子を明示できるため、本書ではこちらを用いる。
+3 行目のシングルクォート \code{'...'} 内では変数展開が行われないため、\code{\$HOME} という文字列がそのまま表示される。Bash では、\code{name="analysis result"} の後に引用符なしで \code{echo \$name} と書くと、既定の設定では空白によって 2 引数へ分割される。zsh の既定の変数展開では、この分割は起こらない~\cite{zsh_expansion}。シェルの設定に依存しないよう、変数の値を一つの引数として渡すときは引用符を付ける。\code{echo "\$name"} では空白を含む値が一つの引数として渡る。\code{\$(pwd)} とバッククォートは、いずれも \code{pwd} の標準出力によるコマンド置換を表す。\code{\$(...)} は入れ子を明示できるため、本書ではこちらを用いる。
 
 この違いは、設定ファイルへ 1 行追記するときに特に重要である。たとえば \code{echo 'export PATH="\$HOME/bin:\$PATH"' >> \textasciitilde/.zshrc} のようにシングルクォートで囲むと、\code{\$HOME} や \code{\$PATH} を展開せず、その文字列をそのまま \code{\textasciitilde/.zshrc} へ追記できる。もしダブルクォートで囲むと、その場で現在の値へ展開されて書き込まれるので、意図とずれることがある。
 
@@ -920,7 +933,7 @@ $ export PATH="$HOME/my_scripts:$PATH"
 
 \subsection{\code{echo}、標準出力、標準エラー}
 
-シェルのコマンドは、単に画面へ文字を出すだけではなく、出力先を切り替えられる。ここで区別したいのは、通常の結果を流す標準出力（standard output, stdout）と、エラーメッセージを流す標準エラー（standard error, stderr）である。
+第~\ref{sec:standard-streams}~節で説明した標準出力と標準エラー出力は、それぞれ別の保存先へ接続できる。まず、短い文字列を出力する \code{echo} で標準出力の行き先を確かめる。
 
 \code{echo} は、引数として受け取った文字列を標準出力へ送る。
 
@@ -972,7 +985,9 @@ $ python analyze.py 1> output.log 2> error.log
 $ python analyze.py > run.log 2>&1
 \end{lstlisting}
 
-これは、標準エラーの行き先を標準出力と同じ先へ合わせる、という意味である。ログを 1 本にまとめたいときに使う。
+リダイレクトは左から順に適用される~\cite{bash_manual}。\code{> run.log 2>\&1} では、まず標準出力をファイルへ接続し、次に標準エラー出力をその時点の標準出力と同じ行き先へ接続する。順序を逆にした \code{2>\&1 > run.log} では、標準エラー出力は先に元の標準出力、通常は端末へ接続されるため、ファイルに入るのは標準出力だけである。
+
+\code{|} が通常接続するのは標準出力だけである。標準エラー出力も次のコマンドへ渡す場合は \code{command 2>\&1 | next\_command} とする。両経路をまとめても、プログラム内の出力の一時蓄積（バッファリング）により、実際に処理した順序とログの行順が一致するとは限らない。
 
 \subsection{\code{tee} による画面表示と保存}
 
@@ -992,6 +1007,18 @@ $ python analyze.py 2>&1 | tee -a run.log
 \end{lstlisting}
 
 この場合は、既存の \code{run.log} を消さずに末尾へ足していく。毎日の実行結果を 1 つのログへ蓄積したい場合に向く。
+
+\subsection{終了ステータスによる成功・失敗の確認}
+\label{sec:exit-status}\index{しゅうりょうすてーたす@終了ステータス|textbf}
+
+コマンドは終了時に整数の終了ステータスを返す。通常は 0 が成功、0 以外が失敗などの状態を表す。直前の値は \code{\$?} で確認できる。
+\begin{lstlisting}[language=bash]
+ls existing_file.txt
+echo "$?"
+\end{lstlisting}
+\code{echo} など別のコマンドを実行すると \code{\$?} も更新されるので、調べたいコマンドの直後に確認する。非零の意味はコマンドごとに異なり、\code{grep} の 1 は検索条件に一致する行がないことを表す。標準エラー出力に警告があっても成功するプログラムがあり、逆に何も表示せず失敗するものもある。
+
+Bash と zsh のパイプラインは、既定では最後のコマンドの終了ステータスを返す。\code{set -o pipefail} を設定すると、途中のコマンドの失敗も検出できる。ただし、\code{head} が必要な行だけ読んで終了すると、前段が書き込み先を失って非零になる場合がある。終了ステータスは、そのコマンドと処理手順の意味に沿って解釈する。
 
 \section{権限とスクリプトの実行}
 
@@ -1061,12 +1088,12 @@ $ ./hello.py
 
 \code{\#!/usr/bin/env python3} は、\code{env} が \code{PATH} から \code{python3} を探し、その実行ファイルでスクリプトを解釈する指定である。ファイルを \code{./script.py} として直接実行するには、適切なシバンと実行権限の両方が必要になる。付録~\ref{app:shell_scripting} では、同じ仕組みに基づくシェルスクリプトと、\code{for} ループや条件分岐による一括処理を扱う。
 
-\section{USGS カタログの取得・調査・圧縮}
+\section{章末課題：USGS カタログの取得・調査・圧縮}
 
 各課題の記録対象は、コマンドを実行した事実だけでなく、入力、主要なオプション、出力の読み方までを含む。ネットワーク上のデータを取得できない場合でも、1 問目と、手元の任意の CSV を使った 3 問目は実行できる。
 
 \begin{enumerate}
-\item \textbf{章末問題用の作業ディレクトリの作成}。
+\item \textbf{章末課題用の作業ディレクトリの作成}。
 次のコマンドを実行し、どのようなディレクトリが作成されるか確認せよ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p earthquake_practice/{raw,compressed,scripts,figures,results}
@@ -1080,7 +1107,7 @@ $ ls
 本書の章末課題では、アメリカ地質調査所（\textbf{U}nited \textbf{S}tates \textbf{G}eological \textbf{S}urvey、\textbf{USGS}）が公開している地震カタログを使用する。
 以下のコマンドを実行し、2024年1月のカタログを \code{raw/} へ保存し、行数、先頭数行、末尾数行、特定の地名を含む行を調べよ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ curl -L "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31T23:59:59.999999&limit=20000&orderby=time-asc" \
+$ curl -fL "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31T23:59:59.999999&limit=20000&orderby=time-asc" \
   -o raw/usgs_global_2024_01.csv
 $ ls -lh raw/usgs_global_2024_01.csv
 $ wc -l raw/usgs_global_2024_01.csv
@@ -1089,7 +1116,9 @@ $ tail -n 3 raw/usgs_global_2024_01.csv
 $ grep -i "Japan" raw/usgs_global_2024_01.csv | head
 \end{lstlisting}
 どのコマンドが「件数確認」「冒頭確認」「末尾確認」「文字列検索」に対応しているかを整理してまとめよ。
-\code{curl} の \code{-L} は転送先が変更された場合に追従し、\code{-o} は保存先を指定する。\code{wc -l} の値にはヘッダ行も含まれるので、データ件数との違いを説明せよ。\code{grep -i} の \code{-i} と、後段の \code{head} が検索結果を何件に制限するかも記録せよ。
+\code{curl} の \code{-f} は HTTP のエラー応答を失敗として扱い、\code{-L} は転送先が変更された場合に追従し、\code{-o} は保存先を指定する。\code{wc -l} の値にはヘッダ行も含まれるので、データ件数との違いを説明せよ。\code{grep -i} の \code{-i} と、後段の \code{head} が検索結果を何件に制限するかも記録せよ。
+
+\code{limit=20000} は取得件数の上限であり、この指定だけでは全件取得を保証しない。USGS の検索仕様~\cite{usgs_api} に従い、同じ期間・検索条件の \code{count} エンドポイントで対象件数を確認する。上限を超える場合は期間を分割し、境界の重複をイベント ID で除く。取得日時と検索条件も保存する。
 
 \item \textbf{同じ CSV に対する 3 種類の圧縮形式の比較}。
 \code{gzip}、\code{tar.gz}、\code{zip} をそれぞれ 1 つずつ作り、圧縮前後の容量を確認せよ。
@@ -1102,7 +1131,7 @@ $ tar -tzf compressed/usgs_global_2024_01.tar.gz
 $ unzip -l compressed/usgs_global_2024_01.zip
 $ wc -c raw/usgs_global_2024_01.csv compressed/*
 \end{lstlisting}
-三つの形式に同じ CSV が入っていることは、\code{gzip -cd}、\code{tar -tzf}、\code{unzip -l} の出力で確認する。\code{gzip -c} は元の CSV を変更せず、圧縮結果を標準出力へ書き出す。\code{tar -czf} は指定した CSV を tar アーカイブに格納し、そのアーカイブを gzip で圧縮する。\code{zip} も同じ CSV を ZIP アーカイブに格納する。今回の入力は単一ファイルであるため、ディレクトリを再帰的にたどる \code{zip -r} は使わない。
+先頭行の表示は内容の一部を、\code{tar -tzf} と \code{unzip -l} は格納されたファイル名などを確認する操作であり、内容全体の一致を保証しない。それぞれ別の作業用ディレクトリへ展開し、\code{cmp 元のCSV 展開後のCSV} で全バイトを比較せよ。\code{cmp} は一致すると何も表示せず 0 を返し、不一致では 1、読み込みなどのエラーでは 2 を返す。\code{gzip -c} は元の CSV を変更せず、圧縮結果を標準出力へ書き出す。\code{tar -czf} は指定した CSV を tar アーカイブに格納し、そのアーカイブを gzip で圧縮する。\code{zip} も同じ CSV を ZIP アーカイブに格納する。今回の入力は単一ファイルであるため、ディレクトリを再帰的にたどる \code{zip -r} は使わない。
 
 \code{wc -c} は各ファイルのバイト数を表示する。その値から、\code{容量比 = 圧縮後のバイト数 / 元 CSV のバイト数} をそれぞれ求める。この値が小さいほど、圧縮後の容量が元の容量より小さい。コマンドの各オプションの役割も、本節の説明と対応付けて記録する。
 

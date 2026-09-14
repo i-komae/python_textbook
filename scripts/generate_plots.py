@@ -181,17 +181,23 @@ fig.tight_layout()
 fig.savefig("../assets/figures/string_axis_example.pdf")
 plt.close(fig)
 
-# 1d. Subplots example
-np.random.seed(24)
-values1 = np.random.normal(loc=0.0, scale=1.0, size=2500)
-values2 = np.random.normal(loc=0.8, scale=1.3, size=2500)
-fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
-axes[0].hist(values1, bins=40, alpha=0.7, label="sample A")
+# 1d. Subplots example (same inputs as the textbook)
+import numpy as np
+import matplotlib.pyplot as plt
+
+rng = np.random.default_rng(29)
+values1 = rng.normal(loc=0.0, scale=1.0, size=3000)
+values2 = rng.normal(loc=0.5, scale=1.2, size=3000)
+
+bin_edges = np.linspace(min(values1.min(), values2.min()),
+                        max(values1.max(), values2.max()), 41)
+fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharex=True, sharey=True)
+axes[0].hist(values1, bins=bin_edges, alpha=0.7, label="sample A")
 axes[0].set_title("sample A")
 axes[0].set_xlabel("value")
 axes[0].set_ylabel("count")
 
-axes[1].hist(values2, bins=40, alpha=0.7, label="sample B")
+axes[1].hist(values2, bins=bin_edges, alpha=0.7, label="sample B")
 axes[1].set_title("sample B")
 axes[1].set_xlabel("value")
 
@@ -203,25 +209,28 @@ fig.tight_layout()
 fig.savefig("../assets/figures/subplots_example.pdf")
 plt.close(fig)
 
-# 1. Distribution Examples
-fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-np.random.seed(42)
-gauss_data = np.random.normal(0, 1.5, 5000)
-exp_data = np.random.exponential(2.5, 5000)
-
-axes[0].hist(gauss_data, bins=40, density=True, alpha=0.7, label="data")
-x_g = np.linspace(-6, 6, 100)
-axes[0].plot(x_g, gaussian_pdf(x_g, 0, 1.5), lw=2, label="fit: Gaussian")
-axes[0].set_xlabel("Value")
-axes[0].set_ylabel("Density")
-axes[0].legend()
-
-counts, bins, _ = axes[1].hist(exp_data, bins=40, range=(0, 15), density=True, alpha=0.7, label="data")
-x_e = np.linspace(0, 15, 100)
-axes[1].plot(x_e, exponential_pdf(x_e, 2.5), lw=2, label="fit: Exponential")
-axes[1].set_xlabel("Wait Time")
-axes[1].set_ylabel("Density")
-axes[1].legend()
+# 1. Distribution examples: fit parameters from the displayed samples.
+from scipy import stats
+rng = np.random.default_rng(37)
+gauss_data = rng.normal(loc=3.0, scale=0.8, size=3000)
+exp_data = rng.exponential(scale=2.5, size=3000)
+mean, sigma = stats.norm.fit(gauss_data)
+_, tau = stats.expon.fit(exp_data, floc=0)
+fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+axes[0].hist(gauss_data, bins=40, density=True, alpha=0.7, label="sample")
+x_g = np.linspace(gauss_data.min(), gauss_data.max(), 300)
+axes[0].plot(x_g, stats.norm.pdf(x_g, loc=mean, scale=sigma),
+             label=fr"Normal fit: $\mu={mean:.2f},\ \sigma={sigma:.2f}$")
+axes[0].set_xlabel("value")
+axes[0].set_ylabel("Probability density")
+axes[0].legend(loc="upper right", fontsize=10)
+axes[1].hist(exp_data, bins=40, density=True, alpha=0.7, label="sample")
+x_e = np.linspace(0, exp_data.max(), 300)
+axes[1].plot(x_e, stats.expon.pdf(x_e, scale=tau),
+             label=fr"Exponential fit: $\tau={tau:.2f}$")
+axes[1].set_xlabel("Waiting time [s]")
+axes[1].set_ylabel("Probability density [1/s]")
+axes[1].legend(loc="upper right", fontsize=10)
 fig.tight_layout()
 fig.savefig("../assets/figures/distribution_examples.pdf")
 plt.close(fig)
@@ -232,8 +241,8 @@ labels = ['slow Python loop', 'NumPy', 'pandas']
 times = [182.4, 2.1, 8.5]
 ax.bar(labels, times, color=['#d9534f', '#5bc0de', '#5cb85c'])
 ax.set_yscale('log')
-ax.set_ylabel("Execution Time [s]")
-ax.set_title("Vectorization Performance Comparison")
+ax.set_ylabel("Illustrative relative time")
+ax.set_title("Illustration (not measured)")
 fig.tight_layout()
 fig.savefig("../assets/figures/vectorization_benchmark.pdf")
 plt.close(fig)
@@ -253,23 +262,26 @@ fig.savefig("../assets/figures/heatmap_example.pdf")
 fig.savefig("../assets/figures/heatmap_example.png", dpi=150) # Raster example for explanation
 plt.close(fig)
 
-# 4. Errorbar and Log Scale
-fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-x_val = np.logspace(0, 3, 15)
-y_val = 1000 * np.exp(-x_val / 50) + np.abs(np.random.randn(15) * 5)
-y_err = np.sqrt(np.abs(y_val) + 1)
+# 4. Errorbar and log scale (same inputs as the textbook)
+import numpy as np
+import matplotlib.pyplot as plt
 
+x_val = np.geomspace(1.0, 100.0, 12)
+y_val = 5.0 * x_val ** (-1.2)
+y_err = 0.15 * y_val
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+# fmt='o' は点を丸で描き、capsize=3 は端部の横棒を 3 point にする
 axes[0].errorbar(x_val, y_val, yerr=y_err, fmt='o', capsize=3, label="data")
-axes[0].set_xlabel("Time [ns]")
-axes[0].set_ylabel("Rate [Hz]")
-axes[0].legend()
+axes[0].set_xlabel("x")
+axes[0].set_ylabel("y")
 
 axes[1].errorbar(x_val, y_val, yerr=y_err, fmt='o', capsize=3, label="data")
 axes[1].set_yscale('log')
 axes[1].set_xscale('log')
-axes[1].set_xlabel("Time [ns] (Log Scale)")
-axes[1].set_ylabel("Rate [Hz] (Log Scale)")
-axes[1].legend()
+axes[1].set_xlabel("x")
+axes[1].set_ylabel("y")
 
 fig.tight_layout()
 fig.savefig("../assets/figures/errorbar_example.pdf")
@@ -279,13 +291,9 @@ plt.close(fig)
 def linear_model(x, a, b):
     return a * x + b
 
-x_fit_data = np.linspace(0.0, 10.0, 11)
-y_true = linear_model(x_fit_data, 1.8, 6.8)
-y_noise = np.array([1.0, -0.7, 0.6, 1.4, -0.8, -1.1, -0.6, 0.0, 1.8, 0.7, 0.9])
-y_fit_data = y_true + y_noise
-y_fit_data[8] = 43.0
-y_err_fit = np.full_like(x_fit_data, 1.5)
-y_err_fit[8] = 20.0
+x_fit_data = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
+y_fit_data = np.array([1.1, 2.0, 3.2, 4.1, 5.1])
+y_err_fit = np.array([0.2, 0.2, 1.5, 0.2, 0.2])
 
 popt_bad, _ = curve_fit(linear_model, x_fit_data, y_fit_data)
 popt_good, cov_good = curve_fit(
@@ -296,7 +304,7 @@ popt_good, cov_good = curve_fit(
     absolute_sigma=True,
 )
 fit_errors = np.sqrt(np.diag(cov_good))
-x_fit_line = np.linspace(0.0, 10.0, 200)
+x_fit_line = np.linspace(0.0, 4.0, 200)
 
 fig, ax = plt.subplots(figsize=(6.6, 4.6))
 ax.errorbar(
@@ -313,14 +321,14 @@ ax.plot(
     linear_model(x_fit_line, *popt_bad),
     "r--",
     lw=2,
-    label=fr"without sigma: $y={popt_bad[0]:.1f}x+{popt_bad[1]:.1f}$",
+    label=fr"without sigma: $y={popt_bad[0]:.3f}x+{popt_bad[1]:.3f}$",
 )
 ax.plot(
     x_fit_line,
     linear_model(x_fit_line, *popt_good),
     color="#1f77b4",
     lw=2,
-    label=fr"with sigma: $y={popt_good[0]:.1f}x+{popt_good[1]:.1f}$",
+    label=fr"with sigma: $y={popt_good[0]:.3f}x+{popt_good[1]:.3f}$",
 )
 ax.set_xlabel("x")
 ax.set_ylabel("y")

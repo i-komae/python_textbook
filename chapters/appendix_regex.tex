@@ -4,6 +4,8 @@
 
 正規表現は、文字列が満たすパターンを記述する記法である。\code{grep}、\code{awk}、Python の \code{re} モジュールでは、ログの抽出、ファイル名の検査、検出器 ID の選別、時刻文字列の検証などに正規表現を用いる。ここでは、本文で触れた \code{grep} や \code{awk} の延長として、解析に必要な構文をまとめる。
 
+以下のメタ文字の説明は、主に Python の \code{re} と \code{grep -E} の拡張正規表現を対象とする~\cite{python_re,grep_manual}。\code{grep} の既定の基本正規表現とは、\code{+}、\code{?}、括弧などの扱いが異なる。Python の \code{.} は既定では改行に一致せず、\code{\textbackslash d} は ASCII の数字以外の Unicode の十進数字にも一致する。半角数字だけが対象なら \code{[0-9]} と明示する。
+
 \section{文字列パターンを表す正規表現}
 
 \subsection{文字どおりの一致とメタ文字}
@@ -51,6 +53,8 @@ $
 \end{table}
 
 表~\ref{tab:wildcard-vs-regex} は、二つの記法における \code{*} の意味を比較している。\code{grep "*.txt"} では、引用符内の \code{*} をシェルではなく \code{grep} の正規表現エンジンが解釈する。正規表現の \code{*} は直前の要素の 0 回以上の反復を表すため、この位置では「任意の文字列」にならず、エラーとなる場合もある。シェルによるファイル名展開にはワイルドカード、文字列内容の照合には正規表現を用いる。
+
+正規表現は文字列の形を検査する。日付や時刻のパターンに一致しても、2 月 30 日や 99 時などが有効な日時になるとは限らない。暦や時刻の値域は \code{datetime} などでも検証する。
 
 \section{アンカー・文字クラス・量指定子}
 
@@ -143,7 +147,7 @@ $ awk '$1 ~ /^det_[AB]$/ {print $1, $3}' summary.txt
 
 \subsection{Python による抽出と変換}
 
-正規表現の括弧で囲んだ部分は、照合結果から個別に取り出せる。Python では、\code{re.search} や \code{re.fullmatch} の戻り値に対して \code{group()} を呼び出す。
+正規表現の括弧で囲んだ部分は、照合結果から個別に取り出せる。Python では、\code{re.search} や \code{re.fullmatch} の返り値に対して \code{group()} を呼び出す。
 
 \begin{lstlisting}[language=Python]
 import re
@@ -200,4 +204,4 @@ print(bool(re.fullmatch(r"run_\d+", "run_42")))
 \item Python \code{re}: 抽出した結果をそのまま解析処理へつなげたいとき
 \end{itemize}
 
-正規表現へ条件を詰め込みすぎると、パターンの検証と保守が難しくなる。まずアンカー、文字クラス、量指定子で条件を記述し、それで表現できない場合に括弧や選択を加える。長いパターンには、受理する文字列と拒否する文字列のテストも用意する。
+正規表現は必要な条件を小さく組み合わせて作る。受理する文字列と拒否する文字列のテストを用意し、変更時に再確認する。

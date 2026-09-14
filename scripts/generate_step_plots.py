@@ -8,15 +8,10 @@ os.makedirs("../assets/figures", exist_ok=True)
 
 plt.style.use("my_style.mplstyle")
 
-# 大量データの作成（10万点、中心に極端に集中）
-np.random.seed(42)
-x = np.random.randn(500000) * 2
-y = x * 0.7 + np.random.randn(500000) * 1.5
-# さらに強烈なコアを持たせる
-x_core = np.random.randn(100000) * 0.1
-y_core = np.random.randn(100000) * 0.1
-x = np.concatenate([x, x_core])
-y = np.concatenate([y, y_core])
+# Same 600,000 synthetic points as the textbook listing.
+rng = np.random.default_rng(19)
+x = rng.normal(loc=0.0, scale=1.0, size=600_000)
+y = 0.65 * x + rng.normal(loc=0.0, scale=0.55, size=x.size)
 
 # 1. 失敗例: 散布図 (Scatter)
 fig, ax = plt.subplots(figsize=(6, 5))
@@ -62,9 +57,9 @@ ax.set_yscale('log')
 ax.set_ylim(bottom=1, top=2000)
 
 for i, v in enumerate(times):
-    ax.text(i, v * 1.3, f"{v} s", ha='center')
-ax.set_ylabel("Execution Time [s]")
-ax.set_title("Pandas Processing Time Comparison")
+    ax.text(i, v * 1.3, f"{v}", ha='center')
+ax.set_ylabel("Illustrative relative time")
+ax.set_title("Illustration (not measured)")
 fig.tight_layout()
 fig.savefig("../assets/figures/pandas_benchmark.pdf")
 plt.close(fig)

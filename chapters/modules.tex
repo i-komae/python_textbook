@@ -34,7 +34,7 @@ $ uv add --dev pytest ruff
 $ uv sync
 \end{lstlisting}
 
-\code{uv add} で追加した \code{numpy}、\code{matplotlib}、\code{scipy} は、このパッケージの実行時依存関係である。\code{pytest} と \code{ruff} は開発時にだけ使うため、\code{--dev} 付きで追加する。\code{pytest} は公開関数の戻り値と例外を検証し、\code{ruff} は \code{uv run ruff check .} によって未使用 import や規則違反を変更記録前に検出する。本章では、公開関数のテストをパッケージ構成の一部として扱う。
+\code{uv add} で追加した \code{numpy}、\code{matplotlib}、\code{scipy} は、このパッケージの実行時依存関係である。\code{pytest} と \code{ruff} は開発時にだけ使うため、\code{--dev} 付きで追加する。\code{pytest} は公開関数の返り値と例外を検証し、\code{ruff} は \code{uv run ruff check .} によって未使用 import や規則違反を変更記録前に検出する。本章では、公開関数のテストをパッケージ構成の一部として扱う。
 
 この例で作成するディレクトリ構成を次に示す。
 
@@ -99,6 +99,12 @@ dev = [
 \item ユーザー定義関数の受付
 \item 引数 \code{p0} によるフィット初期値の指定
 \end{itemize}
+
+\subsection{型ヒントと結果をまとめるクラス}
+\index{くらす@クラス|textbf}\index{かたひんと@型ヒント|textbf}\index{dataclass@\code{dataclass}|textbf}
+以降の例には型ヒントを付ける。\code{x: float} は引数の想定型、\code{-> np.ndarray} は返り値の想定型を示すが、記述するだけで実行時の型検査が行われるわけではない。\code{float | None} は浮動小数点数か \code{None}、\code{tuple[float, float]} は二つの浮動小数点数の組を表す。これらの書式を使う例は Python 3.10 以降を前提とする。
+
+クラスは、関連するデータや操作をまとめたオブジェクトの型を定義する。ここでは \code{@dataclass} を使い、保存先、度数、ビン境界、推定値を一つの結果として返す。\code{result.counts} のように属性名で取り出せる。\code{frozen=True} は属性の再代入を禁止するが、属性が参照する NumPy 配列の要素まで変更不能にするものではない。呼び出し可能な関数やオブジェクトを callable といい、\code{Callable[..., np.ndarray]} は引数構成を限定せず NumPy 配列を返す呼び出しを表す型ヒントである。
 
 \subsection{モデル関数の分離}
 
@@ -251,9 +257,10 @@ def _make_bin_edges(
         high = low + 1.0
 
     if bin_width is not None:
-        if bin_width <= 0:
-            raise ValueError("bin_width must be positive.")
-        return np.arange(low, high + bin_width, bin_width)
+        if not np.isfinite(bin_width) or bin_width <= 0:
+            raise ValueError("bin_width must be finite and positive.")
+        n_bins = int(np.ceil((high - low) / bin_width))
+        return low + np.arange(n_bins + 1) * bin_width
 
     if bins is None:
         bins = 40
@@ -275,7 +282,7 @@ def save_histogram_with_fit(
     data: ArrayLike,
     output_path: str | Path,
     *,
-    bins: int | Sequence[float] | None = 40,
+    bins: int | Sequence[float] | None = None,
     bin_width: float | None = None,
     data_range: tuple[float, float] | None = None,
     fit_model: str | ModelFunc = "gaussian",
@@ -290,9 +297,9 @@ def save_histogram_with_fit(
     Args:
         data: 1 次元データ列。
         output_path: 保存先ファイル名。
-        bins: ビン数またはビン境界列。
+        bins: ビン数またはビン境界列。幅も未指定なら 40 ビン。
         bin_width: ビン幅。bins と同時には指定しない。
-        data_range: ヒストグラム範囲。
+        data_range: 範囲の下限と上限。幅指定時は上端を切り上げる。
         fit_model: モデル名または自作 callable。
         fit: False ならフィットを実行しない。
         p0: curve_fit へ渡す初期値。
@@ -312,41 +319,45 @@ def save_histogram_with_fit(
         raise ValueError("data must contain only finite values.")
 
     bin_edges = _make_bin_edges(values, bins, bin_width, data_range)
+    if fit and not np.allclose(np.diff(bin_edges), np.diff(bin_edges)[0]):
+        raise ValueError("Fitting counts requires equal-width bins.")
     counts, bin_edges = np.histogram(values, bins=bin_edges)
     centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
     errors = np.sqrt(counts)
 
     fig, ax = plt.subplots()
-    ax.errorbar(centers, counts, yerr=errors, fmt="o", capsize=3, label="data")
+    try:
+        ax.errorbar(centers, counts, yerr=errors, fmt="o", capsize=3, label="data")
 
-    fit_params = None
-    fit_cov = None
-    if fit:
-        model = resolve_model(fit_model)
-        sigma = np.where(errors > 0, errors, 1.0)
-        fit_params, fit_cov = curve_fit(
-            model,
-            centers,
-            counts,
-            p0=p0,
-            sigma=sigma,
-            absolute_sigma=True,
-            maxfev=10000,
-        )
-        x_fit = np.linspace(bin_edges[0], bin_edges[-1], 400)
-        y_fit = model(x_fit, *fit_params)
-        ax.plot(x_fit, y_fit, label="fit")
+        fit_params = None
+        fit_cov = None
+        if fit:
+            model = resolve_model(fit_model)
+            sigma = np.where(errors > 0, errors, 1.0)
+            fit_params, fit_cov = curve_fit(
+                model,
+                centers,
+                counts,
+                p0=p0,
+                sigma=sigma,
+                absolute_sigma=True,
+                maxfev=10000,
+            )
+            x_fit = np.linspace(bin_edges[0], bin_edges[-1], 400)
+            y_fit = model(x_fit, *fit_params)
+            ax.plot(x_fit, y_fit, label="fit")
 
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    if title is not None:
-        ax.set_title(title)
-    ax.legend()
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        if title is not None:
+            ax.set_title(title)
+        ax.legend()
 
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path, dpi=150, bbox_inches="tight")
-    plt.close(fig)
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    finally:
+        plt.close(fig)
     return HistogramFitResult(
         output_path=output_path,
         counts=counts,
@@ -357,6 +368,8 @@ def save_histogram_with_fit(
 \end{lstlisting}
 
 この関数では、ビン境界の決定と作図本体を分けている。こうしておくと、ビン幅指定のロジックだけを単独にテストしやすい。また、\code{fit\_model} が文字列なら既定のモデル群から選び、callable ならそのまま使うので、利用者は既定モデルと自作モデルを同じ引数で扱える。
+
+この関数のフィットは、等幅ビンの中心における度数を最小二乗法で近似する学習用の実装である。不等幅ビンでは幅の違いが度数に入るため、フィットを拒否する。\(\sqrt{N}\) の誤差棒と、空のビンに便宜上与える \(\sigma=1\) は、低計数に対する信頼区間を保証しない。精密な推定にはビン内で積分した期待計数や Poisson 尤度などを検討する。幅を指定すると上端が指定幅に合わせて切り上がるので、実際の範囲は返された \code{bin\_edges} で確認する。
 
 \subsection{\code{\_\_init\_\_.py} による公開インタフェースの整理}
 \index{こうかいapi@公開 API|textbf}
@@ -421,7 +434,7 @@ save_histogram_with_fit(
 
 1 つ目はガウス関数でフィットし、2 つ目は \code{fit=False} としてヒストグラムだけを保存している。ビン数指定とビン幅指定の両方が動くことも、この 2 例で確認できる。
 
-1 つ目の呼び出しで保存される図の例を図~\ref{fig:histfit-module-example} に示す。ヒストグラムは入力した 4000 個の信号値を表し、曲線はビンごとの度数へ当てはめたガウス関数である。この入力は平均 5.0 mV、標準偏差 1.2 mV の正規分布から生成している。戻り値の \code{parameters} と \code{covariance} を調べれば、推定した中心と幅、および各パラメータの標準誤差を生成条件と比較できる。図の保存だけでなく、既知の入力に対して推定結果が妥当かどうかも検証する。
+1 つ目の呼び出しで保存される図の例を図~\ref{fig:histfit-module-example} に示す。ヒストグラムは入力した 4000 個の信号値を表し、曲線はビンごとの度数へ当てはめたガウス関数である。この入力は平均 5.0 mV、標準偏差 1.2 mV の正規分布から生成している。返り値の \code{parameters} と \code{covariance} を調べれば、推定した中心と幅、および各パラメータの標準誤差を生成条件と比較できる。図の保存だけでなく、既知の入力に対して推定結果が妥当かどうかも検証する。
 
 \begin{figure}[H]
 \centering
@@ -495,6 +508,7 @@ Histogram plotting and fitting utilities for analysis scripts.
 ## Installation
 
 ```bash
+uv venv
 uv pip install .
 ```
 
@@ -502,7 +516,15 @@ uv pip install .
 
 ```python
 from histfit_tools import save_histogram_with_fit
+
+result = save_histogram_with_fit([1, 2, 2, 3], "example.pdf", bins=3, fit=False)
+print(result.counts)
 ```
+
+## Requirements
+
+Python >= 3.11; NumPy, Matplotlib, SciPy.
+Dependencies are installed from pyproject.toml.
 \end{lstlisting}
 
 README はパッケージ全体の目的、導入方法、最小使用例を示し、docstring は関数単位の入出力契約を示す。両者の対象範囲を分け、同じ情報を重複して保守しない。
@@ -534,13 +556,13 @@ $ uv pip install -e .
 
 \subsection{インストール確認}
 
-インストール後は、短い import テストでパッケージを読み込めることを確認する。
+インストール後は、その仮想環境の Python を直接起動して読み込み元を確認する。\code{uv run} は環境を再同期してプロジェクトを editable install へ戻す場合があるため、通常インストールの確認にはここでは使わない。読み込み済みモジュールはプロセス内に保持されるので、変更後の確認には新しい Python プロセスを使う。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ uv run python -c "from histfit_tools import save_histogram_with_fit; print(save_histogram_with_fit)"
+$ .venv/bin/python -c "import histfit_tools; print(histfit_tools.__file__)"
 \end{lstlisting}
 
-この import テストは、パッケージ名と公開関数を解決できることを確認する。依存関係、計算、ファイル出力を含む動作は、既知の小規模入力で関数を実行し、戻り値と保存ファイルを検証する統合テストで確認する。
+この import テストは、パッケージ名と公開関数を解決できることを確認する。依存関係、計算、ファイル出力を含む動作は、既知の小規模入力で関数を実行し、返り値と保存ファイルを検証する統合テストで確認する。
 
 \section{Git リポジトリによるパッケージの共有}
 
@@ -551,8 +573,9 @@ GitHub\index{github@GitHub|textbf} で共有する場合は、GitHub の Web 画
 空のリモートリポジトリを作成した後、記録対象を確認して次のコマンドを実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ git add pyproject.toml uv.lock README.md src tests .python-version
+$ git add pyproject.toml uv.lock README.md src tests .python-version .gitignore
 $ git commit -m "Create histfit_tools package"
+$ git branch -M main
 $ git remote add origin git@github.com:username/histfit_tools.git
 $ git push -u origin main
 \end{lstlisting}
@@ -589,7 +612,7 @@ $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 
 開発中には、Jupyter、Sphinx、mkdocs など、利用者には不要でも開発者には必要な道具が増える。これらをすべて実行時依存関係へ含めると、利用者のインストール量と依存関係の衝突リスクが増す。公開 API と実行時依存関係は必要最小限に保ち、開発用の道具は開発用依存関係へ分ける。
 
-\section{解析パッケージの作成と検証}
+\section{章末課題：解析パッケージの作成と検証}
 
 \begin{enumerate}
 \item \textbf{最小パッケージの作成}。
@@ -602,7 +625,7 @@ $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 \code{mean\_signal()} に型ヒントと複数行 docstring を追加し、\verb|uv run python -c "from signal_tools import mean_signal; help(mean_signal)"| で表示せよ。docstring の要約、引数、返り値、例外条件がそれぞれどの行に表示されたかを確認せよ。
 
 \item \textbf{通常インストールと editable install の比較}。
-別の仮想環境を 2 つ作り、一方では \code{uv pip install .}、もう一方では \code{uv pip install -e .} を実行せよ。インストール後に関数の戻り値を変更し、どちらの環境で変更が直ちに反映されるかを確認せよ。\code{-e} はソースディレクトリを参照可能な形で登録する指定であり、依存関係の解決やビルド処理をすべて省略する指定ではない。
+別の仮想環境を 2 つ作り、一方では \code{uv pip install .}、もう一方では \code{uv pip install -e .} を実行せよ。インストール後に関数の返り値を変更し、どちらの環境で変更が直ちに反映されるかを確認せよ。\code{-e} はソースディレクトリを参照可能な形で登録する指定であり、依存関係の解決やビルド処理をすべて省略する指定ではない。
 
 \item \textbf{依存関係と生成物の分類}。
 NumPy を実行時依存関係、pytest と ruff を開発用依存関係として追加し、\code{pyproject.toml} の該当箇所を示せ。さらに \code{.gitignore} に \code{.venv/}、\code{\_\_pycache\_\_/}、\code{.pytest\_cache/}、\code{dist/} を書き、\code{git status --short} にこれらが現れないことを確認せよ。\code{uv.lock} をコミットするかどうかはプロジェクトの運用方針によるため、本課題では自分の判断と理由を記述せよ。

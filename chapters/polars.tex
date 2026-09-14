@@ -79,7 +79,7 @@ print(selected)
 print(strong)
 \end{lstlisting}
 
-\code{select()} で列が減り、\code{filter()} で条件に合う行だけが残る。出力は次の通りである。
+\code{select()} で列が減り、\code{filter()} で条件に合う行だけが残る。出力の例を示す。表の罫線や型の表示は一部簡略化している。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shape: (4, 2)
@@ -131,6 +131,8 @@ shape: (4, 5)
 
 \code{alias()} は式の結果へ列名を付ける操作である。式を複数組み合わせる場合は、出力列名を明示すると後続の選択や集計との対応を追いやすい。
 
+一つの \code{with\_columns()} 内の式は、基本的に呼び出し前の列を参照する。同じ呼び出しで新しく作る列を別の式から使う場合は、\code{with\_columns()} を二段に分ける。
+
 \subsection{\code{group\_by()} と集計}
 
 集計も式として書く。\code{group\_by()}\index{group_by@\code{group\_by}|textbf} と \code{agg()} は、pandas の \code{groupby()} に対応する中心的な道具である。
@@ -151,7 +153,7 @@ summary = (
 print(summary)
 \end{lstlisting}
 
-集計後は、検出器ごとに 1 行ずつの表へまとまる。出力は次の通りである。
+集計後は、検出器ごとに 1 行ずつの表へまとまる。出力の例を示す。表の罫線や型の表示は一部簡略化している。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shape: (2, 5)
@@ -164,6 +166,14 @@ shape: (2, 5)
 \end{lstlisting}
 
 Polars の \code{group\_by()} は、集計対象が expression なので、同じ書き方のまま統計量を増やしやすい。\code{count}、\code{mean}、\code{std} のような基本操作は、式の名前を見れば意味を追いやすい。
+
+\code{pl.len()} は群の行数、\code{pl.col("signal").count()} はその列の非 null 値の個数を数える。標準偏差の既定は \code{ddof=1} である。群の平均を元の各行へ付けるには、\code{over()} を使う。
+\begin{lstlisting}[language=Python]
+with_group_mean = derived.with_columns(
+    pl.col("signal").mean().over("detector").alias("detector_mean")
+)
+\end{lstlisting}
+\code{group\_by().agg()} が群ごとに行をまとめるのに対し、この \code{over()} は元の行数を保つ。
 
 \subsection{join と表の変形}
 \index{polars@Polars!pivot@\code{pivot()}}
@@ -283,6 +293,8 @@ test_B_001  14.8    null    high
 
 \code{str.extract()} の第 1 引数は正規表現、第 2 引数の \code{1} は取り出すキャプチャグループの番号である。一致しない \code{test\_B\_001} の \code{prefix} は \code{null} になる。\code{when}、\code{then}、\code{otherwise} は、条件、真の場合の値、偽の場合の値を順に組み立てる。
 
+\code{when().then().otherwise()} では、Python の \code{if} のように選ばれた分岐だけが評価されるとは限らない。各分岐の式は、それぞれ単独でも有効でなければならない。条件外の行で不正な型変換が起きる場合も、分岐を書くだけでは回避できない。
+
 \subsection{lazy API と \code{scan\_parquet()}}
 \index{polars@Polars!scan_parquet@\code{scan\_parquet()}}
 \index{polars@Polars!collect@\code{collect()}}
@@ -302,7 +314,7 @@ result = lf.collect()
 print(result)
 \end{lstlisting}
 
-\code{scan\_parquet()} の引数 \code{"events/*.parquet"} は、一致する複数の Parquet ファイルを入力にする。戻り値は \code{LazyFrame} であり、この時点ではデータを実体化しない。\code{collect()} を呼ぶとクエリが実行され、戻り値として DataFrame が得られる。実行時には、\code{select()} で使う列だけを読む列射影や、\code{filter()} を早い段階へ移す最適化が適用されることがある。最適化内容を確認したい場合は、実行前に \code{print(lf.explain())} として計画を表示できる。
+\code{scan\_parquet()} の引数 \code{"events/*.parquet"} は、一致する複数の Parquet ファイルを入力にする。返り値は \code{LazyFrame} であり、この時点ではデータを実体化しない。\code{collect()} を呼ぶとクエリが実行され、返り値として DataFrame が得られる。実行時には、\code{select()} で使う列だけを読む列射影や、\code{filter()} を早い段階へ移す最適化が適用されることがある。最適化内容を確認したい場合は、実行前に \code{print(lf.explain())} として計画を表示できる。
 
 \subsection{CSV と Parquet の入出力}
 \index{polars@Polars!parquet@Parquet}
@@ -345,6 +357,8 @@ Polars の組み込み式は query optimizer が解析できる。Python の \co
 
 Polars では、各列のデータ型に応じて利用できる式が決まり、値が存在しない \code{null} と浮動小数点値 \code{NaN} は別に扱われる。フィルタや集計の前に列型を確認し、\code{is\_null()} と \code{is\_nan()} のどちらを条件に含めるかを決める。
 
+遅延実行は、必要列の選択や条件による絞り込みを実行計画へ反映する仕組みであり、メモリ使用量を無制限に小さくするものではない。\code{collect()} で最終的に得る表の大きさと、並べ替え・結合の中間データにも注意する。
+
 \section{大規模表処理と可視化への受け渡し}
 
 Polars への移行を検討する条件を次に示す。
@@ -360,9 +374,9 @@ Polars への移行を検討する条件を次に示す。
 
 Polars の概念は Concepts~\cite{polars_concepts}、式は Expressions and contexts~\cite{polars_expressions}、遅延実行は Lazy API~\cite{polars_lazy}、入出力は IO~\cite{polars_io}、pandas との差は Coming from Pandas~\cite{polars_from_pandas} に記載されている。本章は、これらの機能を解析手順に沿って再構成した。
 
-\section{検出器別集計と遅延実行}
+\section{章末課題：検出器別集計と遅延実行}
 
-共通入力には前章の \code{events.csv} を用いよ。ファイルがない場合は、第~\ref{chap:pandas}~章の章末問題に示した 6 行の CSV を作成せよ。
+共通入力には前章の \code{events.csv} を用いよ。ファイルがない場合は、第~\ref{chap:pandas}~章の章末課題に示した 6 行の CSV を作成せよ。
 
 \begin{enumerate}
 \item \textbf{列式による列選択と行抽出}。

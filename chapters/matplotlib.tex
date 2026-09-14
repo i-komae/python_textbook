@@ -89,7 +89,7 @@ ax.plot("time", "value", data=table)
 
 \subsection{線・点・参照線・誤差棒の描画関数}
 
-線図には \code{plot()}\index{Matplotlib!plot@\code{plot()}|textbf}、散布図には \code{scatter()}\index{Matplotlib!scatter@\code{scatter()}|textbf}、鉛直および水平の参照線には \code{axvline()}\index{Matplotlib!axvline@\code{axvline()}} と \code{axhline()}\index{Matplotlib!axhline@\code{axhline()}}、誤差付きの点には \code{errorbar()}\index{Matplotlib!errorbar@\code{errorbar()}|textbf} を用いる。次の例は、これらの関数と出力図の対応を示す。
+線図には \code{plot()}\index{matplotlib@Matplotlib!plot@\code{plot()}|textbf}、散布図には \code{scatter()}\index{matplotlib@Matplotlib!scatter@\code{scatter()}|textbf}、鉛直および水平の参照線には \code{axvline()}\index{matplotlib@Matplotlib!axvline@\code{axvline()}} と \code{axhline()}\index{matplotlib@Matplotlib!axhline@\code{axhline()}}、誤差付きの点には \code{errorbar()}\index{matplotlib@Matplotlib!errorbar@\code{errorbar()}|textbf} を用いる。次の例は、これらの関数と出力図の対応を示す。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -126,7 +126,7 @@ fig.savefig("basic_plot_types_example.pdf")
 
 \subsection{ヒートマップとカラーバー}
 
-格子上で定義された 2 次元配列は \code{imshow()}\index{Matplotlib!imshow@\code{imshow()}|textbf} で色に対応させる。これに対して、点群を格子ごとに数え上げる場合は \code{hist2d()}\index{Matplotlib!hist2d@\code{hist2d()}|textbf} を用いる。いずれの場合も、色が表す量と尺度をカラーバーに記す。
+格子上で定義された 2 次元配列は \code{imshow()}\index{matplotlib@Matplotlib!imshow@\code{imshow()}|textbf} で色に対応させる。これに対して、点群を格子ごとに数え上げる場合は \code{hist2d()}\index{matplotlib@Matplotlib!hist2d@\code{hist2d()}|textbf} を用いる。いずれの場合も、色が表す量と尺度をカラーバーに記す。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -190,12 +190,18 @@ ax2.scatter(lon, lat)
 \label{fig:projection-examples}
 \end{figure}
 
-国境、海岸線、地理座標系の変換を必要とする地図には Cartopy を用いる。球面座標上の点分布だけを表示する場合は、Matplotlib の標準投影を利用できる。入力座標の単位、経度の範囲、周期境界における処理を作図前に確認する。
+国境、海岸線、地理座標系の変換を必要とする地図には Cartopy を用いる。球面座標上の点分布だけを表示する場合は、Matplotlib の標準投影を利用できる。入力座標の単位、経度の範囲、周期境界における処理を作図前に確認する。 Cartopy は追加のライブラリであり、導入方法は公式資料~\cite{cartopy_docs} を参照する。海岸線などの地図データを初めて使う際には取得が必要になる場合がある。
 
 
 \section{分布・相関・密度に応じた図の選択}
 
 2 変数の関係を調べるときに、データ量を確認せず散布図を描くだけでは、点の重なりによって密度構造を見落とす場合がある。この節の対象は、データ点数と確認したい性質に応じた散布図、透過表示、2 次元ヒストグラムの選択である。
+
+\subsection{度数と確率密度の区別}
+\index{ひすとぐらむ@ヒストグラム!せいきか@正規化|textbf}\index{かくりつみつど@確率密度|textbf}
+\code{hist()} の既定の縦軸はビン内の度数である。\code{density=True} は、幅 \(\Delta x_i\) のビンの度数 \(n_i\) を \(n_i/(N\Delta x_i)\) に正規化する。ここで \(N\) は表示範囲内で数えた総度数であり、全ビンの面積の和が 1 になる。棒の高さの和が 1 になるとは限らない。
+
+不等幅ビンや対数間隔のビンでは、広いビンほど多くの点が入り得る。分布の形を比較する場合は、度数、単位幅当たりの度数、確率密度のどれを示すかを軸に明記する。\code{density=True} は横軸の値そのものの幅で割る指定であり、対数軸にしただけで対数値の確率密度にはならない。確率密度関数を重ねるときも、正規化する範囲と単位をそろえる。
 
 \subsection{点の重なりに応じた表示方法の選択}
 
@@ -244,11 +250,11 @@ fig.savefig("hist2d_linear_bad.pdf")
 \label{fig:hist2d-linear}
 \end{figure}
 
-図~\ref{fig:hist2d-linear} では中心部の密度を読み取れるが、最大値が約 2 万カウントに達するため、10 カウントや 100 カウント程度の領域には近い色が割り当てられる。この線形カラースケールでは、周辺部の密度差や裾の広がりを識別しにくい。
+図~\ref{fig:hist2d-linear} では中心部の密度を読み取れるが、中心部と周辺部の度数が大きく異なるため、周辺の少数カウントの領域には近い色が割り当てられる。この線形カラースケールでは、周辺部の密度差や裾の広がりを識別しにくい。
 
 \subsubsection{\code{LogNorm} による広い密度範囲の表示}
 
-物理イベントの頻度が 1、10、100、1000 のように数桁にわたる場合には、線形カラースケールだけでは低密度領域の差を表しにくい。\code{LogNorm} は、正のカウントを対数尺度で色へ割り当てる。\index{Matplotlib!LogNorm@\code{LogNorm}|textbf}
+物理イベントの頻度が 1、10、100、1000 のように数桁にわたる場合には、線形カラースケールだけでは低密度領域の差を表しにくい。\code{LogNorm} は、正のカウントを対数尺度で色へ割り当てる。\index{matplotlib@Matplotlib!LogNorm@\code{LogNorm}|textbf}
 
 \begin{lstlisting}[language=Python]
 import matplotlib.colors as mcolors
@@ -267,11 +273,11 @@ fig.savefig("hist2d_lognorm_good.pdf")
 \label{fig:hist2d-lognorm}
 \end{figure}
 
-図~\ref{fig:hist2d-lognorm}では、単一のピークの周囲に広がる低密度の相関層も判別できる。線形尺度では近い色に対応していた低密度領域が、対数尺度では異なる色に割り当てられるためである。
+図~\ref{fig:hist2d-lognorm}では、単一のピークの周囲に広がる低密度の広がりも判別できる。線形尺度では近い色に対応していた低密度領域が、対数尺度では異なる色に割り当てられるためである。
 
 \subsection{\code{subplots()} による複数パネルの配置}
 
-関連する分布を同じ尺度で比較する場合は、1 枚のキャンバス（\code{Figure}\index{Matplotlib!Figure@\code{Figure}|textbf}）の中に複数のパネル（\code{Axes}\index{Matplotlib!Axes@\code{Axes}|textbf}）を配置する。
+関連する分布を同じ尺度で比較する場合は、1 枚のキャンバス（\code{Figure}\index{matplotlib@Matplotlib!Figure@\code{Figure}|textbf}）の中に複数のパネル（\code{Axes}\index{matplotlib@Matplotlib!Axes@\code{Axes}|textbf}）を配置する。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -334,11 +340,13 @@ axes["C"].scatter(x_sc, y_sc)
 
 \code{subplot\_mosaic()} は文字列の名前で Axes を参照できる。\code{GridSpec} は、列幅、行高、結合するセルを数値で指定する。Axes の参照方法と格子比率の制御範囲に応じて選択する。
 
+\code{LogNorm} は 0 以下の値を対数へ写せないため、空のビンなどは通常マスクされる。背景と同じ色で表示された領域を、微小な正の度数と混同しないようにする。また、\code{imshow()} の既定の座標は画像の画素位置である。物理的な座標で表示する場合は、\code{origin} と \code{extent=(xmin, xmax, ymin, ymax)} で上下の向きと画像の外縁を明示する。
+
 \subsection{凡例とレイアウト}
 
 複数の系列やフィット曲線を同じ図へ重ねる場合は、各系列を識別する凡例が必要である。凡例の位置、枠の有無、項目の順序は、データとの重なりと系列間の対応を考慮して定める。
 
-次の例では、同じ物理量を条件 A と B で測定した状況を正規乱数で模擬する。両パネルに同じビン数と共有した縦軸を用い、分布の位置と幅を比較する。
+次の例では、同じ物理量を条件 A と B で測定した状況を正規乱数で模擬する。両パネルに同じビン境界と共有した軸を用い、分布の位置と幅を比較する。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -348,13 +356,15 @@ rng = np.random.default_rng(29)
 values1 = rng.normal(loc=0.0, scale=1.0, size=3000)
 values2 = rng.normal(loc=0.5, scale=1.2, size=3000)
 
-fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
-axes[0].hist(values1, bins=40, alpha=0.7, label="sample A")
+bin_edges = np.linspace(min(values1.min(), values2.min()),
+                        max(values1.max(), values2.max()), 41)
+fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharex=True, sharey=True)
+axes[0].hist(values1, bins=bin_edges, alpha=0.7, label="sample A")
 axes[0].set_title("sample A")
 axes[0].set_xlabel("value")
 axes[0].set_ylabel("count")
 
-axes[1].hist(values2, bins=40, alpha=0.7, label="sample B")
+axes[1].hist(values2, bins=bin_edges, alpha=0.7, label="sample B")
 axes[1].set_title("sample B")
 axes[1].set_xlabel("value")
 
@@ -426,17 +436,17 @@ fig.savefig("errorbar_example.pdf")
 \begin{figure}[tbp]
 \centering
 \includegraphics[width=0.92\linewidth]{distribution_examples.pdf}
-\caption{Matplotlib による分布図とフィットの例。左はガウシアン型、右は指数分布であり、どちらもヒストグラムの上にフィット曲線を重ね、凡例に関数形とパラメータを書いている。}
+\caption{Matplotlib による分布図とフィットの例。左はガウシアン型、右は指数分布であり、どちらもヒストグラムの上にフィット曲線を重ね、凡例に分布名と推定パラメータを示している。}
 \label{fig:distribution-examples}
 \end{figure}
 
-\subsection{画像フォーマットの選択：ラスタとベクタ}\index{Matplotlib!savefig@\code{savefig()}}
+\subsection{画像フォーマットの選択：ラスタとベクタ}\index{matplotlib@Matplotlib!savefig@\code{savefig()}}
 
 解析図の保存形式は、図の要素数、出力先、必要な拡大率に応じて選ぶ。
 
 \begin{itemize}
     \item \textbf{ベクタ形式 (\code{.pdf}, \code{.svg}, \code{.eps})}：線や文字を図形要素として保存するため、拡大しても輪郭がぼやけない。線図や要素数の少ない散布図を論文やレポートへ掲載するときは、\code{savefig("plot.pdf")} のようにベクタ形式で保存する。
-    \item \textbf{ラスタ形式 (\code{.png}, \code{.jpg})}：図をピクセルの集合として保存するため、拡大率によっては輪郭に画素が見える。ベクタ形式では各点が個別要素となるので、密集した散布図や大きな格子画像ではファイルサイズと描画負荷が増える。この場合は、\code{savefig("plot.png", dpi=150)} のように必要な解像度を指定して PNG で保存する。
+    \item \textbf{ラスタ形式 (\code{.png}, \code{.jpg})}：図をピクセルの集合として保存するため、拡大率によっては輪郭に画素が見える。ベクタ形式では各点が個別要素となるので、密集した散布図や各セルを図形として描くヒートマップではファイルサイズと描画負荷が増える。\code{imshow()} の画像は PDF 内にもラスタ画像として埋め込まれる。多数の点やセルだけに \code{rasterized=True} を指定すれば、文字をベクタのまま残すこともできる。図全体を画像にする場合は、\code{savefig("plot.png", dpi=150)} のように必要な解像度を指定して PNG で保存する。
 \end{itemize}
 
 \begin{lstlisting}[language=Python]
@@ -484,7 +494,7 @@ Figure
 `-- Figure-level Text / Colorbar / ...
 \end{lstlisting}
 
-図~\ref{fig:anatomy-example} に、Figure、Axes、Axis、Artist の位置関係を示す。Figure は一つ以上の Axes を持ち、各 Axes は x 軸と y 軸を表す Axis、および線、文字、凡例などの Artist を持つ。
+図~\ref{fig:anatomy-example} に、Figure、Axes、Axis、Artist の位置関係を示す。Figure は一つ以上の Axes を持ち、各 Axes は x 軸と y 軸を表す Axis、および線、文字、凡例などを持つ。Figure、Axes、Axis 自体も Artist の一種であり、四者が互いに独立した分類というわけではない。
 
 \begin{figure}[tbp]
 \centering
@@ -643,7 +653,9 @@ rng = np.random.default_rng(0)
 values1 = rng.normal(loc=0.0, scale=1.0, size=2500)
 values2 = rng.normal(loc=0.8, scale=1.3, size=2500)
 
-fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
+bin_edges = np.linspace(min(values1.min(), values2.min()),
+                        max(values1.max(), values2.max()), 41)
+fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharex=True, sharey=True)
 plot_hist(axes[0], values1, "sample A")
 plot_hist(axes[1], values2, "sample B")
 fig.savefig("histogram_pair_helper.pdf")
@@ -667,7 +679,7 @@ fig.savefig("histogram_pair_helper.pdf")
 
 \subsection{マーカー、線種、色の指定}
 
-Matplotlib では、点の形\index{marker@marker}、線種\index{linestyle@linestyle}、色をそれぞれ独立に指定できる。対応する主な引数は次の 4 つである。
+Matplotlib では、点の形\index{marker@marker}、線種\index{linestyle@linestyle}、色をそれぞれ独立に指定できる。対応する主な引数は次の 5 つである。
 
 \begin{lstlisting}[language=Python]
 ax.plot(
@@ -683,7 +695,8 @@ ax.plot(
 
 \begin{itemize}
 \item \code{marker}: 点の形を決める。
-\item \code{markersize}: 点の大きさを決める。
+\item \code{markersize}: 点の大きさを point 単位で指定する。\code{scatter()} の \code{s} は point の二乗単位であり、同じ数値でも意味が異なる。
+\item \code{linewidth}: 線の太さを point 単位で指定する。
 \item \code{linestyle}: 実線、破線、点線などを決める。
 \item \code{color}: 線や点の色を決める。
 \end{itemize}
@@ -709,7 +722,7 @@ ax.plot(
 \midrule
 \code{"o"} & 丸 & 測定点、既定の散布図 \\
 \code{"s"} & 四角 & 条件の違いを強調したい点 \\
-\code{"\^"} & 上向き三角 & 系列ごとの差別化 \\
+\code{"\textasciicircum"} & 上向き三角 & 系列ごとの差別化 \\
 \code{"D"} & ひし形 & 参照データや補助系列 \\
 \code{"x"} & バツ & 強調した外れ値や選択点 \\
 \bottomrule
@@ -804,7 +817,7 @@ Categorical & \code{tab10} & 離散的な系列の識別 \\
 
 カウント数や強度のように順序と大小を持つ量には、\code{viridis} などの sequential map を対応させる。正負のずれや差分のように基準値の両側を区別する量には、diverging map を対応させる。値の大小を持たない系列の分類には categorical map を用いる。
 
-\subsection{設定ファイル (.mplstyle) による描画設定の共通化}\index{Matplotlib!.mplstyle@\code{.mplstyle}|textbf}
+\subsection{設定ファイル (.mplstyle) による描画設定の共通化}\index{matplotlib@Matplotlib!.mplstyle@\code{.mplstyle}|textbf}
 
 解析テーマごとに作図スクリプトが増えると、各 Python ファイルの先頭へ同じ設定辞書をコピーする方法は保守しにくい。Matplotlib では、共通の描画設定を \code{.mplstyle} 形式のスタイル設定ファイルへ分離し、まとめて読み込める。
 
@@ -863,7 +876,7 @@ ax.grid(False)  # この Axes だけグリッドを消す
 二つの \code{.mplstyle} を配列で渡すと、後ろに書いたファイルの設定が優先される。したがって、基準となる \code{my\_style.mplstyle} を保ったまま、文字サイズやグリッドの有無だけを差し替えられる。さらに、\code{mpl.rcParams} の変更はその後に作成する図へ、\code{ax.grid(False)} のような Axes メソッドは指定したパネルへ適用される。スタイルファイル、スクリプト内の既定値、個別の Axes の順に、適用範囲が狭くなる。
 
 
-\section{数式・注釈・複数図の比較}
+\section{図中の数式表記}
 
 \subsection{Matplotlib による数式表記}
 
@@ -874,9 +887,9 @@ plt.xlabel(r"$\Delta t\,[\mathrm{ns}]$")
 plt.ylabel(r"$N$")
 \end{lstlisting}
 
-単位を数式の中へ入れる場合は、上の例のように \code{\\mathrm} を使って立体で表す。図中の記号、字体、単位は、本文での定義と一致させる。
+単位を数式の中へ入れる場合は、上の例のように \code{\textbackslash{}mathrm} を使って立体で表す。図中の記号、字体、単位は、本文での定義と一致させる。
 
-MathText は、Matplotlib 内部で数式の一部を組版する機能であり、LaTeX の処理系そのものではない。分数、上付き・下付き、ギリシャ文字、\code{\\mathrm} などを扱える一方、任意の LaTeX マクロやパッケージ依存の記法には対応しない。本文と同じ LaTeX 処理系による組版が必要な場合は、外部依存関係を記録したうえで \code{text.usetex=True} を検討する。
+MathText は、Matplotlib 内部で数式の一部を組版する機能であり、LaTeX の処理系そのものではない。分数、上付き・下付き、ギリシャ文字、\code{\textbackslash{}mathrm} などを扱える一方、任意の LaTeX マクロやパッケージ依存の記法には対応しない。本文と同じ LaTeX 処理系による組版が必要な場合は、外部依存関係を記録したうえで \code{text.usetex=True} を検討する。
 
 本文で $\tau$ を時定数として定義したなら、図の凡例とキャプションでも同じ記号を用いる。解析中の量と図中の表記を一対一に対応させる。
 
@@ -926,7 +939,7 @@ ax.plot(x_str, y, marker="o")
 
 \code{Plot types} は図種ごとの選択肢、\code{Gallery} は完成例と実装、\code{Cheatsheets} は主要な引数と書式、\code{Quick start} は \code{Figure} と \code{Axes} の基本構造を示す。目的に近い公式例を選び、入力データ、軸、単位、保存形式を解析条件に合わせて変更する。
 
-\section{地震カタログと発生間隔の可視化}
+\section{章末課題：地震カタログと発生間隔の可視化}
 
 USGS データと第~\ref{chap:numpy}~章で作成した \(\Delta t\) 配列がない場合は、次の小規模データを共通入力に用いよ。課題では画面表示だけで終わらせず、指定したファイルを保存し、保存後に \code{Path(...).exists()} で存在を確認せよ。
 
