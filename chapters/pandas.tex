@@ -613,13 +613,13 @@ B,2050,13.2,true
 \code{pd.read\_csv()} で読み、\code{shape}、\code{columns}、\code{dtypes}、\code{head(3)}、\code{isna().sum()} を表示せよ。行数は 6、列数は 4、\code{signal} の欠損数は 1 になる。\code{head(3)} の \code{3} と、\code{isna().sum()} の \code{sum()} がどの方向に集計しているかを説明せよ。
 
 \item \textbf{条件抽出と列追加}。
-\code{valid} が真で \code{signal >= 12.0} の行を \code{loc} で抽出し、\code{signal / signal.mean()} を \code{signal\_ratio} 列として追加せよ。抽出行は 3 件になる。複数条件を括弧で囲み、\code{and} ではなく \code{\&} を使う理由を説明せよ。
+\code{valid} が真で \code{signal >= 12.0} の行を \code{loc} で抽出し、\code{signal / signal.mean()} を \code{signal\_ratio} 列として追加せよ。抽出行は 3 件になる。\code{signal.mean()} は抽出後の 3 行について求める。複数条件を括弧で囲み、\code{and} ではなく \code{\&} を使う理由を説明せよ。
 
 \item \textbf{検出器別集計と別表の結合}。
-\code{groupby("detector")} と \code{agg()} を使い、有効な信号の件数、平均、標準偏差を求めよ。平均は A が約 12.8333、B が 11.5 になる。さらに、A と B の較正係数を持つ DataFrame を作り、\code{merge(..., on="detector", how="left")} で結合せよ。\code{on} と \code{how} の役割を説明せよ。
+\code{groupby("detector")} と \code{agg()} を使い、有効な信号の件数、平均、標準偏差を求めよ。2 問目の抽出表ではなく元の表を用い、\code{valid} が真で \code{signal} が欠損していない行を集計する。有効件数は A が 3、B が 2、平均は A が約 12.8333、B が 11.5 になる。標準偏差は \code{ddof=1} とし、件数を数える \code{count()} と全行数を数える \code{size()} の違いも確認せよ。さらに、A と B の較正係数を持つ DataFrame を作り、\code{merge(..., on="detector", how="left")} で結合せよ。\code{on} と \code{how} の役割を説明せよ。
 
 \item \textbf{一括読み込みと分割読み込みの比較}。
-本文の \code{chunksize=2} の方法で件数と平均を求め、一括読み込みから得た結果と \code{pd.testing.assert\_frame\_equal()} または \code{np.allclose()} で一致を確認せよ。チャンク平均の単純平均が一般には誤る理由を、件数が異なる 2 チャンクの例を使って説明せよ。
+3 問目と同じ有効条件を使い、本文の \code{chunksize=2} の方法で件数と平均を求め、一括読み込みから得た結果と \code{pd.testing.assert\_frame\_equal()} または \code{np.allclose()} で一致を確認せよ。チャンク平均の単純平均が一般には誤る理由を、件数が異なる 2 チャンクの例を使って説明せよ。
 
 \item \textbf{再利用可能な形式への保存}。
 集計表を CSV と Parquet の両方へ保存し、読み戻して列名と値を確認せよ。\code{index=False} を付けた場合に何が保存されないかを説明し、Parquet の読み込みに追加ライブラリが必要な環境では、表示された例外名も記録せよ。

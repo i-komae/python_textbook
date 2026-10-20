@@ -120,7 +120,7 @@ PYBIND11_MODULE(_core, m) {
 }
 \end{lstlisting}
 
-\code{pybind11/stl.h} をインクルードすると、Python の list から \code{std::vector<double>} への変換が有効になる。したがって、この関数の呼び出し側に明示的な変換コードは不要である。負の時間窓は定義に反するため、C++ 側で \code{std::invalid\_argument} を送出する。
+\code{pybind11/stl.h} をインクルードすると、Python の list から \code{std::vector<double>} への変換が有効になる。したがって、この関数の呼び出し側に明示的な変換コードは不要である。負の時間窓は定義に反するため、C++ 側で \code{std::invalid\_argument} を送出する。この例の時刻は浮動小数点数で表せる範囲の相対時刻である。総合課題の Unix 時刻付近で ns の差を扱う場合は、整数ナノ秒による API と検出器の条件を別に実装する。\code{double} へ変換してから差を取る方法では、元の時間分解能を失い得る。
 
 \subsection{Python から公開する API}
 

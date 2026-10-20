@@ -3,3 +3,8 @@ build
 main.synctex.gz
 venv
 .venv
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+notebooks/_outputs/

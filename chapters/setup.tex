@@ -564,8 +564,8 @@ print(window_ns)
 
 \begin{enumerate}
 \item \textbf{\code{uv} による地震データ解析用プロジェクトの作成}。
-\code{earthquake\_practice} の下に \code{usgs\_project} を作り、\code{uv init} を実行せよ。作成された \code{.python-version} の内容を確認したうえで、必要なら手元で使える Python を \code{uv python pin ...} によって指定する。次に \code{uv add numpy matplotlib scipy}、\code{uv run python --version}、\code{uv run python -c "import numpy, matplotlib, scipy"} を順に実行し、選ばれた Python と仮想環境を確認せよ。
-\code{uv init} 後には \code{pyproject.toml}、\code{.python-version}、\code{src/} 以下のパッケージなどが作られる。\code{uv add} 後には依存関係が \code{pyproject.toml} へ記録され、通常は \code{uv.lock} と \code{.venv/} も作られる。\code{uv run python -c "import sys; print(sys.executable)"} を追加で実行し、表示されたパスがプロジェクトの \code{.venv} 以下にあることを確認せよ。\code{-c} は、後続の文字列を Python コードとして実行するオプションである。
+\code{earthquake\_practice} の下に \code{usgs\_project} を作り、\code{uv init --package} を実行せよ。作成された \code{.python-version} の内容を確認したうえで、必要なら手元で使える Python を \code{uv python pin ...} によって指定する。次に \code{uv add numpy matplotlib scipy}、\code{uv run python --version}、\code{uv run python -c "import numpy, matplotlib, scipy"} を順に実行し、選ばれた Python と仮想環境を確認せよ。
+\code{uv init --package} 後には \code{pyproject.toml}、\code{.python-version}、\code{src/} 以下のパッケージなどが作られる。\code{--package} はビルド可能な構成を明示する指定であり、uv 0.12 より前の版でも本節と同じ構成を作れる。\code{uv add} 後には依存関係が \code{pyproject.toml} へ記録され、通常は \code{uv.lock} と \code{.venv/} も作られる。\code{uv run python -c "import sys; print(sys.executable)"} を追加で実行し、表示されたパスがプロジェクトの \code{.venv} 以下にあることを確認せよ。\code{-c} は、後続の文字列を Python コードとして実行するオプションである。
 
 \item \textbf{\code{pyenv} と \code{venv} による別方式の環境構築}。
 \code{earthquake\_practice} の下に \code{usgs\_venv} を作り、必要なら \code{pyenv local ...} で Python を切り替えてから \code{python -m venv .venv} を実行せよ。仮想環境を有効にする前後で \code{command -v python}、\code{python --version}、\code{pip --version} がどう変わるかを記録せよ。

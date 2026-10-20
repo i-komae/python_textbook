@@ -383,7 +383,7 @@ Polars の概念は Concepts~\cite{polars_concepts}、式は Expressions and con
 \code{pl.read\_csv()} で表を読み、\code{select()} で \code{detector} と \code{signal} だけを選べ。次に、\code{signal} が \code{null} でなく 12.0 以上である行を \code{filter()} せよ。結果は A が 2 行、B が 1 行の計 3 行になる。\code{pl.col()} が値ではなく式を返すことと、\code{is\_not\_null()} を条件に明示する理由を説明せよ。
 
 \item \textbf{列追加と集計を含む単一クエリ}。
-\code{with\_columns()} で各検出器の平均からの差 \code{signal\_centered} を作成せよ。この計算には \code{pl.col("signal").mean().over("detector")} を用いよ。その後、\code{group\_by()} と \code{agg()} で件数、平均、最大値を求め、検出器名で並べ替えよ。\code{over("detector")} と \code{group\_by("detector")} の違いを、出力行数に着目して説明せよ。
+\code{with\_columns()} で各検出器の平均からの差 \code{signal\_centered} を作成せよ。この計算には \code{pl.col("signal").mean().over("detector")} を用いよ。元の 6 行の表に列を追加し、\code{group\_by()} と \code{agg()} で件数、平均、最大値を求め、検出器名で並べ替えよ。全行数を数える \code{pl.len()} と、非 null の信号数を数える \code{pl.col("signal").count()} を両方求める。前者は A、B とも 3、後者は A が 3、B が 2 になる。\code{over("detector")} と \code{group\_by("detector")} の違いを、出力行数に着目して説明せよ。
 
 \item \textbf{lazy API の実行計画と結果の確認}。
 \code{pl.scan\_csv("events.csv")} から始め、必要な 2 列の選択、欠損除去、検出器別平均を記述せよ。\code{collect()} の前に \code{explain()} を表示し、その後に \code{collect()} した DataFrame を表示せよ。\code{LazyFrame} と \code{DataFrame} のどちらが実データを保持するかを説明せよ。

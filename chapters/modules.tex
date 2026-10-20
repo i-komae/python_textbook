@@ -619,7 +619,7 @@ $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 空の作業ディレクトリで \code{uv init --lib signal\_tools} を実行し、生成された \code{pyproject.toml} と \code{src/signal\_tools/\_\_init\_\_.py} を確認せよ。\code{--lib} を付けた理由、\code{src} レイアウトで未インストールの作業ツリーを誤って import する問題を検出しやすい理由、\code{pyproject.toml} の \code{name} と \code{requires-python} の意味を説明せよ。
 
 \item \textbf{公開関数とテストの追加}。
-\code{src/signal\_tools/statistics.py} に、数値列を受け取って算術平均を返す \code{mean\_signal(values)} を作れ。空列では \code{ValueError} を送出せよ。\code{\_\_init\_\_.py} から再公開し、\code{from signal\_tools import mean\_signal} で呼び出せる状態にせよ。\code{tests/test\_statistics.py} に通常入力と空入力のテストを書き、\code{uv run pytest} の末尾で \code{2 passed} と表示されることを確認せよ。
+\code{src/signal\_tools/statistics.py} に、数値列を受け取って算術平均を返す \code{mean\_signal(values)} を作れ。空列では \code{ValueError} を送出せよ。\code{\_\_init\_\_.py} から再公開し、\code{from signal\_tools import mean\_signal} で呼び出せる状態にせよ。\code{tests/test\_statistics.py} に通常入力と空入力のテストを書き、\code{uv add --dev pytest ruff} で検証用の依存関係を追加し、\code{uv run pytest} の末尾で \code{2 passed} と表示されることを確認せよ。
 
 \item \textbf{引数、返り値、例外の文書化}。
 \code{mean\_signal()} に型ヒントと複数行 docstring を追加し、\verb|uv run python -c "from signal_tools import mean_signal; help(mean_signal)"| で表示せよ。docstring の要約、引数、返り値、例外条件がそれぞれどの行に表示されたかを確認せよ。

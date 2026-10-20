@@ -25,6 +25,7 @@ cd python_textbook
 - `build/`: LaTeX のビルド生成物
 - `slow_event_analysis.py`: 課題で使う配布スクリプト
 - `events_data.zip`: 課題で使う配布データ
+- `notebooks/`: 章末課題12章と総合課題の解説Notebook（[使い方と対応表](notebooks/README.md)）
 
 ## ディレクトリ構造
 
@@ -84,11 +85,11 @@ make
 
 ```sh
 TEXMFCACHE=build/texmf-cache TEXMFVAR=build/texmf-var \
-latexmk -f -lualatex -synctex=1 -interaction=nonstopmode \
+latexmk -lualatex -synctex=1 -interaction=nonstopmode \
   -file-line-error -output-directory=build main.tex
 ```
 
-`make all` では、これに `-gg` を付けて強制再コンパイルします。
+`make all` では、これに `-f -gg` を付けて強制再コンパイルします。Makefile では、日本語の索引を作るための `upmendex` と索引スタイルも指定しています。
 
 ## 補足
 

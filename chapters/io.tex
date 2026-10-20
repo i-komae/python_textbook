@@ -374,7 +374,7 @@ CSV の先頭 200 行から \code{time}、\code{latitude}、\code{longitude}、\
 
 \item \textbf{発展課題}。
 CSV の中には空欄や想定外の値が入り得る。空欄に加えて数値へ変換できない \code{mag} もスキップし、何件スキップしたかを \code{results/skipped\_rows.txt} へ書き出せ。\code{DictReader} では空欄セルは空文字列として読まれるので、たとえば \code{if row["mag"] == ""} のような判定を入れればよい。
-小規模入力に対するスキップ件数は 1 件となる。\code{float(row["mag"])} が失敗する場合も \code{ValueError} として数えられるようにし、空欄と不正な文字列を区別して記録せよ。
+小規模入力に対するスキップ件数は 1 件となる。\code{float(row["mag"])} が失敗する場合も \code{ValueError} として数えられるようにし、空欄と不正な文字列を区別して記録せよ。\code{float("NaN")} や \code{float("inf")} は例外にならないため、有限な値だけを集計する場合は \code{math.isfinite()} でも検査し、非有限値の件数を分けて記録する。JSON を保存するときは \code{allow\_nan=False} を指定すれば、標準の JSON にない数値の書き出しを検出できる。
 \end{enumerate}
 
 ファイルの構造を確認し、必要な値を Python のオブジェクトへ変換できれば、多数の数値を同じ型の配列として計算できる。次章では、ここで読み込んだ時刻や信号値を NumPy 配列へ変換し、差分、条件抽出、集計、ヒストグラムを扱う。
