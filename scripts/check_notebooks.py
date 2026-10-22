@@ -50,7 +50,7 @@ def main() -> None:
         started = time.perf_counter()
         try:
             NotebookClient(nb, km=manager, timeout=300, record_timing=False,
-                           resources={"metadata": {"path": str(root)}},
+                           resources={"metadata": {"path": str(path.parent)}},
                            allow_errors=False).execute(env=environment)
         finally:
             if manager.has_kernel:

@@ -21,7 +21,7 @@ uv pip install -r notebooks/requirements.txt
 uv run --no-project --python .venv/bin/python python -m jupyterlab notebooks
 ```
 
-Notebookを開き、カーネルの再起動後に全セルを上から実行してください。最初のセルでPythonの版と出力先を確認できます。図、CSV、仮想環境、実習用スクリプトなどは `notebooks/_outputs/<Notebook名>/` に作成され、再実行時には同名の実習用生成物を置き換えます。
+Notebookを開き、コードセルを上からShift+Enterで実行してください。セルの下に出た値や図を、前後の説明と比べます。最後にカーネルを再起動して全セルを上から実行すると、前の実行状態に依存していないことを確かめられます。ファイルを作る問では、その直前の「保存先を用意する」セルでPythonの版と出力先を確認できます。図、CSV、仮想環境、実習用スクリプトなどは `notebooks/_outputs/<Notebook名>/` に作成され、再実行時には同名の実習用生成物を置き換えます。
 
 ## 本文との対応
 
@@ -30,10 +30,10 @@ Notebookを開き、カーネルの再起動後に全セルを上から実行し
 | Notebook | 対応する本文 | 解説する内容 |
 | --- | --- | --- |
 | [01_shell.ipynb](01_shell.ipynb) | シェル | 作業場所、USGSの取得条件、内容の調査、3形式の圧縮と全バイト照合、URLを解説します。 |
-| [02_setup.ipynb](02_setup.ipynb) | 実行環境 | uvの構成、venvの実行ファイル、pyenvのshim、設定値の検査を解説します。 |
-| [03_basics.ipynb](03_basics.ipynb) | 基本構文 | 欠損判定、平均関数、例外、隣接差、argparseを解説します。 |
+| [02_setup.ipynb](02_setup.ipynb) | 実行環境 | 動いているPythonを確認し、venv、uv、pyenvの順に違いを確かめます。 |
+| [03_basics.ipynb](03_basics.ipynb) | 基本構文 | 1件の取り出しから、反復、欠損判定、平均関数、時刻差、端末の引数へ進みます。 |
 | [04_io.ipynb](04_io.ipynb) | 入出力 | CSVの要約、JSONとPickleの読み戻し、不正値の記録を解説します。 |
-| [05_numpy.ipynb](05_numpy.ipynb) | NumPy | ソート、差分、統計量、ビン境界、地域比較を解説します。 |
+| [05_numpy.ipynb](05_numpy.ipynb) | NumPy | 4個の時刻で差分を確かめ、課題の6個の時刻、axis、区間集計、地域比較へ進みます。 |
 | [06_pandas.ipynb](06_pandas.ipynb) | pandas | 欠損、条件抽出、群集計、結合、チャンク集計、Parquetを解説します。 |
 | [07_polars.ipynb](07_polars.ipynb) | Polars | 列式、群平均、実行計画、結合、pivot、pandasとの照合を解説します。 |
 | [08_matplotlib.ipynb](08_matplotlib.ipynb) | Matplotlib | 散布図、カラーバー、対数ビン、保存、Cartopyを解説します。 |
@@ -55,7 +55,7 @@ Notebookを開き、カーネルの再起動後に全セルを上から実行し
 
 ## 全Notebookを検証する
 
-リポジトリ直下で実行します。Notebookごとに新しいカーネルを起動し、エラーや期待値との不一致があれば終了します。
+リポジトリ直下で実行します。Notebookごとに新しいカーネルを起動し、そのNotebookがあるフォルダーを現在位置として実行します。エラーや期待値との不一致があれば終了します。
 
 ```sh
 python scripts/check_notebooks.py
@@ -70,4 +70,4 @@ python scripts/check_notebooks.py notebooks/10_astropy.ipynb
 
 検証用の一時ファイルは `build/notebook-validation/` に保存します。通常の検証では、実カタログの取得、Cartopyの描画、端末でのpyenv切り替えは実行しません。
 
-2026年10月20日に、Python 3.12.14で全13冊の実行と期待値の照合を確認しました。総合課題は最初の3日で66組、全500日で12,033組となり、配布データの基準値に一致しました。主なライブラリはNumPy 2.5.4、pandas 3.0.6、Polars 2.0.0、Matplotlib 3.11.2、SciPy 1.18.1、Astropy 8.0.2、PyArrow 26.0.0です。
+2026年10月22日に、Python 3.12.14で全13冊を新しいカーネルから実行し、期待値と保存ファイルを確認しました。教材直下とNotebookのフォルダーの両方から実行しています。総合課題は最初の3日で66組、全500日で12,033組となり、配布データの基準値に一致しました。主なライブラリはNumPy 2.5.4、pandas 3.0.6、Polars 2.0.0、Matplotlib 3.11.2、SciPy 1.18.1、Astropy 8.0.2、PyArrow 26.0.0です。

@@ -4,12 +4,11 @@
 \section{データ型と基本操作}
 
 ターミナルで \code{python3} と入力すると、Python をインタラクティブモードで起動できる。
-インタラクティブモードでは、Python のバージョン情報に続いて入力待ちを表す \code{>>>} が表示される。
+インタラクティブモードでは、Python のバージョン情報に続いて入力待ちを表す \code{>>>} が表示される。次は表示の一部を示した例である。
 
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 $ python3
-Python 3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 17.0.0 (clang-1700.0.13.3)] on darwin
-Type "help", "copyright", "credits" or "license" for more information.
+Python 3.12.14 ...
 >>>
 \end{lstlisting}
 
@@ -17,52 +16,64 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 \subsection{変数と基本型}\index{へんすう@変数|textbf}\index{かた@型|textbf}\index{せいすう@整数}\index{ふどうしょうすうてんすう@浮動小数点数}\index{もじれつ@文字列}\index{しんぎち@真偽値}
 
-Python では、値に名前を付けて使う。たとえばデータを表すいくつかの変数を定義すると次のようになる。
+測定値を後の計算でも使いたいときは、値に名前を付ける。次の例では、最初の測定値を \code{first}、次の測定値を \code{second} という名前で使う。Notebook のコードセルへ入力する場合は、\code{>>>} を付けずに 4 行を実行する。
 
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
->>> n_rows = 12
->>> threshold = 3600.0
->>> label = "A"
->>> use_log = True
+first = 12.4
+second = 15.1
+mean = (first + second) / 2
+print(mean)
 \end{lstlisting}
 
-\code{n\_rows} は整数、\code{threshold} は浮動小数点数、\code{label} は文字列、\code{use\_log} は真偽値である。\code{type()}\index{type@\code{type()}|textbf} は、値の型を返す。件数や添字には整数、連続量やフィットパラメータには浮動小数点数を用いる。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+13.75
+\end{lstlisting}
+
+\code{mean} には、2 つの測定値の平均が入る。このように、値を使うために付けた名前を「変数」という。\code{=} は、右側の値を左側の名前で使えるようにする代入の記号である。数学の等号とは意味が異なり、値を比較するときには \code{==} を使う。比較は第~\ref{subsec:if}~節で扱う。
+
+\code{first = 12.4} を \code{first = 10.0} に変え、4 行すべてをもう一度実行すると、表示は \code{12.55} になる。変数の値を変えた後には、その値を使う計算もやり直す必要がある。
+
+\subsubsection{数値と文字列を区別する}
+
+次に、数値の \code{12} と、引用符で囲んだ \code{"12"} を比べる。対話モードで入力すると、次のようになる。
 
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
->>> type(n_rows)
+>>> count = 12
+>>> text = "12"
+>>> count + 3
+15
+>>> text + "3"
+'123'
+\end{lstlisting}
+
+\code{count + 3} は数値を足す。一方、\code{text + "3"} は文字を後ろにつなげるため、\code{'123'} になる。引用符で囲んだ値を「文字列」という。ファイルから読み込んだ \code{"12"} を数値として計算したいときは、\code{int(text)} のように変換する。
+
+\begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
+>>> int(text) + 3
+15
+>>> type(count)
 <class 'int'>
->>> type(threshold)
-<class 'float'>
->>> type(label)
+>>> type(text)
 <class 'str'>
+\end{lstlisting}
+
+\code{type()} は、その値がどの種類かを返す。この種類を「型」という。\code{int} は整数、\code{str} は文字列を表す。
+
+\subsubsection{小数と真偽値を使う}
+
+小数を扱う型を浮動小数点型（\code{float}）という。最初の例の \code{12.4} と \code{15.1} はこの型である。条件を満たすかどうかを表す \code{True} と \code{False} は真偽値（\code{bool}）である。
+
+\begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
+>>> type(12.4)
+<class 'float'>
+>>> use_log = True
 >>> type(use_log)
 <class 'bool'>
 \end{lstlisting}
 
-Python では、変数名に型を宣言してから値を代入する必要はない。ただし、型がなくなるわけではなく、\code{12}、\code{12.0}、\code{"12"} という三つの値は、それぞれ \code{int}、\code{float}、\code{str} として区別される。このように値が実行時に型を持つ仕組みを動的型付けという。柔軟に書ける一方、大量の数値を一つずつ Python オブジェクトとして処理すると、固定長の数値配列に比べて管理情報や演算呼び出しの負担が大きくなる。
+件数には整数、平均値のように小数になり得る値には浮動小数点数、名前には文字列を使う。Python では、使い始める前に変数の型を宣言する必要はないが、値ごとの型は区別される。NumPy で大量の値を扱うときの型は、第~\ref{sec:numpy-types}~節で説明する。
 
-後述する NumPy などを用いて大量のデータを高速に処理する際には、C 言語と同様に、メモリ上の表現まで区別した型を指定する場面がある。Python の型と NumPy の型の違いは第~\ref{sec:numpy-types}~節で説明する。基本構文の段階でも、\code{1} は整数、\code{1.0} は浮動小数点数であり、\code{"12"} は数値ではなく文字列であることを区別する。特に文字列の \code{"12"} と整数の \code{12} の混同は、ファイルの読み込みや数値計算でエラーの原因になる。
-
-数値表現が似ている整数、浮動小数点数、文字列を比較する。
-
-\begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
->>> count = 12
->>> threshold = 12.0
->>> text = "12"
->>>
->>> type(count), count
-(<class 'int'>, 12)
->>> type(threshold), threshold
-(<class 'float'>, 12.0)
->>> type(text), text
-(<class 'str'>, '12')
-\end{lstlisting}
-
-整数型は件数や添字に、浮動小数点型は平均値やフィット係数などの連続量に用いる。一方、\code{"12"} は数字からなる文字列であり、そのままでは数値計算に使えない。ファイルから読み込んだ列については、値の表記だけで数値型と判断せず、型を確認する。
-
-また、\code{=} は「左辺と右辺が等しい」という意味ではなく、「右辺の値を左辺の変数名へ結び付ける」という代入の記号である。条件の比較に用いる \code{==} とは役割が異なる。条件式については、第~\ref{subsec:if}~節で詳しく説明する。
-
-\code{None} は「値がない」ことを表す特別な値であり、0、空文字列、\code{False} とは異なる。\code{value is None} で判定する。関数に \code{return} がない場合や、\code{return} に値を付けない場合にも \code{None} が返る。
+\code{None} は「値がない」ことを表す特別な値であり、0、空文字列、\code{False} とは異なる。測定できなかった信号を表す場合などに使い、\code{value is None} で判定する。
 
 \subsection{数値と演算子}\index{えんざんし@演算子|textbf}\index{しそくえんざん@四則演算}\index{べきじょう@べき乗}\index{じょうよ@剰余}\index{せいすうじょざん@整数除算}
 
@@ -474,6 +485,8 @@ $ python3 time_conversion.py
 4515
 \end{lstlisting}
 
+\code{return} に値を付けない場合や、\code{return} がない関数では、\code{None} が返る。平均のような結果を次の計算で使いたい場合は、返す値を明示する。
+
 関数名と引数は入力の意味を、返り値は出力の契約を表す。同じ入力に対する期待値と例外条件を個別にテストできるため、呼び出し側の処理とは独立して正しさを検証できる。
 
 \subsubsection{関数の引数}\index{かんすう@関数!ひきすう@引数|textbf}\index{でふぉるとひきすう@デフォルト引数|textbf}\index{きーわーどひきすう@キーワード引数|textbf}
@@ -770,13 +783,13 @@ events = [
 
 \begin{enumerate}
 \item \textbf{条件に合う入力行の表示}。
-\code{for} 文で各辞書を取り出し、\code{signal} が \code{None} でない行だけを \code{A 1000 12.4} の形式で表示せよ。\code{is not None} を使う理由と、辞書の角括弧に書いたキーの役割を説明せよ。表示される行は 3 行である。
+まず \code{print(events[0])} で最初の記録を表示し、続いて \code{print(events[0]["signal"])} で信号値の \code{12.4} だけを取り出せ。次に \code{for} 文で全 4 件の信号値を順に表示する。最後に \code{signal} が \code{None} でない行だけを選び、\code{A 1000 12.4} の形式で表示せよ。表示される行は 3 行である。これらが動いた後で、\code{is not None} を使う理由と、辞書の角括弧に書いたキーの役割を説明せよ。
 
 \item \textbf{関数への分離と集計}。
-イベント列と検出器名を受け取り、該当する検出器の有効な \code{signal} の平均を返す \code{mean\_signal(events, detector)} を作れ。A では \code{13.75}、B では \code{9.8} が返ることを \code{print()} で確認せよ。該当する有効値がない場合は \code{ValueError} を送出し、docstring に引数、返り値、例外条件を明記せよ。
+最初に A の有効信号だけをリストへ入れ、\code{[12.4, 15.1]} になることを確認せよ。合計を件数で割り、平均 \code{13.75} を求める。次に同じ計算を \code{mean\_signal(events, detector)} という関数へまとめ、A では \code{13.75}、B では \code{9.8} が返ることを確認する。その後で、有効値がない場合に \code{ValueError} を送出する処理を加える。最後に docstring へ、受け取る値、返す値、例外が発生する条件を書く。
 
 \item \textbf{時刻差の計算}。
-\code{time\_ns} だけをリスト内包表記で取り出し、昇順に並べた後、隣り合う要素の差を求めよ。結果は \code{[180, 120, 210]} になる。\code{range(len(times) - 1)} の開始値、終了値、最後の添字がどう対応するかを説明せよ。
+まず \code{for} 文で \code{time\_ns} を順にリストへ追加し、\code{[1000, 1180, 1300, 1510]} になることを確認せよ。昇順に並べた後、最初の差 \code{1180 - 1000} を求め、同じ計算を残りにも繰り返す。最後に、時刻の取り出しをリスト内包表記で書き直せ。結果は \code{[180, 120, 210]} になる。\code{range(len(times) - 1)} の開始値、終了値、最後の添字がどう対応するかを説明せよ。
 
 \item \textbf{コマンドライン引数による条件指定}。
 検出器名を位置引数、信号の下限を \code{--min-signal} で受け取るスクリプトを \code{argparse} で作れ。既定値は \code{0.0} とする。\code{python filter\_events.py A --min-signal 13} を実行したとき、時刻 \code{1300} の 1 件だけが表示されることを確認し、位置引数とオプション引数の違いを説明せよ。

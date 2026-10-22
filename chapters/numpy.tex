@@ -1,30 +1,37 @@
 \chapter{NumPy による数値計算}
 \label{chap:numpy}
 
-NumPy\index{numpy@NumPy|textbf} は、Python で数値配列を扱うときの基本となるライブラリである。本章では、\code{ndarray} の形状と型、配列全体への演算、ブロードキャストを扱う。前半には配列の生成と変形、後半には集計、コピーとビュー、差分、ヒストグラム、線形代数の例を配置した。
+NumPy\index{numpy@NumPy|textbf} は、複数の数値をまとめて計算するためのライブラリである。まず、記録した時刻から事象の発生間隔を求める。その後で、数値の並べ方、条件に合う値の取り出し、合計や平均、分布の集計へ進む。配列の型やメモリの共有も、実際の値を確かめながら学ぶ。
 
-\section{配列の構造とベクトル化}
+\section{配列を作って間隔を求める}
 
-\subsection{配列計算の基本概念}
+\subsection{隣り合う時刻の差を求める}
 
-Python のリストは柔軟だが、数値配列として大量の値を処理するには向いていないことがある。NumPy は、同じ型の数値を多次元配列 \code{ndarray}\index{ndarray@\code{ndarray}|textbf} として持ち、配列全体へまとめて演算をかけるためのライブラリである。最も基本的な NumPy 配列の定義と差分計算の例を示す。
+ある観測の開始から 10 秒、15 秒、23 秒、41 秒の時点で、4 回の事象が記録されたとする。知りたいのは、次の事象が起きるまでに何秒かかったかである。最初の間隔は \code{15 - 10} で 5 秒、次は \code{23 - 15} で 8 秒、最後は \code{41 - 23} で 18 秒になる。
+
+この計算には、複数の数値をまとめて扱う「配列」を使う。\code{import numpy as np} は、NumPy の機能を \code{np} という短い名前で使うための準備である。\code{np.array([...])} で、角括弧の中の数値をまとめた配列を作る。次の例を Notebook のコードセルで実行する。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
 
-times = np.array([10, 15, 23, 41], dtype=np.int64)
-deltas = times[1:] - times[:-1]
+times = np.array([10, 15, 23, 41])
+intervals = np.diff(times)
+print(intervals)
 \end{lstlisting}
 
-この差分計算は Python の \code{for} ループでも記述できるが、NumPy では添字ループを明示せずに配列演算として記述できる。実行時間の比較方法は第~\ref{chap:performance}~章で扱う。図~\ref{fig:vectorization-benchmark} は比較図の模式例であり、この差分計算の実測結果ではない。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+[ 5  8 18]
+\end{lstlisting}
 
-数式で書けば、これは隣り合う時刻の差
+\code{np.diff(times)} は、後ろの値から一つ前の値を引く計算を順に行う。時刻が 4 個あるので、間隔は 3 個になる。
+
+最後の時刻を \code{41} から \code{45} に変えてもう一度実行すると、最後の間隔だけが \code{22} に変わる。ここでは時刻が小さい順に並んでいる。未整列の入力では、先に並べ替える必要がある。
+
+数式では、この計算を隣り合う時刻の差
 \[
 \Delta t_i = t_{i+1} - t_i
 \]
-をまとめて計算していることに対応する。NumPy を使うと、このような「添字付きの式」を配列全体に対してそのまま書きやすい。
-
-NumPy 配列は、Python のリストを高速化したものではない。同じ型の数値を共通のデータ領域に保持し、配列全体への演算を低水準の実装へ渡すデータ構造である。この構造に合わせて、要素ごとの手続きではなく、配列に適用する変換として処理を記述する。
+と表す。NumPy で配列をまとめて計算する書き方を、ベクトル化という。大量の値を扱うときに Python の要素別ループを減らせるが、速度は実際の入力で測定する。比較方法は第~\ref{chap:performance}~章で扱う。
 
 \subsection{\code{ndarray} と属性}
 
@@ -58,7 +65,7 @@ float64
 \subsection{Python, C, NumPy でのデータ型の違い}
 \label{sec:numpy-types}
 
-Python の標準数値型は値ごとに型と管理情報を持つ。これに対して NumPy 配列では、配列全体に共通する固定長の型を \code{dtype} で指定する。代表的な数値型の対応を表~\ref{tab:type-comparison} に示す。
+Python では、変数名へ型を宣言せずに値を代入でき、値ごとに型が決まる。この仕組みを動的型付けという。Python の標準数値型は値ごとに型と管理情報を持つ。これに対して NumPy 配列では、配列全体に共通する固定長の型を \code{dtype} で指定する。代表的な数値型の対応を表~\ref{tab:type-comparison} に示す。
 
 \begin{table}[hbtp]
 \centering
@@ -208,8 +215,9 @@ print(np.sqrt(a))
 
 \subsection{集計と \code{axis}}
 
-NumPy の集計関数は、配列全体または指定した軸に沿って値を集計する。\code{axis}\index{axis@\code{axis}|textbf} の指定と入出力の \code{shape} の関係を、次の例で確認する。
+次の 2 行 3 列の配列で、全体の合計、列ごとの合計、行ごとの合計を求める。\code{sum()} は合計を求める操作であり、\code{axis}\index{axis@\code{axis}|textbf} は、どの方向に並ぶ値を足すかを指定する。まず出力を見て、実際の足し算と対応させる。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 matrix = np.array([[1.0, 2.0, 3.0],
                    [4.0, 5.0, 6.0]])
@@ -231,8 +239,11 @@ print(col_max)
 [ 6. 15.]
 [4. 5. 6.]
 \end{lstlisting}
+\end{minipage}
 
-\code{total} は全要素の和である。\code{axis=0} は 0 軸に沿って集計するため各列の和を返し、\code{axis=1} は 1 軸に沿って集計するため各行の和を返す。入力と出力の \code{shape} を比較すると、集計によって除かれた軸を確認できる。
+\code{total} は全要素を足した \code{21.0} である。\code{axis=0} では、各列を上から下へ足す。1 列目は \code{1 + 4}、2 列目は \code{2 + 5}、3 列目は \code{3 + 6} なので、\code{[5., 7., 9.]} になる。
+
+\code{axis=1} では、各行を左から右へ足す。1 行目は \code{1 + 2 + 3}、2 行目は \code{4 + 5 + 6} なので、\code{[6., 15.]} になる。\code{max(axis=0)} は同じ列の最大値を選ぶので、\code{[4., 5., 6.]} を返す。この説明は 2 次元配列についてのものであり、3 次元以上では配列の形と集計する軸を対応させる。
 
 行列 \(A = (a_{ij})\) に対しては、
 \[
@@ -269,6 +280,25 @@ print(grid[1, :])
 \end{lstlisting}
 
 \code{times[1:4]} は添字 1 から 3、すなわち 2 番目から 4 番目までを取り出す。\code{grid[:, 1]} は全行の 2 列目、\code{grid[1, :]} は 2 行目全体である。多次元配列に対する \code{for row in grid:} は、第 0 軸に沿って 1 行ずつ反復する。同じ演算を全行へ適用する場合は、明示的な反復と配列演算のどちらが入力と出力の関係を直接表すかを比較する。
+
+スライスを使うと、章の冒頭の間隔計算を次のようにも書ける。途中の配列を表示して、どの値同士を引くかを確認する。
+
+\begin{lstlisting}[language=Python]
+times = np.array([10, 15, 23, 41], dtype=np.int64)
+later = times[1:]
+earlier = times[:-1]
+print(later)
+print(earlier)
+print(later - earlier)
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+[15 23 41]
+[10 15 23]
+[ 5  8 18]
+\end{lstlisting}
+
+\code{times[1:]} は先頭を除いた 3 個、\code{times[:-1]} は末尾を除いた 3 個を取り出す。配列同士の引き算では、同じ位置の値同士を引くため、\code{15 - 10}、\code{23 - 15}、\code{41 - 23} をまとめて計算できる。これが \code{np.diff(times)} と同じ結果になる。
 
 \subsection{配列形状の変更}
 

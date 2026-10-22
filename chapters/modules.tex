@@ -1,9 +1,39 @@
 \chapter{自作モジュールの作成と再利用}
 \label{ch:modules}
 
-一つのスクリプトに記述した処理を複数のデータやプロジェクトから利用する場合、コピーによる再利用では修正内容が分岐する。再利用する処理を自作モジュール\index{もじゅーる@モジュール|textbf}へ分離し、パッケージとしてインストールできる構成にすると、実装とテストを一か所で管理できる。
+同じ平均や図の作成を複数の解析で使うときは、その処理を一つのファイルへまとめておくと、使うたびに書き直さずに済む。まず短い平均の関数を保存し、別のファイルから呼び出してみる。その後で、他のプロジェクトへも配れるパッケージの構成と、インストール方法を扱う。
 
-ここでいう「モジュール」は、\code{plotting.py} や \code{models.py} のような一つの Python ファイルを指す。一方、パッケージ\index{ぱっけーじ@パッケージ|textbf}は、複数のモジュールをディレクトリへまとめ、\code{import} できる形にした単位である。本章では、\code{uv}\index{uv@\code{uv}|textbf} によるライブラリ用パッケージの作成と、通常インストールおよび editable install を扱う。
+\section{平均の関数を別のファイルから使う}
+
+まず、2 つの測定値の平均を別のファイルから求める。新しい作業用フォルダーを作り、次の内容を \code{signal\_stats.py} という名前で保存する。
+
+\begin{lstlisting}[language=Python, title={signal\_stats.py}]
+def mean_signal(values):
+    """数値列の算術平均を返す。空列ではValueErrorを出す。"""
+    if len(values) == 0:
+        raise ValueError("入力列が空です。")
+    return sum(values) / len(values)
+\end{lstlisting}
+
+同じフォルダーに \code{analyze.py} を作り、次を保存する。
+
+\begin{lstlisting}[language=Python, title={analyze.py}]
+from signal_stats import mean_signal
+
+values = [12.4, 15.1]
+print(mean_signal(values))
+\end{lstlisting}
+
+端末で 2 つのファイルを保存したフォルダーへ移動し、実行する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python analyze.py
+13.75
+\end{lstlisting}
+
+\code{from signal\_stats import mean\_signal} は、\code{signal\_stats.py} に書いた関数を読み込む命令である。\code{mean\_signal(values)} がその関数を呼び、2 つの測定値の平均を返す。このように読み込んで使う Python ファイルをモジュール\index{もじゅーる@モジュール|textbf}という。
+
+複数のモジュールをディレクトリへまとめ、読み込んで使う単位をパッケージという。同じフォルダーの別のスクリプトからも、この関数を読み込める。他のフォルダーやプロジェクトからも安定して使うには、後で説明するパッケージ\index{ぱっけーじ@パッケージ|textbf}にまとめ、使用する環境へインストールする。次の節からは、その構成を作る理由と手順を扱う。
 
 \section{解析処理を再利用可能な部品へ分ける理由}
 

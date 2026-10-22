@@ -1,221 +1,93 @@
 \chapter{Python 実行環境の構築}
 \label{chap:setup}
 
-\section{Python の確認と管理方針}
+\section{最初の計算を実行する}
 
-\subsection{OS の Python・\code{pyenv}・仮想環境の役割}
+この節では、Python を用意し、Notebook で \code{3 + 2} を計算するところまでを進める。Python はコードを実行するプログラムであり、JupyterLab はコードと結果をブラウザ内で確認するためのアプリケーションである。準備にはインターネット接続を使う。
 
-Python の実行環境は、次の 3 層に分けて管理する。
+\subsection{OS に合う端末を開く}
 
-\begin{enumerate}
-\item Python 本体を入れること
-\item 複数バージョンの Python を切り替えること
-\item プロジェクトごとの仮想環境を作ること
-\end{enumerate}
+macOS では「ターミナル」を開く。Windows では前章の手順で WSL 上の Ubuntu を用意し、Ubuntu の端末を開く。以下の命令はその端末に入力する。Windows の PowerShell へそのまま入力する命令ではない。
 
-Python 本体はコードを実行する処理系であり、\code{pyenv} は複数の Python 本体から使用する版を選択する。仮想環境は、選択した Python に対する外部ライブラリをプロジェクトごとに分離する。同じ Python 3.12 を使用しても、プロジェクト A と B の依存関係は別々の仮想環境に保持できる。
+どちらの OS でも、以下では uv を使って Python 3.12 と作業用の環境を用意する。Python の導入と仮想環境の詳細は、最初の計算を試した後に説明する。
 
-\subsection{Python のバージョンと実行ファイルの確認}
+\subsection{uv を用意する}
 
-macOS と WSL のいずれでも、環境を変更する前に、シェルから見えている Python を確認する。次の 3 コマンドは、バージョン、シェルが選択したコマンド、その Python プロセスが使用している実行ファイルを順に表示する。
+\code{uv --version} で番号が表示される場合は、次の小節へ進む。\code{command not found} と表示される場合は、公式の導入スクリプト~\cite{uv_install} を保存する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python3 --version
-$ command -v python3
-$ python3 -c "import sys; print(sys.executable)"
+$ curl -fLsS https://astral.sh/uv/install.sh -o uv-install.sh
+$ less uv-install.sh
 \end{lstlisting}
 
-結果の例は次のようになる。
+\code{less} の表示は \code{q} で閉じる。取得元とスクリプトの内容を確認したうえで、次を実行する。導入先や変更内容はスクリプトが表示する案内で確認する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Python 3.12.10
-/opt/homebrew/bin/python3
-/opt/homebrew/Cellar/python@3.12/3.12.10/bin/python3.12
+$ sh uv-install.sh
 \end{lstlisting}
 
-1 行目は、\code{python3} で起動する Python のバージョンを表す。2 行目は、シェルが \code{python3} という名前から見つけた実行ファイルである。3 行目は、起動した Python 自身が認識している実行ファイルの位置であり、シンボリックリンクの参照先まで含む場合がある。2 行目と 3 行目が同じ文字列である必要はないが、両者が同じ系列の Python を指していることは確認しておきたい。複数バージョンを切り替える環境では、この対応関係が実行環境を特定する手掛かりになる。
+導入後は、新しい端末を開いて \code{uv --version} を実行する。\code{uv 0.x.y} のように番号が出れば、次へ進める。番号自体は導入時期によって変わる。
 
-\section{\code{pyenv} による複数バージョンの管理}
+\subsection{作業用フォルダーと Python を用意する}
 
-Python 本体の導入と切り替えには \code{pyenv} を利用できる。\code{pyenv} は、複数の Python を利用者の領域へ導入し、シェルから \code{python} などを実行したときに選ばれるバージョンを切り替える。切り替えの範囲には、利用者の既定値、ディレクトリごとの設定、一つのシェルセッションだけに適用する設定がある。
-
-\subsection{macOS での準備}
-
-\code{pyenv}\index{pyenv@\code{pyenv}|textbf} は Python 本体をビルドして入れるので、macOS では Xcode Command Line Tools が必要になる。すでに Homebrew が正常に動いているなら、Command Line Tools は入っていることが多い。インストール済みかどうかは、次のコマンドで確認できる。
+次の命令を 1 行ずつ実行する。\code{analysis\_practice} には、この章で作るファイルを保存する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ xcode-select -p
+$ mkdir -p analysis_practice
+$ cd analysis_practice
+$ uv venv --python 3.12 --seed .venv
+$ source .venv/bin/activate
+$ python --version
 \end{lstlisting}
 
-すでにインストールされていれば、結果の例は次のようになる。
+\code{uv venv} は、使用する Python と追加ライブラリをまとめる作業用の環境を \code{.venv} に作る。指定した Python が手元になければ、uv が取得する。\code{--seed} は後で使う pip もこの環境へ入れる指定である。\code{source} の行は、この端末でその環境を使い始める命令である。
+
+最後に \code{Python 3.12.x} と表示されることを確認する。\code{x} の部分は更新によって変わる。このように作業ごとに用意する環境を「仮想環境」という。
+
+\subsection{Notebook を開いて計算する}
+
+まず、表や図を作るためのライブラリと JupyterLab を導入する。ライブラリは、他の人が作った計算や作図の機能を自分のコードから使うためのものである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-/Library/Developer/CommandLineTools
+$ python -m pip install numpy matplotlib scipy jupyterlab
+$ python -m jupyterlab
 \end{lstlisting}
 
-このように開発ツールのパスが表示されれば、選択された場所を確認できる。Xcode 本体を導入した環境では、そのアプリケーション内のパスが表示されることもある。パスの代わりにエラーが出る場合は、未導入または設定不備の可能性がある。
-未導入の場合のインストールコマンドは次のとおりである。
+ブラウザに JupyterLab が開いたら、「Python 3」の Notebook を新しく作る。ブラウザが開かない場合は、端末に表示された \code{http://localhost:.../lab?token=...} を同じコンピュータのブラウザで開く。\code{token} を含む URL は認証情報なので、他人へ送ったり公開したりしない。
+
+最初のコードセルに次を入力し、Shift+Enter で実行する。
+
+\begin{lstlisting}[language=Python]
+print(3 + 2)
+\end{lstlisting}
+
+セルの下に \code{5} が表示されれば、Python で最初の計算を実行できている。続いて \code{3} を \code{10} に変え、再実行して \code{12} が表示されることを確認する。
+
+Notebook は名前を付けて保存する。作業を終えたら、JupyterLab を起動した端末で Ctrl+C を押し、終了確認に従う。その後 \code{deactivate} を入力すると、端末で仮想環境を使う状態が解除される。再開時は \code{analysis\_practice} へ移動し、\code{source .venv/bin/activate}、\code{python -m jupyterlab} の順に実行する。
+
+\section{使っている Python を確認する}
+
+ここからは、最初の手順で何を用意したかを確かめる。Python 本体はコードを実行する。仮想環境は、その作業で追加したライブラリを他の作業と分けて保持する。複数の Python の版を切り替える必要がある場合は、後半の pyenv の節を参照する。
+
+以下は、\code{analysis\_practice} フォルダーへ移動し、\code{source .venv/bin/activate} で仮想環境を有効にした端末で実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ xcode-select --install
-\end{lstlisting}
-
-以下の macOS の手順は Homebrew を利用する。未導入なら、Homebrew の公式案内~\cite{homebrew_docs} に従って導入し、\code{brew --version} が表示されることを確認する。pyenv による Python のビルドには追加のライブラリも必要になるため、pyenv のビルド環境の案内~\cite{pyenv_build} に従って用意する。代表的な macOS 用の指定は次のとおりである。
-\begin{lstlisting}[language=bash]
-brew install openssl@3 readline sqlite3 xz tcl-tk@8 libb2 zstd zlib pkgconfig
-\end{lstlisting}
-必要なパッケージや追加設定は、導入する Python と OS の版によって異なる。
-
-\subsection{WSL / Ubuntu での準備}
-
-WSL の Ubuntu では、ビルドに必要なライブラリを先に入れておく。次のコマンドで、パッケージ一覧の更新と必要なライブラリの導入を続けて行える。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ sudo apt update
-$ sudo apt install -y build-essential curl git libssl-dev zlib1g-dev \
-  libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev tk-dev
-\end{lstlisting}
-
-\code{apt update} の出力は長いが、末尾でたとえば次のように \code{Done} が見えれば、パッケージ一覧の更新は完了している。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-\end{lstlisting}
-
-\code{apt install} でも多くの行が流れる。このコマンド例には \code{-y} を付けているため、通常は確認なしで続行する。\code{-y} を外した場合は、途中で次のような確認が出ることがある。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Need to get 48.2 MB of archives.
-After this operation, 201 MB of additional disk space will be used.
-Do you want to continue? [Y/n]
-\end{lstlisting}
-
-この表示が出たら、示されているパッケージや使用量に問題がないことを確認し、続けるなら \code{y} を入力して \code{Enter} を押す。\code{n} を入力すると処理は中止され、インストールは行われない。
-
-インストールの終盤では、次のように \code{Setting up ...} が並ぶことがある。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Setting up libffi-dev:amd64 (3.4.4-1) ...
-Setting up libsqlite3-dev:amd64 (3.40.1-2ubuntu0.2) ...
-Setting up build-essential (12.9ubuntu3) ...
-\end{lstlisting}
-
-これは各パッケージの設定を進めている段階であり、この表示自体は正常である。最後まで流れたあとでエラーが出ずにシェルのプロンプトへ戻れば、インストールは完了している。
-
-\subsection{\code{pyenv} の導入とシェルへの組み込み}
-
-macOS では、次のコマンドで \code{pyenv} を導入できる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ brew install pyenv
-\end{lstlisting}
-
-導入後の確認には、後述する \code{pyenv --version} と \code{command -v pyenv} を用いる。Homebrew の途中経過や保存先はバージョンによって変わるため、特定の表示文字列を成功条件にはしない。
-
-一方、WSL / Ubuntu では通常 Homebrew を前提にしないので、前節の依存パッケージを入れたあとにインストーラスクリプトを使う。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ curl -fsSL -o pyenv-installer.sh https://pyenv.run
-$ less pyenv-installer.sh
-$ bash pyenv-installer.sh
-\end{lstlisting}
-
-1 行目は公式のインストール用スクリプトを保存し、2 行目は実行前に内容を表示する。配布元と内容を確認したうえで、3 行目によって実行する。取得した内容を直接 \code{bash} へ渡す方法では、実行前の確認ができない。
-
-導入後は、pyenv が現在のシェルに必要な初期化コードを起動時の設定ファイルへ追加する。Homebrew で導入した場合と、上のスクリプトで導入した場合とでは、最初のコマンドだけが異なる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-# Homebrew で導入した場合
-$ pyenv init --install
-
-# インストール用スクリプトで導入した場合
-$ ~/.pyenv/bin/pyenv init --install
-
-$ exec "$SHELL"
-\end{lstlisting}
-
-\code{pyenv init --install} は、実行中のシェルを判別し、推奨される初期化コードを対応する起動時設定ファイルへ追加する。実行前に変更内容が表示された場合は、対象のファイルと追記内容を確認する。bash で環境変数 \code{BASH\_ENV} が \code{.bashrc} を指している特殊な構成では自動設定を避け、pyenv の公式文書にある手動設定を用いる。
-
-\code{exec "\$SHELL"} は、いま動いているシェルを、\code{\$SHELL} が示すシェルプログラムで置き換えるコマンドである。\code{SHELL} には通常、ログインシェルとして設定されたプログラムのパスが入り、\code{zsh} なら \code{/bin/zsh}、\code{bash} なら \code{/bin/bash} となる。ただし、\code{SHELL} と現在実行中の対話シェルが常に一致するとは限らない。現在のシェルは \code{ps -p \$\$ -o comm=} でも確認できる。ここでは \code{\textasciitilde/.zshrc} に追記した内容をすぐ反映させるために実行している。ターミナルをいったん閉じて開き直しても同じ目的は果たせる。
-
-シェルを読み直した後、次の 2 コマンドで \code{pyenv} のバージョンと、シェルが解決したコマンドを確認する。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ pyenv --version
-pyenv 2.x.x
-$ command -v pyenv
-/Users/student/.pyenv/bin/pyenv
-\end{lstlisting}
-
-1 行目でバージョン番号が出れば、シェルから \code{pyenv} を実行できる状態にある。2 行目のパスは導入方法によって異なり、Homebrew で導入した場合は Homebrew の \code{bin} ディレクトリが表示されることもある。\code{command not found} になる場合は、\code{pyenv init --install} が変更したファイル、現在のシェル、再起動後の \code{PATH} を順に調べる。表示したバージョン番号とパスは説明用の例であり、同じ文字列になる必要はない。
-
-\subsection{Python バージョンの導入と切り替え}
-
-\code{pyenv} を使う場合は、\code{pyenv install} でバージョンを追加し、\code{pyenv global}、\code{pyenv local}、\code{pyenv shell} で切り替える。次の例では、2 系統の Python を追加してから一覧を表示する。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ pyenv install 3.11.11
-$ pyenv install 3.12.10
-$ pyenv versions
-\end{lstlisting}
-
-\code{pyenv install} は数分かかることがあり、途中でビルドログが多数流れる。完了後に \code{pyenv versions} を実行すると、たとえば次のように表示される。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-* system (set by /Users/student/.pyenv/version)
-  3.11.11
-  3.12.10
-\end{lstlisting}
-
-\code{system} は、pyenv の shim より後ろにある \code{PATH} から選ばれる実行ファイルを表す。OS に付属する Python とは限らず、Homebrew などで導入した Python が先に見つかる場合もある。\code{3.11.11} と \code{3.12.10} が一覧にあれば、そのバージョンは pyenv の管理下に導入されている。先頭の \code{*} は現在選ばれている設定を示す。
-
-その利用者がディレクトリ固有の設定を持たない場合に使う既定バージョンは、\code{pyenv global} で指定する。他の利用者や OS 全体の設定は変更しない。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ pyenv global 3.12.10
 $ python --version
 $ command -v python
-$ pyenv which python
+$ python -c "import sys; print(sys.executable)"
 \end{lstlisting}
 
-結果の例は次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Python 3.12.10
-/Users/student/.pyenv/shims/python
-/Users/student/.pyenv/versions/3.12.10/bin/python
-\end{lstlisting}
-
-\code{command -v python} が示す \code{shims/python} は Python 本体ではなく、pyenv が選んだ実行ファイルへ処理を渡す中継用プログラムである。\code{pyenv which python} は、中継後に実行される Python のパスを表示する。これに対して \code{pyenv local} は、あるディレクトリ以下で優先するバージョンを指定する。特定のプロジェクト用ディレクトリでバージョンを固定する手順を次に示す。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ mkdir analysis311
-$ cd analysis311
-$ pyenv local 3.11.11
-$ python --version
-$ cat .python-version
-\end{lstlisting}
-
-結果の例は次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Python 3.11.11
-3.11.11
-\end{lstlisting}
-
-\code{pyenv local} を実行すると \code{.python-version} が作られ、指定した \code{3.11.11} が記録される。この設定は、そのディレクトリと下位のディレクトリに適用される。ただし、さらに下位に別の \code{.python-version} があれば、そちらが優先される。同じマシンでも、プロジェクトごとに異なる Python を選択できる。
-
-\code{pyenv shell 3.11.11} は、現在のシェルセッションだけに適用される一時的な切り替えである。特定の Python バージョンによる動作確認に用いる。
+1 行目は版、2 行目はシェルが見つけた命令の場所、3 行目は起動した Python が使っている実行ファイルを表示する。仮想環境を使っていれば、2 行目と 3 行目には通常 \code{analysis\_practice/.venv/bin/python} を含むパスが出る。値が異なる場合は、現在のフォルダーと仮想環境の有効化を確認する。
 
 \section{\code{venv} によるプロジェクト別仮想環境の作成}
 \index{venv@\code{venv}|textbf}
 
-Python 本体のバージョンを決めたら、そのバージョンの上にプロジェクト専用の仮想環境\index{かそうかんきょう@仮想環境|textbf}を作る。依存ライブラリの衝突を避けるためである。仮想環境を作り、そこに入るための基本コマンドは次の通りである。
+使いたい Python が既に入っている場合は、その Python から標準ライブラリの venv でもプロジェクト専用の仮想環境\index{かそうかんきょう@仮想環境|textbf}を作れる。ここでは別の作業用フォルダーを作り、先ほどの環境と区別する。仮想環境が有効な場合は、\code{deactivate} で解除してから進める。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python -m venv .venv
+$ mkdir -p analysis_venv
+$ cd analysis_venv
+$ python3 -m venv .venv
 $ source .venv/bin/activate
 $ command -v python
 $ command -v pip
@@ -226,16 +98,16 @@ $ pip --version
 仮想環境へ入ると、プロンプトの先頭に \code{(.venv)} が付くことが多い。ターミナルの表示は次のように変わる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-(.venv) student@host analysis $
+(.venv) student@host analysis_venv $
 \end{lstlisting}
 
 \code{command -v python} 以降の結果は、たとえば次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-/Users/student/analysis/.venv/bin/python
-/Users/student/analysis/.venv/bin/pip
+/Users/student/analysis_venv/.venv/bin/python
+/Users/student/analysis_venv/.venv/bin/pip
 Python 3.11.11
-pip 25.0 from /Users/student/analysis/.venv/lib/python3.11/site-packages/pip
+pip 25.0 from /Users/student/analysis_venv/.venv/lib/python3.11/site-packages/pip
 \end{lstlisting}
 
 \code{command -v} の結果から、\code{python} と \code{pip} が \code{.venv/bin} で見つかることが分かる。これは、\code{source .venv/bin/activate} が \code{\$PATH} の先頭に \code{.venv/bin} を追加するためである。Python 本体の確認には、\code{python -c "import sys; print(sys.executable)"} も利用できる。表示したバージョンとパスは説明用の例である。
@@ -297,16 +169,11 @@ JupyterLab のノートブックは、コード、説明、出力、図を実行
 
 \section{プロジェクト管理ツール \code{uv} の利用}
 
-\code{uv}\index{uv@\code{uv}|textbf} は Python 本体の導入もできるが、本書では「プロジェクト単位の管理」に用いる。特に、依存関係\index{いそんかんけい@依存関係|textbf}、解決したパッケージの正確なバージョンを記録するロックファイル、\code{.python-version}、Git 管理、パッケージ化、ワークスペース管理をまとめて扱える。
+最初の節では \code{uv}\index{uv@\code{uv}|textbf} で Python と仮想環境を用意した。この節では、作業名や必要なライブラリをファイルへ記録し、同じ環境を用意しやすくする方法を扱う。必要なライブラリと版の条件を依存関係\index{いそんかんけい@依存関係|textbf}といい、実際に解決した版はロックファイルへ記録できる。
 
-\subsection{uv の導入}
-macOS と WSL/Linux では、uv の公式インストーラー~\cite{uv_install} を利用できる。次の例は、スクリプトを保存して内容を確認してから実行する手順である。
-\begin{lstlisting}[language=bash]
-curl -fLsS https://astral.sh/uv/install.sh -o uv-install.sh
-less uv-install.sh
-sh uv-install.sh
-\end{lstlisting}
-インストーラーの案内に従って新しい端末を開き、\code{uv --version} で導入を確認する。以降の初期構成は uv 0.12 以降を基準とする。古い版では既定のひな形が異なるため、ここではパッケージを作る \code{--package} を明示する。
+\subsection{uv の導入を確認する}
+
+\code{uv --version} を実行して番号が表示されることを確認する。最初の節で導入してあれば、そのまま次へ進める。未導入の場合は、最初の節の保存・確認・実行の手順を使う。以降では、作る構成を明示するため \code{uv init --package} を用いる。uv 0.12 より前と以降で既定のひな形が異なる場合も、この指定でビルド可能な構成を作れる。
 
 \subsection{プロジェクトの初期化}
 
@@ -557,6 +424,181 @@ print(window_ns)
 
 
 \code{250} や \code{3600} のような数値が説明や名前なしにコードへ直接記述されていると、その意味や単位を判断しにくい。このような数値はマジックナンバーと呼ばれる。詳しくは第~\ref{sec:magic-number}~節で扱う。値が仕様上の定数なら意味と単位を表す名前を付け、実行条件なら引数または設定ファイルへ分離する。
+
+\section{\code{pyenv} による複数バージョンの管理}
+
+Python 本体の導入と切り替えには \code{pyenv} を利用できる。\code{pyenv} は、複数の Python を利用者の領域へ導入し、シェルから \code{python} などを実行したときに選ばれるバージョンを切り替える。切り替えの範囲には、利用者の既定値、ディレクトリごとの設定、一つのシェルセッションだけに適用する設定がある。
+
+\subsection{macOS での準備}
+
+\code{pyenv}\index{pyenv@\code{pyenv}|textbf} は Python 本体をビルドして入れるので、macOS では Xcode Command Line Tools が必要になる。すでに Homebrew が正常に動いているなら、Command Line Tools は入っていることが多い。インストール済みかどうかは、次のコマンドで確認できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ xcode-select -p
+\end{lstlisting}
+
+すでにインストールされていれば、結果の例は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+/Library/Developer/CommandLineTools
+\end{lstlisting}
+
+このように開発ツールのパスが表示されれば、選択された場所を確認できる。Xcode 本体を導入した環境では、そのアプリケーション内のパスが表示されることもある。パスの代わりにエラーが出る場合は、未導入または設定不備の可能性がある。
+未導入の場合のインストールコマンドは次のとおりである。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ xcode-select --install
+\end{lstlisting}
+
+以下の macOS の手順は Homebrew を利用する。未導入なら、Homebrew の公式案内~\cite{homebrew_docs} に従って導入し、\code{brew --version} が表示されることを確認する。pyenv による Python のビルドには追加のライブラリも必要になるため、pyenv のビルド環境の案内~\cite{pyenv_build} に従って用意する。代表的な macOS 用の指定は次のとおりである。
+\begin{lstlisting}[language=bash]
+brew install openssl@3 readline sqlite3 xz tcl-tk@8 libb2 zstd zlib pkgconfig
+\end{lstlisting}
+必要なパッケージや追加設定は、導入する Python と OS の版によって異なる。
+
+\subsection{WSL / Ubuntu での準備}
+
+WSL の Ubuntu では、ビルドに必要なライブラリを先に入れておく。次のコマンドで、パッケージ一覧の更新と必要なライブラリの導入を続けて行える。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ sudo apt update
+$ sudo apt install -y build-essential curl git libssl-dev zlib1g-dev \
+  libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev tk-dev
+\end{lstlisting}
+
+\code{apt update} の出力は長いが、末尾でたとえば次のように \code{Done} が見えれば、パッケージ一覧の更新は完了している。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+\end{lstlisting}
+
+\code{apt install} でも多くの行が流れる。このコマンド例には \code{-y} を付けているため、通常は確認なしで続行する。\code{-y} を外した場合は、途中で次のような確認が出ることがある。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+Need to get 48.2 MB of archives.
+After this operation, 201 MB of additional disk space will be used.
+Do you want to continue? [Y/n]
+\end{lstlisting}
+
+この表示が出たら、示されているパッケージや使用量に問題がないことを確認し、続けるなら \code{y} を入力して \code{Enter} を押す。\code{n} を入力すると処理は中止され、インストールは行われない。
+
+インストールの終盤では、次のように \code{Setting up ...} が並ぶことがある。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+Setting up libffi-dev:amd64 (3.4.4-1) ...
+Setting up libsqlite3-dev:amd64 (3.40.1-2ubuntu0.2) ...
+Setting up build-essential (12.9ubuntu3) ...
+\end{lstlisting}
+
+これは各パッケージの設定を進めている段階であり、この表示自体は正常である。最後まで流れたあとでエラーが出ずにシェルのプロンプトへ戻れば、インストールは完了している。
+
+\subsection{\code{pyenv} の導入とシェルへの組み込み}
+
+macOS では、次のコマンドで \code{pyenv} を導入できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ brew install pyenv
+\end{lstlisting}
+
+導入後の確認には、後述する \code{pyenv --version} と \code{command -v pyenv} を用いる。Homebrew の途中経過や保存先はバージョンによって変わるため、特定の表示文字列を成功条件にはしない。
+
+一方、WSL / Ubuntu では通常 Homebrew を前提にしないので、前節の依存パッケージを入れたあとにインストーラスクリプトを使う。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ curl -fsSL -o pyenv-installer.sh https://pyenv.run
+$ less pyenv-installer.sh
+$ bash pyenv-installer.sh
+\end{lstlisting}
+
+1 行目は公式のインストール用スクリプトを保存し、2 行目は実行前に内容を表示する。配布元と内容を確認したうえで、3 行目によって実行する。取得した内容を直接 \code{bash} へ渡す方法では、実行前の確認ができない。
+
+導入後は、pyenv が現在のシェルに必要な初期化コードを起動時の設定ファイルへ追加する。Homebrew で導入した場合と、上のスクリプトで導入した場合とでは、最初のコマンドだけが異なる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+# Homebrew で導入した場合
+$ pyenv init --install
+
+# インストール用スクリプトで導入した場合
+$ ~/.pyenv/bin/pyenv init --install
+
+$ exec "$SHELL"
+\end{lstlisting}
+
+\code{pyenv init --install} は、実行中のシェルを判別し、推奨される初期化コードを対応する起動時設定ファイルへ追加する。実行前に変更内容が表示された場合は、対象のファイルと追記内容を確認する。bash で環境変数 \code{BASH\_ENV} が \code{.bashrc} を指している特殊な構成では自動設定を避け、pyenv の公式文書にある手動設定を用いる。
+
+\code{exec "\$SHELL"} は、いま動いているシェルを、\code{\$SHELL} が示すシェルプログラムで置き換えるコマンドである。\code{SHELL} には通常、ログインシェルとして設定されたプログラムのパスが入り、\code{zsh} なら \code{/bin/zsh}、\code{bash} なら \code{/bin/bash} となる。ただし、\code{SHELL} と現在実行中の対話シェルが常に一致するとは限らない。現在のシェルは \code{ps -p \$\$ -o comm=} でも確認できる。ここでは \code{\textasciitilde/.zshrc} に追記した内容をすぐ反映させるために実行している。ターミナルをいったん閉じて開き直しても同じ目的は果たせる。
+
+シェルを読み直した後、次の 2 コマンドで \code{pyenv} のバージョンと、シェルが解決したコマンドを確認する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ pyenv --version
+pyenv 2.x.x
+$ command -v pyenv
+/Users/student/.pyenv/bin/pyenv
+\end{lstlisting}
+
+1 行目でバージョン番号が出れば、シェルから \code{pyenv} を実行できる状態にある。2 行目のパスは導入方法によって異なり、Homebrew で導入した場合は Homebrew の \code{bin} ディレクトリが表示されることもある。\code{command not found} になる場合は、\code{pyenv init --install} が変更したファイル、現在のシェル、再起動後の \code{PATH} を順に調べる。表示したバージョン番号とパスは説明用の例であり、同じ文字列になる必要はない。
+
+\subsection{Python バージョンの導入と切り替え}
+
+\code{pyenv} を使う場合は、\code{pyenv install} でバージョンを追加し、\code{pyenv global}、\code{pyenv local}、\code{pyenv shell} で切り替える。次の例では、2 系統の Python を追加してから一覧を表示する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ pyenv install 3.11.11
+$ pyenv install 3.12.10
+$ pyenv versions
+\end{lstlisting}
+
+\code{pyenv install} は数分かかることがあり、途中でビルドログが多数流れる。完了後に \code{pyenv versions} を実行すると、たとえば次のように表示される。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+* system (set by /Users/student/.pyenv/version)
+  3.11.11
+  3.12.10
+\end{lstlisting}
+
+\code{system} は、pyenv の shim より後ろにある \code{PATH} から選ばれる実行ファイルを表す。OS に付属する Python とは限らず、Homebrew などで導入した Python が先に見つかる場合もある。\code{3.11.11} と \code{3.12.10} が一覧にあれば、そのバージョンは pyenv の管理下に導入されている。先頭の \code{*} は現在選ばれている設定を示す。
+
+その利用者がディレクトリ固有の設定を持たない場合に使う既定バージョンは、\code{pyenv global} で指定する。他の利用者や OS 全体の設定は変更しない。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ pyenv global 3.12.10
+$ python --version
+$ command -v python
+$ pyenv which python
+\end{lstlisting}
+
+結果の例は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+Python 3.12.10
+/Users/student/.pyenv/shims/python
+/Users/student/.pyenv/versions/3.12.10/bin/python
+\end{lstlisting}
+
+\code{command -v python} が示す \code{shims/python} は Python 本体ではなく、pyenv が選んだ実行ファイルへ処理を渡す中継用プログラムである。\code{pyenv which python} は、中継後に実行される Python のパスを表示する。これに対して \code{pyenv local} は、あるディレクトリ以下で優先するバージョンを指定する。特定のプロジェクト用ディレクトリでバージョンを固定する手順を次に示す。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ mkdir analysis311
+$ cd analysis311
+$ pyenv local 3.11.11
+$ python --version
+$ cat .python-version
+\end{lstlisting}
+
+結果の例は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+Python 3.11.11
+3.11.11
+\end{lstlisting}
+
+\code{pyenv local} を実行すると \code{.python-version} が作られ、指定した \code{3.11.11} が記録される。この設定は、そのディレクトリと下位のディレクトリに適用される。ただし、さらに下位に別の \code{.python-version} があれば、そちらが優先される。同じマシンでも、プロジェクトごとに異なる Python を選択できる。
+
+\code{pyenv shell 3.11.11} は、現在のシェルセッションだけに適用される一時的な切り替えである。特定の Python バージョンによる動作確認に用いる。
+
 
 \section{章末課題：Python 環境と設定ファイルの検証}
 

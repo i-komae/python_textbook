@@ -7,7 +7,7 @@ pandas\index{pandas@pandas|textbf} は、行と列からなる表形式データ
 
 \subsection{Series と DataFrame}
 
-pandas の基本構造は \code{Series}\index{series@Series|textbf} と \code{DataFrame}\index{dataframe@DataFrame|textbf} である。\code{Series} はラベル付き 1 次元配列、\code{DataFrame} は列名付き 2 次元表である。NumPy 配列が配列全体で一つの \code{dtype} を持つのに対し、DataFrame は列ごとに異なる型と列名を保持できる。
+まず、検出器名、記録時刻、信号値、有効かどうかを持つ 4 件の記録を表にする。1 行は 1 件の記録、1 列は同じ種類の値を表す。pandas の基本構造は \code{Series}\index{series@Series|textbf} と \code{DataFrame}\index{dataframe@DataFrame|textbf} である。\code{Series} はラベル付き 1 次元配列、\code{DataFrame} は列名付き 2 次元表である。NumPy 配列が配列全体で一つの \code{dtype} を持つのに対し、DataFrame は列ごとに異なる型と列名を保持できる。
 
 \begin{lstlisting}[language=Python]
 import pandas as pd
@@ -125,7 +125,7 @@ print(strong)
 2        B    14.8
 \end{lstlisting}
 
-ブール配列で行を絞る操作は NumPy と似ているが、pandas では列名を介して意味を保ったまま書ける。\code{events["signal"] > 11.0} の結果は行ごとの真偽値であり、それを \code{loc} に渡すと条件に合う行だけが残る。
+例えば最初の行の信号値は 12.4 なので、\code{events["signal"] > 11.0} の条件を満たす。2 行目の 10.1 と 4 行目の 9.7 は条件を満たさず、信号が大きい行を選ぶ表には残らない。ブール配列で行を絞る操作は NumPy と似ているが、pandas では列名を介して意味を保ったまま書ける。\code{events["signal"] > 11.0} の結果は行ごとの真偽値であり、それを \code{loc} に渡すと条件に合う行だけが残る。
 
 \code{loc} は行ラベルや列名で選択し、ラベルのスライスでは終点も含む。\code{iloc} は 0 から始まる位置で選択し、Python の通常のスライスと同じく終点を含まない。また、Series を列へ代入すると、通常は位置ではなく index のラベルで対応付けられる。
 
@@ -613,7 +613,7 @@ B,2050,13.2,true
 \code{pd.read\_csv()} で読み、\code{shape}、\code{columns}、\code{dtypes}、\code{head(3)}、\code{isna().sum()} を表示せよ。行数は 6、列数は 4、\code{signal} の欠損数は 1 になる。\code{head(3)} の \code{3} と、\code{isna().sum()} の \code{sum()} がどの方向に集計しているかを説明せよ。
 
 \item \textbf{条件抽出と列追加}。
-\code{valid} が真で \code{signal >= 12.0} の行を \code{loc} で抽出し、\code{signal / signal.mean()} を \code{signal\_ratio} 列として追加せよ。抽出行は 3 件になる。\code{signal.mean()} は抽出後の 3 行について求める。複数条件を括弧で囲み、\code{and} ではなく \code{\&} を使う理由を説明せよ。
+まず \code{valid} が真で \code{signal >= 12.0} という条件の結果を表示し、どの行が \code{True} かを確認せよ。その条件で \code{loc} を使って行を抽出し、抽出した表を表示する。次に、\code{signal / signal.mean()} を \code{signal\_ratio} 列として追加せよ。抽出行は 3 件になる。\code{signal.mean()} は抽出後の 3 行について求める。複数条件を括弧で囲み、\code{and} ではなく \code{\&} を使う理由を説明せよ。
 
 \item \textbf{検出器別集計と別表の結合}。
 \code{groupby("detector")} と \code{agg()} を使い、有効な信号の件数、平均、標準偏差を求めよ。2 問目の抽出表ではなく元の表を用い、\code{valid} が真で \code{signal} が欠損していない行を集計する。有効件数は A が 3、B が 2、平均は A が約 12.8333、B が 11.5 になる。標準偏差は \code{ddof=1} とし、件数を数える \code{count()} と全行数を数える \code{size()} の違いも確認せよ。さらに、A と B の較正係数を持つ DataFrame を作り、\code{merge(..., on="detector", how="left")} で結合せよ。\code{on} と \code{how} の役割を説明せよ。

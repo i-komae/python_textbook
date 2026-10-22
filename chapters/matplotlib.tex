@@ -9,7 +9,7 @@ Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python でグラフや画�
 
 \subsection{最小限のヒストグラム}
 
-最初に、乱数生成器のシードを固定して正規乱数を 2500 個生成し、40 個のビンへ数え上げて PDF に保存する。入力は \code{values}、作図処理は \code{plt.hist()}、出力先は \code{histogram.pdf} である。
+最初に、測定値がどの範囲に何個あるかを棒の高さで表すヒストグラムを作る。例えば 0 から 1 の範囲にある値が 10 個なら、その範囲の棒の高さは 10 になる。数える範囲の一つ一つをビンという。ここでは動作確認用の値を 2500 個作り、40 個のビンへ数え上げて PDF に保存する。乱数を作るときの番号（シード）を固定し、同じ環境では同じ入力を作れるようにする。入力は \code{values}、作図処理は \code{plt.hist()}、出力先は \code{histogram.pdf} である。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
