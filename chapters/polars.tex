@@ -1,7 +1,7 @@
 \chapter{Polars による式ベースの表処理}
 \label{chap:polars}
 
-Polars\index{polars@Polars|textbf} は、列指向の DataFrame ライブラリである。pandas と同じく表形式データを扱うが、index を持たず、列に対する処理を式として組み立てる点が異なる。\code{LazyFrame}\index{lazyframe@LazyFrame|textbf} では、式から作った実行計画を評価前に最適化できる。本章では、呼び出し時に結果を返す eager API と、処理を実行計画として蓄積する lazy API を区別し、列変換、集計、結合、入出力を扱う。
+Polars\index{polars@Polars|textbf} は、pandas と同じく行と列からなる表を扱うライブラリである。まず 4 件の記録を表にし、信号値の列を計算する。次に、条件に合う行を選び、検出器ごとに集計する。後半では、行う処理をまとめて記録してから実行する方法を扱う。
 
 \section{式と遅延実行による表処理}
 
@@ -23,6 +23,7 @@ df = pl.DataFrame(
 print(df)
 \end{lstlisting}
 
+\noindent\begin{minipage}{\linewidth}
 このコードを実行すると、Polars の表は次のように表示される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
@@ -38,10 +39,25 @@ shape: (4, 3)
 | B        | 1244    | 9.7    |
 +----------+---------+--------+
 \end{lstlisting}
+\end{minipage}
 
 \code{shape: (4, 3)} は 4 行 3 列であることを示し、各列名の下にはデータ型が表示される。Polars の式は行ラベルではなく列名を参照し、その列に適用する処理を表す。
 
 \subsection{式による列変換}
+
+まず、各信号値に 1 を足す。\code{pl.col("signal")} は \code{signal} 列を選ぶ指定であり、\code{+ 1} を続けると「この列の各値へ 1 を足す」という式になる。
+
+\begin{lstlisting}[language=Python]
+expr = pl.col("signal") + 1
+result = df.select(expr.alias("signal_plus_one"))
+print(result["signal_plus_one"].to_list())
+\end{lstlisting}
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+[13.4, 11.1, 15.8, 10.7]
+\end{lstlisting}
+
+\code{expr} は計算の指定であり、4 個の答えそのものではない。\code{df.select(...)} に渡すと表へ適用され、\code{alias()} で結果の列名を付けられる。ここでは先頭の信号値 \code{12.4} が \code{13.4} になったことを確認する。
 
 Polars の中心概念は expression（式）\index{expression@expression|textbf}である。式は、列に対してどの計算を適用するかを表す処理記述であり、その時点の値そのものではない。\code{pl.col("signal")} は \code{signal} 列を参照する式であり、四則演算、比較、集計などと組み合わせられる。
 
@@ -56,14 +72,15 @@ print(expr)
 \index{polars@Polars!eager api@eager API}
 \index{polars@Polars!lazy api@lazy API}
 
-Polars には、命令ごとに結果を返す eager API と、処理を実行計画として蓄え、最後に最適化して実行する lazy API がある。
+命令ごとに結果の表を得る方法を eager（即時実行）API という。処理内容を記録し、後でまとめて実行する方法を lazy（遅延実行）API という。例えば、列の選択や行の抽出を先に記録しておけば、必要な部分だけを読むように実行方法を調整できる。以下では、上で作った 4 行の表を実習用の \code{events.csv} へ保存してから、二つの読み方を比べる。同名ファイルがあれば置き換わるので、この章の実習用フォルダーで実行する。
 
 \begin{lstlisting}[language=Python]
+df.write_csv("events.csv")
 eager_df = pl.read_csv("events.csv")
 lazy_df = pl.scan_csv("events.csv")
 \end{lstlisting}
 
-\code{read\_csv()} は呼び出し時に読み込んで DataFrame を作るが、\code{scan\_csv()} は実行前の処理計画を表す \code{LazyFrame} を返す。lazy API では、必要な列だけを読む列射影や、不要な行を早い段階で除く述語プッシュダウンなどを適用できる場合がある。処理時間とメモリ使用量への効果は、入力形式と処理内容に依存するため、同じ入力で測定する。
+\code{read\_csv()} は呼び出し時に読み込んで DataFrame を作る。\code{scan\_csv()} は、これから行う処理を記録する \code{LazyFrame}\index{lazyframe@LazyFrame|textbf} を返す。\code{lazy\_df.collect()} を呼ぶと、記録した処理が実行され、結果の DataFrame が得られる。lazy API では、必要な列だけを読む列射影や、不要な行を早い段階で除く述語プッシュダウンなどを適用できる場合がある。処理時間とメモリ使用量への効果は、入力形式と処理内容に依存するため、同じ入力で測定する。
 
 \section{列変換・集計・結合・入出力}
 

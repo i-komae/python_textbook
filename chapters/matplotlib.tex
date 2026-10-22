@@ -1,7 +1,7 @@
 \chapter{Matplotlib による可視化}
 \label{chap:matplotlib}
 
-Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python でグラフや画像を描画するライブラリである。本章では、データの性質に応じた図の選択と、オブジェクト指向 API による構成要素の制御を扱う。前半では基本的な作図と図種の選択、後半では Figure、Axes、Axis、Artist の関係、複数パネル、スタイル、保存方法を説明する。
+Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python でグラフや画像を描画するライブラリである。本章では、データに合う図を選び、軸の名前や単位を付けて保存する。図全体を表す \code{fig} と、点や線を描く領域を表す \code{ax} を分けて使う書き方も学ぶ。このように描画先を明示する書き方を、オブジェクト指向 API と呼ぶ。前半では基本的な作図と図種の選択、後半では Figure、Axes、Axis、Artist の関係、複数パネル、スタイル、保存方法を説明する。
 
 ヒストグラム\index{ひすとぐらむ@ヒストグラム}や散布図には、計算結果の検証に用いる診断図としての役割がある。平均値や標準偏差だけでは識別できない長い裾、二峰性、外れ値などを、分布の形として確認できるためである。したがって、解析途中の検証と最終結果の提示の双方に可視化を組み込む。
 
@@ -11,6 +11,7 @@ Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python でグラフや画�
 
 最初に、測定値がどの範囲に何個あるかを棒の高さで表すヒストグラムを作る。例えば 0 から 1 の範囲にある値が 10 個なら、その範囲の棒の高さは 10 になる。数える範囲の一つ一つをビンという。ここでは動作確認用の値を 2500 個作り、40 個のビンへ数え上げて PDF に保存する。乱数を作るときの番号（シード）を固定し、同じ環境では同じ入力を作れるようにする。入力は \code{values}、作図処理は \code{plt.hist()}、出力先は \code{histogram.pdf} である。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,6 +24,7 @@ plt.xlabel("value")
 plt.ylabel("count")
 plt.savefig("histogram.pdf")
 \end{lstlisting}
+\end{minipage}
 
 線、文字、マーカーを主体とする図は、ベクタ形式の PDF で保存すると拡大時にも輪郭を保てる。PDF は LaTeX 文書へ直接挿入できる。図~\ref{fig:basic-histogram-example} は、この最小例の出力である。
 

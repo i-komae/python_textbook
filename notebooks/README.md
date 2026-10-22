@@ -70,4 +70,4 @@ python scripts/check_notebooks.py notebooks/10_astropy.ipynb
 
 検証用の一時ファイルは `build/notebook-validation/` に保存します。通常の検証では、実カタログの取得、Cartopyの描画、端末でのpyenv切り替えは実行しません。
 
-2026年10月22日に、Python 3.12.14で全13冊を新しいカーネルから実行し、期待値と保存ファイルを確認しました。教材直下とNotebookのフォルダーの両方から実行しています。総合課題は最初の3日で66組、全500日で12,033組となり、配布データの基準値に一致しました。主なライブラリはNumPy 2.5.4、pandas 3.0.6、Polars 2.0.0、Matplotlib 3.11.2、SciPy 1.18.1、Astropy 8.0.2、PyArrow 26.0.0です。
+2026年10月22日に、Python 3.12.14で全13冊を新しいカーネルから実行し、期待値と保存ファイルを確認しました。Notebookのあるフォルダーを現在位置として実行しています。総合課題は最初の3日で66組、全500日で12,033組となり、配布データの基準値に一致しました。主なライブラリはNumPy 2.5.4、pandas 3.0.6、Polars 2.0.0、Matplotlib 3.11.2、SciPy 1.18.1、Astropy 8.0.2、PyArrow 26.0.0です。

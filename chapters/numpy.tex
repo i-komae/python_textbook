@@ -35,7 +35,7 @@ print(intervals)
 
 \subsection{\code{ndarray} と属性}
 
-NumPy の中心となるデータ構造は \code{ndarray} である。配列の生成後には、\code{shape}、\code{ndim}、\code{dtype} によって形状、次元数、要素型を確認する。
+\code{np.array()} で作った配列の種類を \code{ndarray} という。配列に付随する情報は、\code{a.shape} のように名前の後ろへドットと項目名を付けて取り出せる。この情報を属性という。\code{a.sum()} のように計算を実行するメソッドと異なり、属性を読むときは丸括弧を付けない。次の例で、行数・列数、数値の型、要素数を確認する。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -414,7 +414,7 @@ M_{ij} = x_i + y_j
 
 \subsection{統計量とヒストグラム}
 
-NumPy には、平均、分散、最小値、最大値、ヒストグラムなど、解析の基本となる集計関数がそろっている。代表的な統計量\index{numpy@NumPy!np.mean@\code{np.mean}}\index{numpy@NumPy!np.std@\code{np.std}}とヒストグラムを計算する例を下に示す。
+平均は値の合計を個数で割ったものである。値が平均の周りにどの程度広がっているかは、分散と標準偏差で表せる。\code{ddof=0} の分散は、各値と平均との差を二乗して平均した値であり、その平方根が標準偏差になる。例えば \code{[1, 3]} は平均 2、平均との差が \code{[-1, 1]} なので、分散も標準偏差も 1 である。\code{ddof} を変えた場合の割り算は、例の後で説明する。NumPy には、これらの統計量や最小値、最大値、ヒストグラムを求める関数がある。代表的な統計量\index{numpy@NumPy!np.mean@\code{np.mean}}\index{numpy@NumPy!np.std@\code{np.std}}とヒストグラムを計算する例を下に示す。
 
 \begin{lstlisting}[language=Python]
 values = np.array([1.0, 2.0, 2.0, 3.0, 4.0])
@@ -444,7 +444,11 @@ std = 1.02
 \bar{x} = \frac{1}{N}\sum_{i=1}^{N} x_i,\qquad
 \sigma = \sqrt{\frac{1}{N}\sum_{i=1}^{N} (x_i-\bar{x})^2}
 \]
-を計算している。\code{ddof} は分母の自由度補正を指定し、一般に分母は \(N-\mathrm{ddof}\) となる~\cite{numpy_std}。\code{ddof=0} は手元の \(N\) 個の値のばらつきを分母 \(N\) で記述する指定であり、未知の母集団の標準偏差が求まったことを意味しない。独立に同じ分布から得た標本では、分母 \(N-1\) の標本分散が母分散の不偏推定量となる。ただし、その平方根が母標準偏差の不偏推定量になるわけではない。NumPy の \code{std()} の既定は \code{ddof=0}、pandas の \code{std()} の既定は \code{ddof=1} なので、比較時には指定をそろえる。
+を計算している。\code{ddof} は分母の自由度補正を指定し、一般に分母は \(N-\mathrm{ddof}\) となる~\cite{numpy_std}。\code{ddof=0} は手元の \(N\) 個の値のばらつきを分母 \(N\) で記述する指定であり、未知の母集団の標準偏差が求まったことを意味しない。
+
+ここで、今回の測定値の集まりを標本、その標本を得る元の集まりを母集団という。独立に同じ分布から得た標本では、分母 \(N-1\) の標本分散が母分散の不偏推定量となる。不偏とは、同じ条件で標本を繰り返し得たとき、推定値の平均が母集団の値に一致する性質をいう。ただし、その平方根が母標準偏差の不偏推定量になるわけではない。
+
+NumPy の \code{std()} の既定は \code{ddof=0}、pandas の \code{std()} の既定は \code{ddof=1} なので、比較時には指定をそろえる。
 \index{ひょうじゅんへんさ@標準偏差|textbf}\index{ぶんさん@分散|textbf}\index{ddof@\code{ddof}|textbf}
 
 \section{型・軸・ビューに関する注意点}

@@ -5,6 +5,8 @@
 \label{SEC:shell}
 本書では、ファイル操作やスクリプト実行をターミナル\index{たーみなる@ターミナル|textbf}から行う。初めに、ターミナルとシェルの役割を区別する。
 
+macOS では「ターミナル」を開いて以下の例を試す。Windows では、先に本節後半の WSL の手順を行い、Ubuntu の端末を開く。命令を入力したら Enter を押す。
+
 \begin{itemize}
 \item ターミナル: 文字で命令を入力するためのアプリケーション
 \item シェル\index{しぇる@シェル|textbf}: ターミナルの中で動き、入力されたコマンドを解釈して実行するプログラム
@@ -18,19 +20,21 @@ student@host ~ $
 
 この表示は、シェルが入力を待っていることを意味する。本書の実行例では、実際のプロンプト全体を省略し、読者が入力する行の先頭に \code{\$} だけを置く。\code{\$} は入力行を見分けるための印であり、読者が入力する文字には含まれない。
 
-ログインシェルとして設定されているシェルの名前は、次のコマンドで確認できる。
+利用者がログインするときに起動するよう設定されたシェルを、ログインシェルという。その名前は、次のコマンドで確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo $SHELL
 \end{lstlisting}
 
-この実行例で読者が入力するのは、\code{echo \$SHELL} の部分だけである。行頭の \code{\$} は入力しない。
+この実行例で読者が入力するのは、\code{echo \$SHELL} の部分だけである。行頭の \code{\$} は入力しない。\code{echo} は後ろに続く値を表示し、\code{\$SHELL} はシェルの設定値を取り出す。このような、プログラムへ引き継がれる名前付きの設定値を環境変数という。
 
+\noindent\begin{minipage}{\linewidth}
 実行結果の例は次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /bin/zsh
 \end{lstlisting}
+\end{minipage}
 
 本書では、macOS の例に \code{zsh}、Linux と WSL 上の Ubuntu の例に \code{bash} を用いる。\code{zsh} と \code{bash} はどちらも本章で扱う基本コマンドを実行できるが、起動時に読む設定ファイルや一部のシェル構文は異なる。上の \code{/bin/zsh} は、ログインシェルとして \code{zsh} が設定されていることを表す。
 

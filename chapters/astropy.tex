@@ -7,7 +7,7 @@ Astropy\index{astropy@Astropy|textbf} は、単位付き物理量、時刻系、
 
 \subsection{数値への単位・時刻・座標情報の付与}
 
-Astropy の中心的な発想は、「数値そのもの」ではなく「何の単位で、どの時刻系で、どの座標系なのか」までオブジェクトへ持たせることである。例えば 100 という値だけでは、100 ns なのか 100 ms なのか分からない。Astropy の \code{Quantity}\index{quantity@\code{Quantity}|textbf} を使えば、この曖昧さを減らせる。
+Astropy の中心的な発想は、「数値そのもの」ではなく「何の単位で、どの時刻系で、どの座標系なのか」までオブジェクトへ持たせることである。例えば 100 という値だけでは、100 ns なのか 100 ms なのか分からない。数値と単位を一組にした \code{Quantity}\index{quantity@\code{Quantity}|textbf} を使えば、この曖昧さを減らせる。ns（ナノ秒）は 1 秒の 10 億分の 1、ms（ミリ秒）は 1 秒の 1000 分の 1 である。
 
 \begin{lstlisting}[language=Python]
 import astropy.units as u
@@ -27,7 +27,7 @@ print(f"{distance.to_value(u.km):.10f} km")
 0.0749481145 km
 \end{lstlisting}
 
-この例では、\code{250 * u.ns} という時点で「250 ns」という意味が値に埋め込まれている。式の途中で単位を落とさない限り、単位換算はライブラリが引き受ける。
+この例では、\code{250 * u.ns} という時点で「250 ns」という意味が値に埋め込まれている。\code{u} は単位を使うための短い名前であり、\code{u.ns} はナノ秒、\code{u.m} はメートル、\code{u.s} は秒を表す。\code{.to(u.m)} は単位付きのままメートルへ換算し、\code{.to\_value(u.m)} はメートルへ換算した数値だけを取り出す。式の途中で単位を落とさない限り、単位換算はライブラリが引き受ける。
 
 数式で書けば、ここで行っているのは
 \[
@@ -171,7 +171,7 @@ Astropy の \code{Time} は内部で時刻を二つの浮動小数点数に分�
 
 \subsection{\code{SkyCoord} による座標変換}
 
-Astropy の \code{coordinates} は、天球上の座標系を変換する。\code{SkyCoord}\index{skycoord@\code{SkyCoord}|textbf} はその中心となるクラスである。
+地上の位置を経度と緯度で示すように、空の方向も二つの角度で表せる。赤経は天の赤道に沿って測る角度、赤緯は天の赤道から南北へ測る角度である。次の例では赤経 150 度、赤緯 20 度の方向を指定する。\code{SkyCoord}\index{skycoord@\code{SkyCoord}|textbf} は、この二つの角度と、その基準となる座標系をまとめて保持する。\code{frame="icrs"} は国際天球基準座標系（ICRS）を使う指定である。
 
 \begin{lstlisting}[language=Python]
 from astropy.coordinates import SkyCoord
@@ -184,7 +184,7 @@ print(f"{gal.l.deg:.6f}")
 print(f"{gal.b.deg:.6f}")
 \end{lstlisting}
 
-座標変換後の銀河経度と銀河緯度は次の通りである。
+同じ空の方向を、銀河面を基準とした銀河座標へ表し直す。変換後の銀河経度と銀河緯度は次の通りである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 213.800977
@@ -211,6 +211,7 @@ table["detector"] = ["A", "A", "B"]
 print(table)
 \end{lstlisting}
 
+\noindent\begin{minipage}{\linewidth}
 \code{QTable} を表示すると、列名だけでなく単位も一緒に確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
@@ -221,6 +222,7 @@ time signal detector
 1.0   10.1        A
 2.0   14.8        B
 \end{lstlisting}
+\end{minipage}
 
 \code{QTable} は \code{Quantity} 列を保持するため、単位付きの列をそのまま演算できる。一方、複雑な groupby、join、列演算を中心とする処理には pandas や Polars の機能を利用できる。単位とメタデータの保持、および必要な表操作の双方から中心となる表形式を選ぶ。
 
@@ -256,12 +258,14 @@ print(data.shape)
 print(header["OBJECT"])
 \end{lstlisting}
 
+\noindent\begin{minipage}{\linewidth}
 FITS を書いてから読み直すと、配列形状とヘッダ値は次のように確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 (3, 3)
 test
 \end{lstlisting}
+\end{minipage}
 
 \code{fits.open()} は HDU のリストを返す。画像は \code{PrimaryHDU}、表は \code{BinTableHDU} などに格納される。\code{hdul.info()} で各 HDU の型、名前、次元を確認してから、対象のデータを読み込む。
 
