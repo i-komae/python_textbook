@@ -9,7 +9,7 @@ NumPy\index{numpy@NumPy|textbf} は、複数の数値をまとめて計算する
 
 ある観測の開始から 10 秒、15 秒、23 秒、41 秒の時点で、4 回の事象が記録されたとする。知りたいのは、次の事象が起きるまでに何秒かかったかである。最初の間隔は \code{15 - 10} で 5 秒、次は \code{23 - 15} で 8 秒、最後は \code{41 - 23} で 18 秒になる。
 
-この計算には、複数の数値をまとめて扱う「配列」を使う。\code{import numpy as np} は、NumPy の機能を \code{np} という短い名前で使うための準備である。\code{np.array([...])} で、角括弧の中の数値をまとめた配列を作る。次の例を Notebook のコードセルで実行する。
+この計算には、複数の数値をまとめて扱う「配列」を使う。\code{import numpy as np} は、NumPy の機能を \code{np} という短い名前で使うための準備である。\code{np.array([...])} で、角括弧の中の数値をまとめた配列を作る。次の例を \code{intervals.py} へ保存し、端末で \code{python intervals.py} を実行する。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -61,49 +61,6 @@ float64
 \end{lstlisting}
 
 この出力は、\code{a} が 2 行 3 列、2 次元、6 要素の \code{float64} 配列であり、1 要素が 8 バイトであることを示す。形状不一致には \code{shape} と \code{ndim}、型変換には \code{dtype} と \code{itemsize} が診断材料となる。
-
-\subsection{Python, C, NumPy でのデータ型の違い}
-\label{sec:numpy-types}
-
-Python では、変数名へ型を宣言せずに値を代入でき、値ごとに型が決まる。この仕組みを動的型付けという。Python の標準数値型は値ごとに型と管理情報を持つ。これに対して NumPy 配列では、配列全体に共通する固定長の型を \code{dtype} で指定する。代表的な数値型の対応を表~\ref{tab:type-comparison} に示す。
-
-\begin{table}[hbtp]
-\centering
-\caption{Python, NumPy, C 言語での代表的な数値型の対応}
-\label{tab:type-comparison}
-\begin{tabular}{@{}p{0.14\linewidth}p{0.22\linewidth}p{0.22\linewidth}p{0.24\linewidth}@{}}
-\toprule
-分類 & C 言語の型 & Python の標準型 & NumPy の型 (\code{dtype}) \\
-\midrule
-整数型 & \code{int}, \code{long} & \code{int} (利用可能なメモリの範囲で可変長) & \code{int32}, \code{int64} \\
-単精度浮動小数 & \code{float} (32ビット) & (標準では存在せず) & \code{float32} \\
-倍精度浮動小数 & \code{double} (64ビット) & \code{float} & \code{float64} \\
-論理型 & \code{bool} & \code{bool} & \code{bool\_} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-表のビット幅は一般的な処理系の例であり、C 言語の規格がすべての処理系に同じ幅を保証しているわけではない。C 言語では、\code{float} や \code{double} のように変数の型を宣言し、処理系が定める大きさの領域へ値を格納する。一般的な CPython では、標準の \code{int} は必要な桁数に応じて領域が増え、\code{float} は通常 C 言語の \code{double} と同じ倍精度形式を使う。また、各数値は型や参照管理の情報を含む Python オブジェクトである。多数の値を Python のリストへ格納すると、リスト中の参照と各オブジェクトの管理領域が必要になり、演算も要素ごとの Python 処理を経由する。
-
-NumPy の \code{ndarray} は、要素ごとではなく配列全体で一つの \code{dtype} を共有し、データ領域と、形状・ストライドなどの管理情報を分けて保持する。配列は常に連続とは限らないが、同じ型の値を規則的にたどれるため、要素ごとの Python オブジェクト操作を避け、C や Fortran で実装されたループへまとめて処理を渡せる。この書き方をベクトル化と呼ぶ。
-
-浮動小数点型は、必要な精度と値域、配列の大きさ、入出力元の型、CPU や GPU の特性を基準に選ぶ。NumPy の多くの配列生成関数や Python の \code{float} から作る配列では \code{float64} が既定になり、反復計算や差の小さい値を扱う計算では有力な選択肢になる。一方、\code{float32} は 1 要素が 4 バイトであり、8 バイトの \code{float64} と比べて配列本体のメモリ使用量が半分になる。大きな画像、センサデータ、GPU 計算、メモリ転送が支配的な処理では、この差が処理可能な配列サイズを左右する。元データが \code{float32} なら、必要性を検討せずに倍精度へ変換するとメモリ使用量だけが増える場合もある。
-
-型を変えるときは、速度だけでなく結果が必要な精度を満たすかを確認する。例えば \code{np.finfo(np.float32).eps} と \code{np.finfo(np.float64).eps} を表示すると、1 付近で区別できる相対的な刻み幅を比較できる。どちらの型でも、桁落ちや丸め誤差そのものがなくなるわけではない。基準値が決まっていない段階では \code{float64} から始め、メモリや転送が問題になった時点で \code{float32} でも解析結果が変わらないかを検証する方法が堅実である。
-
-\subsection{メモリ配置と低水準ループによる配列演算}
-
-NumPy の配列演算と Python の要素別ループには、主に次の三つの実装上の差がある。
-
-\begin{enumerate}
-\item 数値を連続したメモリにまとめて持てること
-\item Python レベルのループを減らせること
-\item 内部で低レベルに最適化された処理を使えること
-\end{enumerate}
-
-配列演算は、Python で要素ごとに演算を呼び出す代わりに、配列全体を低水準の実装へ渡す。実行時間は、同じ入力と演算について Python ループと配列演算を測定して比較する。
-
-配列演算では、差分、閾値判定、正規化、平均、分散を、明示的な添字ループを用いずに記述できる。処理対象となる配列と演算の対応が式に現れるため、要素ごとの更新処理と区別できる。
 
 \section{配列の生成・演算・集計}
 
@@ -568,6 +525,49 @@ True
 
 有限値に対する \code{np.isclose(a, b)} は、\(\lvert a-b\rvert\leq\mathrm{atol}+\mathrm{rtol}\lvert b\rvert\) を判定する。既定の許容差が測定精度に適するとは限らないため、単位と値の大きさに合わせて指定する。\code{np.allclose()} もブロードキャストするので、配列の同一性を検証する際は形状の一致を先に確認する。欠損値を一致とみなすかどうかも別に定める。
 
+\subsection{補足：Python・C・NumPy の型とメモリの違い}
+\label{sec:numpy-types}
+
+Python では、変数名へ型を宣言せずに値を代入でき、値ごとに型が決まる。この仕組みを動的型付けという。Python の標準数値型は値ごとに型と管理情報を持つ。これに対して NumPy 配列では、配列全体に共通する固定長の型を \code{dtype} で指定する。代表的な数値型の対応を表~\ref{tab:type-comparison} に示す。
+
+\begin{table}[hbtp]
+\centering
+\caption{Python, NumPy, C 言語での代表的な数値型の対応}
+\label{tab:type-comparison}
+\begin{tabular}{@{}p{0.14\linewidth}p{0.22\linewidth}p{0.22\linewidth}p{0.24\linewidth}@{}}
+\toprule
+分類 & C 言語の型 & Python の標準型 & NumPy の型 (\code{dtype}) \\
+\midrule
+整数型 & \code{int}, \code{long} & \code{int} (利用可能なメモリの範囲で可変長) & \code{int32}, \code{int64} \\
+単精度浮動小数 & \code{float} (32ビット) & (標準では存在せず) & \code{float32} \\
+倍精度浮動小数 & \code{double} (64ビット) & \code{float} & \code{float64} \\
+論理型 & \code{bool} & \code{bool} & \code{bool\_} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+表のビット幅は一般的な処理系の例であり、C 言語の規格がすべての処理系に同じ幅を保証しているわけではない。C 言語では、\code{float} や \code{double} のように変数の型を宣言し、処理系が定める大きさの領域へ値を格納する。一般的な CPython では、標準の \code{int} は必要な桁数に応じて領域が増え、\code{float} は通常 C 言語の \code{double} と同じ倍精度形式を使う。また、各数値は型や参照管理の情報を含む Python オブジェクトである。多数の値を Python のリストへ格納すると、リスト中の参照と各オブジェクトの管理領域が必要になり、演算も要素ごとの Python 処理を経由する。
+
+NumPy の \code{ndarray} は、要素ごとではなく配列全体で一つの \code{dtype} を共有し、データ領域と、形状・ストライドなどの管理情報を分けて保持する。配列は常に連続とは限らないが、同じ型の値を規則的にたどれるため、要素ごとの Python オブジェクト操作を避け、C や Fortran で実装されたループへまとめて処理を渡せる。この書き方をベクトル化と呼ぶ。
+
+浮動小数点型は、必要な精度と値域、配列の大きさ、入出力元の型、CPU や GPU の特性を基準に選ぶ。NumPy の多くの配列生成関数や Python の \code{float} から作る配列では \code{float64} が既定になり、反復計算や差の小さい値を扱う計算では有力な選択肢になる。一方、\code{float32} は 1 要素が 4 バイトであり、8 バイトの \code{float64} と比べて配列本体のメモリ使用量が半分になる。大きな画像、センサデータ、GPU 計算、メモリ転送が支配的な処理では、この差が処理可能な配列サイズを左右する。元データが \code{float32} なら、必要性を検討せずに倍精度へ変換するとメモリ使用量だけが増える場合もある。
+
+型を変えるときは、速度だけでなく結果が必要な精度を満たすかを確認する。例えば \code{np.finfo(np.float32).eps} と \code{np.finfo(np.float64).eps} を表示すると、1 付近で区別できる相対的な刻み幅を比較できる。どちらの型でも、桁落ちや丸め誤差そのものがなくなるわけではない。基準値が決まっていない段階では \code{float64} から始め、メモリや転送が問題になった時点で \code{float32} でも解析結果が変わらないかを検証する方法が堅実である。
+
+\subsection{補足：配列演算を速く実行できる理由}
+
+NumPy の配列演算と Python の要素別ループには、主に次の三つの実装上の差がある。
+
+\begin{enumerate}
+\item 数値を連続したメモリにまとめて持てること
+\item Python レベルのループを減らせること
+\item 内部で低レベルに最適化された処理を使えること
+\end{enumerate}
+
+配列演算は、Python で要素ごとに演算を呼び出す代わりに、配列全体を低水準の実装へ渡す。実行時間は、同じ入力と演算について Python ループと配列演算を測定して比較する。
+
+配列演算では、差分、閾値判定、正規化、平均、分散を、明示的な添字ループを用いずに記述できる。処理対象となる配列と演算の対応が式に現れるため、要素ごとの更新処理と区別できる。
+
 \section{差分・ヒストグラム・線形代数への応用}
 
 \subsection{解析で NumPy を使うときの視点}
@@ -665,25 +665,30 @@ values_array = df["Value"].to_numpy()
 
 NumPy の基礎を復習したいときは、NumPy quickstart~\cite{numpy_quickstart} を併読すると整理しやすい。特に、配列生成、添字とスライス、\code{shape} の変更、ブロードキャスト、コピーとビューは、解析コードを書くたびに戻って確認したくなる項目である。本章は解析で問題になりやすい点を補い、quickstart は関数名や細かな仕様を確認する資料と位置付けられる。
 
-\section{章末課題：地震発生間隔の配列解析}
+\section{章末課題：発生間隔を計算して集計する}
 
-USGS の CSV をまだ用意していない場合は、次の配列を 1 問目と 2 問目の共通入力とせよ。この配列は秒単位の発生時刻であり、意図的に未整列にしてある。
+まず、秒単位の時刻を持つ次の人工データを使う。実カタログを使う場合は、第~\ref{chap:io}~章の方法で \code{time} 列を秒へ変換する。
 
 \begin{lstlisting}[language=Python]
+import numpy as np
+
 times = np.array([720.0, 0.0, 60.0, 4200.0, 180.0, 780.0])
 \end{lstlisting}
 
 \begin{enumerate}
-\item \textbf{発生時刻からの発生間隔配列の作成}。
-第~\ref{chap:io}~章で扱った CSV から \code{time} 列を読み、秒単位の数値配列へ変換せよ。その後で NumPy 配列へまとめ、\code{np.sort} と \code{np.diff} を使って隣り合う地震の発生間隔 \(\Delta t\) を求めよ。
-小規模入力では、整列後の時刻が \code{[0., 60., 180., 720., 780., 4200.]}、\(\Delta t\) が \code{[60., 120., 540., 60., 3420.]} になる。\code{np.sort()} が返す配列と \code{np.diff()} が返す配列について、\code{shape}、\code{dtype}、要素数が 1 減る理由を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{発生間隔を求める。}
+\code{np.sort()} と \code{np.diff()} で、隣り合う時刻の差を求めよ。結果 \code{[60., 120., 540., 60., 3420.]} と、配列の形状・型を示せ。並べ替える前に差を取った結果と比べよ。
+\end{minipage}
 
-\item \textbf{NumPy による発生間隔の基本統計とヒストグラム}。
-\(\Delta t\) 配列に対して、平均値、0 秒超だけに絞った要素数、\([0, 60)\,\mathrm{s}\)、\([60, 600)\,\mathrm{s}\)、\([600, 3600)\,\mathrm{s}\) の 3 区間の個数を求めよ。さらに、\code{edges = np.arange(0.0, 3600.0 + 600.0, 600.0)} として 600 秒幅の境界を作り、\code{np.histogram} によって各ビンの個数と最頻ビンの範囲を求めよ。
-小規模入力の平均値は 840 秒であり、0 秒超の要素数は 5 である。3 区間の個数は順に 0、4、1 になる。600 秒幅のヒストグラムでは、\([0,600)\,\mathrm{s}\) が 4 件で最頻ビンとなり、最後の \([3000,3600]\,\mathrm{s}\) が 1 件となる。3 区間の条件式は右端を含めない一方、\code{np.histogram()} は最後のビンだけ右端を含む。3600 秒ちょうどの値を別に与え、両者の差を確認せよ。さらに、\code{np.histogram()} が返す \code{counts} と \code{bin\_edges} の長さの関係も説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{間隔の分布を集計する。}
+平均、0 秒を超える個数、\([0,60)\)、\([60,600)\)、\([600,3600)\) 秒の個数を求めよ。さらに 0 から 3600 秒を 600 秒幅で \code{np.histogram()} により集計し、表にせよ。検算値は平均 840 秒、正の値 5 個、3 区間は順に 0、4、1 個である。3600 秒を追加し、最後のビンだけ右端を含むことも確かめよ。
+\end{minipage}
 
-\item \textbf{発展課題}。
-発生間隔は短時間側に密集し、長時間側には少数の値が残る場合がある。そのため、等間隔ビンだけでは短時間側の差を分解できないことがある。たとえば \code{np.logspace(np.log10(1), np.log10(3600), 30)} のようにビン境界を作り、\(\Delta t\) のヒストグラムを対数ビンで作り直せ。固定幅ビンと対数ビンについて、ビン幅、空のビンの数、最短値から最長値までを収めるビン数を比較せよ。境界を 30 個指定するとビンは 29 個になる。0 以下の値は対数ビンへ含められないため、その件数と指定範囲外の件数を別に記録せよ。発展課題では、日本近海の範囲を緯度・経度で定義してデータを別に取得し、同じ集計条件による全球データとの分布差を比較せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{発展：ビンの取り方と地域差を比べる。}
+実カタログの間隔を、固定幅ビンと 1～3600 秒の対数ビンで集計せよ。対数ビンは \code{np.logspace(np.log10(1), np.log10(3600), 30)} とする。空のビン、0 以下の値、範囲外の値の件数を表にせよ。さらに緯度・経度で日本近海を定義し、同じ期間・集計条件の全球データと比較せよ。
+\end{minipage}
+
 \end{enumerate}
-
-NumPy 配列は、配列全体で一つの \code{dtype} を共有する。一方、観測時刻、検出器名、信号値のように型の異なる列を一つの記録として保持するには、列ごとに型を持つ表形式の構造を用いる。次章では、pandas の列名、欠損値、グループ集計、結合を扱う。

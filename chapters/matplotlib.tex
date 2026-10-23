@@ -1,7 +1,7 @@
 \chapter{Matplotlib による可視化}
 \label{chap:matplotlib}
 
-Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python でグラフや画像を描画するライブラリである。本章では、データに合う図を選び、軸の名前や単位を付けて保存する。図全体を表す \code{fig} と、点や線を描く領域を表す \code{ax} を分けて使う書き方も学ぶ。このように描画先を明示する書き方を、オブジェクト指向 API と呼ぶ。前半では基本的な作図と図種の選択、後半では Figure、Axes、Axis、Artist の関係、複数パネル、スタイル、保存方法を説明する。
+Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python でグラフや画像を描画するライブラリである。この章では、測定値の分布を図にし、軸の名前や単位を付けて保存する。まず 1 枚のヒストグラムを作り、次に点や線を描く方法を学ぶ。後半では複数の図を並べ、色や文字の大きさを整える。保存した図を開き、何を比較した図かを説明できるようにする。
 
 ヒストグラム\index{ひすとぐらむ@ヒストグラム}や散布図には、計算結果の検証に用いる診断図としての役割がある。平均値や標準偏差だけでは識別できない長い裾、二峰性、外れ値などを、分布の形として確認できるためである。したがって、解析途中の検証と最終結果の提示の双方に可視化を組み込む。
 
@@ -38,6 +38,8 @@ plt.savefig("histogram.pdf")
 \end{figure}
 
 \subsection{軸ラベル、凡例、目盛り}
+
+次の例では、\code{plt.subplots()} で図全体を表す \code{fig} と、点や線を描く領域を表す \code{ax} を作る。\code{ax.plot()} はその領域へ線を描き、\code{fig.savefig()} は図全体を保存する。
 
 図には、各軸が表す量と単位、系列を識別する凡例、比較に必要な目盛りを記す。これらが欠けると、数値の物理的意味や系列間の対応を図だけから判定できない。
 
@@ -465,6 +467,8 @@ fig.savefig("spectrum.png", dpi=150)
 
 
 \section{オブジェクト指向 API による複雑な図の管理}\label{sec:matplotlib-object}
+
+API は、プログラムから機能を呼び出すための関数名や使い方を指す。ここでは、図全体の \code{fig} と描画領域の \code{ax} を分け、\code{ax.plot()} のように描画先を指定する書き方を扱う。これをオブジェクト指向 API と呼ぶ。
 
 \subsection{Figure, Axes, Axis, Artist の役割}
 
@@ -941,9 +945,9 @@ ax.plot(x_str, y, marker="o")
 
 \code{Plot types} は図種ごとの選択肢、\code{Gallery} は完成例と実装、\code{Cheatsheets} は主要な引数と書式、\code{Quick start} は \code{Figure} と \code{Axes} の基本構造を示す。目的に近い公式例を選び、入力データ、軸、単位、保存形式を解析条件に合わせて変更する。
 
-\section{章末課題：地震カタログと発生間隔の可視化}
+\section{章末課題：分布の特徴が伝わる図を作る}
 
-USGS データと第~\ref{chap:numpy}~章で作成した \(\Delta t\) 配列がない場合は、次の小規模データを共通入力に用いよ。課題では画面表示だけで終わらせず、指定したファイルを保存し、保存後に \code{Path(...).exists()} で存在を確認せよ。
+まず次の人工データを使う。実カタログと第~\ref{chap:numpy}~章の発生間隔があれば、同じ手順で作図する。\code{figures/} を作り、保存した図を開いて確認する。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -955,25 +959,38 @@ dt = np.array([1.0, 4.0, 12.0, 60.0, 180.0, 900.0, 3600.0])
 \end{lstlisting}
 
 \begin{enumerate}
-\item \textbf{全球地震分布の散布図}。
-USGS の CSV から \code{longitude}、\code{latitude}、\code{mag} を読み、横軸を経度、縦軸を緯度とする散布図を作れ。点の色でマグニチュードを表し、軸ラベル、カラーバー、タイトルを付けたうえで \code{figures/usgs\_global\_scatter.pdf} へ保存せよ。
-\code{fig, ax = plt.subplots()} の返り値、\code{scatter = ax.scatter(...)} の返り値、\code{fig.colorbar(scatter, ax=ax)} の第 1 引数と \code{ax} 引数の役割を説明せよ。\code{scatter.get\_array()} がマグニチュード配列と一致し、\code{len(fig.axes)} がカラーバーを含めて 2 になることを確認せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{位置とマグニチュードを図にする。}
+横軸を経度、縦軸を緯度、点の色をマグニチュードとする散布図を作れ。軸ラベル、カラーバー、対象範囲が分かるタイトルを付け、\code{figures/usgs\_global\_scatter.pdf} へ保存せよ。図を示し、位置と色から読み取れることを説明せよ。
+\end{minipage}
 
-\item \textbf{発生間隔ヒストグラムの対数表示}。
-第~\ref{chap:numpy}~章で作った \(\Delta t\) 配列を用い、発生間隔ヒストグラムを描け。縦軸を対数表示とし、横軸を線形尺度とした場合と対数尺度とした場合について、短い発生間隔の分解能、長時間側の裾の範囲、空のビンの数を比較せよ。図中にはビンの意味が分かる軸ラベルと単位を明記せよ。
-線形ビンの図と \code{np.logspace()} で作った対数ビンの図を 2 枚の Axes に並べ、\code{figures/interval\_comparison.pdf} へ保存せよ。\code{ax.set\_yscale("log")} と \code{ax.set\_xscale("log")} がデータ値そのものを変換するのではなく、Axis の表示尺度を変えることを説明せよ。0 以下の値を対数軸へ置けない理由も述べよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{発生間隔の見せ方を比較する。}
+固定幅ビン・線形横軸と、対数ビン・対数横軸のヒストグラムを並べよ。縦軸はいずれも件数の対数表示とし、単位、ビン幅、範囲を記す。0 以下と範囲外の値は別に数え、\code{figures/interval\_comparison.pdf} へ保存せよ。短時間側と長時間側の見え方の違いを説明せよ。
+\end{minipage}
 
-\item \textbf{発展課題}。
-通常の散布図では、点がどの海溝や列島に沿って並んでいるかは読み取りにくい。海岸線付きの地図へ重ねたい場合は、Matplotlib だけではなく地図投影を扱う \code{cartopy} が必要になる。\code{cartopy} を導入し、同じ地震データを海岸線付きの地図へ重ねよ。必要な出発点は、
-\begin{itemize}
-\item \code{projection=ccrs.PlateCarree()} による地図 Axes の作成
-\item \code{scatter} 側への \code{transform=ccrs.PlateCarree()} の指定
-\item \code{ax.coastlines()} による海岸線の描画
-\item 全球図における \code{ax.set\_global()} の使用
-\item 日本近海図における \code{ax.set\_extent([122, 154, 20, 50], crs=ccrs.PlateCarree())} の使用
-\end{itemize}
-である。これらの使い方を検索し、地図付きの散布図を作成せよ。
-最小コードは、\code{import cartopy.crs as ccrs}、\code{fig, ax = plt.subplots(subplot\_kw=\{"projection": ccrs.PlateCarree()\})}、\code{ax.set\_global()}、\code{ax.coastlines()}、\code{ax.scatter(longitude, latitude, c=magnitude, transform=ccrs.PlateCarree())} の順に組み立てられる。\code{projection} は地図を描く Axes の座標系、\code{transform} は入力データの座標系を指定する。\code{figures/usgs\_map.pdf} を保存し、両者を同じ値にしていても役割が異なることを説明せよ。Cartopy が未導入なら、実行した導入コマンドと、導入前に出た例外名を記録せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{発展：海岸線を重ねる。}
+Cartopy を利用できる場合は、同じ散布図に海岸線を加え、\code{figures/usgs\_map.pdf} へ保存せよ。下の例を使い、地図の描画先と入力座標をそれぞれ指定する理由を説明せよ。Cartopy は初回に海岸線データを取得する場合がある。
+\end{minipage}
+
 \end{enumerate}
 
-可視化によって分布の形、外れ値、残差の傾向を確認できると、次に検討すべき数値計算を選びやすくなる。次章では、図から得た仮説を定量化するために、SciPy の統計分布、フィット、補間、信号処理を扱う。
+発展課題の出発点を次に示す。全球図では \code{set\_extent()} を \code{set\_global()} に替える。
+
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+
+fig, ax = plt.subplots(
+    subplot_kw={"projection": ccrs.PlateCarree()}
+)
+ax.set_extent([122, 154, 20, 50], crs=ccrs.PlateCarree())
+ax.coastlines()
+points = ax.scatter(longitude, latitude, c=magnitude,
+                    transform=ccrs.PlateCarree())
+ax.set_xlabel("longitude [deg]")
+ax.set_ylabel("latitude [deg]")
+fig.colorbar(points, ax=ax, label="magnitude")
+fig.savefig("figures/usgs_map.pdf")
+\end{lstlisting}

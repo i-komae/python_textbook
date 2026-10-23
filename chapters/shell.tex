@@ -1,6 +1,8 @@
 \chapter{シェルとファイル操作}
 \label{chap:shell}
 
+この章では、作業するフォルダーへ移動し、ファイルの一覧と内容を確認する。まず \code{pwd}、\code{ls}、\code{cd} の役割を区別し、どの場所で操作しているかを確かめられるようにする。取得、圧縮、ログの保存は、その基本操作を使う例として学ぶ。
+
 \section{ターミナル・シェル・WSL の役割}
 \label{SEC:shell}
 本書では、ファイル操作やスクリプト実行をターミナル\index{たーみなる@ターミナル|textbf}から行う。初めに、ターミナルとシェルの役割を区別する。
@@ -20,32 +22,7 @@ student@host ~ $
 
 この表示は、シェルが入力を待っていることを意味する。本書の実行例では、実際のプロンプト全体を省略し、読者が入力する行の先頭に \code{\$} だけを置く。\code{\$} は入力行を見分けるための印であり、読者が入力する文字には含まれない。
 
-利用者がログインするときに起動するよう設定されたシェルを、ログインシェルという。その名前は、次のコマンドで確認できる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ echo $SHELL
-\end{lstlisting}
-
-この実行例で読者が入力するのは、\code{echo \$SHELL} の部分だけである。行頭の \code{\$} は入力しない。\code{echo} は後ろに続く値を表示し、\code{\$SHELL} はシェルの設定値を取り出す。このような、プログラムへ引き継がれる名前付きの設定値を環境変数という。
-
-\noindent\begin{minipage}{\linewidth}
-実行結果の例は次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-/bin/zsh
-\end{lstlisting}
-\end{minipage}
-
-本書では、macOS の例に \code{zsh}、Linux と WSL 上の Ubuntu の例に \code{bash} を用いる。\code{zsh} と \code{bash} はどちらも本章で扱う基本コマンドを実行できるが、起動時に読む設定ファイルや一部のシェル構文は異なる。上の \code{/bin/zsh} は、ログインシェルとして \code{zsh} が設定されていることを表す。
-
-ただし、\code{SHELL} は現在実行中のシェルを必ず示すわけではない。別のシェルを起動した場合などは値が一致しない。現在コマンドを解釈しているシェルは、次のコマンドで確認できる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ ps -p $$ -o comm=
-zsh
-\end{lstlisting}
-
-設定ファイルは、シェル名だけでなく OS と起動方法によっても異なる。zsh の対話シェルでは通常 \code{\textasciitilde/.zshrc} を使う。bash では Linux の対話シェルなら \code{\textasciitilde/.bashrc}、macOS のログインシェルなら \code{\textasciitilde/.bash\_profile} が使われることが多い。
+本書では、macOS の例に \code{zsh}、Linux と WSL 上の Ubuntu の例に \code{bash} を用いる。どちらも本章の基本コマンドを実行できる。
 
 \subsection{Windows における WSL の利用}
 
@@ -55,67 +32,33 @@ zsh
 PS C:\> wsl --install
 \end{lstlisting}
 
+導入時に再起動を求められたら、再起動して Ubuntu を開き、画面の案内に従って利用者名とパスワードを設定する。その後の本書のコマンドは Ubuntu の端末へ入力する。
+
 WSL 上では、本書の Linux 用コマンドとディレクトリ構造を Windows 上で利用できる。また、後半で扱う並列処理や周辺ツールには Linux 系環境を前提とするものがあるため、Windows のコマンドプロンプトや PowerShell とは実行環境を分けて説明する。
 
 \section{コマンド・オプション・引数とヘルプ}
 
 \subsection{コマンド、オプション、引数}
 
-シェルで打つ 1 行は、多くの場合「コマンド本体」「オプション」「引数」から成る。たとえば次のような形である。
+まず、今いるフォルダーの内容を詳しく表示する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ ls -l results
-$ cp data/raw.txt backup/raw.txt
+$ ls -l .
 \end{lstlisting}
 
-1 行目では、\code{ls} がコマンド本体、\code{-l} がオプション、\code{results} が引数である。2 行目では、\code{cp} がコマンド本体で、\code{data/raw.txt} と \code{backup/raw.txt} が引数である。一般に、オプションは動作を変え、引数は対象のファイル名やディレクトリ名を与える。
+\code{ls} は実行するコマンド、\code{-l} は詳しい表示へ切り替えるオプション、\code{.} は対象を指定する引数である。\code{.} は現在のフォルダーを表す。このように、コマンドの後ろへ動作の指定や対象を続けて書く。表示される項目の読み方は、次の節で説明する。
 
-多くのコマンドには、\code{-} と 1 文字からなる短いオプション、または \code{--} と英単語からなる長いオプションがある。ただし、オプション名と動作はコマンドごとに定義される。
+\subsection{説明書を開く}
 
-\subsection{\code{--help} と \code{man} による使用法の確認}
-
-\code{--help} は単独のコマンドではなく、対象のコマンド名に続けて指定するオプションである。例えば \code{python3 --help} は、\code{python3} が受け付けるオプションと引数の書式を表示する。\code{python3} では \code{-h} も同じ説明を表示する。
-
-\code{man} は、コンピュータに収録されている説明書を表示するコマンドである。\code{man} の後ろに調べたいコマンド名を置く。例えば \code{man rsync} を実行すると、\code{rsync} の説明書が開く。実際の入力例は次のとおりである。
+使い方を調べるには、\code{man} の後ろへコマンド名を書く。例えば次を実行すると、\code{ls} の説明書が開く。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python3 --help
-$ python3 -h
-$ man rsync
+$ man ls
 \end{lstlisting}
 
-\code{python3 -h} の出力は長いが、先頭はたとえば次のようになる。
+\code{NAME} は名前と機能、\code{SYNOPSIS} は命令の書き方、\code{DESCRIPTION} は詳しい説明を示す。書式の角括弧 \code{[...]} は省略できる部分を表す。上下キーや Space で移動し、\code{q} で閉じる。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-usage: python3 [option] ... [-c cmd | -m mod | file | -] [arg] ...
-Options and arguments (and corresponding environment variables):
--b     : issue warnings about str(bytes_instance), str(bytearray_instance)
-         and comparing bytes/bytearray with str. (-bb: issue errors)
--B     : don't write .pyc files on import; also PYTHONDONTWRITEBYTECODE=x
--c cmd : program passed in as string (terminates option list)
-\end{lstlisting}
-
-ここで最初の \code{usage: ...} は「このコマンドをどういう形で呼び出せるか」を要約した行である。\code{[-c cmd | -m mod | file | -]} のように角括弧で囲まれた部分は省略可能、\code{|} で区切られた部分はどれか 1 つを選ぶ、という意味で読む。その次の \code{Options and arguments ...} 以下では、各オプションの意味が 1 行ずつ並ぶ。\code{-b} のように短いオプション名、コロンの後ろにその効果、必要なら対応する環境変数が示される。\code{-c cmd} のように引数を伴うものは、オプションの直後に必要な値の名前も書かれる。
-
-\code{man rsync} を開くと、画面の先頭付近はたとえば次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-OPENRSYNC(1)                                    General Commands Manual                                   OPENRSYNC(1)
-
-NAME
-     openrsync - synchronise local and remote files
-
-SYNOPSIS
-     openrsync [-0468BCDEFHILOPRSTWVabcdefghiklmnopqrtuvxyz] [-e program] [-f filter] ...
-               ... source ... directory
-\end{lstlisting}
-
-\code{NAME} はコマンド名と機能の要約、\code{SYNOPSIS} は呼び出し書式を示す。角括弧 \code{[...]} 内は省略可能である。この例の末尾にある \code{source ... directory} は、一つ以上のコピー元に続けてコピー先を書く構造を表す。必要なオプションの綴りと意味は、後続の説明または \code{man} で確認する。
-
-\code{--help} や \code{-h} は、そのコマンドが受け付けるオプションや引数の書式を短く表示することが多い。ただし、どのコマンドでも両方を使えるとは限らない。例えば macOS の \code{ls} は \code{--help} を受け付けない。その場合は、\code{man ls}、\code{man ssh}、\code{man rsync} のように、\code{man} の後ろへ調べたいコマンド名を置く。
-\code{man} を開いたあとは、上下キーや \code{Space} で移動し、\code{/pattern} で検索できる。\code{q} を押せば終了する。
-
-検索エンジンや AI を用いてコマンドの使い方を調べることもできるが、同じ名前のコマンドでもバージョンや OS によって使い方が異なる場合がある。インターネット上の説明と手元の動作が食い違う場合は、手元のコマンドに \code{--help} を付けた出力、または \code{man} で開いた説明書を基準とする。
+コマンドによっては、\code{--help} や \code{-h} を付けると短い使い方を表示できる。ただし、受け付ける指定はコマンドや OS によって異なる。手元の動作がインターネット上の例と違うときは、\code{man} などでその環境の説明を確認する。
 
 \section{現在位置・一覧・パス・ディレクトリ操作}
 
@@ -830,6 +773,8 @@ $ unzip archive.zip
 
 1 行目の \code{-r} は、指定したディレクトリ以下を再帰的に格納する。2 行目の \code{unzip -l} は展開せずに収録項目を表示し、3 行目は内容を展開する。形式に応じて、\code{.zip} には \code{unzip}、\code{.tar.gz} には \code{tar -xzf}、単一の \code{.gz} ファイルには \code{gunzip} または \code{gzip -d} を用いる。
 
+展開後のファイルが元と同じかを確認するには、\code{cmp} を使う。例えば \code{cmp raw/events.csv restored/events.csv} は 2 ファイルを全バイト比較する。一致すれば何も表示せず終了ステータス 0 を返し、不一致なら 1、読み込みなどのエラーなら 2 を返す。先頭数行が同じだけでは、ファイル全体の一致は確認できない。
+
 \section{環境変数と PATH}
 
 \subsection{環境変数の定義と参照}
@@ -932,6 +877,35 @@ $ echo $PATH
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ export PATH="$HOME/my_scripts:$PATH"
 \end{lstlisting}
+
+\subsection{補足：シェルの種類と設定ファイル}
+
+利用者がログインするときに起動するよう設定されたシェルを、ログインシェルという。その名前は、次のコマンドで確認できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ echo $SHELL
+\end{lstlisting}
+
+この実行例で読者が入力するのは、\code{echo \$SHELL} の部分だけである。行頭の \code{\$} は入力しない。\code{echo} は後ろに続く値を表示し、\code{\$SHELL} はシェルの設定値を取り出す。このような、プログラムへ引き継がれる名前付きの設定値を環境変数という。
+
+\noindent\begin{minipage}{\linewidth}
+実行結果の例は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+/bin/zsh
+\end{lstlisting}
+\end{minipage}
+
+\code{zsh} と \code{bash} では、起動時に読む設定ファイルや一部のシェル構文は異なる。上の \code{/bin/zsh} は、ログインシェルとして \code{zsh} が設定されていることを表す。
+
+ただし、\code{SHELL} は現在実行中のシェルを必ず示すわけではない。別のシェルを起動した場合などは値が一致しない。現在コマンドを解釈しているシェルは、次のコマンドで確認できる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ ps -p $$ -o comm=
+zsh
+\end{lstlisting}
+
+設定ファイルは、シェル名だけでなく OS と起動方法によっても異なる。zsh の対話シェルでは通常 \code{\textasciitilde/.zshrc} を使う。bash では Linux の対話シェルなら \code{\textasciitilde/.bashrc}、macOS のログインシェルなら \code{\textasciitilde/.bash\_profile} が使われることが多い。
 
 \section{リダイレクトとログ保存}
 
@@ -1074,75 +1048,59 @@ $ chmod 600 ~/.ssh/id_ed25519
 
 \subsection{スクリプトの直接実行}
 
-Python スクリプトは \code{python3 hello.py} の形で実行するなら、実行権限がなくてもよい。これに対して \code{./hello.py} のように直接実行する場合には、どのプログラムで解釈するかをファイル先頭に書いておく必要がある。
-その先頭行の \code{\#!} で始まる記法を、シバン (shebang) という。
+複数の命令を保存して実行するファイルをスクリプトという。次をテキストファイル \code{hello.sh} として保存する。
 
-\begin{lstlisting}[language=Python]
-#!/usr/bin/env python3
+\begin{lstlisting}[language=bash]
+#!/usr/bin/env bash
 
-print("hello")
+echo "hello"
 \end{lstlisting}
 
-ファイルを直接実行するには、シバンに加えて実行権限も必要である。次の \code{u+x} は、所有者（user）に実行権限を加える指定である。
+\code{bash hello.sh} で実行すると \code{hello} が表示される。先頭の行は、このファイルを直接実行するときに使うプログラムを指定する行であり、シバンという。\code{/usr/bin/env bash} は \code{PATH} から Bash を探す指定である。
+
+ファイル名を指定して直接実行する場合は、実行権限も付ける。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ chmod u+x hello.py
-$ ./hello.py
+$ chmod u+x hello.sh
+$ ./hello.sh
+hello
 \end{lstlisting}
 
-\code{\#!/usr/bin/env python3} は、\code{env} が \code{PATH} から \code{python3} を探し、その実行ファイルでスクリプトを解釈する指定である。ファイルを \code{./script.py} として直接実行するには、適切なシバンと実行権限の両方が必要になる。付録~\ref{app:shell_scripting} では、同じ仕組みに基づくシェルスクリプトと、\code{for} ループや条件分岐による一括処理を扱う。
+\code{u+x} は所有者に実行権限を加える指定、\code{./} は現在のフォルダーを表す。引数や繰り返しを使うシェルスクリプトは付録~\ref{app:shell_scripting} で扱う。
 
-\section{章末課題：USGS カタログの取得・調査・圧縮}
-
-各課題の記録対象は、コマンドを実行した事実だけでなく、入力、主要なオプション、出力の読み方までを含む。ネットワーク上のデータを取得できない場合でも、1 問目と、手元の任意の CSV を使った 3 問目は実行できる。
+\section{章末課題：データを取得し、圧縮形式を比較する}
 
 \begin{enumerate}
-\item \textbf{章末課題用の作業ディレクトリの作成}。
-次のコマンドを実行し、どのようなディレクトリが作成されるか確認せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{作業場所を用意する。}
+次を実行し、\code{pwd} と \code{ls} の結果を示せ。データ、コード、結果をどのフォルダーへ置くか説明せよ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p earthquake_practice/{raw,compressed,scripts,figures,results}
 $ cd earthquake_practice
-$ pwd
-$ ls
 \end{lstlisting}
-シェルは \code{earthquake\_practice/\{raw,compressed,scripts,figures,results\}} を、コンマで区切られた 5 通りのパスへ展開してから \code{mkdir} へ渡す。この機能をブレース展開という。\code{-p} は親ディレクトリも作り、対象が既存でもエラーにしない。\code{ls} の結果に 5 個の名前が現れることを確認し、\code{pwd} の出力がどのディレクトリを示すかも説明せよ。
+\end{minipage}
 
-\item \textbf{USGS 地震カタログの取得とシェルによる内容確認}。
-本書の章末課題では、アメリカ地質調査所（\textbf{U}nited \textbf{S}tates \textbf{G}eological \textbf{S}urvey、\textbf{USGS}）が公開している地震カタログを使用する。
-以下のコマンドを実行し、2024年1月のカタログを \code{raw/} へ保存し、行数、先頭数行、末尾数行、特定の地名を含む行を調べよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{地震カタログの内容を調べる。}
+次の URL から CSV を取得し、データ行数、先頭と末尾の時刻、日本を含む地名の例を表にせよ。\code{wc -l} ではヘッダも数えることに注意する。取得できない場合は、第~\ref{chap:io}~章の人工データで表示と集計を試せる。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ curl -fL "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31T23:59:59.999999&limit=20000&orderby=time-asc" \
-  -o raw/usgs_global_2024_01.csv
-$ ls -lh raw/usgs_global_2024_01.csv
-$ wc -l raw/usgs_global_2024_01.csv
-$ head -n 3 raw/usgs_global_2024_01.csv
-$ tail -n 3 raw/usgs_global_2024_01.csv
-$ grep -i "Japan" raw/usgs_global_2024_01.csv | head
+$ curl -fL -o raw/usgs_global_2024_01.csv \
+  'https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31T23:59:59.999999&limit=20000&orderby=time-asc'
+$ curl -fL -o results/usgs_count.txt \
+  'https://earthquake.usgs.gov/fdsnws/event/1/count?starttime=2024-01-01&endtime=2024-01-31T23:59:59.999999'
+$ cat results/usgs_count.txt
 \end{lstlisting}
-どのコマンドが「件数確認」「冒頭確認」「末尾確認」「文字列検索」に対応しているかを整理してまとめよ。
-\code{curl} の \code{-f} は HTTP のエラー応答を失敗として扱い、\code{-L} は転送先が変更された場合に追従し、\code{-o} は保存先を指定する。\code{wc -l} の値にはヘッダ行も含まれるので、データ件数との違いを説明せよ。\code{grep -i} の \code{-i} と、後段の \code{head} が検索結果を何件に制限するかも記録せよ。
+\code{count} は同じ検索条件の総件数を返す。取得上限の 20000 件を超える場合は、期間を分割し、イベント ID の重複を除く~\cite{usgs_api}。取得日時と検索条件も記録する。
+\end{minipage}
 
-\code{limit=20000} は取得件数の上限であり、この指定だけでは全件取得を保証しない。USGS の検索仕様~\cite{usgs_api} に従い、同じ期間・検索条件の \code{count} エンドポイントで対象件数を確認する。上限を超える場合は期間を分割し、境界の重複をイベント ID で除く。取得日時と検索条件も保存する。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{3 種類の圧縮形式を比較する。}
+同じ CSV を gzip、tar.gz、zip へ圧縮せよ。元の容量、圧縮後の容量、容量比（圧縮後／元）を表にする。それぞれ別のフォルダーへ展開し、\code{cmp 元のCSV 展開後のCSV} で全内容の一致を確かめよ。最も小さかった形式と、格納方法の違いを説明せよ。
+\end{minipage}
 
-\item \textbf{同じ CSV に対する 3 種類の圧縮形式の比較}。
-\code{gzip}、\code{tar.gz}、\code{zip} をそれぞれ 1 つずつ作り、圧縮前後の容量を確認せよ。
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ gzip -c raw/usgs_global_2024_01.csv > compressed/usgs_global_2024_01.csv.gz
-$ tar -czf compressed/usgs_global_2024_01.tar.gz raw/usgs_global_2024_01.csv
-$ zip compressed/usgs_global_2024_01.zip raw/usgs_global_2024_01.csv
-$ gzip -cd compressed/usgs_global_2024_01.csv.gz | head -n 2
-$ tar -tzf compressed/usgs_global_2024_01.tar.gz
-$ unzip -l compressed/usgs_global_2024_01.zip
-$ wc -c raw/usgs_global_2024_01.csv compressed/*
-\end{lstlisting}
-先頭行の表示は内容の一部を、\code{tar -tzf} と \code{unzip -l} は格納されたファイル名などを確認する操作であり、内容全体の一致を保証しない。それぞれ別の作業用ディレクトリへ展開し、\code{cmp 元のCSV 展開後のCSV} で全バイトを比較せよ。\code{cmp} は一致すると何も表示せず 0 を返し、不一致では 1、読み込みなどのエラーでは 2 を返す。\code{gzip -c} は元の CSV を変更せず、圧縮結果を標準出力へ書き出す。\code{tar -czf} は指定した CSV を tar アーカイブに格納し、そのアーカイブを gzip で圧縮する。\code{zip} も同じ CSV を ZIP アーカイブに格納する。今回の入力は単一ファイルであるため、ディレクトリを再帰的にたどる \code{zip -r} は使わない。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{発展：取得条件と URL の関係を調べる。}
+2 問目の URL を、取得先、パス、検索条件に分けて示せ。期間または地域を変え、取得件数と変更した項目を表にして、どの指定が結果を変えたか説明せよ。
+\end{minipage}
 
-\code{wc -c} は各ファイルのバイト数を表示する。その値から、\code{容量比 = 圧縮後のバイト数 / 元 CSV のバイト数} をそれぞれ求める。この値が小さいほど、圧縮後の容量が元の容量より小さい。コマンドの各オプションの役割も、本節の説明と対応付けて記録する。
-
-\item \textbf{発展課題}。
-URL の構造について調べよ。
-カタログの URL（\url{https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31T23:59:59.999999&limit=20000&orderby=time-asc}）を確認し、\code{https}、\code{earthquake.usgs.gov}、\code{usgs.gov}、\code{.gov}、\code{/fdsnws/event/1/query}、\code{?format=csv\&starttime=2024-01-01\&endtime=2024-01-31T23:59:59.999999\&limit=20000\&orderby=time-asc} のそれぞれについて、名称や役割をまとめよ。
-ここでは順に、スキーム、ホスト名、登録ドメイン、トップレベルドメイン、パス、クエリ文字列を表す。クエリ文字列は \code{\&} で複数の \code{名前=値} を区切る。\code{format}、\code{starttime}、\code{endtime}、\code{limit}、\code{orderby} が取得結果をどう変えるかを、2 問目の出力と対応させて説明せよ。
 \end{enumerate}
-
-シェルでファイルの所在、内容、権限、入出力を確認できれば、Python の導入後も実行されるプログラムと保存先を追跡できる。次章では、\code{PATH} と実行ファイルの知識に基づく Python のバージョン、仮想環境、プロジェクト依存関係の管理を扱う。

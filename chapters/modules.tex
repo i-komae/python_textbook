@@ -48,6 +48,57 @@ $ python analyze.py
 
 同じ処理を複数のスクリプトへコピーすると、それぞれが独立した実装となり、修正内容が一致しなくなる場合がある。自作モジュールから \code{from histfit\_tools import save\_histogram\_with\_fit} のように import すれば、呼び出し側を複製せずに一つの実装を共有できる。
 
+\section{引数・設定ファイルとコードを分ける}
+
+第~\ref{sec:command-line-args}~節では、実行時にファイル名などを指定する方法を学んだ。ここでは、繰り返し使う解析条件をどこへ置くかを整理する。
+
+値の配置は、その値が実行ごとに変わるか、複数の実行で共有されるか、プログラムの定義として固定されるかによって決める。すべてをコマンドライン引数にすると、同じ条件を反復する際にも毎回指定が必要となる。
+
+\begin{description}
+\item[コマンドライン引数] 実行ごとに変わる値を置く。入力ディレクトリ、出力先、日付範囲、並列数などが典型である。
+\item[設定ファイル] プロジェクト単位では固定だが、将来変更し得る値を置く。較正ファイルのパス、検出器 ID、閾値、図の保存形式などが当てはまる。
+\item[環境変数] 計算機ごとに異なるデータの置き場所などを渡す。例えば \code{DATA\_ROOT} に保存先を設定する。認証情報を扱う場合はコードや共有ファイルへ直接書かず、利用するサービスの案内に従って管理する。
+\item[コード内の定数] 定義として固定したい値や単位変換を書く。\code{NS\_PER\_SECOND} や物理定数のように、意味が仕様として決まっているものを置く。
+\end{description}
+
+入力ファイルのパス、出力先、しきい値、作業ディレクトリなどの実行条件は、コードへ直接固定せず、外から指定できるようにする。コードを変更せずに条件を切り替えられれば、同じ処理の再利用と実行条件の再現が容易になる。
+
+\subsection{設定ファイルに解析条件をまとめる}
+\index{まじっくなんばー@マジックナンバー|textbf}
+
+実行のたびには変えないものの、解析条件として変更する可能性がある値は、設定ファイルへまとめられる。形式には JSON や TOML などがある。ここでは標準ライブラリだけで扱える JSON の例（\code{config.json}）を示す。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={config.json}]
+{
+  "calibration_path": "calib/detector_a.csv",
+  "coincidence_window_ns": 250,
+  "figure_format": "pdf"
+}
+\end{lstlisting}
+
+この JSON ファイルを Python のスクリプトから読み込む場合のコード例は次のようになる。
+
+\begin{lstlisting}[language=Python]
+import json
+from pathlib import Path
+
+config = json.loads(Path("config.json").read_text(encoding="utf-8"))
+window_ns = config["coincidence_window_ns"]
+print(window_ns)
+\end{lstlisting}
+
+実行結果は次のようになる。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+250
+\end{lstlisting}
+
+この \code{250} は、JSON の \code{coincidence\_window\_ns} から読み込んだ値であり、Python コードには直接記述されていない。そのため、コードを変更せずに設定ファイルだけを差し替えられる。Python 3.11 以降では、標準ライブラリの \code{tomllib} で TOML も読み込める。入力パス、出力先、閾値など、実行ごとに変わり得る条件はコードから設定ファイルまたは引数へ分離する。
+
+
+
+\code{250} や \code{3600} のような数値が説明や名前なしにコードへ直接記述されていると、その意味や単位を判断しにくい。このような数値はマジックナンバーと呼ばれる。名前の付け方は第~\ref{sec:magic-number}~節で扱った。値が仕様上の定数なら意味と単位を表す名前を付け、実行条件なら引数または設定ファイルへ分離する。
+
 \section{\code{uv} によるパッケージ開発の初期化}
 
 \subsection{最初の初期化}
@@ -404,7 +455,7 @@ def save_histogram_with_fit(
 \subsection{\code{\_\_init\_\_.py} による公開インタフェースの整理}
 \index{こうかいapi@公開 API|textbf}
 
-パッケージの公開 API に含める関数とクラスは、\code{\_\_init\_\_.py} で再公開する。
+他のプログラムから使ってよい関数名や呼び出し方を、公開 API という。パッケージの公開 API に含める関数とクラスは、\code{\_\_init\_\_.py} で再公開する。
 
 \begin{lstlisting}[language=Python, title={src/histfit\_tools/\_\_init\_\_.py}]
 """Histogram plotting and fitting utilities."""
@@ -640,25 +691,34 @@ $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 
 ライブラリの \code{dependencies} には、実装とテストによって確認した互換範囲を記述する。根拠なく \code{numpy==2.0.0} のような完全固定を行うと、利用者側の他の依存関係と両立しない場合がある。下限だけを検証した場合は \code{numpy>=2.0} のように記述し、非互換の上限が判明している場合はその上限も記述する。リポジトリ内の開発・検証環境は \code{uv.lock} で再現する。
 
-開発中には、Jupyter、Sphinx、mkdocs など、利用者には不要でも開発者には必要な道具が増える。これらをすべて実行時依存関係へ含めると、利用者のインストール量と依存関係の衝突リスクが増す。公開 API と実行時依存関係は必要最小限に保ち、開発用の道具は開発用依存関係へ分ける。
+開発中には、テストや説明文の作成に使う道具も必要になる。これらをすべて実行時依存関係へ含めると、利用者のインストール量と依存関係の衝突リスクが増す。公開 API と実行時依存関係は必要最小限に保ち、開発用の道具は開発用依存関係へ分ける。
 
-\section{章末課題：解析パッケージの作成と検証}
+\section{章末課題：平均を求めるパッケージを作る}
 
 \begin{enumerate}
-\item \textbf{最小パッケージの作成}。
-空の作業ディレクトリで \code{uv init --lib signal\_tools} を実行し、生成された \code{pyproject.toml} と \code{src/signal\_tools/\_\_init\_\_.py} を確認せよ。\code{--lib} を付けた理由、\code{src} レイアウトで未インストールの作業ツリーを誤って import する問題を検出しやすい理由、\code{pyproject.toml} の \code{name} と \code{requires-python} の意味を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{パッケージを準備する。}
+\code{uv init --lib signal\_tools} で作成し、\code{pyproject.toml} と \code{src/signal\_tools/} を確認せよ。ファイル構成を図にし、設定ファイルとコードの役割を説明せよ。
+\end{minipage}
 
-\item \textbf{公開関数とテストの追加}。
-\code{src/signal\_tools/statistics.py} に、数値列を受け取って算術平均を返す \code{mean\_signal(values)} を作れ。空列では \code{ValueError} を送出せよ。\code{\_\_init\_\_.py} から再公開し、\code{from signal\_tools import mean\_signal} で呼び出せる状態にせよ。\code{tests/test\_statistics.py} に通常入力と空入力のテストを書き、\code{uv add --dev pytest ruff} で検証用の依存関係を追加し、\code{uv run pytest} の末尾で \code{2 passed} と表示されることを確認せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{平均の関数とテストを作る。}
+\code{statistics.py} に \code{mean\_signal(values)} を作り、\code{from signal\_tools import mean\_signal} で使えるようにせよ。\code{[1.0, 2.0, 3.0]} では 2.0、空列では \code{ValueError} となる 2 件のテストを書く。\code{uv add --dev pytest ruff}、\code{uv run pytest} を実行し、関数と \code{2 passed} の結果を示せ。
+\end{minipage}
 
-\item \textbf{引数、返り値、例外の文書化}。
-\code{mean\_signal()} に型ヒントと複数行 docstring を追加し、\verb|uv run python -c "from signal_tools import mean_signal; help(mean_signal)"| で表示せよ。docstring の要約、引数、返り値、例外条件がそれぞれどの行に表示されたかを確認せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{使い方を説明する。}
+型ヒントと docstring を付け、\code{help(mean\_signal)} で表示せよ。引数、返り値、空列の扱いが分かる使用例を一つ作り、説明文と実行結果を示せ。
+\end{minipage}
 
-\item \textbf{通常インストールと editable install の比較}。
-別の仮想環境を 2 つ作り、一方では \code{uv pip install .}、もう一方では \code{uv pip install -e .} を実行せよ。インストール後に関数の返り値を変更し、どちらの環境で変更が直ちに反映されるかを確認せよ。\code{-e} はソースディレクトリを参照可能な形で登録する指定であり、依存関係の解決やビルド処理をすべて省略する指定ではない。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{発展：インストール方法を比べる。}
+別々の仮想環境へ通常形式と \code{-e} 付きでインストールせよ。実習用に関数の返り値を変更し、再インストール前に反映されるかを表で比較せよ。確認後は正しい関数へ戻し、テストを再実行する。
+\end{minipage}
 
-\item \textbf{依存関係と生成物の分類}。
-NumPy を実行時依存関係、pytest と ruff を開発用依存関係として追加し、\code{pyproject.toml} の該当箇所を示せ。さらに \code{.gitignore} に \code{.venv/}、\code{\_\_pycache\_\_/}、\code{.pytest\_cache/}、\code{dist/} を書き、\code{git status --short} にこれらが現れないことを確認せよ。\code{uv.lock} をコミットするかどうかはプロジェクトの運用方針によるため、本課題では自分の判断と理由を記述せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{共有するファイルを選ぶ。}
+NumPy を実行時、pytest と ruff を開発用の依存関係へ追加せよ。\code{.venv/}、\code{\_\_pycache\_\_/}、\code{.pytest\_cache/}、\code{dist/} を \code{.gitignore} へ書く。共有するファイルと生成物を表にし、\code{uv.lock} の扱いも理由とともに説明せよ。
+\end{minipage}
+
 \end{enumerate}
-
-自作モジュールによって処理を独立した関数へ分けると、各関数の正しさと処理時間を個別に調べられる。次章では、この構造を利用してボトルネックを測定し、計算量、配列演算、メモリ使用量、逐次処理の観点から実装を改善する。

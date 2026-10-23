@@ -1,7 +1,7 @@
 \chapter{Astropy による時刻・単位・\mbox{天体データ処理}}
 \label{chap:astropy}
 
-Astropy\index{astropy@Astropy|textbf} は、単位付き物理量、時刻系、天球座標系、FITS、天文向け表を扱うライブラリである。単位、時刻系、座標系を数値とは別の文字列として管理すると、演算時に対応関係を失う可能性がある。本章では、これらの情報を数値と同じオブジェクトに保持し、変換、演算、表および FITS への保存を行う方法を扱う。
+Astropy\index{astropy@Astropy|textbf} は、単位や時刻、天体の座標を扱うライブラリである。この章では、数値と単位を一組にして計算し、秒とナノ秒などの換算を確かめる。次に時刻差や天体の座標を求め、単位を残したまま表へ保存する。数値だけを扱う場合との違いを説明できるようにする。
 
 \section{数値と単位・時刻・座標の一元的な管理}
 
@@ -318,23 +318,32 @@ Astropy を使うべき場面は、数値とともに単位、時刻系、座標
 
 全体の導入は Getting Started~\cite{astropy_getting_started} と User Guide~\cite{astropy_user_guide}、単位は Units and Quantities~\cite{astropy_units}、時刻は Time and Dates~\cite{astropy_time}、座標は Coordinates~\cite{astropy_coordinates}、表は Tables~\cite{astropy_table}、FITS は FITS File Handling~\cite{astropy_fits} に記載されている。本章は、そのうち観測データ解析で用いる機能を扱った。
 
-\section{章末課題：単位付き観測データの処理}
+\section{章末課題：単位と時刻の意味を保って計算する}
 
 \begin{enumerate}
-\item \textbf{単位を保持した時間窓の比較}。
-\code{window = 250 * u.ns} とし、\code{dt = np.array([120, 220, 250, 251, 800]) * u.ns} の各要素が時間窓以内かを判定せよ。真になる要素は 120、220、250 ns の 3 個である。境界の 250 ns を含めるために \code{<} ではなく \code{<=} を使う理由と、\code{u.ns} を付けずに比較した場合の問題を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{時間窓に入る値を選ぶ。}
+\code{[120, 220, 250, 251, 800]} ns から、250 ns 以下の値を単位付きで選べ。ns と秒の両方で比較し、どちらも 3 個になることを表に示せ。境界の 250 ns を含めること。
+\end{minipage}
 
-\item \textbf{秒境界をまたぐ時刻差の計算}。
-\code{2026-04-12T11:59:59.999999900} と \code{2026-04-12T12:00:00.000000120} を UTC の \code{Time} として作り、差を ns で表示せよ。結果は約 220 ns になり、250 ns 以内である。\code{format="isot"}、\code{scale="utc"}、\code{to\_value("ns")} の役割を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{秒をまたぐ短い時刻差を求める。}
+\code{2026-04-12T11:59:59.999999900} と \code{2026-04-12T12:00:00.000000120} を \code{Time(format="isot", scale="utc")} で作れ。差を ns で求め、約 220 ns であることと、250 ns 以内かどうかを示せ。
+\end{minipage}
 
-\item \textbf{UTC と TAI による同一時刻の表現}。
-同じ \code{Time} オブジェクトについて \code{utc.iso} と \code{tai.iso} を表示し、文字列表現が異なっても同じ瞬間を表していることを確認せよ。文字列を直接引き算する方法が不適切である理由を、時刻系とうるう秒の観点から説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{同じ瞬間を UTC と TAI で表す。}
+2 問目の最初の時刻を UTC と TAI で表示せよ。表示文字列と、時刻オブジェクト同士の差を並べ、表示が違っても同じ瞬間を表すことを説明せよ。
+\end{minipage}
 
-\item \textbf{単位付き表の ECSV と FITS への保存}。
-\code{time}、\code{signal}、\code{detector} を持つ \code{QTable} を作り、\code{time} に ns、\code{signal} に mV を付けよ。ECSV へ保存して読み戻し、各列の単位と行数を表示せよ。さらに同じ信号値を FITS 画像として保存し、画像 HDU のヘッダへ \code{BUNIT="mV"} を記録する。\code{fits.open()} で形状、\code{BUNIT}、信号値を読み戻し、ECSV の列単位と一致することを確認せよ。\code{overwrite=True} を付ける場合の挙動も説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{単位付きデータを保存する。}
+時刻 \code{[0, 120, 250]} ns、信号 \code{[12.4, 9.8, 15.1]} mV、検出器 \code{["A", "B", "A"]} の \code{QTable} を ECSV へ保存せよ。同じ信号を FITS 画像へ保存し、ヘッダに \code{BUNIT="mV"} を付ける。読み戻した行数、値、単位を表で照合せよ。\code{overwrite=True} は既存の実習ファイルを置き換える指定である。
+\end{minipage}
 
-\item \textbf{座標系を明示した変換}。
-赤経 150 度、赤緯 20 度を ICRS の \code{SkyCoord} として作り、銀河座標へ変換せよ。銀河経度は約 213.801 度、銀河緯度は約 50.264 度になる。\code{ra}、\code{dec}、\code{frame} の意味を述べ、地平座標への変換では観測時刻と観測地点が追加で必要になる理由を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{天体の座標を変換する。}
+赤経 150 度、赤緯 20 度を ICRS の \code{SkyCoord} とし、銀河座標へ変換せよ。銀河経度約 213.801 度、銀河緯度約 50.264 度と照合し、変換前後の座標系と値を表にせよ。地平座標への変換に追加で必要な観測条件も挙げよ。
+\end{minipage}
+
 \end{enumerate}
-
-本章までに、データの読み込み、整形、計算、可視化、物理量の表現を扱った。同じ解析を別のデータへ安全に適用するには、処理を関数とモジュールへ分け、テスト可能な公開インタフェースを定める必要がある。次章では、そのためのパッケージ構成と依存関係の管理を扱う。

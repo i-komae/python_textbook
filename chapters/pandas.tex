@@ -1,7 +1,7 @@
 \chapter{pandas による表形式データ解析}
 \label{chap:pandas}
 
-pandas\index{pandas@pandas|textbf} は、行と列からなる表形式データを扱うライブラリである。観測ログ、イベント一覧、較正表、集計結果のように、各行が一つの記録、各列が一つの変数に対応するデータを \code{DataFrame} で表現できる。本章では、列名と型の確認、条件抽出、欠損値処理、集計、表変形、入出力を扱う。
+pandas\index{pandas@pandas|textbf} は、行と列からなる表形式データを扱うライブラリである。この章では、観測記録を表にし、条件に合う行を選び、検出器ごとの平均を求める。値が空欄のときの扱いと、計算結果の保存も学ぶ。元の表からどの行を計算に使ったかを説明できるようにする。
 
 \section{DataFrame の構造と列指向処理}
 
@@ -25,6 +25,7 @@ print(type(events).__name__)
 print(events)
 \end{lstlisting}
 
+\noindent\begin{minipage}{\linewidth}
 このコードを実行すると、次のような DataFrame が表示される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
@@ -35,6 +36,7 @@ DataFrame
 2        B     1055    14.8  False
 3        B     1244     9.7   True
 \end{lstlisting}
+\end{minipage}
 
 この表では、行番号 0, 1, 2, 3 は index、\code{"detector"} や \code{"signal"} は列名である。index は行を識別するラベルであり、列名は各列が表す量を示す。値だけでなく、列名、型、単位、欠損値の有無を合わせて確認する。
 
@@ -343,6 +345,17 @@ print(log[["timestamp", "date", "prefix", "detector"]])
 
 pandas は、CSV、Parquet、圧縮テキストなどを DataFrame として読み書きできる。本節では、ファイル形式ごとの型と圧縮方法の指定を扱う。
 
+まず、読み込みを試すための 2 件の記録を圧縮 CSV へ保存する。
+
+\begin{lstlisting}[language=Python]
+sample = pd.DataFrame({
+    "detector": ["A", "B"],
+    "time_ns": [1000, 1180],
+    "signal": [12.4, 9.8],
+})
+sample.to_csv("events.csv.gz", index=False, compression="gzip")
+\end{lstlisting}
+
 \index{pandas!read\_csv@\code{read\_csv()}|textbf}
 \begin{lstlisting}[language=Python]
 df = pd.read_csv(
@@ -358,9 +371,16 @@ small = pd.read_parquet("events.parquet", columns=["detector", "signal"])
 
 この例は、ヘッダ付きのカンマ区切り CSV を gzip 圧縮した \code{events.csv.gz} を想定している。第 1 引数は入力パス、\code{compression="gzip"} は圧縮方式、\code{usecols} は読み込む列、\code{dtype} は列ごとの型である。\code{to\_parquet()} は表全体を Parquet へ保存し、\code{read\_parquet(..., columns=...)} は指定した 2 列だけを読み込む。
 
-\code{read\_csv()} では、必要な列、列の型、コメント行の扱いを入力時に指定できる。次の例は、gzip 圧縮された空白区切りファイルから、必要な列だけを指定した型で読み込む。
+\code{read\_csv()} では、必要な列、列の型、コメント行の扱いを入力時に指定できる。次は、空白区切りの 2 行を gzip へ保存し、必要な列だけを指定した型で読み込む例である。
 
 \begin{lstlisting}[language=Python]
+import gzip
+
+path = "observations.txt.gz"
+with gzip.open(path, "wt", encoding="utf-8") as f:
+    f.write("1 2026-04-12 12:00:00 12.4\n")
+    f.write("2 2026-04-12 12:00:01 9.8\n")
+
 df = pd.read_csv(
     path,
     compression="gzip",
@@ -594,9 +614,10 @@ df["value_sq"] = df.parallel_apply(
 
 基本操作の公式資料として Getting started tutorials~\cite{pandas_tutorials} と 10 minutes to pandas~\cite{pandas_10min} がある。列選択と代入は Indexing~\cite{pandas_indexing}、欠損値処理は Missing data~\cite{pandas_missing}、表の結合は Merge, join, concatenate and compare~\cite{pandas_merging}、時刻列は Time series / date functionality~\cite{pandas_timeseries} に詳しい。本章は、これらの機能を解析手順に沿って再構成した。
 
-\section{章末課題：検出器別の表集計}
+\clearpage
+\section{章末課題：検出器ごとの信号を集計する}
 
-次の CSV を \code{events.csv} として保存し、すべての課題の共通入力とせよ。
+次を \code{events.csv} として保存する。各問では、この元の 6 行を読み込む。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={events.csv}]
 detector,time_ns,signal,valid
@@ -609,20 +630,29 @@ B,2050,13.2,true
 \end{lstlisting}
 
 \begin{enumerate}
-\item \textbf{読み込み直後の表の検査}。
-\code{pd.read\_csv()} で読み、\code{shape}、\code{columns}、\code{dtypes}、\code{head(3)}、\code{isna().sum()} を表示せよ。行数は 6、列数は 4、\code{signal} の欠損数は 1 になる。\code{head(3)} の \code{3} と、\code{isna().sum()} の \code{sum()} がどの方向に集計しているかを説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{表の内容を確認する。}
+\code{pd.read\_csv()} で読み、先頭 3 行、行数・列数、各列の型と欠損数を表示せよ。6 行 4 列、信号の欠損 1 件となることを確かめ、表の特徴を説明せよ。
+\end{minipage}
 
-\item \textbf{条件抽出と列追加}。
-まず \code{valid} が真で \code{signal >= 12.0} という条件の結果を表示し、どの行が \code{True} かを確認せよ。その条件で \code{loc} を使って行を抽出し、抽出した表を表示する。次に、\code{signal / signal.mean()} を \code{signal\_ratio} 列として追加せよ。抽出行は 3 件になる。\code{signal.mean()} は抽出後の 3 行について求める。複数条件を括弧で囲み、\code{and} ではなく \code{\&} を使う理由を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{強い信号を取り出す。}
+\code{valid} が真で \code{signal >= 12.0} の 3 行を取り出し、その 3 行の平均で信号を割った \code{signal\_ratio} 列を追加せよ。抽出前後の件数と結果の表を示せ。
+\end{minipage}
 
-\item \textbf{検出器別集計と別表の結合}。
-\code{groupby("detector")} と \code{agg()} を使い、有効な信号の件数、平均、標準偏差を求めよ。2 問目の抽出表ではなく元の表を用い、\code{valid} が真で \code{signal} が欠損していない行を集計する。有効件数は A が 3、B が 2、平均は A が約 12.8333、B が 11.5 になる。標準偏差は \code{ddof=1} とし、件数を数える \code{count()} と全行数を数える \code{size()} の違いも確認せよ。さらに、A と B の較正係数を持つ DataFrame を作り、\code{merge(..., on="detector", how="left")} で結合せよ。\code{on} と \code{how} の役割を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{検出器ごとに集計し、較正係数を結合する。}
+元の表で、\code{valid} が真かつ信号が欠損していない行を使い、検出器別の件数、平均、標準偏差（\code{ddof=1}）を求めよ。件数は A が 3、B が 2、平均は約 12.8333 と 11.5 となる。係数 A: 1.02、B: 0.97 の表を \code{merge()} で結合し、信号に係数を掛けた結果も示せ。
+\end{minipage}
 
-\item \textbf{一括読み込みと分割読み込みの比較}。
-3 問目と同じ有効条件を使い、本文の \code{chunksize=2} の方法で件数と平均を求め、一括読み込みから得た結果と \code{pd.testing.assert\_frame\_equal()} または \code{np.allclose()} で一致を確認せよ。チャンク平均の単純平均が一般には誤る理由を、件数が異なる 2 チャンクの例を使って説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{分割して読んでも同じ平均になるか確かめる。}
+\code{chunksize=2} で読み、3 問目と同じ有効条件で件数と平均を求めよ。一括読み込みと値を照合し、比較表を作れ。各分割の合計と件数を使う理由も説明せよ。
+\end{minipage}
 
-\item \textbf{再利用可能な形式への保存}。
-集計表を CSV と Parquet の両方へ保存し、読み戻して列名と値を確認せよ。\code{index=False} を付けた場合に何が保存されないかを説明し、Parquet の読み込みに追加ライブラリが必要な環境では、表示された例外名も記録せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{集計表を保存して読み戻す。}
+3 問目の集計表を CSV と Parquet へ保存し、列名と値が保持されたかを表にせよ。CSV は \code{index=False} とする。Parquet の読み書きには、対応するエンジン（例えば PyArrow）が必要である。
+\end{minipage}
+
 \end{enumerate}
-
-pandas で表処理の基本と結果の検証方法を確認した後は、同じ処理を別の DataFrame 実装で書くと、設計上の違いが明確になる。次章では、Polars による index 非依存の表処理、列式、遅延実行を扱う。

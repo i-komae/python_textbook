@@ -1,13 +1,69 @@
 \chapter{SciPy による数値計算とフィット}
 \label{chap:scipy}
 
-SciPy\index{scipy@SciPy|textbf} は、NumPy 配列を入力として統計、補間、信号処理、最適化、数値積分を行うライブラリ群である。本章では、分布モデル、パラメータ推定、曲線フィット、補間、信号処理と、それぞれの適用条件を扱う。
+SciPy\index{scipy@SciPy|textbf} は、データに式を当てはめる計算や、分布の推定などに使うライブラリである。この章では、まず 5 個の点に合う直線を求める。その後で分布、重み付け、補間、波形処理を学ぶ。求めた値を図へ重ね、データとのずれと適用条件を確かめられるようにする。
 
-\section{分布モデルとパラメータ推定}
+\section{データに直線を当てはめる}
+
+\subsection{データに合う直線を求める}
+
+横軸を \code{x}、縦軸を \code{y} としてデータを描くと、点がおおむね直線に沿って並ぶ場合がある。そこで、直線を表す式 \code{y = a * x + b} を使い、点の並びに合う \code{a} と \code{b} を求める。
+
+\code{a} は直線の傾き、\code{b} は \code{x = 0} のときの \code{y} の値である。このように、データに合わせて式の中の値を求めることを「フィット」という。ここでは、各点の \code{y} と直線の \code{y} の差を二乗し、その合計が小さくなるように \code{a} と \code{b} を求める。
+
+式の中で調整する \code{a} と \code{b} をパラメータという。観測値から式による値を引いた差を残差という。求めた直線をデータと同じ図に描き、各点とのずれを確かめる。次の \code{curve\_fit()} の例で、この 2 つの値を計算する。
+
+直線を使ってよいかは、データが得られた過程や図の形に基づいて判断する。推定値の解釈には、使った範囲、残差、推定値の不確かさの確認も必要である。重み付けや共分散による評価は、基本のフィットを試した後に説明する。
+
+\subsection{\code{curve\_fit} によるパラメータ推定}
+
+次の動作確認用のデータでは、傾きと切片を持つ直線を当てはめる。\code{linear\_model(x, a, b)} に \code{x} と候補の \code{a}、\code{b} を渡すと、直線上の \code{y} が返る。\code{curve\_fit()} はこの関数を繰り返し呼び、データとの差の二乗和が小さくなる \code{a} と \code{b} を探す。
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=Python]
+import numpy as np
+from scipy.optimize import curve_fit
+
+def linear_model(x, a, b):
+    return a * x + b
+
+xdata = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
+ydata = np.array([1.1, 2.0, 3.2, 4.1, 5.1])
+
+linear_params, linear_cov = curve_fit(linear_model, xdata, ydata)
+linear_errors = np.sqrt(np.diag(linear_cov))
+
+print(linear_params)
+print(linear_errors)
+\end{lstlisting}
+\end{minipage}
+
+最初の行が傾きと切片、次の行がそれぞれの標準誤差である。標準誤差は、仮定した誤差モデルの下で推定値がどの程度変わり得るかの目安であり、その計算は後で説明する。まず傾きが約 1.01、切片が約 1.08 になったことを確認する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+[1.01 1.08]
+[0.02516611 0.06164414]
+\end{lstlisting}
+
+\code{linear\_params} は推定した傾きと切片である。\code{linear\_cov} は、それらの不確かさを 2 行 2 列にまとめた共分散行列である。左上と右下を対角成分と呼び、それぞれ傾きと切片の分散を表す。\code{np.diag(linear\_cov)} はこの 2 個を取り出し、\code{np.sqrt(...)} は平方根を求めるため、各パラメータの標準誤差が得られる。上の例では \code{linear\_params[0]} が傾き、\code{linear\_params[1]} が切片である。非対角成分はパラメータ間の共分散を表すため、相関を調べる場合は各パラメータの標準偏差で規格化する。\code{curve\_fit()} の出力は、仮定したモデル、残差の定義、\code{sigma} の指定に依存する。
+
+上の直線モデル \(f(x; a, b) = ax + b\) なら、\code{curve\_fit()} は概ね
+\[
+S(a, b) = \sum_i \left[y_i - (a x_i + b)\right]^2
+\]
+を小さくする \(a\) と \(b\) を探していると考えればよい。より一般には、モデル \(f(x; \mathbf{p})\) に対して
+\[
+S(\mathbf{p}) = \sum_i \left[y_i - f(x_i; \mathbf{p})\right]^2
+\]
+という残差二乗和を最小化している。
+
+得られた推定値は、データとモデルを重ねた図、別条件のデータ、単位、残差と照合する。SciPy の各関数についても、入力、返り値、仮定、失敗条件を確認する。
+
+\section{分布と要約統計}
 
 \subsection{NumPy 配列を入力とする専門計算機能}
 
-SciPy の多くの関数は NumPy 配列を入力とし、NumPy 配列またはスカラーを返す。したがって、入力の \code{shape} と \code{dtype}、返り値の意味を NumPy の配列操作と対応付ける。目的と subpackage の対応は次のとおりである。
+SciPy の多くの関数は NumPy 配列を入力とし、NumPy 配列またはスカラーを返す。したがって、入力の \code{shape} と \code{dtype}、返り値の意味を NumPy の配列操作と対応付ける。SciPy 内で目的別に分けた機能のまとまりをサブパッケージといい、次のように選ぶ。
 
 \begin{itemize}
 \item \code{scipy.stats}\index{scipy@SciPy!stats@\code{scipy.stats}|textbf}: 分布、検定、要約統計
@@ -18,17 +74,7 @@ SciPy の多くの関数は NumPy 配列を入力とし、NumPy 配列または�
 \item \code{scipy.constants}\index{scipy@SciPy!constants@\code{scipy.constants}|textbf}: 物理定数
 \end{itemize}
 
-要素ごとの演算や基本的な集計には NumPy を用い、確率分布、最適化、補間、信号処理などの専用アルゴリズムが必要な場合に、対応する SciPy の subpackage を選ぶ。
-
-\subsection{データに合う直線を求める}
-
-横軸を \code{x}、縦軸を \code{y} としてデータを描くと、点がおおむね直線に沿って並ぶ場合がある。そこで、直線を表す式 \code{y = a * x + b} を使い、点の並びに合う \code{a} と \code{b} を求める。
-
-\code{a} は直線の傾き、\code{b} は \code{x = 0} のときの \code{y} の値である。このように、データに合わせて式の中の値を求めることを「フィット」という。ここでは、各点の \code{y} と直線の \code{y} の差を二乗し、その合計が小さくなるように \code{a} と \code{b} を求める。
-
-式の中で調整する \code{a} と \code{b} をパラメータという。観測値から式による値を引いた差を残差という。求めた直線をデータと同じ図に描き、各点とのずれを確かめる。後の \code{curve\_fit()} の例では、この 2 つの値を実際に計算する。
-
-直線を使ってよいかは、データが得られた過程や図の形に基づいて判断する。推定値の解釈には、使った範囲、残差、推定値の不確かさの確認も必要である。重み付けや共分散による評価は、基本のフィットを試した後に説明する。
+要素ごとの演算や基本的な集計には NumPy を用い、確率分布、最適化、補間、信号処理などの専用アルゴリズムが必要な場合に、対応する SciPy のサブパッケージ を選ぶ。
 
 \subsection{正規分布と指数分布}
 
@@ -45,8 +91,6 @@ p(t) = \frac{1}{\tau} \exp\!\left(-\frac{t}{\tau}\right)
 \qquad (t \ge 0)
 \]
 である。SciPy の分布オブジェクトは、確率密度、累積分布、分位点、乱数生成を共通のインタフェースで提供する。
-
-\section{統計・フィット・補間・信号処理}
 
 \subsection{\code{scipy.stats} による要約統計と分布}
 
@@ -101,49 +145,6 @@ print(cdf)
 F(x) = \int_{-\infty}^{x} p(t)\,dt
 \]
 に対応する。したがって、\code{stats.norm.cdf(x)} は「\(x\) 以下に入る確率」を返している。
-
-\subsection{\code{curve\_fit} によるパラメータ推定}
-
-次の動作確認用のデータでは、傾きと切片を持つ直線を当てはめる。\code{linear\_model(x, a, b)} に \code{x} と候補の \code{a}、\code{b} を渡すと、直線上の \code{y} が返る。\code{curve\_fit()} はこの関数を繰り返し呼び、データとの差の二乗和が小さくなる \code{a} と \code{b} を探す。
-
-\noindent\begin{minipage}{\linewidth}
-\begin{lstlisting}[language=Python]
-from scipy.optimize import curve_fit
-
-def linear_model(x, a, b):
-    return a * x + b
-
-xdata = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
-ydata = np.array([1.1, 2.0, 3.2, 4.1, 5.1])
-
-linear_params, linear_cov = curve_fit(linear_model, xdata, ydata)
-linear_errors = np.sqrt(np.diag(linear_cov))
-
-print(linear_params)
-print(linear_errors)
-\end{lstlisting}
-\end{minipage}
-
-最初の行が傾きと切片、次の行がそれぞれの標準誤差である。標準誤差は、仮定した誤差モデルの下で推定値がどの程度変わり得るかの目安であり、その計算は後で説明する。まず傾きが約 1.01、切片が約 1.08 になったことを確認する。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-[1.01 1.08]
-[0.02516611 0.06164414]
-\end{lstlisting}
-
-\code{linear\_params} は推定した傾きと切片である。\code{linear\_cov} は、それらの不確かさを 2 行 2 列にまとめた共分散行列である。左上と右下を対角成分と呼び、それぞれ傾きと切片の分散を表す。\code{np.diag(linear\_cov)} はこの 2 個を取り出し、\code{np.sqrt(...)} は平方根を求めるため、各パラメータの標準誤差が得られる。上の例では \code{linear\_params[0]} が傾き、\code{linear\_params[1]} が切片である。非対角成分はパラメータ間の共分散を表すため、相関を調べる場合は各パラメータの標準偏差で規格化する。\code{curve\_fit()} の出力は、仮定したモデル、残差の定義、\code{sigma} の指定に依存する。
-
-上の直線モデル \(f(x; a, b) = ax + b\) なら、\code{curve\_fit()} は概ね
-\[
-S(a, b) = \sum_i \left[y_i - (a x_i + b)\right]^2
-\]
-を小さくする \(a\) と \(b\) を探していると考えればよい。より一般には、モデル \(f(x; \mathbf{p})\) に対して
-\[
-S(\mathbf{p}) = \sum_i \left[y_i - f(x_i; \mathbf{p})\right]^2
-\]
-という残差二乗和を最小化している。
-
-得られた推定値は、データとモデルを重ねた図、別条件のデータ、単位、残差と照合する。SciPy の各関数についても、入力、返り値、仮定、失敗条件を確認する。
 
 \section{モデル選択・重み付け・残差評価}
 
@@ -387,31 +388,44 @@ c = 299792458\ \mathrm{m\,s^{-1}}
 
 分布を比べる前に、解析に使う測定値の集まりを標本、その分布を決める調整値をパラメータ（母数）と呼ぶことを確認する。例えば、位置を 0 に固定した指数分布では、平均待ち時間が一つのパラメータになる。
 
+図では、ある値以下に入る標本の割合を階段状に描くと、分布の形を比較できる。例えば 5 個の間隔のうち 3 個が 100 秒以下なら、100 秒での割合は \(3/5=0.6\) である。この図を経験累積分布関数（ECDF）と呼び、モデルの累積分布関数（CDF）と重ねる。次は、5 個の人工的な間隔を指数分布と比べる例である。
+
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+intervals = np.array([30.0, 60.0, 90.0, 140.0, 360.0])
+ordered = np.sort(intervals)
+fraction = np.arange(1, len(ordered) + 1) / len(ordered)
+loc, scale = stats.expon.fit(intervals, floc=0)
+print(scale)
+
+fig, ax = plt.subplots()
+ax.step(ordered, fraction, where="post", label="data")
+ax.plot(ordered, stats.expon.cdf(ordered, loc=loc, scale=scale),
+        label="exponential model")
+ax.set_xlabel("interval [s]")
+ax.set_ylabel("cumulative fraction")
+ax.legend()
+fig.savefig("interval_cdf.pdf")
+\end{lstlisting}
+
+平均待ち時間の推定値は 136 秒となる。\code{fraction} は \code{[0.2, 0.4, 0.6, 0.8, 1.0]} であり、100 秒以下の割合は 0.6 である。\code{floc=0} は分布の開始位置を 0 秒へ固定する指定である。保存した図では、同じ横軸の値に対するデータとモデルの縦軸の差を比べる。少数の値で描画方法を確かめた後、実データでは標本数や独立性も考慮してモデルを判断する。
+
+\subsection{補足：尤度と AIC による比較}
+
 個々の値が互いに独立で同じ分布から得られたと仮定すると、各観測値での確率密度を掛け合わせ、パラメータによってデータとの合い方を比べられる。この積を尤度という。連続値では密度を使うので、尤度を「その値が出る確率」とは呼ばない。尤度を最大にするパラメータを探す方法が最尤推定であり、SciPy の連続分布の \code{fit()} は既定でこの方法を使う~\cite{scipy_distribution_fit}。計算では自然対数を取り、密度の積を \code{logpdf(...).sum()} という和へ変える。
 
 調整するパラメータを増やすと、データへ合わせやすくなる。その複雑さも含めて候補を比べる指標の一つが AIC（赤池情報量規準）であり、\(\mathrm{AIC}=2k-2\log L\) と定義される~\cite{statsmodels_aic}。\(k\) はデータから推定したパラメータ数、\(L\) は最大尤度、\(\log\) は自然対数である。同じ標本と同じ観測範囲に対して求めた候補の間で、小さい値を選ぶ目安にする。AIC が小さいことだけでは、モデルの正しさは保証されない。地震間に相関があれば、上の独立性の仮定も別に検討する。
 
-図では、ある値以下に入る標本の割合を階段状に描くと、分布の形を比較できる。例えば 5 個の間隔のうち 3 個が 100 秒以下なら、100 秒での割合は \(3/5=0.6\) である。この図を経験累積分布関数（ECDF）と呼び、モデルの累積分布関数（CDF）と重ねる。Notebook では、ヒストグラム、累積分布、両者の CDF の差を順に確認する。
-
-SciPy は、解析の中で次のような役割を持つ。
-
-\begin{enumerate}
-\item \code{stats} による分布形状と要約統計の確認
-\item \code{signal} によるピーク候補の抽出と平滑化
-\item \code{interpolate} による校正曲線・補助曲線の作成
-\item \code{optimize} によるモデルパラメータの推定
-\item \code{integrate} と \code{constants} による計算の完結
-\end{enumerate}
-
 SciPy は、入力配列の物理的意味や、採用すべきモデルを自動では決めない。特にフィットでは、データ範囲、重み、残差、推定値の不確かさを確認し、採用した条件を結果とともに記録する必要がある。
 
-ここまで見てきた SciPy は、主に「数値をどう計算するか」を受け持つ道具である。時刻系、単位、座標系、FITS のように「数値そのものの意味付け」まで含めて扱いたくなったところで、次章の Astropy が必要になる。SciPy は計算アルゴリズム、Astropy は物理量や観測量の表現を担当すると考えると、章のつながりも見えやすい。
+本文を読み終えた後で関数名や引数を確認したいときは、SciPy User Guide~\cite{scipy_user_guide} を起点にすると探しやすい。分布や検定は Statistics~\cite{scipy_stats}、フィットや最適化は Optimization~\cite{scipy_optimize}、補間は Interpolation~\cite{scipy_interpolate}、波形処理は Signal processing~\cite{scipy_signal}、数値積分は Integration~\cite{scipy_integrate} が対応している。
 
-本文を読み終えた後で関数名や引数を確認したいときは、SciPy User Guide~\cite{scipy_user_guide} を起点にすると探しやすい。分布や検定は Statistics~\cite{scipy_stats}、フィットや最適化は Optimization~\cite{scipy_optimize}、補間は Interpolation~\cite{scipy_interpolate}、波形処理は Signal processing~\cite{scipy_signal}、数値積分は Integration~\cite{scipy_integrate} が対応している。本章は、それらを解析で使う順に並べ替えて説明した。
+\section{章末課題：モデルを当てはめて妥当性を確かめる}
 
-\section{章末課題：分布モデルとフィットの演習}
-
-最初の 2 問は、答えの目安が分かっている人工データで計算する。まず平均待ち時間を求め、次に直線を当てはめる。その後で、実際の地震カタログをどのモデルで説明できるかを検討する。次のコードが検証用データを生成する。乱数シードを固定しているため、同じライブラリ環境では同じ入力を再現できる。
+最初の 2 問では、次の人工データを使う。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -424,31 +438,30 @@ sigma = np.full_like(x, 0.5)
 y_obs = y_true + rng.normal(scale=sigma)
 \end{lstlisting}
 
-実データに当てる分布と関数を、最初から決め打ちしてはならない。まず図を描いて特徴を観察し、比較する量と近似を試す範囲を判断せよ。ヒストグラムと累積分布の選択、短時間側の取扱い、対数軸の採否についても、その理由とともに記録せよ。
-
 \begin{enumerate}
-\item \textbf{既知の指数分布による推定方法の検証}。
-\code{scipy.stats.expon.fit(synthetic\_dt, floc=0)} で指数分布のパラメータを推定せよ。\code{floc=0} は位置母数を 0 に固定する指定であり、返り値は \code{loc} と \code{scale} の順である。推定された \code{scale} が生成時の 120 秒に近いことを確認し、標本平均とも比較せよ。許容範囲を 115 秒から 125 秒として自動確認する \code{assert} も記述せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{平均待ち時間を推定する。}
+\code{stats.expon.fit(synthetic\_dt, floc=0)} の \code{scale} を求めよ。標本平均と比べ、生成値 120 秒に対して 115～125 秒の範囲に入ることを \code{assert} で確認せよ。生成値、平均、推定値を表にせよ。
+\end{minipage}
 
-\item \textbf{重み付き直線フィットと残差の確認}。
-まず本文の 5 点で \code{curve\_fit()} を使い、傾きが約 1.01、切片が約 1.08 となることを確認せよ。次に課題の 80 点の \code{y\_obs} を \(y=ax+b\) へフィットする。\code{sigma=sigma}、\code{absolute\_sigma=True} を指定し、推定値 \code{popt} と共分散行列 \code{pcov} を受け取る。傾きが 2.3 から 2.7、切片が 0.7 から 1.7 の範囲に入ることを確認せよ。推定値を表示した後、\code{y\_obs - model(x, *popt)} を計算し、データと直線のずれを表示せよ。この差が残差である。その後、\code{np.sqrt(np.diag(pcov))} で各パラメータの標準不確かさを求める。最後にデータとフィット線を上段、残差を下段に描き、2 段の図を保存する。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{直線を求め、残差を描く。}
+\code{y\_obs} を直線へフィットし、\code{sigma=sigma, absolute\_sigma=True} を指定せよ。傾き・切片と標準不確かさを表にし、上段にデータと直線、下段に残差を描け。傾き 2.5、切片 1.2 の生成値と比較せよ。検算の目安は傾き 2.3～2.7、切片 0.7～1.7 である。
+\end{minipage}
 
-\item \textbf{実データの発生間隔分布と fit 方針の決定}。
-第~\ref{chap:numpy}~章で作った \(\Delta t\) 配列がある場合は、等間隔ビンのヒストグラム、対数ビンのヒストグラム、経験累積分布のうち少なくとも 2 通りを作成せよ。その上で、指数分布を含む候補を比較し、採用するモデルとフィット範囲を決定せよ。1 問目の検証用データと異なり、実データが単一の指数分布に従う保証はない。モデルを採用した根拠、除外した範囲、残差または適合度を記録せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{実データの分布モデルを検討する。}
+実カタログの発生間隔について、ヒストグラムと経験累積分布を作れ。指数分布を含む候補を比べ、採用するモデルと範囲を選べ。図と残差を示し、選択理由を説明せよ。期間、地域、件数、地震の種別とマグニチュード尺度を記録する。実データがなければ \code{synthetic\_dt} で方法を確かめる。
+\end{minipage}
 
-\item \textbf{解析上の選択に対する感度評価}。
-3 問目と少なくとも 1 条件を変えて推定を繰り返せ。ビン幅、フィット範囲、短時間側の扱い、重み、関数形などから選び、推定値と不確かさがどの程度変化したかを表にまとめよ。結果が変わったという事実だけでなく、どのデータ点の寄与が変化したためかを図と残差から説明せよ。分布の標本を下限や上限で切る場合は、観測範囲で規格化した条件付き分布の尤度を用いる。例えば指数分布で \(t\geq c\) だけを使うなら、無記憶性を仮定したモデルでは \(t-c\) を推定対象とする。選別した値へ元の分布をそのまま当てはめる方法と区別せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{解析条件を変えて比較する。}
+3 問目のビン幅、推定範囲、重み、モデルのいずれかを変え、推定値と不確かさを表で比較せよ。どのデータの寄与が変わったかを説明する。範囲を切って推定する場合は、その範囲で規格化した条件付き分布を使う。指数分布で \(t\geq c\) だけを使う場合は、同モデルの無記憶性に基づき \(t-c\) へ当てはめる。
+\end{minipage}
 
-実データでは、検索期間・地域、使用したイベント種別、マグニチュードの型を記録する。USGS の CSV には \code{magType} などの列があり~\cite{usgs_csv}、異なる尺度や検出能力の地域を混ぜると単一のモデルで説明できない場合がある。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{発展：地震規模と累積件数の関係を調べる。}
+実カタログから、マグニチュード \(M\) の分布と累積件数 \(N(\geq M)\) を描け。記録の取りこぼしが少ないと考える下限 \(M_c\) を選び、\(\log_{10}N(\geq M)=a-bM\) の関係~\cite{gutenberg_richter_1944}を検討せよ。\(M_c\)、件数、推定法、不確かさ、図と残差を示す。累積件数の点は独立でないため、推定には個々の値の尤度か、重ならない区間の計数モデルを用いる。
+\end{minipage}
 
-\item \textbf{発展課題：マグニチュード分布と Gutenberg--Richter 関係}。
-USGS カタログのマグニチュード \(M\) について、度数分布と累積件数 \(N(\geq M)\) を作り、カタログが十分に完全とみなせる下限 \(M_c\) を検討せよ。ここでいう完全性は、その規模以上の地震をどの程度取りこぼさず記録できているかを表す。\(M\geq M_c\) の範囲で Gutenberg--Richter 関係~\cite{gutenberg_richter_1944}
-\[
-\log_{10}N(\geq M)=a-bM
-\]
-が成り立つかを調べる。この関係は、地震規模に対するべき乗則を、対数尺度であるマグニチュード \(M\) で表したものである。
-
-累積件数の点は同じイベントを共有するため、独立な Poisson 変数として \(\chi^2\) を解釈できない。推定には、重ならないマグニチュード区間の度数に対する計数モデル、または個々の \(M\) に対する尤度法を用いよ。累積分布は表示だけに用い、推定量と区別せよ。日本近海または全球を対象とし、期間、空間範囲、\(M_c\)、ビン、イベント数、推定法、不確かさ、残差を明示せよ。
 \end{enumerate}
-
-SciPy は数値配列に対する計算を担うが、物理単位、時刻系、天球座標の意味までは自動的に補わない。次章では、Astropy によって数値へ単位や座標系を保持し、SciPy や表処理ライブラリとの間で受け渡す方法を扱う。

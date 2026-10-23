@@ -1,13 +1,13 @@
 \chapter{入出力とファイル}
 \label{chap:io}
 
-本章では、Python によるファイルの開閉、複数ファイルの探索、行単位の読み込み、値への変換を扱う。入力形式、文字コード、列型、時刻と単位、出力先を記録することで、同じデータ変換を再実行できる入出力\index{にゅうしゅつりょく@入出力|textbf}を構成する。
+この章では、ファイルの文字を読み、必要な値を数値へ変換し、計算結果を別のファイルへ保存する。データを読み込むことを入力、結果を書き出すことを出力という\index{にゅうしゅつりょく@入出力|textbf}。まず 3 行のファイルを表示し、その後で表の読み込みと保存を学ぶ。読み戻した内容が保存前と一致するかを確かめられることが目標である。
 
 \section{テキストファイルの入出力と探索}
 
 \subsection{ファイルのオープンと基本的な読み書き}
 
-Python でテキストファイルを読むときの基本は \code{open}\index{open@\code{open}|textbf} である。さらに \code{with} を組み合わせると、処理が正常に終わった場合だけでなく、途中で例外が発生した場合にもファイルが閉じられる。まず、次の 3 行をテキストファイル \code{sample.txt} として保存する。Notebook で実行する場合は、その Notebook と同じフォルダーへ保存する。スクリプトを端末から実行する場合は、端末の現在位置へ保存する。
+Python でテキストファイルを読むときの基本は \code{open}\index{open@\code{open}|textbf} である。さらに \code{with} を組み合わせると、処理が正常に終わった場合だけでなく、途中で例外が発生した場合にもファイルが閉じられる。まず、次の 3 行をテキストファイル \code{sample.txt} として保存する。保存先は、端末で \code{pwd} を実行して表示される作業フォルダーとする。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={sample.txt}]
 run 1: 12.4
@@ -16,7 +16,7 @@ run 3: 14.8
 \end{lstlisting}
 
 \noindent\begin{minipage}{\linewidth}
-このファイルを 1 行ずつ表示するコードは次のようになる。
+次を同じ作業フォルダーの \code{read\_sample.py} へ保存し、端末で \code{python read\_sample.py} を実行する。
 
 \begin{lstlisting}[language=Python]
 path = "sample.txt"
@@ -343,13 +343,13 @@ CSV はテキストとして内容を確認できる一方、読み込み時に�
     \item \textbf{Parquet}: 列指向のバイナリ形式である。pandas や Polars から表を保存し、列選択や行グループ単位の読み込みを行える。レコード単位の更新ではなく、列の抽出、集計、複数ファイルの走査を前提とする。
 \end{itemize}
 
-解析の初期段階では、内容をテキストとして確認でき、複数のソフトウェアで扱える CSV が検証に役立つ。大量のイベントデータの反復読み込みが測定上のボトルネックになった場合は、変換手順と列型を記録したうえで Parquet や HDF5 を中間形式として導入する。小規模なデータや一度しか読み込まないデータでは、変換時間と形式管理の負担が利点を上回る場合がある。\code{.pkl} は、信頼できる同一環境内の途中結果や作業用キャッシュに用途を限定する。
+解析の初期段階では、内容をテキストとして確認でき、複数のソフトウェアで扱える CSV が検証に役立つ。大量のイベントデータを繰り返し読む時間が長い場合は、変換手順と列型を記録したうえで Parquet や HDF5 を中間形式として導入する。小規模なデータや一度しか読み込まないデータでは、変換時間と形式管理の負担が利点を上回る場合がある。\code{.pkl} は、信頼できる同一環境内の途中結果や作業用キャッシュに用途を限定する。
 
 Parquet は保存形式の名前であり、\code{pyarrow} は pandas が Parquet の読み書きに利用できる実装の一つである。\code{read\_parquet()} と \code{to\_parquet()} の実行には、pandas が対応するエンジンを利用できる環境が必要となる。
 
-\section{章末課題：USGS カタログの読み込みと要約}
+\section{章末課題：CSV を読み、要約を保存する}
 
-第~\ref{chap:shell}~章で USGS の CSV を取得していない場合は、\code{raw} ディレクトリを作り、次の内容を \code{raw/usgs\_example.csv} として保存すれば、同じ課題を小規模な入力で実行できる。その場合は課題中の入力パスを読み替える。人工データは、取得済みの実カタログとは別のファイルへ保存する。
+\code{earthquake\_practice} を作業フォルダーとする。第~\ref{chap:shell}~章の CSV、または次の人工データを \code{raw/usgs\_example.csv} へ保存して使う。\code{raw/} と \code{results/} は作成しておく。人工データは実カタログと別名で保存する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={raw/usgs\_example.csv}]
 time,latitude,longitude,mag,place
@@ -358,27 +358,20 @@ time,latitude,longitude,mag,place
 2024-01-01T00:12:30.000Z,34.5,139.5,2.8,Tokyo
 \end{lstlisting}
 
-この小規模入力では、ヘッダを除くデータ行数は 3、最初と最後の時刻はそれぞれ \code{2024-01-01T00:00:00.000Z} と \code{2024-01-01T00:12:30.000Z}、空欄を除くマグニチュードの最小値と最大値は 2.8 と 3.2 になる。自分の出力がこれらと一致することを確認した後、実データへ進め。
-
 \begin{enumerate}
-\item \textbf{USGS CSV の要約と JSON への保存}。
-第~\ref{chap:shell}~章で取得した \code{raw/usgs\_global\_2024\_01.csv} を \code{csv.DictReader} で読み、少なくとも次の情報を \code{results/usgs\_summary.json} へ保存せよ。
-\begin{itemize}
-\item ヘッダを除くデータ行数
-\item 最初のイベント時刻
-\item 最後のイベント時刻
-\item マグニチュードの最小値と最大値
-\end{itemize}
-空欄の \code{mag} は数値集計から除き、その件数も記録せよ。有効な値が一つもない場合は、最小値・最大値を \code{None} として保存する。出力には \code{pathlib} と \code{json.dump} を用いよ。
-\code{Path.mkdir(parents=True, exist\_ok=True)} で出力ディレクトリを作り、\code{json.dump(..., indent=2)} の各引数が何を指定するかも説明せよ。保存後に \code{json.load()} で読み戻し、辞書の内容を表示して検証せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{CSV の要約を JSON へ保存する。}
+\code{csv.DictReader} で読み、件数、最初と最後の時刻、空欄を除いた \code{mag} の最小値・最大値・空欄数を求めよ。有効値がなければ最小値と最大値は \code{None} とする。\code{results/usgs\_summary.json} へ保存し、読み戻した内容を表にせよ。人工データでは 3 件、最小 2.8、最大 3.2、空欄 1 件となる。
+\end{minipage}
 
-\item \textbf{解析用中間データの Pickle への保存}。
-CSV の先頭 200 行から \code{time}、\code{latitude}、\code{longitude}、\code{mag} を抽出し、辞書のリストとして \code{results/usgs\_preview.pkl} へ保存せよ。読み直して要素数と先頭 1 件を表示し、保存前の値と一致することを確かめよ。
-小規模入力を使った場合、要素数は 3 であり、先頭辞書の \code{time} は \code{2024-01-01T00:00:00.000Z} になる。\code{"wb"} と \code{"rb"} の \code{b} の意味を説明し、この PKL を信頼できない相手から受け取った場合に読み込んではならない理由も述べよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{途中結果を保存して読み戻す。}
+先頭 200 行までの \code{time}、\code{latitude}、\code{longitude}、\code{mag} を辞書のリストにし、\code{results/usgs\_preview.pkl} へ保存せよ。読み戻した件数と先頭 1 件を示し、保存前との一致を確認せよ。人工データでは 3 件となる。Pickle は自分で作った信頼できるファイルだけを読む。
+\end{minipage}
 
-\item \textbf{発展課題}。
-CSV の中には空欄や想定外の値が入り得る。空欄に加えて数値へ変換できない \code{mag} もスキップし、何件スキップしたかを \code{results/skipped\_rows.txt} へ書き出せ。\code{DictReader} では空欄セルは空文字列として読まれるので、たとえば \code{if row["mag"] == ""} のような判定を入れればよい。
-小規模入力に対するスキップ件数は 1 件となる。\code{float(row["mag"])} が失敗する場合も \code{ValueError} として数えられるようにし、空欄と不正な文字列を区別して記録せよ。\code{float("NaN")} や \code{float("inf")} は例外にならないため、有限な値だけを集計する場合は \code{math.isfinite()} でも検査し、非有限値の件数を分けて記録する。JSON を保存するときは \code{allow\_nan=False} を指定すれば、標準の JSON にない数値の書き出しを検出できる。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{発展：不正な値を分けて記録する。}
+\code{mag} に \code{abc}、\code{NaN}、\code{inf} を持つ検証用の行を追加し、空欄、変換できない値、有限でない値の件数を別々に数えよ。有限な値だけで集計し、除外件数を \code{results/skipped\_rows.txt} へ保存せよ。追加前後の集計表を比較し、検出方法を説明せよ。
+\end{minipage}
+
 \end{enumerate}
-
-ファイルの構造を確認し、必要な値を Python のオブジェクトへ変換できれば、多数の数値を同じ型の配列として計算できる。次章では、ここで読み込んだ時刻や信号値を NumPy 配列へ変換し、差分、条件抽出、集計、ヒストグラムを扱う。

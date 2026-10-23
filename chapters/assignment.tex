@@ -3,29 +3,21 @@
 \index{どうじかんそく@同時観測|textbf}
 \section{入力データと実行環境の準備}
 
-この課題では、次のファイルを配布する。
+この課題では、異なる検出器の記録から、時刻差が 250 ns 以内の組を探す。配布コードの誤りを修正して処理を速くし、件数、処理時間、2 種類の時間差の分布を発表する。
 
-\begin{itemize}
-\item \code{events\_data.zip}
-\item \code{slow\_event\_analysis.py}
-\item 本テキスト
-\end{itemize}
+\code{events\_data.zip} と \code{slow\_event\_analysis.py} を、配布リポジトリ（\url{https://github.com/i-komae/python_textbook}）から同じ作業フォルダーへ保存する。\code{unzip events\_data.zip} で展開すると、年・月ごとのフォルダーに 500 日分の gzip ファイルが現れる。
 
-\code{events\_data.zip} を展開すると、\code{events\_data/} というディレクトリが得られる。日ごとに gzip 圧縮されたイベントファイルがあり、年・月ごとのディレクトリに分かれている。
-
-課題のスクリプトやデータは、GitHub リポジトリ
-（\url{https://github.com/i-komae/python_textbook}）
-から入手できる。手元に配布物がそろっていない場合は、リポジトリの取得と、直下にある \code{slow\_event\_analysis.py} および \code{events\_data.zip} の配置確認が必要である。\code{events\_data.zip} の展開によって得られる \code{events\_data/} が入力ディレクトリとなる。
-
-配布コードには、検証と修正の対象となる誤りが含まれている。元のコードを保存し、修正用のコピーで作業する。入力データ、比較する出力、自分で実装する処理を着手前に確認せよ。
+配布コードには修正対象の誤りが含まれる。元のファイルを残し、\code{cp slow\_event\_analysis.py event\_analysis.py} で作業用のコピーを作る。
 
 \subsection{配布コードによる基準測定}
 
 まず本節の「小規模入力による検証」に示す 3 日分の入力を用意し、配布コードを変更せずに実行せよ。必要なライブラリは \code{matplotlib} と \code{tqdm} であり、使用する仮想環境に導入する。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python3 slow_event_analysis.py events_data_small --outdir slow_output
+$ python slow_event_analysis.py events_data_small --outdir slow_output
 \end{lstlisting}
+\end{minipage}
 
 全期間の処理時間は、データ量、ストレージ、計算機によって変わる。初回の対象は数日分とし、入力形式と出力の確認後に対象期間を広げるのがよい。
 
@@ -35,15 +27,19 @@ $ python3 slow_event_analysis.py events_data_small --outdir slow_output
 
 解析を始める前に、gzip ファイルを一つ開き、各列の意味を確認せよ。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ gzip -cd events_data/2024/01/events_2024_01_01.txt.gz | head
 \end{lstlisting}
+\end{minipage}
 
 各行の列は次のようになっている。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 event_id year month day hhmmss ns detector_id signal
 \end{lstlisting}
+\end{minipage}
 
 各列の型と役割を言語化すると、整数として扱う列、時刻を構成する列、識別子としてのみ使う列、物理量として解釈する列を区別できる。この区別が曖昧なままでは、型変換や時刻比較の誤りを招く。
 
@@ -57,35 +53,39 @@ event_id year month day hhmmss ns detector_id signal
 
 500 日分の全データを処理する前に、数日分を別ディレクトリへコピーし、短時間で再実行できる検証用入力を用意せよ。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p events_data_small/2024/01
 $ cp events_data/2024/01/events_2024_01_01.txt.gz events_data_small/2024/01/
 $ cp events_data/2024/01/events_2024_01_02.txt.gz events_data_small/2024/01/
 $ cp events_data/2024/01/events_2024_01_03.txt.gz events_data_small/2024/01/
 \end{lstlisting}
+\end{minipage}
 
 小規模入力は、修正後の結果を短時間で検証するために用いる。上記の 3 日分について正しい実装から得られる同時観測イベント対は 66 組である。小規模入力でこの件数と個々のイベント対を確認した後に、500 日分の処理を実行する。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 n_pairs_total = 66
 analysis_sec = <measured value>
 \end{lstlisting}
+\end{minipage}
 
 この段階では、期待件数との一致、個々のイベント対の正しさ、再実行時の一致をそれぞれ確認する。件数が毎回変わる、出力ファイルの形式が揺れる、といった状態では、その先の高速化に進むべきではない。
 
 \section{検証・修正・高速化の要件}
 
-必須項目は次の五点である。
+次の順に進め、結果を保存する。
 
 \begin{enumerate}
-\item 配布コードの処理時間の測定
-\item 同時観測イベント数の検証
-\item バグの特定と修正
-\item 解析処理の高速化
-\item 同時観測イベントの時刻差分布の作図とフィット
+\item 3 日分で配布コードを実行し、件数と処理時間を記録する。
+\item 時刻差の定義と照らして誤りを特定し、作業用コードを修正する。
+\item 小さな入力で各組の正しさを確かめ、3 日分・全期間の件数を基準値と比べる。
+\item 同じ入力で処理を高速化し、結果の一致と時間の変化を確認する。
+\item 以下に定義する 2 枚の分布図を作り、モデルを当てはめて解釈する。
 \end{enumerate}
 
-この順序にも意味がある。性能改善に着手するのは、元のコードの振る舞いを把握し、正しさを確認した後である。誤ったコードを高速化しても、誤った結果が速く得られるだけである。
+高速化の前後で、件数だけでなくイベント対の内容も照合する。
 
 \subsection{同時観測を判定する時刻差}
 
@@ -113,71 +113,53 @@ analysis_sec = <measured value>
 
 件数と実行時間の要約を \code{summary.txt} へ保存する。必須出力をまとめると、次の 4 ファイルになる。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 coincidence_pairs.csv
 pair_dt_hist.pdf
 pair_mean_gap_hist.pdf
 summary.txt
 \end{lstlisting}
+\end{minipage}
 
 \subsection{正しさを検証する基準値}
 \index{ただしさのけんしょう@正しさの検証|textbf}
 
 今回の配布データは 500 日分であり、前述の定義に従って全期間から得られる同時観測イベント対は
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 n_pairs_total = 12033
 \end{lstlisting}
+\end{minipage}
 
 となる。この値を全期間処理の基準値とする。
 
 ただし、この値に合ったからといって、それだけで実装が正しいとは限らない。偶然件数だけ一致している可能性もある。実装の検証には、可能な範囲で個々のイベント対の内容と、ファイル境界付近の振る舞いも含める必要がある。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 n_pairs_total = 12033
 analysis_sec = <measured value>
 plot_sec = <measured value>
 \end{lstlisting}
+\end{minipage}
 
 このような要約ファイルを保存しておくと、コード変更の前後で結果を比較しやすい。件数と処理時間を同じファイルへ記録すれば、正しさと速度を同時に追跡できる。処理時間は計算機と実行時の状態に依存するため、例示した欄には各自の実測値を記入する。
 
-\section{提出レポートと発展的実装}
+\clearpage
+\section{結果のまとめと発表}
 
-提出物は次の二つである。
+解析コードと、LaTeX で作成したレポート（ソースと PDF）を提出する。レポートと発表では、次の 4 点を順に示せ。
 
-\begin{itemize}
-\item 解析に使った Python コード
-\item LaTeX で書いたレポートと、その PDF
-\end{itemize}
-
-レポートには、少なくとも次の内容を含めよ。
-
-\begin{itemize}
-\item 元のコードの問題点
-\item 正しさをどう検証したか
-\item バグをどう修正したか
-\item どう高速化したか
-\item 改善前後の処理時間
-\item 作成した図
-\item フィット結果とその解釈
-\end{itemize}
-
-レポートの構成は、変更点の羅列ではなく、問題の発見、原因の切り分け、修正方針、検証方法、結果、考察の順が望ましい。図表は本文から参照し、その内容と解釈を説明せよ。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-1. 元のコードの観察
-2. バグの特定
-3. 修正内容
-4. 高速化方針
-5. 結果の比較
-6. 図とフィットの考察
-\end{lstlisting}
-
-この順序で書けば、読者は「何が問題で、どう直して、何が改善したのか」を追いやすい。レポートは成果物であると同時に、思考過程の記録でもある。
+\begin{enumerate}
+\item \textbf{問題と修正：} 元のコードの誤り、原因、修正内容を説明する。
+\item \textbf{正しさ：} 小規模入力の検算と、3 日分 66 組・全 500 日分 12033 組との照合結果を示す。境界の検証も含める。
+\item \textbf{処理時間：} 修正前、正しく修正した後、高速化後を、同じ入力と測定条件の表で比較する。変更点と速度比を記す。
+\item \textbf{分布の解釈：} 2 枚の図、モデル、範囲、推定値と不確かさを示し、図から分かることと判断できないことを説明する。
+\end{enumerate}
 
 \subsection{発展課題}
 \index{べんちまーく@ベンチマーク}
 
-発展課題では、図の作成やフィットを含む全処理の所要時間を測定し、主要なボトルネックを一つ選んで改善せよ。NumPy や pandas による配列・列処理に加え、アルゴリズムの変更や、計算コアの C/C++ 実装も選択肢に含めてよい。
-
-この発展課題では特定の解法を指定しない。pandas による列処理、ストリーミング処理、ボトルネックとなる関数の別言語実装などから、測定結果に基づいて方法を選択する。レポートには、選択理由、変更前後の実行時間とメモリ使用量、結果の一致を記載する。
+読み込み、探索、作図、フィットを含む全体の時間を測り、時間のかかる箇所を一つ改善せよ。方法は測定結果に基づいて選び、変更前後の時間、メモリ使用量、結果の一致を表で示せ。

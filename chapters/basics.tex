@@ -1,13 +1,15 @@
 \chapter{Python の基本}
 \label{chap:basics}
 
+この章では、測定値に名前を付け、条件に合う値を選び、同じ処理を繰り返す方法を学ぶ。最後には、複数の測定値の平均を関数で求められるようにする。最初は短い式を対話モードで試し、処理が長くなったら Python ファイルへまとめる。
+
 \section{データ型と基本操作}
 
-ターミナルで \code{python3} と入力すると、Python をインタラクティブモードで起動できる。
+前章で用意した仮想環境を有効にし、ターミナルで \code{python} と入力すると、Python をインタラクティブモードで起動できる。
 インタラクティブモードでは、Python のバージョン情報に続いて入力待ちを表す \code{>>>} が表示される。次は表示の一部を示した例である。
 
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
-$ python3
+$ python
 Python 3.12.14 ...
 >>>
 \end{lstlisting}
@@ -16,8 +18,9 @@ Python 3.12.14 ...
 
 \subsection{変数と基本型}\index{へんすう@変数|textbf}\index{かた@型|textbf}\index{せいすう@整数}\index{ふどうしょうすうてんすう@浮動小数点数}\index{もじれつ@文字列}\index{しんぎち@真偽値}
 
-測定値を後の計算でも使いたいときは、値に名前を付ける。次の例では、最初の測定値を \code{first}、次の測定値を \code{second} という名前で使う。Notebook のコードセルへ入力する場合は、\code{>>>} を付けずに 4 行を実行する。
+測定値を後の計算でも使いたいときは、値に名前を付ける。次の例では、最初の測定値を \code{first}、次の測定値を \code{second} という名前で使う。対話モードでは、\code{>>>} の後へ 1 行ずつ入力する。ファイルで試す場合は、4 行を \code{mean.py} へ保存して \code{python mean.py} で実行する。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 first = 12.4
 second = 15.1
@@ -28,6 +31,7 @@ print(mean)
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 13.75
 \end{lstlisting}
+\end{minipage}
 
 \code{mean} には、2 つの測定値の平均が入る。このように、値を使うために付けた名前を「変数」という。\code{=} は、右側の値を左側の名前で使えるようにする代入の記号である。数学の等号とは意味が異なり、値を比較するときには \code{==} を使う。比較は第~\ref{subsec:if}~節で扱う。
 
@@ -63,6 +67,7 @@ print(mean)
 
 小数を扱う型を浮動小数点型（\code{float}）という。最初の例の \code{12.4} と \code{15.1} はこの型である。条件を満たすかどうかを表す \code{True} と \code{False} は真偽値（\code{bool}）である。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> type(12.4)
 <class 'float'>
@@ -70,6 +75,7 @@ print(mean)
 >>> type(use_log)
 <class 'bool'>
 \end{lstlisting}
+\end{minipage}
 
 件数には整数、平均値のように小数になり得る値には浮動小数点数、名前には文字列を使う。Python では、使い始める前に変数の型を宣言する必要はないが、値ごとの型は区別される。NumPy で大量の値を扱うときの型は、第~\ref{sec:numpy-types}~節で説明する。
 
@@ -80,7 +86,7 @@ print(mean)
 対話モードでは、式を入力するたびに評価結果が表示される。四則演算、べき乗、剰余、床除算の例を次に示す。
 
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
-$ python3
+$ python
 >>> 2 + 3
 5
 >>> 2 * 3
@@ -559,8 +565,6 @@ print(good_append(2))
 
 \begin{lstlisting}[language=Python]
 import math
-import glob
-import argparse
 
 print(math.pi)
 print(math.sqrt(2.0))
@@ -623,6 +627,33 @@ if __name__ == "__main__":
 \end{lstlisting}
 
 import した場合は関数定義だけが読み込まれ、\code{main()} は呼び出されない。ファイルを直接実行した場合は条件が真となり、\code{main()} が呼び出される。
+
+\subsection{実行時に入力先や出力先を指定する}
+\label{sec:command-line-args}
+
+入力ディレクトリや出力先が実行ごとに変わる解析スクリプトでは、それらをコードへ埋め込まず、コマンドライン引数として受け取る。Python 標準ライブラリの \code{argparse} を用いた最小構成を次に示す。
+
+\begin{lstlisting}[language=Python]
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("input_dir")
+parser.add_argument("--outdir", default="output")
+args = parser.parse_args()
+
+print(args.input_dir, args.outdir)
+\end{lstlisting}
+
+このスクリプトを \code{analyze.py} として保存した場合の実行例を次に示す。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python analyze.py data/run001
+data/run001 output
+$ python analyze.py data/run001 --outdir results/figures
+data/run001 results/figures
+\end{lstlisting}
+
+1 行目では、位置引数 \code{input\_dir} に \code{data/run001} が入り、\code{--outdir} は省略したため既定値 \code{output} が使われる。2 行目では、\code{--outdir} の指定によって \code{results/figures} が使われる。この出力から、\code{input\_dir} が必須の位置引数、\code{--outdir} が既定値を持つオプション引数であることを確認できる。
 
 \subsection{短い関数と値の展開}
 \index{lambda@\code{lambda}|textbf}\index{あんぱっく@アンパック|textbf}
@@ -741,7 +772,10 @@ PEP 8 のうち、本書の例で一貫して用いる規則を次に示す。
 NS_PER_SECOND = 1_000_000_000
 COINCIDENCE_WINDOW_NS = 250
 
+second_diff = 1          # 秒の部分の差
+ns_diff = -999_999_780   # 秒未満の部分の差
 dt_ns = second_diff * NS_PER_SECOND + ns_diff
+print(dt_ns)            # 220
 is_coincident = abs(dt_ns) <= COINCIDENCE_WINDOW_NS
 \end{lstlisting}
 
@@ -772,9 +806,9 @@ def positive_seconds(value):
 \end{lstlisting}
 この例は正の有限値だけを保証する検査ではなく、\code{nan} や \code{inf} も入力し得る場合には \code{math.isfinite(seconds)} による検査を追加する。命名や字下げの慣例は Python のスタイルガイド PEP 8~\cite{pep8} にまとめられている。
 
-\section{章末課題：イベントデータと基本構文}
+\section{章末課題：記録を選び、平均と時刻差を求める}
 
-この章の課題は、次の小さなイベント列だけで実行できる。前章までのファイルは必要ない。\code{time\_ns} は記録時刻であり、単位の ns（ナノ秒）は 1 秒の 10 億分の 1 を表す。\code{signal} は信号値、\code{detector} は検出器名である。
+次の 4 件を使う。\code{time\_ns} はナノ秒単位の記録時刻、\code{signal} は信号値、\code{None} は欠測を表す。
 
 \begin{lstlisting}[language=Python]
 events = [
@@ -786,17 +820,24 @@ events = [
 \end{lstlisting}
 
 \begin{enumerate}
-\item \textbf{条件に合う入力行の表示}。
-まず \code{print(events[0])} で最初の記録を表示し、続いて \code{print(events[0]["signal"])} で信号値の \code{12.4} だけを取り出せ。次に \code{for} 文で全 4 件の信号値を順に表示する。最後に \code{signal} が \code{None} でない行だけを選び、\code{A 1000 12.4} の形式で表示せよ。表示される行は 3 行である。これらが動いた後で、\code{is not None} を使う理由と、辞書の角括弧に書いたキーの役割を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{欠測を除いて表示する。}
+\code{for} と \code{if} を使い、信号値が \code{None} でない 3 件を「検出器名、時刻、信号値」の順で表示せよ。表示結果を示し、除いた記録を説明せよ。
+\end{minipage}
 
-\item \textbf{関数への分離と集計}。
-最初に A の有効信号だけをリストへ入れ、\code{[12.4, 15.1]} になることを確認せよ。合計を件数で割り、平均 \code{13.75} を求める。次に同じ計算を \code{mean\_signal(events, detector)} という関数へまとめ、A では \code{13.75}、B では \code{9.8} が返ることを確認する。その後で、有効値がない場合に \code{ValueError} を送出する処理を加える。最後に docstring へ、受け取る値、返す値、例外が発生する条件を書く。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{検出器ごとの平均を求める。}
+\code{mean\_signal(events, detector)} を作れ。欠測を除き、有効値がないときは \code{ValueError} を出すこと。A の平均 13.75 と B の平均 9.8 を表にし、平均に使った件数を併記せよ。関数には引数、返り値、例外条件を説明する docstring を付ける。
+\end{minipage}
 
-\item \textbf{時刻差の計算}。
-まず \code{for} 文で \code{time\_ns} を順にリストへ追加し、\code{[1000, 1180, 1300, 1510]} になることを確認せよ。昇順に並べた後、最初の差 \code{1180 - 1000} を求め、同じ計算を残りにも繰り返す。最後に、時刻の取り出しをリスト内包表記で書き直せ。結果は \code{[180, 120, 210]} になる。\code{range(len(times) - 1)} の開始値、終了値、最後の添字がどう対応するかを説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{隣り合う記録の時刻差を求める。}
+時刻を取り出し、昇順に並べて隣との差を計算せよ。結果 \code{[180, 120, 210]} を単位付きで示し、4 件の記録から差が 3 個得られる理由を説明せよ。
+\end{minipage}
 
-\item \textbf{コマンドライン引数による条件指定}。
-検出器名を位置引数、信号の下限を \code{--min-signal} で受け取るスクリプトを \code{argparse} で作れ。既定値は \code{0.0} とする。\code{python filter\_events.py A --min-signal 13} を実行したとき、時刻 \code{1300} の 1 件だけが表示されることを確認し、位置引数とオプション引数の違いを説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{実行時に抽出条件を変える。}
+検出器名を位置引数、信号の下限を \code{--min-signal}（既定値 0.0）で受け取る \code{filter\_events.py} を作れ。\code{python filter\_events.py A --min-signal 13} で時刻 1300 の 1 件が残ることを確かめ、下限を変えた結果と比較せよ。
+\end{minipage}
+
 \end{enumerate}
-
-この章で扱った値、コンテナ、条件分岐、反復、関数は、ファイルから読み取ったデータを処理するための部品になる。次章では、これらの部品を入出力と結び付け、テキスト、CSV、JSON、バイナリ形式から Python オブジェクトへの変換を扱う。

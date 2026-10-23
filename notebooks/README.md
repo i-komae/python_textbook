@@ -30,7 +30,7 @@ Notebookを開き、コードセルを上からShift+Enterで実行してくだ�
 | Notebook | 対応する本文 | 解説する内容 |
 | --- | --- | --- |
 | [01_shell.ipynb](01_shell.ipynb) | シェル | 作業場所、USGSの取得条件、内容の調査、3形式の圧縮と全バイト照合、URLを解説します。 |
-| [02_setup.ipynb](02_setup.ipynb) | 実行環境 | 動いているPythonを確認し、venv、uv、pyenvの順に違いを確かめます。 |
+| [02_setup.ipynb](02_setup.ipynb) | 実行環境・付録「実行環境の補足」 | 動いているPythonを確認し、venv、uv、pyenvの順に違いを確かめます。 |
 | [03_basics.ipynb](03_basics.ipynb) | 基本構文 | 1件の取り出しから、反復、欠損判定、平均関数、時刻差、端末の引数へ進みます。 |
 | [04_io.ipynb](04_io.ipynb) | 入出力 | CSVの要約、JSONとPickleの読み戻し、不正値の記録を解説します。 |
 | [05_numpy.ipynb](05_numpy.ipynb) | NumPy | 4個の時刻で差分を確かめ、課題の6個の時刻、axis、区間集計、地域比較へ進みます。 |
@@ -72,4 +72,4 @@ python scripts/check_notebooks.py notebooks/10_astropy.ipynb
 
 検証用の一時ファイルは `build/notebook-validation/` に保存します。通常の検証では、実カタログの取得、Cartopyの描画、端末でのpyenv切り替えは実行しません。
 
-2026年10月22日に、Python 3.12.14で全13冊を新しいカーネルから実行し、期待値と保存ファイルを確認しました。Notebookのあるフォルダーを現在位置として実行しています。総合課題は最初の3日で66組、全500日で12,033組となり、配布データの基準値に一致しました。主なライブラリはNumPy 2.5.4、pandas 3.0.6、Polars 2.0.0、Matplotlib 3.11.2、SciPy 1.18.1、Astropy 8.0.2、PyArrow 26.0.0です。
+2026年10月24日に、Python 3.12.14で全13冊を新しいカーネルから実行し、期待値と保存ファイルを確認しました。Notebookのあるフォルダーを現在位置として実行しています。総合課題は最初の3日で66組、全500日で12,033組となり、配布データの基準値に一致しました。主なライブラリはNumPy 2.5.4、pandas 3.0.6、Polars 2.0.0、Matplotlib 3.11.2、SciPy 1.18.1、Astropy 8.0.2、PyArrow 26.0.0です。

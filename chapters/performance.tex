@@ -1,6 +1,8 @@
 \chapter{Python 解析の高速化}
 \label{chap:performance}
 
+この章では、同じ入力を処理する二つの方法を比べ、結果を保ったまま速くする方法を学ぶ。まず処理時間を測り、次に入力が増えたときの処理回数と、メモリの使用量を調べる。改善前後の結果と実測時間を示し、どこを変えた効果かを説明できるようにする。
+
 \section{処理時間の基準測定}
 
 高速化\index{こうそくか@高速化|textbf}を始める前に、処理時間の内訳を測定する必要がある。データの読み込み、探索、図の作成のどこに時間を要しているかを区別しなければ、変更による効果を適切に評価できない。
@@ -26,17 +28,6 @@ print(f"elapsed = {t1 - t0:.3f} s")
 キャッシュ、OS のスケジューリング、同時に動作するプロセスによって測定値は変動する。入力と実行条件をそろえて複数回測定し、中央値や最小値など、あらかじめ定めた代表値を比較する。
 
 この例の \code{run\_analysis()} は、0 から 9999 までの数を二乗し、合計する関数である。最初に \code{333283335000}、次に所要時間が秒で表示される。\code{t0} と \code{t1} の差は、その間の関数呼び出しにかかった時間を表す。手元の解析を測るときは、この関数を測定したい処理に置き換える。
-
-\subsection{Jupyter の \code{\%timeit} による計測}
-
-Jupyter の \code{\%timeit}\index{timeit@\code{\%timeit}|textbf} と \code{\%\%timeit} は、短い式またはセルを複数回実行し、所要時間の統計量を表示する。短い処理の比較に用いる。次の例では、別のセルで \code{import numpy as np} と \code{array = np.arange(1000000)} を実行してから、計測セルを実行する。
-
-\begin{lstlisting}[language=Python]
-%%timeit
-result = array * 2
-\end{lstlisting}
-
-ただし、\code{\%timeit} はノートブックや IPython で短い処理を測定する機能であり、スクリプト全体の読み込みや入出力を含めた時間の測定には適さない。短い式や関数には \code{\%timeit}、解析全体には \code{perf\_counter} を使う。
 
 \section{計算量の見積もり}
 \index{けいさんりょう@計算量|textbf}
@@ -267,7 +258,7 @@ print(streaming_mean("values.txt"))
 
 出力は \code{2.5} となる。引数 \code{path} は入力ファイルの場所であり、\code{enumerate(..., start=1)} はエラー箇所をファイルと同じ 1 始まりの行番号で報告するために使う。この関数が保持するのは現在行、件数、合計だけなので、入力行数が増えても集計用メモリはほぼ一定である。ただし、中央値や全体のソートのように全データの順序が必要な統計量は、この単純な方法だけでは正確に求められない。
 
-\section{プロファイリングと低レベル実装}
+\section{処理時間の内訳と発展的な改善}
 
 \subsection{プロファイラによるボトルネックの特定}
 \index{ぼとるねっく@ボトルネック|textbf}
@@ -289,7 +280,7 @@ ncalls  tottime  cumtime  function
 
 この関数は中で別の Python 関数を呼ばないため、関数自身の時間と累積時間はほぼ同じになる。別の関数を呼ぶ解析では、累積時間にその呼び出し先の時間も入る。親と子の累積時間を足すと同じ処理を二重に数えるため、どの列を比較しているかを確かめる。ファイルの読み書きでは待ち時間も入るので、解析全体の経過時間も併せて測定する。
 
-\subsection{C や C++ へ書き換えるという選択肢}
+\subsection{発展：C や C++ への書き換え}
 
 Python で作成した解析コードでも、計算量の多い部分だけを C や C++ で実装できる。移植する範囲は、アルゴリズムを整理し、プロファイルによって処理時間を支配する箇所を特定してから決める。
 
@@ -307,7 +298,7 @@ for (std::size_t i = 0; i < n; ++i) {
 
 C++ への書き換えによって 1 回の比較に要する時間が減っても、上の二重ループの計算量は $O(N^2)$ のままである。アルゴリズム変更による演算回数の削減と、実装言語変更による 1 演算あたりの時間短縮を分けて測定する。
 
-\subsection{Python からの C/C++ コード呼び出し}
+\subsection{発展：Python から C/C++ を呼ぶ}
 \index{cython@Cython|textbf}
 \index{pybind11@pybind11|textbf}
 
@@ -334,9 +325,7 @@ for i in range(n):
 
 既存の C 共有ライブラリを呼ぶ場合は \code{ctypes}、C++ の関数やクラスを Python API として公開する場合は pybind11、Python に近いコードへ型を付けてコンパイルする場合は Cython が候補となる。言語境界のインタフェースを限定し、測定で特定した計算コアだけを分離する。pybind11 の最小構成は付録~\ref{app:pybind11} で説明する。
 
-\begin{lstlisting}[language=Python]
-result = fast_module.count_pairs(times, window)
-\end{lstlisting}
+付録~\ref{app:pybind11}~の \code{count\_pairs\_within\_window()} は、このように C++ の関数を Python から呼ぶ実装例である。
 
 Python 側の入出力契約をテストで固定すれば、同じ契約を保ったまま内部実装を置き換えられる。Cython や C++ へ移植しても計算量は自動では改善しないため、プロファイルによって処理時間を支配するループを特定し、アルゴリズムと実装言語の効果を分けて測定する。
 
@@ -372,6 +361,7 @@ streaming    :   4.8 s
 \begin{lstlisting}[language=Python]
 import numpy as np
 
+data = [0.0, 0.1, 0.5, 0.6, 1.0]
 values = np.array(data, dtype=np.float64)
 diffs = np.diff(values)
 count = np.count_nonzero(diffs > 0.25)
@@ -386,23 +376,34 @@ count = np.count_nonzero(diffs > 0.25)
 
 図~\ref{fig:vectorization-benchmark} は実行時間の大小を比較するための図であり、結果の正しさまでは保証しない。高速化の前後で同じ \code{count} が得られることをテストし、その上で入力サイズ、反復回数、実行環境、代表値をそろえて時間を比較する必要がある。
 
-\section{章末課題：処理時間とメモリの測定}
+\section{章末課題：正しさと処理時間を比較する}
+
+測定には同じ入力と計算機を使う。各方法を 5 回ずつ測り、中央値または最小値のどちらを使ったかを記す。
 
 \begin{enumerate}
-\item \textbf{結果を保持したベクトル化}。
-\verb|values = np.arange(1_000_000, dtype=np.float64)| について、各要素を二乗してから総和を求める処理を Python の \code{for} 文と NumPy の列演算で実装せよ。\code{np.isclose()} で結果が一致することを先に確認し、その後で \code{time.perf\_counter()} を使って各方法を 5 回ずつ測定せよ。最小値または中央値を報告し、1 回だけの値を比較しない理由を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{ループと配列演算を比べる。}
+\code{np.arange(1\_000\_000, dtype=np.float64)} の二乗和を、\code{for} と NumPy で求めよ。\code{np.isclose()} で結果の一致を確かめ、実行時間と速度比を表にせよ。
+\end{minipage}
 
-\item \textbf{入力サイズと計算量の関係}。
-本文の \code{has\_duplicate\_slow()} と \code{has\_duplicate\_fast()} を使い、\code{np.random.default\_rng(42).permutation(N).tolist()} で作った、重複がなく順序を乱した入力について \(N=1000, 2000, 4000\) の実行時間を測定せよ。整列済み入力では Timsort が線形時間で動くことがあり、最悪計算量の比較にはならない。\(N\) を 2 倍にしたときの時間比を求め、\(O(N^2)\) と \(O(N\log N)\) の予想と比較せよ。計算機や実行時の状態によって時間は変わるため、絶対時間ではなく比と傾向を説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{入力が増えたときの時間を比べる。}
+本文の重複判定 2 関数を、\code{np.random.default\_rng(42).permutation(N).tolist()} に適用せよ。\(N=1000,2000,4000\) の時間と、\(N\) を倍にしたときの時間比を図または表にせよ。\(O(N^2)\)、\(O(N\log N)\) の予想と比較する。入力は整列させずに使う。
+\end{minipage}
 
-\item \textbf{ビューとコピーの影響}。
-本文の \code{values}、\code{view}、\code{copied} を作り、\code{view[0] = -1} と \code{copied[0] = -2} を実行した後で \code{values[100]} と \code{values[0]} を表示せよ。前者だけが変化する理由を、\code{np.shares\_memory()} の結果と対応させて説明せよ。さらに \code{float32} と \code{float64} で同じ要素数の \code{nbytes} を比較せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{ビューとコピーを比べる。}
+本文の \code{values}、\code{view}、\code{copied} を作り、\code{view[0] = -1} と \code{copied[0] = -2} を実行せよ。元配列の変化と \code{np.shares\_memory()} の結果を表にせよ。同じ要素数の \code{float32} と \code{float64} の \code{nbytes} も比較する。
+\end{minipage}
 
-\item \textbf{逐次集計の検証}。
-1 から 100000 までを 1 行ずつ書いたファイルを作り、本文の \code{streaming\_mean()} で平均を求めよ。期待値は \code{50000.5} である。同じファイルを全件リストへ読み込む実装も作り、結果の一致を確認せよ。両者が保持するデータ量を、入力行数 \(N\) に対するオーダーで説明せよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{1 行ずつ読んで平均を求める。}
+1～100000 を 1 行ずつ書いたファイルを作り、本文の \code{streaming\_mean()} と全件読み込みで平均を求めよ。両方が 50000.5 になることを確かめ、保持するデータ量が行数に対してどう増えるか説明せよ。
+\end{minipage}
 
-\item \textbf{プロファイル結果に基づく改善対象の選定}。
-自分の解析スクリプト、または 1 問目の 2 実装を関数へ分けたスクリプトを \code{python -m cProfile -s cumtime script.py} で測定せよ。出力の \code{ncalls}、\code{tottime}、\code{cumtime} の意味を説明し、累積時間の上位 3 関数を記録せよ。そのうち改善対象に選ぶ関数と、選ばない関数の理由をそれぞれ述べよ。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{測定結果から改善対象を選ぶ。}
+1 問目の 2 実装を関数にし、\code{python -m cProfile -s cumtime script.py} で測定せよ。累積時間の上位 3 関数を表にし、改善すべき箇所を一つ選ぶ。選択理由を処理時間と呼び出し回数から説明せよ。
+\end{minipage}
+
 \end{enumerate}
-
-性能改善では、処理時間だけでなく計算結果の同一性も検証する。入力条件、実行環境、反復回数、代表値の選び方を記録しておけば、第三者も測定を再現できる。次章では、同時観測イベントの探索を題材として、データの読み込み、検証、可視化、フィット、性能測定を一つの解析へ統合する。

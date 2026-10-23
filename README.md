@@ -25,7 +25,7 @@ cd python_textbook
 - `build/`: LaTeX のビルド生成物
 - `slow_event_analysis.py`: 課題で使う配布スクリプト
 - `events_data.zip`: 課題で使う配布データ
-- `notebooks/`: 章末課題12章と総合課題の解説Notebook（[使い方と対応表](notebooks/README.md)）
+- `notebooks/`: 章末課題と総合課題の任意の補助教材として使う解説Notebook（[使い方と対応表](notebooks/README.md)）
 
 ## ディレクトリ構造
 
@@ -56,7 +56,7 @@ python_textbook/
 ## 章構成
 
 - 本文: `intro.tex` から `assignment.tex`
-- 付録: `appendix_ssh.tex`, `appendix_git.tex`, `appendix_pybind11.tex`, `appendix_regex.tex`, `appendix_shell_scripting.tex`
+- 付録: `appendix_environment.tex`, `appendix_ssh.tex`, `appendix_git.tex`, `appendix_pybind11.tex`, `appendix_regex.tex`, `appendix_shell_scripting.tex`
 
 ## コンパイル
 

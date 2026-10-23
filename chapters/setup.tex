@@ -2,8 +2,9 @@
 \label{chap:setup}
 
 \section{最初の計算を実行する}
+\label{sec:setup-first}
 
-この節では、Python を用意し、Notebook で \code{3 + 2} を計算するところまでを進める。Python はコードを実行するプログラムであり、JupyterLab はコードと結果をブラウザ内で確認するためのアプリケーションである。準備にはインターネット接続を使う。
+この章では、Python を準備し、短いコードをファイルへ保存して実行する。計算結果の \code{5} を表示し、コードの変更後に \code{12} へ変わることを確認するのが最初の目標である。準備にはインターネット接続を使う。
 
 \subsection{OS に合う端末を開く}
 
@@ -42,32 +43,51 @@ $ python --version
 
 \code{uv venv} は、使用する Python と追加ライブラリをまとめる作業用の環境を \code{.venv} に作る。指定した Python が手元になければ、uv が取得する。\code{--seed} は後で使う pip もこの環境へ入れる指定である。\code{source} の行は、この端末でその環境を使い始める命令である。
 
-最後に \code{Python 3.12.x} と表示されることを確認する。\code{x} の部分は更新によって変わる。このように作業ごとに用意する環境を「仮想環境」という。
+最後に \code{Python 3.12.x} と表示されることを確認する。\code{x} の部分は更新によって変わる。このように作業ごとに用意する環境を「仮想環境」\index{かそうかんきょう@仮想環境|textbf}という。
 
-\subsection{Notebook を開いて計算する}
+\subsection{Python ファイルを保存して実行する}
 
-まず、表や図を作るためのライブラリと JupyterLab を導入する。ライブラリは、他の人が作った計算や作図の機能を自分のコードから使うためのものである。
+コードを書くには、文字だけのファイルを編集するテキストエディタを使う。ここでは、端末内で使えるエディタ \code{nano} を例にする。\code{analysis\_practice} にいることを \code{pwd} で確認し、次を入力する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python -m pip install numpy matplotlib scipy jupyterlab
-$ python -m jupyterlab
+$ nano first_calculation.py
 \end{lstlisting}
 
-ブラウザに JupyterLab が開いたら、「Python 3」の Notebook を新しく作る。ブラウザが開かない場合は、端末に表示された \code{http://localhost:.../lab?token=...} を同じコンピュータのブラウザで開く。\code{token} を含む URL は認証情報なので、他人へ送ったり公開したりしない。
+編集画面が開いたら、次の 2 行を入力する。左側の行番号は入力しない。
 
-最初のコードセルに次を入力し、Shift+Enter で実行する。
-
-\begin{lstlisting}[language=Python]
-print(3 + 2)
+\begin{lstlisting}[language=Python, title={first\_calculation.py}]
+count = 3
+print(count + 2)
 \end{lstlisting}
 
-セルの下に \code{5} が表示されれば、Python で最初の計算を実行できている。続いて \code{3} を \code{10} に変え、再実行して \code{12} が表示されることを確認する。
+Ctrl キーを押しながら O を押すと、保存するファイル名の確認が出る。Enter で確定し、Ctrl+X でエディタを閉じる。\code{nano} を使えない場合や使い慣れたエディタがある場合は、そのエディタで同じ内容を保存してよい。ファイル形式は標準テキスト、文字コードは UTF-8 とし、名前の末尾が \code{.py.txt} にならないようにする。
 
-Notebook は名前を付けて保存する。作業を終えたら、JupyterLab を起動した端末で Ctrl+C を押し、終了確認に従う。その後 \code{deactivate} を入力すると、端末で仮想環境を使う状態が解除される。再開時は \code{analysis\_practice} へ移動し、\code{source .venv/bin/activate}、\code{python -m jupyterlab} の順に実行する。
+ターミナルへ戻ったら、保存したファイルを実行する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python first_calculation.py
+5
+\end{lstlisting}
+
+\code{python} は Python を起動する命令であり、後ろの \code{first\_calculation.py} は実行するファイル名である。\code{print()} は括弧内の計算結果を画面に表示する。\code{5} が表示されれば、保存したコードを実行できている。
+
+もう一度 \code{nano first\_calculation.py} で開き、\code{count = 3} を \code{count = 10} へ変えて保存する。同じ実行コマンドで \code{12} が表示されることを確認する。このように、編集、保存、実行、結果の確認を繰り返してプログラムを作る。
+
+\code{can't open file} と表示されたら、\code{pwd} と \code{ls} で現在位置とファイル名を確かめる。\code{SyntaxError} と表示されたら、表示された行の括弧や引用符などを見本と比べる。エラーの詳しい読み方は第~\ref{chap:basics}~章で説明する。
+
+\subsection{作業を終える・再開する}
+
+作業を終えたら、端末で \code{deactivate} を実行して仮想環境の利用を終える。作成したファイルや環境は削除されない。再開するときは、\code{analysis\_practice} へ移動してから、次を実行する。環境を毎回作り直す必要はない。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source .venv/bin/activate
+$ python first_calculation.py
+12
+\end{lstlisting}
 
 \section{使っている Python を確認する}
 
-ここからは、最初の手順で何を用意したかを確かめる。Python 本体はコードを実行する。仮想環境は、その作業で追加したライブラリを他の作業と分けて保持する。複数の Python の版を切り替える必要がある場合は、後半の pyenv の節を参照する。
+ここからは、最初の手順で何を用意したかを確かめる。Python 本体はコードを実行する。仮想環境は、その作業で追加したライブラリを他の作業と分けて保持する。
 
 以下は、\code{analysis\_practice} フォルダーへ移動し、\code{source .venv/bin/activate} で仮想環境を有効にした端末で実行する。
 
@@ -77,230 +97,12 @@ $ command -v python
 $ python -c "import sys; print(sys.executable)"
 \end{lstlisting}
 
-1 行目は版、2 行目はシェルが見つけた命令の場所、3 行目は起動した Python が使っている実行ファイルを表示する。仮想環境を使っていれば、2 行目と 3 行目には通常 \code{analysis\_practice/.venv/bin/python} を含むパスが出る。値が異なる場合は、現在のフォルダーと仮想環境の有効化を確認する。
+1 行目は版、2 行目はシェルが見つけた命令の場所、3 行目は起動した Python が使っている実行ファイルを表示する。\code{-c} は、後ろの引用符内を Python コードとして実行する指定である。ここでは \code{sys} という Python 付属の機能で、実行ファイルの場所を表示している。仮想環境を使っていれば、2 行目と 3 行目には通常 \code{analysis\_practice/.venv/bin/python} を含むパスが出る。値が異なる場合は、現在のフォルダーと仮想環境の有効化を確認する。
 
-\section{\code{venv} によるプロジェクト別仮想環境の作成}
-\index{venv@\code{venv}|textbf}
+\section{解析用ライブラリを追加する}
+\label{sec:setup-libraries}
 
-使いたい Python が既に入っている場合は、その Python から標準ライブラリの venv でもプロジェクト専用の仮想環境\index{かそうかんきょう@仮想環境|textbf}を作れる。ここでは別の作業用フォルダーを作り、先ほどの環境と区別する。仮想環境が有効な場合は、\code{deactivate} で解除してから進める。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ mkdir -p analysis_venv
-$ cd analysis_venv
-$ python3 -m venv .venv
-$ source .venv/bin/activate
-$ command -v python
-$ command -v pip
-$ python --version
-$ pip --version
-\end{lstlisting}
-
-仮想環境へ入ると、プロンプトの先頭に \code{(.venv)} が付くことが多い。ターミナルの表示は次のように変わる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-(.venv) student@host analysis_venv $
-\end{lstlisting}
-
-\code{command -v python} 以降の結果は、たとえば次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-/Users/student/analysis_venv/.venv/bin/python
-/Users/student/analysis_venv/.venv/bin/pip
-Python 3.11.11
-pip 25.0 from /Users/student/analysis_venv/.venv/lib/python3.11/site-packages/pip
-\end{lstlisting}
-
-\code{command -v} の結果から、\code{python} と \code{pip} が \code{.venv/bin} で見つかることが分かる。これは、\code{source .venv/bin/activate} が \code{\$PATH} の先頭に \code{.venv/bin} を追加するためである。Python 本体の確認には、\code{python -c "import sys; print(sys.executable)"} も利用できる。表示したバージョンとパスは説明用の例である。
-
-\subsection{\code{pip} と \code{python -m pip}}
-
-仮想環境を有効化すると、通常はその環境の \code{python} と \code{pip}\index{pip@\code{pip}|textbf} が \code{PATH} の先頭に置かれる。ただし、\code{pip} というコマンド名だけでは対応する Python をコード上で指定できない。\code{python -m pip} は、シェルが選択した \code{python} で pip モジュールを実行するため、両者の対応を明示できる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python -m pip install --upgrade pip
-$ python -m pip install numpy pandas polars matplotlib scipy astropy tqdm
-\end{lstlisting}
-
-\code{pip install} の出力は長いが、末尾ではたとえば次のような行が見える。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Successfully installed numpy-2.3.0 pandas-2.3.0 scipy-1.15.0
-\end{lstlisting}
-
-\code{Successfully installed ...} は、パッケージの導入処理が終了したことを示す。直後に \code{python -c "import numpy, pandas"} を実行し、使用する Python から import できることを別に確認する。
-
-作業を終えたら \code{deactivate} で仮想環境から抜けられる。
-
-\section{解析用ライブラリと JupyterLab}
-
-\subsection{JupyterLab との併用}
-
-JupyterLab\index{jupyterlab@JupyterLab|textbf} は、短いコード片を対話的に実行し、数値、表、図を同じ文書内で確認できる環境である。探索的解析に用いる場合の導入と起動のコマンドを次に示す。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ source .venv/bin/activate
-$ python -m pip install jupyterlab
-$ python -m jupyterlab
-\end{lstlisting}
-
-\code{jupyter lab} を実行すると、ターミナルにはたとえば次のような行が出る。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-[I] Jupyter Server 2.15.0 is running at:
-[I] http://localhost:8888/lab?token=abc123...
-\end{lstlisting}
-
-この URL はブラウザから Jupyter Server へ接続するためのアドレスである。\code{localhost:8888} は同じコンピュータ上の 8888 番ポートを示し、\code{token=...} は接続時の認証に用いるアクセストークンである。トークンを含む URL は認証情報として扱い、公開ログや共有文書へ記録しない。
-
-JupyterLab のノートブックには、コードセルの前後に説明用の Markdown セルを配置できる。Markdown は、見出しや箇条書きを簡単な記号で書くための書式であり、行頭の \code{\#} は見出し、\code{-} は箇条書きの項目を表す。セルの種類を Markdown にして説明を入力し、Shift+Enter で実行すると、文章として表示される。入力条件、数式、図の解釈を残すために使う。再実行時に必要となる入力ファイルと閾値を記載する例を次に示す。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-# 解析メモ
-
-- 入力ファイル: `events_2024_01_01.txt.gz`
-- 閾値: `signal > 5.0`
-
-$\Delta t$ の分布を確認する
-\end{lstlisting}
-
-JupyterLab のノートブックは、コード、説明、出力、図を実行順とともに一つのファイルへ保存する。一方、同じ処理を多数の入力へ反復する場合や、対話操作なしで再実行する場合には、入出力を引数で指定する Python スクリプトと自動テストを用意する。次節では、ノートブックとスクリプトの双方が参照するプロジェクト環境を \code{uv} で管理する方法を扱う。
-
-上の起動例は、前節で作ったプロジェクトのディレクトリで実行する。セルを実行する Python のプロセスをカーネルという。ノートブック内で \code{import sys; print(sys.executable)} を実行し、使用する環境を確認する。セルは表示順と異なる順序でも実行できるため、結果を保存する前にはカーネルを再起動して全セルを上から実行する。サーバーを終了するときは、起動した端末で Ctrl+C を押し、終了確認に従う。
-
-\section{プロジェクト管理ツール \code{uv} の利用}
-
-最初の節では \code{uv}\index{uv@\code{uv}|textbf} で Python と仮想環境を用意した。この節では、作業名や必要なライブラリをファイルへ記録し、同じ環境を用意しやすくする方法を扱う。必要なライブラリと版の条件を依存関係\index{いそんかんけい@依存関係|textbf}といい、実際に解決した版はロックファイルへ記録できる。
-
-\subsection{uv の導入を確認する}
-
-\code{uv --version} を実行して番号が表示されることを確認する。最初の節で導入してあれば、そのまま次へ進める。未導入の場合は、最初の節の保存・確認・実行の手順を使う。以降では、作る構成を明示するため \code{uv init --package} を用いる。uv 0.12 より前と以降で既定のひな形が異なる場合も、この指定でビルド可能な構成を作れる。
-
-\subsection{プロジェクトの初期化}
-
-基本的なプロジェクトは \code{uv init} で作成でき、追加のオプションは必要に応じて指定する。新しいディレクトリを作成して初期化する手順は次のとおりである。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ mkdir analysis_uv
-$ cd analysis_uv
-$ uv init --package --python 3.11
-\end{lstlisting}
-
-現在の \code{uv init} は、既定でコマンドラインアプリケーションとして配布できる構成を作る。\code{ls -a} と \code{find src -maxdepth 2 -type f} で確認できる主要な項目を次に示す。外側に既存の Git リポジトリがある場合など、Git 関連項目の有無は実行場所によって異なる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={analysis\_uv/ の初期構成}]
-.git/
-.gitignore
-.python-version
-README.md
-pyproject.toml
-src/
-`-- analysis_uv/
-    `-- __init__.py
-\end{lstlisting}
-
-\code{src/analysis\_uv/\_\_init\_\_.py} には、\code{pyproject.toml} の \code{[project.scripts]} から呼び出す関数が置かれる。\code{uv init} の直後には、通常 \code{.venv} と \code{uv.lock} はまだない。これらは、最初の \code{uv add}、\code{uv sync}、または \code{uv run} によって依存関係を解決し、環境を同期するときに作られる。
-
-\begin{itemize}
-\item \code{uv init --bare}: \code{pyproject.toml}\index{pyproject.toml@\code{pyproject.toml}|textbf} のみを作成
-\item \code{uv init --vcs none}: Git 初期化を省略
-\item \code{uv init --no-pin-python}: \code{.python-version} の作成を省略
-\item \code{uv init --no-package}: ビルドシステムを持たない平坦なスクリプト構成
-\item \code{uv init --lib}: 他のプロジェクトから読み込むライブラリ向けの構成
-\end{itemize}
-
-既定のアプリケーション構成はコマンドとして実行するプログラムに、\code{--lib} は他のコードから読み込む関数やクラスの配布に向く。ビルドシステムを必要としない単純なスクリプトには \code{--no-package} を指定できる。
-
-\subsection{依存関係の追加と環境の同期}
-\index{uv.lock@\code{uv.lock}|textbf}
-\index{ろっくふぁいる@ロックファイル|textbf}
-
-\code{uv add} は依存ライブラリを追加し、\code{pyproject.toml} とロック情報を更新する。次の例では、7 個の解析用ライブラリをまとめて追加する。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ uv add numpy pandas polars matplotlib scipy astropy tqdm
-\end{lstlisting}
-
-\code{uv add} を実行すると、依存関係の解決結果が要約表示される。たとえば次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Resolved 18 packages in 0.42s
-Installed 7 packages in 0.31s
-+ numpy==2.3.0
-+ pandas==2.3.0
-+ scipy==1.15.0
-\end{lstlisting}
-
-\code{Resolved ... packages} は、直接指定したライブラリだけでなく、その依存先も含めて必要な集合を決めたことを表す。\code{Installed ... packages} は実際に環境へ追加した数であり、その下の \code{+} 付き行は今回入った主なパッケージ名とバージョンである。
-
-\code{uv sync} は、\code{pyproject.toml} とロックファイルに基づいて環境をそろえる。\code{uv init} 後にまだ環境を同期していなければ、この実行時に \code{.venv} と \code{uv.lock} が作られる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ uv sync
-\end{lstlisting}
-
-\code{uv sync} の後は、たとえば次のような行が見える。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Creating virtual environment at: .venv
-Installed 18 packages in 0.54s
-\end{lstlisting}
-
-\code{Creating virtual environment at: .venv} と表示された場合、プロジェクト用の仮想環境が \code{.venv/} に作られている。\code{uv sync} は、\code{pyproject.toml} と \code{uv.lock} に基づいて依存関係をその環境へ同期する。リポジトリの取得と変更履歴の確認に必要な Git の操作は、付録~\ref{app:git} で説明する。
-
-\subsection{コマンドの実行とバージョン固定}
-
-\code{uv run} は、そのプロジェクトの環境でコマンドを実行する。スクリプトのパスを指定する場合と、Python 本体へ引数を渡す場合では、コマンドの構成が異なる。両者の例を次に示す。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ uv run analysis-uv
-$ uv run python --version
-$ uv add --dev pytest
-$ uv run python -m pytest
-\end{lstlisting}
-
-たとえば \code{uv run python --version} の結果は次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Python 3.12.10
-\end{lstlisting}
-
-この 1 行は、現在のプロジェクト設定に従って起動された Python のバージョンを示す。既定構成では、\code{pyproject.toml} の \code{[project.scripts]} に登録された \code{analysis-uv} を \code{uv run analysis-uv} で実行する。\code{-m} を使う場合や Python 本体へオプションを渡す場合には、\code{uv run python ...} と記述する。ここに示したバージョン番号は説明用の例である。
-
-ここまでの説明では、プロジェクト環境でコマンドを実行する方法を扱った。次項では、プロジェクトが用いる Python のバージョンを固定する。
-
-\code{uv} は、プロジェクトで使用する Python の版を \code{.python-version} に記録できる。\code{pyenv} がシェルで解決する Python を選択するのに対し、\code{uv} はプロジェクト設定とコマンドの \code{--python} 指定に基づいて実行環境を選択する。プロジェクトの既定値と、1 回のコマンドだけに適用する指定を次に示す。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ uv python pin 3.12
-$ uv run python --version
-$ uv run --python 3.11 python --version
-\end{lstlisting}
-
-結果の例は次の通りである。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Python 3.12.10
-Python 3.11.11
-\end{lstlisting}
-
-1 行目は、\code{uv python pin 3.12} によってプロジェクトの既定が 3.12 系になっていることを示す。2 行目は、\code{--python 3.11} を指定した実行に限って 3.11 系を使用した結果である。\code{pin} はプロジェクトの既定値を設定し、\code{--python} は個別のコマンドに対して使用する Python を指定する。
-
-\code{3.12} の指定は 3.12 系を選ぶものであり、パッチ版まで固定する指定ではない。必要なら \code{uv python pin 3.12.10} のように版を完全に指定する。また、\code{--python 3.11} は \code{pyproject.toml} の \code{requires-python} が 3.11 を許す場合にだけ使用できる。異なる版で実行すると、プロジェクトの仮想環境が作り直される場合がある。ロックファイルとともに、実際の Python と OS の版も記録する。テストファイルをまだ作っていない場合、\code{pytest} はテストを収集できず、通常は終了ステータス 5 を返す。テストの作成は第~\ref{ch:modules}~章で扱う。
-
-\subsection{標準ライブラリと外部ライブラリ}
-
-Python には、最初から使える標準ライブラリと、自分で追加する外部ライブラリがある。
-
-\begin{itemize}
-\item 標準ライブラリの例: \code{math}, \code{pathlib}, \code{glob}, \code{argparse}
-\item 外部ライブラリの例: \code{numpy}, \code{pandas}, \code{polars}, \code{matplotlib}, \code{scipy}, \code{astropy}
-\end{itemize}
-
-標準ライブラリは Python 本体に含まれ、外部ライブラリは目的に応じて環境へ追加する。両者を区別すると、別環境で再現する際に追加すべき依存関係が明確になる。
-
-\subsection{解析用ライブラリの導入}
-
-本書の後半で使う主なライブラリを表~\ref{tab:packages} に示す。
+ライブラリは、計算や作図などの機能をまとめたものである。Python に最初から含まれる標準ライブラリと、自分で追加する外部ライブラリがある。例えば平方根を求める \code{math} は標準ライブラリであり、図を作る Matplotlib は外部ライブラリである。本書で使う主な外部ライブラリを表~\ref{tab:packages} に示す。それぞれの具体的な使い方は、対応する章で学ぶ。
 
 \begin{table}[hbtp]
 \centering
@@ -310,312 +112,48 @@ Python には、最初から使える標準ライブラリと、自分で追加�
 \toprule
 ライブラリ & 主な役割 \\
 \midrule
-NumPy & 固定型の数値配列と配列演算 \\
-pandas & 表形式データの読み込みと加工 \\
-Matplotlib & 図の作成 \\
-SciPy & フィットと数値計算 \\
-Astropy & 時刻・単位・座標の扱い \\
-Polars & 式と遅延実行による表処理 \\
-tqdm & 進捗表示 \\
+NumPy & 多数の数値の計算 \\
+pandas、Polars & 表の読み込み、加工、集計 \\
+Matplotlib & 図の作成と保存 \\
+SciPy & データへの式の当てはめなどの数値計算 \\
+Astropy & 単位、時刻、天体の座標の扱い \\
+tqdm & 処理の進み具合の表示 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\code{venv} で管理する環境には \code{pip install}、\code{uv} で管理するプロジェクトには \code{uv add} を用いる。\code{venv} を使う場合のコマンドを次に示す。
+\code{analysis\_practice} の仮想環境を有効にした端末で、次を実行する。\code{pip} は外部ライブラリを導入する道具である。\code{python -m pip} と書くことで、現在使っている Python に対応する pip を実行できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python -m pip install numpy pandas polars matplotlib scipy astropy tqdm
 \end{lstlisting}
 
-インストールが成功すると、末尾ではたとえば次のように表示される。
+途中には取得状況やライブラリ名が表示される。最後にエラーが出ずに入力待ちへ戻ったら、次の命令で、導入した機能を Python から読み込めるか確認する。\code{import} はライブラリを使うための読み込み命令である。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Successfully installed astropy-7.0.0 matplotlib-3.10.0 numpy-2.3.0 pandas-2.3.0
+$ python -c "import numpy, pandas, polars, matplotlib, scipy, astropy, tqdm; print('OK')"
+OK
 \end{lstlisting}
 
-この出力は、表示されたバージョンのライブラリがインストールされたことを示す。再現用の記録には、実行したコマンドに加えて、\code{python -m pip freeze} などで確認したバージョンを保存する。
+\code{ModuleNotFoundError} が出た場合は、表示された名前のライブラリを読み込めていない。仮想環境を有効にしたか、導入時の名前を間違えていないかを確認する。
 
-同じライブラリを \code{uv} 管理のプロジェクトへ追加するコマンドは次のとおりである。
+\section{次章へ進む前の確認}
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ uv add numpy pandas polars matplotlib scipy astropy tqdm
-\end{lstlisting}
+自分で保存した \code{first\_calculation.py} を実行し、値を書き換えた後に答えが変わることを確認できれば、次章へ進める。作業を再開するときに、作業フォルダーへ移動して仮想環境を有効にする手順も確認しておく。
 
-\code{uv} 管理のプロジェクトでは、たとえば次のような要約が表示される。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Resolved 18 packages in 0.42s
-Installed 7 packages in 0.31s
-\end{lstlisting}
-
-\code{pip install} と異なり、\code{uv add} はライブラリを環境へ導入するとともに、\code{pyproject.toml} にプロジェクトの依存関係として記録する。
-
-\section{引数・設定ファイルとコードの分離}
-
-\subsection{コマンドライン引数と設定ファイルの使い分け}
-
-入力ディレクトリや出力先が実行ごとに変わる解析スクリプトでは、それらをコードへ埋め込まず、コマンドライン引数として受け取る。Python 標準ライブラリの \code{argparse} を用いた最小構成を次に示す。
-
-\begin{lstlisting}[language=Python]
-import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument("input_dir")
-parser.add_argument("--outdir", default="output")
-args = parser.parse_args()
-
-print(args.input_dir, args.outdir)
-\end{lstlisting}
-
-このスクリプトを \code{analyze.py} として保存した場合の実行例を次に示す。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python analyze.py data/run001
-data/run001 output
-$ python analyze.py data/run001 --outdir results/figures
-data/run001 results/figures
-\end{lstlisting}
-
-1 行目では、位置引数 \code{input\_dir} に \code{data/run001} が入り、\code{--outdir} は省略したため既定値 \code{output} が使われる。2 行目では、\code{--outdir} の指定によって \code{results/figures} が使われる。この出力から、\code{input\_dir} が必須の位置引数、\code{--outdir} が既定値を持つオプション引数であることを確認できる。
-
-値の配置は、その値が実行ごとに変わるか、複数の実行で共有されるか、プログラムの定義として固定されるかによって決める。すべてをコマンドライン引数にすると、同じ条件を反復する際にも毎回指定が必要となる。
-
-\begin{description}
-\item[コマンドライン引数] 実行ごとに変わる値を置く。入力ディレクトリ、出力先、日付範囲、並列数などが典型である。
-\item[設定ファイル] プロジェクト単位では固定だが、将来変更し得る値を置く。較正ファイルのパス、検出器 ID、閾値、図の保存形式などが当てはまる。
-\item[環境変数] コンピュータや実行環境に依存する値を渡す。\code{DATA\_ROOT} などのパスに加え、コードや追跡対象の設定ファイルへ記録しない認証情報をプロセスへ渡す用途がある。環境変数は同じ利用者のプロセスやログから参照される場合があるため、保管方法そのものには OS の認証情報ストアや実行基盤の secret 管理を用いる。
-\item[コード内の定数] 定義として固定したい値や単位変換を書く。\code{NS\_PER\_SECOND} や物理定数のように、意味が仕様として決まっているものを置く。
-\end{description}
-
-入力ファイルのパス、出力先、しきい値、作業ディレクトリなどの実行条件は、原則としてハードコーディングしない。コードを変更せずに条件を切り替えられれば、同じ処理の再利用と実行条件の再現が容易になる。
-
-\subsection{設定ファイルの利用とマジックナンバーを避ける設計}
-\index{まじっくなんばー@マジックナンバー|textbf}
-
-実行のたびには変えないものの、解析条件として変更する可能性がある値は、設定ファイルへまとめられる。形式には JSON や TOML などがある。ここでは標準ライブラリだけで扱える JSON の例（\code{config.json}）を示す。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={config.json}]
-{
-  "calibration_path": "calib/detector_a.csv",
-  "coincidence_window_ns": 250,
-  "figure_format": "pdf"
-}
-\end{lstlisting}
-
-この JSON ファイルを Python のスクリプトから読み込む場合のコード例は次のようになる。
-
-\begin{lstlisting}[language=Python]
-import json
-from pathlib import Path
-
-config = json.loads(Path("config.json").read_text(encoding="utf-8"))
-window_ns = config["coincidence_window_ns"]
-print(window_ns)
-\end{lstlisting}
-
-実行結果は次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-250
-\end{lstlisting}
-
-この \code{250} は、JSON の \code{coincidence\_window\_ns} から読み込んだ値であり、Python コードには直接記述されていない。そのため、コードを変更せずに設定ファイルだけを差し替えられる。Python 3.11 以降では、標準ライブラリの \code{tomllib} で TOML も読み込める。入力パス、出力先、閾値など、実行ごとに変わり得る条件はコードから設定ファイルまたは引数へ分離する。
-
-
-
-\code{250} や \code{3600} のような数値が説明や名前なしにコードへ直接記述されていると、その意味や単位を判断しにくい。このような数値はマジックナンバーと呼ばれる。詳しくは第~\ref{sec:magic-number}~節で扱う。値が仕様上の定数なら意味と単位を表す名前を付け、実行条件なら引数または設定ファイルへ分離する。
-
-\section{\code{pyenv} による複数バージョンの管理}
-
-Python 本体の導入と切り替えには \code{pyenv} を利用できる。\code{pyenv} は、複数の Python を利用者の領域へ導入し、シェルから \code{python} などを実行したときに選ばれるバージョンを切り替える。切り替えの範囲には、利用者の既定値、ディレクトリごとの設定、一つのシェルセッションだけに適用する設定がある。
-
-\subsection{macOS での準備}
-
-\code{pyenv}\index{pyenv@\code{pyenv}|textbf} は Python 本体をビルドして入れるので、macOS では Xcode Command Line Tools が必要になる。すでに Homebrew が正常に動いているなら、Command Line Tools は入っていることが多い。インストール済みかどうかは、次のコマンドで確認できる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ xcode-select -p
-\end{lstlisting}
-
-すでにインストールされていれば、結果の例は次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-/Library/Developer/CommandLineTools
-\end{lstlisting}
-
-このように開発ツールのパスが表示されれば、選択された場所を確認できる。Xcode 本体を導入した環境では、そのアプリケーション内のパスが表示されることもある。パスの代わりにエラーが出る場合は、未導入または設定不備の可能性がある。
-未導入の場合のインストールコマンドは次のとおりである。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ xcode-select --install
-\end{lstlisting}
-
-以下の macOS の手順は Homebrew を利用する。未導入なら、Homebrew の公式案内~\cite{homebrew_docs} に従って導入し、\code{brew --version} が表示されることを確認する。pyenv による Python のビルドには追加のライブラリも必要になるため、pyenv のビルド環境の案内~\cite{pyenv_build} に従って用意する。代表的な macOS 用の指定は次のとおりである。
-\begin{lstlisting}[language=bash]
-brew install openssl@3 readline sqlite3 xz tcl-tk@8 libb2 zstd zlib pkgconfig
-\end{lstlisting}
-必要なパッケージや追加設定は、導入する Python と OS の版によって異なる。
-
-\subsection{WSL / Ubuntu での準備}
-
-WSL の Ubuntu では、ビルドに必要なライブラリを先に入れておく。次のコマンドで、パッケージ一覧の更新と必要なライブラリの導入を続けて行える。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ sudo apt update
-$ sudo apt install -y build-essential curl git libssl-dev zlib1g-dev \
-  libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev tk-dev
-\end{lstlisting}
-
-\code{apt update} の出力は長いが、末尾でたとえば次のように \code{Done} が見えれば、パッケージ一覧の更新は完了している。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-\end{lstlisting}
-
-\code{apt install} でも多くの行が流れる。このコマンド例には \code{-y} を付けているため、通常は確認なしで続行する。\code{-y} を外した場合は、途中で次のような確認が出ることがある。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Need to get 48.2 MB of archives.
-After this operation, 201 MB of additional disk space will be used.
-Do you want to continue? [Y/n]
-\end{lstlisting}
-
-この表示が出たら、示されているパッケージや使用量に問題がないことを確認し、続けるなら \code{y} を入力して \code{Enter} を押す。\code{n} を入力すると処理は中止され、インストールは行われない。
-
-インストールの終盤では、次のように \code{Setting up ...} が並ぶことがある。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Setting up libffi-dev:amd64 (3.4.4-1) ...
-Setting up libsqlite3-dev:amd64 (3.40.1-2ubuntu0.2) ...
-Setting up build-essential (12.9ubuntu3) ...
-\end{lstlisting}
-
-これは各パッケージの設定を進めている段階であり、この表示自体は正常である。最後まで流れたあとでエラーが出ずにシェルのプロンプトへ戻れば、インストールは完了している。
-
-\subsection{\code{pyenv} の導入とシェルへの組み込み}
-
-macOS では、次のコマンドで \code{pyenv} を導入できる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ brew install pyenv
-\end{lstlisting}
-
-導入後の確認には、後述する \code{pyenv --version} と \code{command -v pyenv} を用いる。Homebrew の途中経過や保存先はバージョンによって変わるため、特定の表示文字列を成功条件にはしない。
-
-一方、WSL / Ubuntu では通常 Homebrew を前提にしないので、前節の依存パッケージを入れたあとにインストーラスクリプトを使う。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ curl -fsSL -o pyenv-installer.sh https://pyenv.run
-$ less pyenv-installer.sh
-$ bash pyenv-installer.sh
-\end{lstlisting}
-
-1 行目は公式のインストール用スクリプトを保存し、2 行目は実行前に内容を表示する。配布元と内容を確認したうえで、3 行目によって実行する。取得した内容を直接 \code{bash} へ渡す方法では、実行前の確認ができない。
-
-導入後は、pyenv が現在のシェルに必要な初期化コードを起動時の設定ファイルへ追加する。Homebrew で導入した場合と、上のスクリプトで導入した場合とでは、最初のコマンドだけが異なる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-# Homebrew で導入した場合
-$ pyenv init --install
-
-# インストール用スクリプトで導入した場合
-$ ~/.pyenv/bin/pyenv init --install
-
-$ exec "$SHELL"
-\end{lstlisting}
-
-\code{pyenv init --install} は、実行中のシェルを判別し、推奨される初期化コードを対応する起動時設定ファイルへ追加する。実行前に変更内容が表示された場合は、対象のファイルと追記内容を確認する。bash で環境変数 \code{BASH\_ENV} が \code{.bashrc} を指している特殊な構成では自動設定を避け、pyenv の公式文書にある手動設定を用いる。
-
-\code{exec "\$SHELL"} は、いま動いているシェルを、\code{\$SHELL} が示すシェルプログラムで置き換えるコマンドである。\code{SHELL} には通常、ログインシェルとして設定されたプログラムのパスが入り、\code{zsh} なら \code{/bin/zsh}、\code{bash} なら \code{/bin/bash} となる。ただし、\code{SHELL} と現在実行中の対話シェルが常に一致するとは限らない。現在のシェルは \code{ps -p \$\$ -o comm=} でも確認できる。ここでは \code{\textasciitilde/.zshrc} に追記した内容をすぐ反映させるために実行している。ターミナルをいったん閉じて開き直しても同じ目的は果たせる。
-
-シェルを読み直した後、次の 2 コマンドで \code{pyenv} のバージョンと、シェルが解決したコマンドを確認する。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ pyenv --version
-pyenv 2.x.x
-$ command -v pyenv
-/Users/student/.pyenv/bin/pyenv
-\end{lstlisting}
-
-1 行目でバージョン番号が出れば、シェルから \code{pyenv} を実行できる状態にある。2 行目のパスは導入方法によって異なり、Homebrew で導入した場合は Homebrew の \code{bin} ディレクトリが表示されることもある。\code{command not found} になる場合は、\code{pyenv init --install} が変更したファイル、現在のシェル、再起動後の \code{PATH} を順に調べる。表示したバージョン番号とパスは説明用の例であり、同じ文字列になる必要はない。
-
-\subsection{Python バージョンの導入と切り替え}
-
-\code{pyenv} を使う場合は、\code{pyenv install} でバージョンを追加し、\code{pyenv global}、\code{pyenv local}、\code{pyenv shell} で切り替える。次の例では、2 系統の Python を追加してから一覧を表示する。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ pyenv install 3.11.11
-$ pyenv install 3.12.10
-$ pyenv versions
-\end{lstlisting}
-
-\code{pyenv install} は数分かかることがあり、途中でビルドログが多数流れる。完了後に \code{pyenv versions} を実行すると、たとえば次のように表示される。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-* system (set by /Users/student/.pyenv/version)
-  3.11.11
-  3.12.10
-\end{lstlisting}
-
-\code{system} は、pyenv の shim より後ろにある \code{PATH} から選ばれる実行ファイルを表す。OS に付属する Python とは限らず、Homebrew などで導入した Python が先に見つかる場合もある。\code{3.11.11} と \code{3.12.10} が一覧にあれば、そのバージョンは pyenv の管理下に導入されている。先頭の \code{*} は現在選ばれている設定を示す。
-
-その利用者がディレクトリ固有の設定を持たない場合に使う既定バージョンは、\code{pyenv global} で指定する。他の利用者や OS 全体の設定は変更しない。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ pyenv global 3.12.10
-$ python --version
-$ command -v python
-$ pyenv which python
-\end{lstlisting}
-
-結果の例は次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Python 3.12.10
-/Users/student/.pyenv/shims/python
-/Users/student/.pyenv/versions/3.12.10/bin/python
-\end{lstlisting}
-
-\code{command -v python} が示す \code{shims/python} は Python 本体ではなく、pyenv が選んだ実行ファイルへ処理を渡す中継用プログラムである。\code{pyenv which python} は、中継後に実行される Python のパスを表示する。これに対して \code{pyenv local} は、あるディレクトリ以下で優先するバージョンを指定する。特定のプロジェクト用ディレクトリでバージョンを固定する手順を次に示す。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ mkdir analysis311
-$ cd analysis311
-$ pyenv local 3.11.11
-$ python --version
-$ cat .python-version
-\end{lstlisting}
-
-結果の例は次のようになる。
-
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-Python 3.11.11
-3.11.11
-\end{lstlisting}
-
-\code{pyenv local} を実行すると \code{.python-version} が作られ、指定した \code{3.11.11} が記録される。この設定は、そのディレクトリと下位のディレクトリに適用される。ただし、さらに下位に別の \code{.python-version} があれば、そちらが優先される。同じマシンでも、プロジェクトごとに異なる Python を選択できる。
-
-\code{pyenv shell 3.11.11} は、現在のシェルセッションだけに適用される一時的な切り替えである。特定の Python バージョンによる動作確認に用いる。
-
-
-\section{章末課題：Python 環境と設定ファイルの検証}
-
-この章の課題の確認対象は、コマンドだけでなく、作成されたファイルと実際に選ばれた Python までを含む。バージョン番号は環境によって異なるため、特定の番号との一致ではなく、各コマンドの出力が互いに矛盾していないかを検証せよ。
+\section{章末課題：保存したプログラムを実行する}
 
 \begin{enumerate}
-\item \textbf{\code{uv} による地震データ解析用プロジェクトの作成}。
-\code{earthquake\_practice} の下に \code{usgs\_project} を作り、\code{uv init --package} を実行せよ。作成された \code{.python-version} の内容を確認したうえで、必要なら手元で使える Python を \code{uv python pin ...} によって指定する。次に \code{uv add numpy matplotlib scipy}、\code{uv run python --version}、\code{uv run python -c "import numpy, matplotlib, scipy"} を順に実行し、選ばれた Python と仮想環境を確認せよ。
-\code{uv init --package} 後には \code{pyproject.toml}、\code{.python-version}、\code{src/} 以下のパッケージなどが作られる。\code{--package} はビルド可能な構成を明示する指定であり、uv 0.12 より前の版でも本節と同じ構成を作れる。\code{uv add} 後には依存関係が \code{pyproject.toml} へ記録され、通常は \code{uv.lock} と \code{.venv/} も作られる。\code{uv run python -c "import sys; print(sys.executable)"} を追加で実行し、表示されたパスがプロジェクトの \code{.venv} 以下にあることを確認せよ。\code{-c} は、後続の文字列を Python コードとして実行するオプションである。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{計算を変更して実行する。}
+\code{first\_calculation.py} を実行し、\code{count} が 3 の場合と 10 の場合の表示を表にせよ。実行した命令と、編集・保存・実行の順序を説明せよ。
+\end{minipage}
 
-\item \textbf{\code{pyenv} と \code{venv} による別方式の環境構築}。
-\code{earthquake\_practice} の下に \code{usgs\_venv} を作り、必要なら \code{pyenv local ...} で Python を切り替えてから \code{python -m venv .venv} を実行せよ。仮想環境を有効にする前後で \code{command -v python}、\code{python --version}、\code{pip --version} がどう変わるかを記録せよ。
-有効化後のプロンプト先頭には通常 \code{(.venv)} が現れ、\code{command -v python} は \code{usgs\_venv/.venv/bin/python} を指す。\code{pip --version} の出力にも同じ \code{.venv} 以下のパスが含まれることを確認せよ。最後に \code{deactivate} を実行し、\code{command -v python} が有効化前の状態へ戻ることも記録せよ。\code{python -m venv .venv} の \code{-m} と末尾の \code{.venv} がそれぞれ何を指定するかも説明に含める。
+\item \begin{minipage}[t]{\linewidth}
+\textbf{使っている環境を確認する。}
+仮想環境の Python の版と場所、ライブラリの導入確認の結果を記録せよ。作業を終了して再開し、同じファイルを再実行できることを示せ。
+\end{minipage}
 
-\item \textbf{発展課題}。
-同じコマンド名 \code{python} が、ディレクトリごとの設定によって異なる実行ファイルへ解決されることを検証する。手元で 2 系統以上の Python が使える場合は、別々のディレクトリで \code{pyenv local} を設定し、\code{python --version}、\code{command -v python}、\code{pyenv which python}、\code{cat .python-version} の結果を比較せよ。さらに片方のディレクトリで \code{uv run python --version} も実行し、\code{pyenv} による選択と \code{uv} によるプロジェクト環境の選択を区別して整理する。
-比較結果には、シェルが解決した shim、\code{pyenv local} が選んだ Python、\code{uv} のプロジェクト仮想環境で使われる Python を分けて記載する。\code{python -c "import sys; print(sys.executable); print(sys.version)"} の結果も併記し、中継用の shim と最終的な Python 実行ファイルを混同しない。
 \end{enumerate}
 
-本章では、シェルから呼び出される Python 実行ファイルと、プロジェクトごとのライブラリ環境を区別した。次章では、この環境における対話的な式の評価とスクリプトの実行を説明し、値、条件分岐、反復、関数を用いた処理の組み立てを扱う。
+別方式での環境作成や、ライブラリの版を記録・切り替える方法、環境管理の演習は付録~\ref{app:environment}~にまとめた。
