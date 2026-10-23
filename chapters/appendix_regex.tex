@@ -118,7 +118,7 @@ for text in ["12", "-3.5", "+0.25", "1.2.3"]:
     print(text, bool(pattern.fullmatch(text)))
 \end{lstlisting}
 
-このパターンは、符号付き整数や小数を表し、\code{1.2.3} のような壊れた文字列は弾く。
+このパターンは、符号付き整数や小数を表し、\code{1.2.3} のように形式に合わない文字列には一致しない。
 
 \section{run 名・時刻・数値ログの抽出}
 

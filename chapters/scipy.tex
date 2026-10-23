@@ -74,7 +74,7 @@ SciPy の多くの関数は NumPy 配列を入力とし、NumPy 配列または�
 \item \code{scipy.constants}\index{scipy@SciPy!constants@\code{scipy.constants}|textbf}: 物理定数
 \end{itemize}
 
-要素ごとの演算や基本的な集計には NumPy を用い、確率分布、最適化、補間、信号処理などの専用アルゴリズムが必要な場合に、対応する SciPy のサブパッケージ を選ぶ。
+要素ごとの演算や基本的な集計には NumPy を用い、確率分布、最適化、補間、信号処理などの専用アルゴリズムが必要な場合に、対応する SciPy のサブパッケージを選ぶ。
 
 \subsection{正規分布と指数分布}
 
@@ -374,7 +374,7 @@ c = 299792458\ \mathrm{m\,s^{-1}}
 
 \subsection{初期値と制約を無視しない}
 
-非線形フィットは、初期値次第で別の極小へ落ちたり、収束しなかったりする。\code{curve\_fit()} が値を返したからといって、それが唯一の解だとは限らない。複数の初期値で試す、図へ重ねて見る、残差を見る、といった確認が必要である。
+非線形フィットは、初期値によって異なる極小値へ収束したり、収束しなかったりする。\code{curve\_fit()} が値を返したからといって、それが唯一の解だとは限らない。複数の初期値で試す、図へ重ねて見る、残差を見る、といった確認が必要である。
 
 \subsection{補間と外挿を混同しない}
 
@@ -441,12 +441,12 @@ y_obs = y_true + rng.normal(scale=sigma)
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
 \textbf{平均待ち時間を推定する。}
-\code{stats.expon.fit(synthetic\_dt, floc=0)} の \code{scale} を求めよ。標本平均と比べ、生成値 120 秒に対して 115～125 秒の範囲に入ることを \code{assert} で確認せよ。生成値、平均、推定値を表にせよ。
+\code{stats.expon.fit(synthetic\_dt, floc=0)} の \code{scale} を求めよ。標本平均と比べ、生成時に指定した平均 120 秒に近い値（115～125 秒）になることを \code{assert} で確認せよ。生成時の設定値、標本平均、推定値を表にせよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{直線を求め、残差を描く。}
-\code{y\_obs} を直線へフィットし、\code{sigma=sigma, absolute\_sigma=True} を指定せよ。傾き・切片と標準不確かさを表にし、上段にデータと直線、下段に残差を描け。傾き 2.5、切片 1.2 の生成値と比較せよ。検算の目安は傾き 2.3～2.7、切片 0.7～1.7 である。
+\code{y\_obs} を直線へフィットし、\code{sigma=sigma, absolute\_sigma=True} を指定せよ。傾き・切片と標準不確かさを表にし、上段にデータと直線、下段に残差を描け。生成時に指定した傾き 2.5、切片 1.2 と比較せよ。検算の目安は傾き 2.3～2.7、切片 0.7～1.7 である。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}

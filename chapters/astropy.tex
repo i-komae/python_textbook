@@ -81,7 +81,7 @@ v = \frac{3.2\ \mathrm{m}}{12.5\ \mathrm{ns}}
 
 \subsection{物理定数}
 
-Astropy には物理定数も入っている。SciPy の \code{constants} と似ているが、こちらは単位付きで返る点が大きい。
+Astropy には物理定数も入っている。SciPy の \code{constants} と似ているが、Astropy では値が単位付きで返る。
 
 \begin{lstlisting}[language=Python]
 from astropy.constants import c, k_B
@@ -109,7 +109,7 @@ Astropy の定数オブジェクトを表示すると、値だけでなく単位
 
 \subsection{\code{Time} による時刻表現}
 
-Astropy の \code{Time}\index{time@\code{Time}|textbf} は、複数のフォーマットと複数の時刻系をまたいで扱える。
+Astropy の \code{Time}\index{time@\code{Time}|textbf} は、複数の時刻形式と時刻系を扱い、相互に変換できる。
 
 \begin{lstlisting}[language=Python]
 from astropy.time import Time
@@ -311,7 +311,7 @@ Astropy を使うべき場面は、数値とともに単位、時刻系、座標
 \item ns、\(\mu\)s、mV、MeV などの単位を混ぜて計算したいとき
 \item 天球座標を別の座標系へ変換したいとき
 \item FITS 画像や FITS テーブルを直接読み書きしたいとき
-\item 表データに単位やメタデータを持たせたまま運びたいとき
+\item 表データの単位やメタデータを保ったまま受け渡したいとき
 \end{itemize}
 
 大規模表の集計や複雑な join では、pandas や Polars が必要な API と性能を備えている場合がある。その場合は、Astropy で単位と時刻を解釈し、変換時に失われる情報を記録してから必要な列だけを表処理ライブラリへ渡す。集計結果を Matplotlib や SciPy へ渡すときも、数値に対応する単位と時刻系を併記する。

@@ -248,7 +248,7 @@ $ pwd
 \end{tabular}
 \end{table}
 
-表~\ref{tab:path-notation} は、シェルを読み始めた直後に最低限区別したい表記をまとめたものである。絶対パスは \code{/} から始まる。\code{\textasciitilde/analysis} はシェルによる展開後にホームディレクトリ下の絶対パスとなり、カレントディレクトリには依存しない。
+表~\ref{tab:path-notation} は、シェルを使い始めるときに区別しておきたい表記をまとめたものである。絶対パスは \code{/} から始まる。\code{\textasciitilde/analysis} はシェルによる展開後にホームディレクトリ下の絶対パスとなり、カレントディレクトリには依存しない。
 
 次のディレクトリ構成を考える。
 
@@ -479,7 +479,7 @@ $ rm data/test_*.csv
 
 \code{cp data/*.csv backup/} とすると、条件に合う複数の CSV をまとめてコピーできる。\code{rm data/test\_*.csv} なら、\code{data/test\_001.csv} や \code{data/test\_20260413.csv} のように同じ接頭辞を持つファイルを一括削除できる。
 
-ただし、ワイルドカード\index{わいるどかーど@ワイルドカード|textbf}は想定より多くのファイルへ一致することがある。特に削除系のコマンドでは、先に \code{ls data/test\_*.csv} で実際の対象を表示してから \code{rm data/test\_*.csv} を実行する。また、一致する項目がない場合の振る舞いはシェル設定によって異なるため、削除前の一覧表示はその確認にもなる。
+ただし、ワイルドカード\index{わいるどかーど@ワイルドカード|textbf}は想定より多くのファイルに一致することがある。特に削除系のコマンドでは、先に \code{ls data/test\_*.csv} で実際の対象を表示してから \code{rm data/test\_*.csv} を実行する。また、一致する項目がない場合の振る舞いはシェル設定によって異なるため、削除前の一覧表示はその確認にもなる。
 
 
 \section{ファイルの内容確認とデータ抽出}
@@ -833,14 +833,14 @@ $ echo "`pwd`"
 
 この違いは、設定ファイルへ 1 行追記するときに特に重要である。たとえば \code{echo 'export PATH="\$HOME/bin:\$PATH"' >> \textasciitilde/.zshrc} のようにシングルクォートで囲むと、\code{\$HOME} や \code{\$PATH} を展開せず、その文字列をそのまま \code{\textasciitilde/.zshrc} へ追記できる。もしダブルクォートで囲むと、その場で現在の値へ展開されて書き込まれるので、意図とずれることがある。
 
-また、空白と改行の扱いにも注意が必要である。クォートの外では、空白やタブや改行が単語の区切りになる。そのため、空白を含むファイル名はクォートしないと壊れる。
+また、空白と改行の扱いにも注意が必要である。クォートの外では、空白やタブや改行が単語の区切りになる。そのため、空白を含むファイル名を引用符で囲まないと、複数の引数に分かれてしまう。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir "analysis result"
 $ cp "analysis result/data.txt" backup/
 \end{lstlisting}
 
-1 つの長いコマンドを複数行へ分けたいときは、行末に \code{\textbackslash} を置いて改行を継続する。
+1 つの長いコマンドを複数行へ分けたいときは、行末に \code{\textbackslash} を置いて次の行へ続ける。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python analyze.py \
@@ -852,7 +852,7 @@ $ python analyze.py \
 
 \subsection{PATH と実行ファイル}
 
-シェルが \code{python3} や \code{ls} を実行できるのは、それらが実行ファイルとして保存されており、しかもシェルがその場所を知っているからである。その探索に使う環境変数が \code{\$PATH} である。実際に実行ファイルがどこから使われているかを探すには、次のコマンドを用いる。
+シェルが \code{python3} や \code{ls} を実行できるのは、それらが実行ファイルとして保存されており、しかもシェルがその場所を知っているからである。その探索に使う環境変数が \code{\$PATH} である。実際にどの実行ファイルが使われるかを調べるには、次のコマンドを用いる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ command -v python3

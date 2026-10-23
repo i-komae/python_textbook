@@ -43,7 +43,7 @@ $ ssh-keygen -t ed25519 -C "your_email@example.com"
 $ ls -l ~/.ssh
 \end{lstlisting}
 
-秘密鍵の権限が緩いと SSH が拒否することがある。その場合は次のように直す。
+秘密鍵を他の利用者も読める設定にしていると、SSH 接続が拒否されることがある。その場合は次のように直す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod 700 ~/.ssh

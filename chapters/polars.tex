@@ -1,7 +1,7 @@
 \chapter{Polars による式ベースの表処理}
 \label{chap:polars}
 
-Polars\index{polars@Polars|textbf} は、pandas と同じく行と列からなる表を扱うライブラリである。まず 4 件の記録を表にし、信号値の列を計算する。次に、条件に合う行を選び、検出器ごとに集計する。後半では、行う処理をまとめて記録してから実行する方法を扱う。
+Polars\index{polars@Polars|textbf} は、pandas と同じく行と列からなる表を扱うライブラリである。まず 4 件の記録を表にし、信号値の列に計算を適用する。次に、条件に合う行を選び、検出器ごとに集計する。後半では、行う処理をまとめて記録してから実行する方法を扱う。
 
 \section{式と遅延実行による表処理}
 
@@ -59,7 +59,7 @@ print(result["signal_plus_one"].to_list())
 
 \code{expr} は計算の指定であり、4 個の答えそのものではない。\code{df.select(...)} に渡すと表へ適用され、\code{alias()} で結果の列名を付けられる。ここでは先頭の信号値 \code{12.4} が \code{13.4} になったことを確認する。
 
-Polars の中心概念は expression（式）\index{expression@expression|textbf}である。式は、列に対してどの計算を適用するかを表す処理記述であり、その時点の値そのものではない。\code{pl.col("signal")} は \code{signal} 列を参照する式であり、四則演算、比較、集計などと組み合わせられる。
+Polars の基本となるのは expression（式）\index{expression@expression|textbf}である。式は、列に対してどの計算を適用するかを表し、その時点の値そのものではない。\code{pl.col("signal")} は \code{signal} 列を参照する式であり、四則演算、比較、集計などと組み合わせられる。
 
 \begin{lstlisting}[language=Python]
 expr = pl.col("signal") / pl.col("signal").mean()
@@ -80,7 +80,7 @@ eager_df = pl.read_csv("events.csv")
 lazy_df = pl.scan_csv("events.csv")
 \end{lstlisting}
 
-\code{read\_csv()} は呼び出し時に読み込んで DataFrame を作る。\code{scan\_csv()} は、これから行う処理を記録する \code{LazyFrame}\index{lazyframe@LazyFrame|textbf} を返す。\code{lazy\_df.collect()} を呼ぶと、記録した処理が実行され、結果の DataFrame が得られる。遅延実行 では、必要な列だけを読む列射影や、不要な行を早い段階で除く述語プッシュダウンなどを適用できる場合がある。処理時間とメモリ使用量への効果は、入力形式と処理内容に依存するため、同じ入力で測定する。
+\code{read\_csv()} は呼び出し時に読み込んで DataFrame を作る。\code{scan\_csv()} は、これから行う処理を記録する \code{LazyFrame}\index{lazyframe@LazyFrame|textbf} を返す。\code{lazy\_df.collect()} を呼ぶと、記録した処理が実行され、結果の DataFrame が得られる。遅延実行では、必要な列だけを読む列射影や、不要な行を早い段階で除く述語プッシュダウンなどを適用できる場合がある。処理時間とメモリ使用量への効果は、入力形式と処理内容に依存するため、同じ入力で測定する。
 
 \section{列変換・集計・結合・入出力}
 
@@ -117,7 +117,7 @@ shape: (2, 3)
 +----------+---------+--------+
 \end{lstlisting}
 
-\code{df["signal"]} は列を Series として取り出す。これに対して、\code{select()} や \code{filter()} へ渡した式は、複数列の変換や 遅延実行 の実行計画にも使用できる。値を取り出す操作と、表に適用する式を区別する。
+\code{df["signal"]} は列を Series として取り出す。これに対して、\code{select()} や \code{filter()} へ渡した式は、複数列の変換や遅延実行の実行計画にも使用できる。値を取り出す操作と、表に適用する式を区別する。
 
 \subsection{\code{with\_columns()} による列の追加}
 
@@ -170,7 +170,7 @@ summary = (
 print(summary)
 \end{lstlisting}
 
-集計後は、検出器ごとに 1 行ずつの表へまとまる。出力の例を示す。表の罫線や型の表示は一部簡略化している。
+集計結果は、検出器ごとに 1 行の表になる。出力の例を示す。表の罫線や型の表示は一部簡略化している。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shape: (2, 5)
@@ -182,7 +182,7 @@ shape: (2, 5)
 +----------+-------+-------------+------------+---------------+
 \end{lstlisting}
 
-Polars の \code{group\_by()} は、集計対象が expression なので、同じ書き方のまま統計量を増やしやすい。\code{count}、\code{mean}、\code{std} のような基本操作は、式の名前を見れば意味を追いやすい。
+Polars の \code{group\_by()} は、集計方法も式で指定するため、同じ書き方のまま統計量を増やしやすい。\code{count}、\code{mean}、\code{std} のような基本操作は、式の名前を見れば意味を追いやすい。
 
 \code{pl.len()} は群の行数、\code{pl.col("signal").count()} はその列の非 null 値の個数を数える。標準偏差の既定は \code{ddof=1} である。群の平均を元の各行へ付けるには、\code{over()} を使う。
 \begin{lstlisting}[language=Python]
@@ -249,7 +249,7 @@ shape: (2, 3)
 \index{polars@Polars!null@\code{null}}
 \index{nan@NaN|textbf}
 
-Polars は欠損値の扱いが比較的厳密である。\code{null} と \code{NaN} を区別して考える。
+Polars では、欠損値を表す \code{null} と、浮動小数点の特殊値 \code{NaN} を区別する。
 
 \begin{lstlisting}[language=Python]
 missing = pl.DataFrame(
@@ -274,7 +274,7 @@ null    true     null
 NaN     false    true
 \end{lstlisting}
 
-\code{null} は値が存在しないこと、\code{NaN} は浮動小数点の特殊値である。\code{is\_nan()} へ \code{null} を渡した結果も \code{null} になる点に注意する。両方を除くなら、例えば \code{pl.col("signal").is\_not\_null() \& pl.col("signal").is\_finite()} をフィルタ条件にする。どちらを落とすかによって使う式が変わる。
+\code{null} は値が存在しないこと、\code{NaN} は浮動小数点の特殊値である。\code{is\_nan()} へ \code{null} を渡した結果も \code{null} になる点に注意する。両方を除くなら、例えば \code{pl.col("signal").is\_not\_null() \& pl.col("signal").is\_finite()} をフィルタ条件にする。どちらを除くかによって使う式が変わる。
 
 \subsection{文字列と条件分岐}
 
@@ -312,11 +312,11 @@ test_B_001  14.8    null    high
 
 \code{when().then().otherwise()} では、Python の \code{if} のように選ばれた分岐だけが評価されるとは限らない。各分岐の式は、それぞれ単独でも有効でなければならない。条件外の行で不正な型変換が起きる場合も、分岐を書くだけでは回避できない。
 
-\subsection{遅延実行 と \code{scan\_parquet()}}
+\subsection{遅延実行と \code{scan\_parquet()}}
 \index{polars@Polars!scan_parquet@\code{scan\_parquet()}}
 \index{polars@Polars!collect@\code{collect()}}
 
-遅延実行 は、複数の読み込み、抽出、列選択、集計を一つの実行計画として最適化する場合に用いる。
+遅延実行は、複数の読み込み、抽出、列選択、集計を一つの実行計画として最適化する場合に用いる。
 
 \begin{lstlisting}[language=Python]
 from pathlib import Path
@@ -372,9 +372,9 @@ Polars と pandas では、同じ DataFrame という名称を使っていても
 \subsection{\code{map\_elements()} や Python の \code{lambda} を多用しない}
 \index{polars@Polars!map_elements@\code{map\_elements()}}
 
-Polars の組み込み式は query optimizer が解析できる。Python の \code{lambda} や \code{map\_elements()} で任意の Python 関数を呼ぶと、最適化や並列実行の範囲が狭まり、呼び出しのオーバーヘッドも加わる場合がある。まず \code{pl.col()}、\code{when}、\code{str}、\code{dt}、\code{over} などの組み込み式で表せるかを確認し、表せない処理にだけ Python 関数を用いる。
+Polars は組み込み式の内容を調べ、実行計画を最適化できる。Python の \code{lambda} や \code{map\_elements()} で任意の Python 関数を呼ぶと、最適化や並列実行の範囲が狭まり、呼び出しのオーバーヘッドも加わる場合がある。まず \code{pl.col()}、\code{when}、\code{str}、\code{dt}、\code{over} などの組み込み式で表せるかを確認し、表せない処理にだけ Python 関数を用いる。
 
-\subsection{遅延実行 では \code{collect()} を忘れない}
+\subsection{遅延実行では \code{collect()} を忘れない}
 
 \code{scan\_csv()} や \code{scan\_parquet()} は \code{LazyFrame} を返す。\code{print(lf)} が表示するのは実データではなく実行計画である。計画を評価して結果の DataFrame を得るには、\code{collect()} を呼び出す。
 
@@ -395,7 +395,7 @@ Polars への移行を検討する条件を次に示す。
 \item 列射影や述語プッシュダウンを適用できる入力形式と処理内容である場合
 \end{itemize}
 
-小規模データで index を用いた対話的操作が必要な場合や、既存コードが pandas の操作 に依存している場合は、pandas を維持する方が変更量を抑えられる。切り替えの判断には、行数だけでなく、必要な機能、移行コスト、メモリ使用量、同じ入力に対する処理時間を用いる。
+小規模データで index を用いた対話的操作が必要な場合や、既存コードが pandas の操作に依存している場合は、pandas を維持する方が変更量を抑えられる。切り替えの判断には、行数だけでなく、必要な機能、移行コスト、メモリ使用量、同じ入力に対する処理時間を用いる。
 
 Polars の概念は Concepts~\cite{polars_concepts}、式は Expressions and contexts~\cite{polars_expressions}、遅延実行は Lazy API~\cite{polars_lazy}、入出力は IO~\cite{polars_io}、pandas との差は Coming from Pandas~\cite{polars_from_pandas} に記載されている。本章は、これらの機能を解析手順に沿って再構成した。
 

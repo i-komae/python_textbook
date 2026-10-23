@@ -9,7 +9,7 @@ Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python でグラフや画�
 
 \subsection{最小限のヒストグラム}
 
-最初に、測定値がどの範囲に何個あるかを棒の高さで表すヒストグラムを作る。例えば 0 から 1 の範囲にある値が 10 個なら、その範囲の棒の高さは 10 になる。数える範囲の一つ一つをビンという。ここでは動作確認用の値を 2500 個作り、40 個のビンへ数え上げて PDF に保存する。乱数を作るときの番号（シード）を固定し、同じ環境では同じ入力を作れるようにする。入力は \code{values}、作図処理は \code{plt.hist()}、出力先は \code{histogram.pdf} である。
+最初に、測定値がどの範囲に何個あるかを棒の高さで表すヒストグラムを作る。例えば 0 から 1 の範囲にある値が 10 個なら、その範囲の棒の高さは 10 になる。数える範囲の一つ一つをビンという。ここでは動作確認用の値を 2500 個作り、40 個のビンに分けて数え、ヒストグラムを PDF に保存する。乱数を作るときの番号（シード）を固定し、同じ環境では同じ入力を作れるようにする。入力は \code{values}、作図処理は \code{plt.hist()}、出力先は \code{histogram.pdf} である。
 
 \noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
@@ -153,7 +153,7 @@ h = axes[1].hist2d(sample_x, sample_y, bins=90, norm=LogNorm(), cmap="magma")
 fig.colorbar(h[3], ax=axes[1], label="counts")
 \end{lstlisting}
 
-図~\ref{fig:heatmap-colorbar-example} の左は \code{imshow()} によるヒートマップ、右は \code{hist2d()} と \code{LogNorm} を使った 2 次元ヒストグラムである。\code{cmap=} は値から色への対応\index{からーまっぷ@カラーマップ}を定め、\code{fig.colorbar(...)} はその対応尺度と量名を図中に示す。
+図~\ref{fig:heatmap-colorbar-example} の左は \code{imshow()} によるヒートマップ、右は \code{hist2d()} と \code{LogNorm} を使った 2 次元ヒストグラムである。\code{cmap=} は値から色への対応\index{からーまっぷ@カラーマップ}を定め、\code{fig.colorbar(...)} は色に対応する値と、その量の名前を図中に示す。
 
 \begin{figure}[tbp]
 \centering
@@ -162,7 +162,7 @@ fig.colorbar(h[3], ax=axes[1], label="counts")
 \label{fig:heatmap-colorbar-example}
 \end{figure}
 
-\code{imshow()} は格子上に並んだ値を描くため、シミュレーションで得た場や画像データをそのまま表示できる。一方、\code{hist2d()} は点群を格子ごとに数え上げる。点数が数桁にわたる場合は、\code{LogNorm()} による対数的な色割り当てによって、高密度領域と低密度領域を同じ図に表示できる。
+\code{imshow()} は格子上に並んだ値を描くため、シミュレーションで得た場や画像データをそのまま表示できる。一方、\code{hist2d()} は点群を格子ごとに数え上げる。格子ごとの点数が数桁にわたる場合は、\code{LogNorm()} による対数的な色割り当てによって、高密度領域と低密度領域を同じ図に表示できる。
 
 \subsection{全天図と投影: Hammer 図法と Mollweide 図法}
 
@@ -277,7 +277,7 @@ fig.savefig("hist2d_lognorm_good.pdf")
 \label{fig:hist2d-lognorm}
 \end{figure}
 
-図~\ref{fig:hist2d-lognorm}では、単一のピークの周囲に広がる低密度の広がりも判別できる。線形尺度では近い色に対応していた低密度領域が、対数尺度では異なる色に割り当てられるためである。
+図~\ref{fig:hist2d-lognorm}では、単一のピークを取り囲む低密度領域も判別できる。線形尺度では近い色に対応していた低密度領域が、対数尺度では異なる色に割り当てられるためである。
 
 \subsection{\code{subplots()} による複数パネルの配置}
 
@@ -342,7 +342,7 @@ axes["C"].scatter(x_sc, y_sc)
 \label{fig:subplot-mosaic-example}
 \end{figure}
 
-\code{subplot\_mosaic()} は文字列の名前で Axes を参照できる。\code{GridSpec} は、列幅、行高、結合するセルを数値で指定する。Axes の参照方法と格子比率の制御範囲に応じて選択する。
+\code{subplot\_mosaic()} は文字列の名前で Axes を参照できる。\code{GridSpec} は、列幅、行高、結合するセルを数値で指定する。Axes の参照方法と、行や列の大きさをどこまで調整したいかに応じて選ぶ。
 
 \code{LogNorm} は 0 以下の値を対数へ写せないため、空のビンなどは通常マスクされる。背景と同じ色で表示された領域を、微小な正の度数と混同しないようにする。また、\code{imshow()} の既定の座標は画像の画素位置である。物理的な座標で表示する場合は、\code{origin} と \code{extent=(xmin, xmax, ymin, ymax)} で上下の向きと画像の外縁を明示する。
 
@@ -435,7 +435,7 @@ fig.savefig("errorbar_example.pdf")
 
 分布図を解釈するときは、軸が表す量と単位を特定したうえで、分布の中心と幅、裾、外れ値の順に確認する。
 
-例えば、図~\ref{fig:distribution-examples} の左パネルでは、ヒストグラムとフィット曲線の残差、および分布の左右対称性を調べる。右パネルでは、短時間側の立ち上がりと長時間側の減衰を同じ時定数で説明できるかを調べる。本文では、図から読み取った特徴と、その特徴が結論を支える論理を記述する。
+例えば、図~\ref{fig:distribution-examples} の左パネルでは、ヒストグラムとフィット曲線の残差、および分布の左右対称性を調べる。右パネルでは、短時間側の立ち上がりと長時間側の減衰を同じ時定数で説明できるかを調べる。レポートには、図から読み取った特徴と、それがどのように結論を支えるかを記述する。
 
 \begin{figure}[tbp]
 \centering
@@ -477,7 +477,7 @@ Matplotlib では、\code{Figure}、\code{Axes}、\code{Axis} が異なる階層
 \begin{description}
 \item[\code{Figure}] 図全体である。1 つの PDF や PNG、1 つの表示ウィンドウに相当する。\code{savefig}、\code{suptitle}、図全体の凡例や colorbar などは Figure のメソッドまたは構成要素である。
 \item[\code{Axes}] データを描く 1 つのパネルである。\code{plot}、\code{hist}、\code{scatter}、\code{set\_xlabel}、\code{legend} などは Axes のメソッドとして呼び出す。
-\item[\code{Axis} (\code{x Axis, y Axis})] 目盛り、目盛りラベル、スケールを管理する部品である。通常は \code{ax.set\_xscale("log")} や \code{ax.set\_xlim(...)} のように Axes 経由で触るが、内部には \code{ax.xaxis} と \code{ax.yaxis} がある。
+\item[\code{Axis} (\code{x Axis, y Axis})] 目盛り、目盛りラベル、スケールを管理する部品である。通常は \code{ax.set\_xscale("log")} や \code{ax.set\_xlim(...)} のように Axes のメソッドで設定するが、内部には \code{ax.xaxis} と \code{ax.yaxis} がある。
 \item[\code{Artist}] 図の中に描かれる要素の総称である。線は \code{Line2D}、文字は \code{Text}、凡例は \code{Legend}、ヒストグラムの棒は \code{Rectangle} という Artist として管理される。代表的な要素を次に示す。
   \begin{itemize}
     \item \code{Title}, \code{Legend}: 図のタイトル、および各系列を示す凡例。
@@ -487,7 +487,7 @@ Matplotlib では、\code{Figure}、\code{Axes}、\code{Axis} が異なる階層
   \end{itemize}
 \end{description}
 
-Figure、Axes、Axis、Artist の階層関係だけを先に図解の構図に合わせて木構造で書くと、次のようになる。
+図の構成要素の関係を木構造で示すと、次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Figure
@@ -571,9 +571,9 @@ BarContainer
 Rectangle
 \end{lstlisting}
 
-ここで \code{bars} 全体は \code{BarContainer} であり、その中の 1 本 1 本は \code{Rectangle} である。したがって、「ヒストグラムの棒だけ色を変える」といった細かい調整は、最終的には Artist を触る操作だと理解できる。
+ここで \code{bars} 全体は \code{BarContainer} であり、その中の 1 本 1 本は \code{Rectangle} である。したがって、「ヒストグラムの棒だけ色を変える」といった細かい調整は、個々の Artist の設定を変えて行う。
 
-Figure 側の要素も、コード上の型を見ると役割を区別しやすい。図全体タイトル \code{suptitle} や colorbar は、特定の Axes だけでなく Figure 全体の構成に関わる。次のコードは、これらの型を表示する。
+Figure 側の要素も、コード上の型を見ると役割を区別しやすい。図全体のタイトル \code{suptitle} や colorbar は、特定の Axes だけでなく Figure 全体の構成に関わる。次のコードは、これらの型を表示する。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -611,7 +611,7 @@ ax.set_xscale("log")
 操作対象とメソッドの対応を次に示す。
 
 \begin{itemize}
-\item 図全体を保存する、図全体タイトルを付ける: Figure
+\item 図全体を保存する、図全体のタイトルを付ける: Figure
 \item 線やヒストグラムを描く、軸ラベルや凡例を付ける: Axes
 \item 対数軸、目盛り位置、目盛りラベルを変える: Axis 関連。ただし実際の操作は Axes メソッド経由が多い
 \item 特定の線だけ色や太さを変える、凡例や文字を細かく調整する: Artist
@@ -681,7 +681,7 @@ fig.savefig("histogram_pair_helper.pdf")
 \item レポート全体で一貫した表記
 \end{itemize}
 
-色、フォント、線幅、軸ラベル、単位、凡例の規則を文書全体で統一すると、同じ表現が同じ意味に対応する。系列や条件の区別には、文書内で一貫した色、マーカー、線種を割り当てる。
+色、フォント、線幅、軸ラベル、単位、凡例の規則を文書全体で統一すると、同じ量や条件を一貫した表現で示せる。系列や条件の区別には、文書内で一貫した色、マーカー、線種を割り当てる。
 
 \subsection{マーカー、線種、色の指定}
 
@@ -716,7 +716,7 @@ ax.plot(
 \label{fig:style-reference-example}
 \end{figure}
 
-図~\ref{fig:style-reference-example} では、マーカー、線種、色の各指定と描画結果を比較できる。個々の指定と用途は、マーカーを表~\ref{tab:matplotlib-markers}、線種を表~\ref{tab:matplotlib-linestyles}、色を表~\ref{tab:matplotlib-colors} にまとめた。系列の識別を色だけに依存させず、マーカーまたは線種も併用すれば、白黒印刷でも系列間の差を保持できる。
+図~\ref{fig:style-reference-example} では、マーカー、線種、色の各指定と描画結果を比較できる。マーカーの指定方法と用途は表~\ref{tab:matplotlib-markers}、線種は表~\ref{tab:matplotlib-linestyles}、色は表~\ref{tab:matplotlib-colors} にまとめた。系列の識別を色だけに依存させず、マーカーまたは線種も併用すれば、白黒印刷でも系列間の差を保持できる。
 
 \begin{table}[tbp]
 \centering
@@ -728,7 +728,7 @@ ax.plot(
 \midrule
 \code{"o"} & 丸 & 測定点、既定の散布図 \\
 \code{"s"} & 四角 & 条件の違いを強調したい点 \\
-\code{"\textasciicircum"} & 上向き三角 & 系列ごとの差別化 \\
+\code{"\textasciicircum"} & 上向き三角 & 系列の区別 \\
 \code{"D"} & ひし形 & 参照データや補助系列 \\
 \code{"x"} & バツ & 強調した外れ値や選択点 \\
 \bottomrule
@@ -813,7 +813,7 @@ mpl.rcParams.update(
 \toprule
 種類 & 例 & 対応させる量 \\
 \midrule
-Sequential & \code{viridis}, \code{plasma}, \code{cividis} & 0 から大へ単調に増える量 \\
+Sequential & \code{viridis}, \code{plasma}, \code{cividis} & 小さい値から大きい値へ連続的に変化する量 \\
 Diverging & \code{coolwarm}, \code{RdBu\_r} & 0 や基準値をはさんで符号が変わる量 \\
 Grayscale & \code{Greys} & 印刷や下地としての濃淡表示 \\
 Categorical & \code{tab10} & 離散的な系列の識別 \\
@@ -857,7 +857,7 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 \subsection{共通スタイルの部分的な上書き}
 
-共通スタイルを直接変更すると、そのスタイルを読むすべての図へ変更が及ぶ。発表用に文字だけを拡大する場合や、下書きだけグリッドを消す場合は、基準スタイルを読み込んだ後に必要な項目だけを上書きする。
+共通スタイルを直接変更すると、そのスタイルを使うすべての図に変更が反映される。発表用に文字だけを拡大する場合や、下書きだけグリッドを消す場合は、基準スタイルを読み込んだ後に必要な項目だけを上書きする。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 # presentation_style.mplstyle
@@ -886,7 +886,7 @@ ax.grid(False)  # この Axes だけグリッドを消す
 
 \subsection{Matplotlib による数式表記}
 
-Matplotlib では、軸ラベルや凡例に数式風の表記を書ける。既定では LaTeX そのものではなく、TeX に似た \code{MathText}\index{mathtext@MathText} という仕組みが使われる。
+Matplotlib では、軸ラベルや凡例に数式を書ける。既定では LaTeX そのものではなく、TeX に似た \code{MathText}\index{mathtext@MathText} という仕組みが使われる。
 
 \begin{lstlisting}[language=Python]
 plt.xlabel(r"$\Delta t\,[\mathrm{ns}]$")
@@ -971,7 +971,7 @@ dt = np.array([1.0, 4.0, 12.0, 60.0, 180.0, 900.0, 3600.0])
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{発展：海岸線を重ねる。}
-Cartopy を利用できる場合は、同じ散布図に海岸線を加え、\code{figures/usgs\_map.pdf} へ保存せよ。下の例を使い、地図の描画先と入力座標をそれぞれ指定する理由を説明せよ。Cartopy は初回に海岸線データを取得する場合がある。
+Cartopy を利用できる場合は、同じ散布図に海岸線を加え、\code{figures/usgs\_map.pdf} へ保存せよ。下の例を使い、地図と入力データの座標系をそれぞれ指定する理由を説明せよ。Cartopy は初回に海岸線データを取得する場合がある。
 \end{minipage}
 
 \end{enumerate}

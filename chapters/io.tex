@@ -291,7 +291,7 @@ print(loaded_result["values"])
 [1.0, 2.0, 3.0]
 \end{lstlisting}
 
-\code{"wb"} と \code{"rb"} の \code{b} はバイナリモードを意味する。JSON と違って内容をテキストとして確認できないが、Python オブジェクトの構造を保存できる。ただし、別の Python やライブラリのバージョンで常に復元できる保証はなく、他言語との交換にも向かない。長期保存や共同研究の交換形式ではなく、生成環境と入力を記録したローカルな作業用キャッシュとして用いる。
+\code{"wb"} と \code{"rb"} の \code{b} はバイナリモードを意味する。JSON と違って内容をテキストとして確認できないが、Python オブジェクトの構造を保存できる。ただし、Python やライブラリのバージョンが異なると復元できるとは限らず、他言語との交換にも向かない。長期保存や共同研究の交換形式ではなく、生成環境と入力を記録したローカルな作業用キャッシュとして用いる。
 
 Pickle の読み込みには、コード実行に関する注意も必要である。\code{pickle.load()} は、オブジェクトを復元する過程で任意のコードを実行する可能性がある。出所と生成過程を確認できない \code{.pkl} は読み込まず、自分で生成したもの、または信頼できる相手から安全な経路で受け取ったものだけを対象とする。
 
@@ -343,13 +343,13 @@ CSV はテキストとして内容を確認できる一方、読み込み時に�
     \item \textbf{Parquet}: 列指向のバイナリ形式である。pandas や Polars から表を保存し、列選択や行グループ単位の読み込みを行える。レコード単位の更新ではなく、列の抽出、集計、複数ファイルの走査を前提とする。
 \end{itemize}
 
-解析の初期段階では、内容をテキストとして確認でき、複数のソフトウェアで扱える CSV が検証に役立つ。大量のイベントデータを繰り返し読む時間が長い場合は、変換手順と列型を記録したうえで Parquet や HDF5 を中間形式として導入する。小規模なデータや一度しか読み込まないデータでは、変換時間と形式管理の負担が利点を上回る場合がある。\code{.pkl} は、信頼できる同一環境内の途中結果や作業用キャッシュに用途を限定する。
+解析の初期段階では、内容をテキストとして確認でき、複数のソフトウェアで扱える CSV が検証に役立つ。大量のイベントデータを繰り返し読む時間が長い場合は、変換手順と列型を記録したうえで Parquet や HDF5 を中間形式として導入する。小規模なデータや一度しか読み込まないデータでは、形式を変換・管理する手間に見合う利点が得られない場合がある。\code{.pkl} は、信頼できる同一環境内の途中結果や作業用キャッシュに用途を限定する。
 
 Parquet は保存形式の名前であり、\code{pyarrow} は pandas が Parquet の読み書きに利用できる実装の一つである。\code{read\_parquet()} と \code{to\_parquet()} の実行には、pandas が対応するエンジンを利用できる環境が必要となる。
 
 \section{章末課題：CSV を読み、要約を保存する}
 
-\code{earthquake\_practice} を作業フォルダーとする。第~\ref{chap:shell}~章の CSV、または次の人工データを \code{raw/usgs\_example.csv} へ保存して使う。\code{raw/} と \code{results/} は作成しておく。人工データは実カタログと別名で保存する。
+\code{earthquake\_practice} を作業フォルダーとする。第~\ref{chap:shell}~章で取得した CSV、または次の人工データを使う。人工データを使う場合は、実カタログと区別して \code{raw/usgs\_example.csv} へ保存する。\code{raw/} と \code{results/} は作成しておく。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={raw/usgs\_example.csv}]
 time,latitude,longitude,mag,place
@@ -361,7 +361,7 @@ time,latitude,longitude,mag,place
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
 \textbf{CSV の要約を JSON へ保存する。}
-\code{csv.DictReader} で読み、件数、最初と最後の時刻、空欄を除いた \code{mag} の最小値・最大値・空欄数を求めよ。有効値がなければ最小値と最大値は \code{None} とする。\code{results/usgs\_summary.json} へ保存し、読み戻した内容を表にせよ。人工データでは 3 件、最小 2.8、最大 3.2、空欄 1 件となる。
+\code{csv.DictReader} で読み、件数、最初と最後の時刻、\code{mag} の空欄数と、空欄を除いた最小値・最大値を求めよ。有効値がなければ最小値と最大値は \code{None} とする。\code{results/usgs\_summary.json} へ保存し、読み戻した内容を表にせよ。人工データでは 3 件、最小 2.8、最大 3.2、空欄 1 件となる。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}

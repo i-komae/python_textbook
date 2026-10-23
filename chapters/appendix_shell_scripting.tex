@@ -234,7 +234,7 @@ done
 
 特定のディレクトリにある複数のファイルを順次処理する場合にも、\code{for} ループを利用できる。次の例では、入力ファイル名（\code{data/input/run01.csv} など）から、対応する出力ファイル名（\code{data/output/run01\_result.png} など）を生成する。
 
-\code{basename} コマンドや、変数の後方一致削除（\code{\%...}）を用いることでこれを簡潔に実装できる。
+\code{basename} コマンドや、変数の末尾から指定した部分を除く記法（\code{\%...}）を用いることでこれを簡潔に実装できる。
 
 \begin{lstlisting}[language=bash]
 #!/usr/bin/env bash

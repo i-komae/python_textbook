@@ -7,7 +7,7 @@ pandas\index{pandas@pandas|textbf} は、行と列からなる表形式データ
 
 \subsection{Series と DataFrame}
 
-まず、検出器名、記録時刻、信号値、有効かどうかを持つ 4 件の記録を表にする。1 行は 1 件の記録、1 列は同じ種類の値を表す。pandas の基本構造は \code{Series}\index{series@Series|textbf} と \code{DataFrame}\index{dataframe@DataFrame|textbf} である。\code{Series} はラベル付き 1 次元配列、\code{DataFrame} は列名付き 2 次元表である。NumPy 配列が配列全体で一つの \code{dtype} を持つのに対し、DataFrame は列ごとに異なる型と列名を保持できる。
+まず、検出器名、記録時刻、信号値、記録の有効性を示す値を含む 4 件の記録を表にする。1 行は 1 件の記録、1 列は同じ種類の値を表す。pandas の基本構造は \code{Series}\index{series@Series|textbf} と \code{DataFrame}\index{dataframe@DataFrame|textbf} である。\code{Series} はラベル付き 1 次元配列、\code{DataFrame} は列名付き 2 次元表である。NumPy 配列が配列全体で一つの \code{dtype} を持つのに対し、DataFrame は列ごとに異なる型と列名を保持できる。
 
 \begin{lstlisting}[language=Python]
 import pandas as pd
@@ -44,7 +44,7 @@ DataFrame の利点は、列名によって意味を示しながら、列単位�
 
 DataFrame の列選択は辞書のキーによる値の参照、行の条件抽出はブール配列による NumPy 配列の抽出に対応する。ただし、DataFrame では index と列名のラベルも演算時の対応付けに使われる。
 
-\subsection{行例・形状・列型・欠損値の確認}
+\subsection{行の内容・表の形状・列の型・欠損値の確認}
 \index{pandas!describe@\code{describe()}}
 
 DataFrame の作成または読み込みの直後には、\code{head()}、\code{shape}、\code{dtypes}、\code{info()} で行の例、形状、列型、欠損値数を確認する。
@@ -142,7 +142,7 @@ events["is_late"] = events["time_ns"] > 1100
 print(events)
 \end{lstlisting}
 
-列を追加すると、元の表へ新しい列が右側へ増える。出力は次のようになる。
+新しい列は、元の表の右端に追加される。出力は次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
   detector  time_ns  signal  valid  signal_ratio  is_late
@@ -170,7 +170,7 @@ derived = (
 \index{pandas!isna@\code{isna()}}
 \index{けっそんち@欠損値|textbf}
 
-現実のデータでは、空欄や壊れた値が入り込む。pandas ではこれを \code{NaN} や \code{NA} として扱うことが多い。
+実際のデータには、値が記録されていないことがある。pandas では、そのような欠損値を \code{NaN} や \code{NA} で表す。
 
 \begin{lstlisting}[language=Python]
 df = pd.DataFrame(
@@ -213,7 +213,7 @@ df["id"] = df["id"].astype("Int64")
 
 \subsection{要約統計と \code{groupby}}
 
-\code{describe()} は数値列の件数、平均、標準偏差、分位点、最小値、最大値を返す。\code{groupby()}\index{groupby@\code{groupby}|textbf} は、カテゴリごとに分割した行へ同じ集計を適用する。
+\code{describe()} は数値列の件数、平均、標準偏差、分位点、最小値、最大値を返す。\code{groupby()}\index{groupby@\code{groupby}|textbf} は、行をカテゴリごとに分け、それぞれを集計する。
 
 \begin{lstlisting}[language=Python]
 print(events.describe())
@@ -337,7 +337,7 @@ print(log[["timestamp", "date", "prefix", "detector"]])
 2 2026-04-02 09:30:00+00:00  2026-04-02    NaN        B
 \end{lstlisting}
 
-\code{to\_datetime()} で日時型へ変換すると、時刻差、日付成分、時刻順を日時の演算として扱える。文字列列には \code{str.contains()}、\code{str.extract()}、\code{str.strip()} などのベクトル化メソッドがある。カテゴリ型は、有限個のカテゴリ値と整数コードを分けて保持し、カテゴリの順序も定義できる。
+\code{to\_datetime()} で日時型へ変換すると、時刻差の計算、年月日の取り出し、時刻順の並べ替えができる。文字列の列には \code{str.contains()}、\code{str.extract()}、\code{str.strip()} などのベクトル化メソッドがある。カテゴリ型は、有限個のカテゴリ値と整数コードを分けて保持し、カテゴリの順序も定義できる。
 
 \subsection{入出力}
 \index{parquet@Parquet|textbf}
@@ -583,7 +583,7 @@ df["value_sq"] = df.parallel_apply(
 \label{fig:pandas-benchmark}
 \end{figure}
 
-\code{pandarallel} は、DataFrame を複数プロセスへ分割し、\code{parallel\_apply()} に渡した関数を各部分へ適用する。プロセスの生成、データの直列化、プロセス間転送の時間も加わるため、対象処理について逐次実行との実行時間とメモリ使用量を測定する。
+\code{pandarallel} は、DataFrame を複数プロセスへ分割し、\code{parallel\_apply()} に渡した関数を各部分へ適用する。プロセスの生成、データの直列化、プロセス間転送の時間も加わるため、対象処理の逐次実行と並列実行を比べ、実行時間とメモリ使用量を測定する。
 
 \code{pandarallel} は複数の Python プロセスを起動するため、OS によってプロセスの開始方法や必要な設定が異なる。Windows で本書の Linux 系コマンドと実行条件をそろえる場合は、第~\ref{chap:shell}~章で説明した WSL を利用できる。
 
@@ -608,7 +608,7 @@ df["value_sq"] = df.parallel_apply(
 
 この流れでは、列名と列型を保ったまま抽出、集計、結合、保存を記述している。観測条件、検出器 ID、run 名、欠損フラグのように型の異なる列を一つの記録として扱う場合は、列ごとに型を持つ DataFrame を利用できる。
 
-一方、CSV の読み込みや集計が実測した待ち時間の主要部分を占める場合は、次章で扱う Polars も候補となる。行数だけで切り替えを決めず、必要な機能、メモリ使用量、処理時間を同じ入力で比較する。
+一方、CSV の読み込みや集計が、実測した処理時間の大部分を占める場合は、次章で扱う Polars も候補となる。行数だけで切り替えを決めず、必要な機能、メモリ使用量、処理時間を同じ入力で比較する。
 
 また、pandas の多くの操作は、DataFrame が 1 台の計算機のメモリに収まることを前提とする。ただし、\code{read\_csv(chunksize=...)} を使えば、総和や件数のように部分結果を統合できる処理は全件を同時に保持せずに実行できる。必要な表がメモリに収まらない場合は、列と行を早い段階で絞る、分割集計を使う、Parquet に変換する、次章の Polars やデータベースを使う、という順に処理の性質に合う方法を選ぶ。
 

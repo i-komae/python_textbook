@@ -10,7 +10,7 @@
 
 macOS では「ターミナル」を開く。Windows では前章の手順で WSL 上の Ubuntu を用意し、Ubuntu の端末を開く。以下の命令はその端末に入力する。Windows の PowerShell へそのまま入力する命令ではない。
 
-どちらの OS でも、以下では uv を使って Python 3.12 と作業用の環境を用意する。Python の導入と仮想環境の詳細は、最初の計算を試した後に説明する。
+以下では、どちらの OS でも uv を使って Python 3.12 と作業用の環境を用意する。Python の導入と仮想環境の詳細は、最初の計算を試した後に説明する。
 
 \subsection{uv を用意する}
 
@@ -87,7 +87,7 @@ $ python first_calculation.py
 
 \section{使っている Python を確認する}
 
-ここからは、最初の手順で何を用意したかを確かめる。Python 本体はコードを実行する。仮想環境は、その作業で追加したライブラリを他の作業と分けて保持する。
+ここからは、最初の手順で何を用意したかを確かめる。Python 本体はコードを実行する。仮想環境を使うと、作業ごとに追加ライブラリを分けて管理できる。
 
 以下は、\code{analysis\_practice} フォルダーへ移動し、\code{source .venv/bin/activate} で仮想環境を有効にした端末で実行する。
 
@@ -97,7 +97,7 @@ $ command -v python
 $ python -c "import sys; print(sys.executable)"
 \end{lstlisting}
 
-1 行目は版、2 行目はシェルが見つけた命令の場所、3 行目は起動した Python が使っている実行ファイルを表示する。\code{-c} は、後ろの引用符内を Python コードとして実行する指定である。ここでは \code{sys} という Python 付属の機能で、実行ファイルの場所を表示している。仮想環境を使っていれば、2 行目と 3 行目には通常 \code{analysis\_practice/.venv/bin/python} を含むパスが出る。値が異なる場合は、現在のフォルダーと仮想環境の有効化を確認する。
+1 行目は版、2 行目はシェルが見つけた命令の場所、3 行目は実際に起動した Python の実行ファイルの場所を表示する。\code{-c} は、後ろの引用符内を Python コードとして実行する指定である。ここでは \code{sys} という Python 付属の機能で、実行ファイルの場所を表示している。仮想環境を使っていれば、2 行目と 3 行目には通常 \code{analysis\_practice/.venv/bin/python} を含むパスが出る。値が異なる場合は、現在のフォルダーと仮想環境の有効化を確認する。
 
 \section{解析用ライブラリを追加する}
 \label{sec:setup-libraries}

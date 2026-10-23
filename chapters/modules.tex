@@ -1,7 +1,7 @@
 \chapter{自作モジュールの作成と再利用}
 \label{ch:modules}
 
-同じ平均や図の作成を複数の解析で使うときは、その処理を一つのファイルへまとめておくと、使うたびに書き直さずに済む。まず短い平均の関数を保存し、別のファイルから呼び出してみる。その後で、他のプロジェクトへも配れるパッケージの構成と、インストール方法を扱う。
+平均の計算や図の作成を複数の解析で繰り返すときは、その処理を一つのファイルへまとめておくと、使うたびに書き直さずに済む。まず短い平均の関数を保存し、別のファイルから呼び出してみる。その後で、他のプロジェクトへも配れるパッケージの構成と、インストール方法を扱う。
 
 \section{平均の関数を別のファイルから使う}
 
@@ -46,7 +46,7 @@ $ python analyze.py
 \item フィット関数やモデル関数
 \end{itemize}
 
-同じ処理を複数のスクリプトへコピーすると、それぞれが独立した実装となり、修正内容が一致しなくなる場合がある。自作モジュールから \code{from histfit\_tools import save\_histogram\_with\_fit} のように import すれば、呼び出し側を複製せずに一つの実装を共有できる。
+同じ処理を複数のスクリプトへコピーすると、それぞれが独立した実装となり、修正内容が一致しなくなる場合がある。自作モジュールから \code{from histfit\_tools import save\_histogram\_with\_fit} のように import すれば、処理のコードを複製せずに一つの実装を共有できる。
 
 \section{引数・設定ファイルとコードを分ける}
 
@@ -101,7 +101,7 @@ print(window_ns)
 
 \section{\code{uv} によるパッケージ開発の初期化}
 
-\subsection{最初の初期化}
+\subsection{作業用プロジェクトの作成}
 \index{src layout@src レイアウト|textbf}
 
 本書では、他のコードから \code{import} するライブラリを作るため、\code{uv init --lib} を用いる。次のコマンドによって、ヒストグラム作図用ライブラリの初期構成と依存関係を作成する。
@@ -608,7 +608,7 @@ Python >= 3.11; NumPy, Matplotlib, SciPy.
 Dependencies are installed from pyproject.toml.
 \end{lstlisting}
 
-README はパッケージ全体の目的、導入方法、最小使用例を示し、docstring は関数単位の入出力契約を示す。両者の対象範囲を分け、同じ情報を重複して保守しない。
+README はパッケージ全体の目的、導入方法、最小使用例を示し、docstring は関数の引数、返り値、例外条件を示す。両者の対象範囲を分け、同じ情報を重複して保守しない。
 
 \section{\code{uv pip} による通常インストールと editable install}
 
@@ -681,7 +681,7 @@ $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 
 \section{実行時依存関係と開発用依存関係}
 
-依存関係は、利用者に必要な実行時依存関係、開発者だけが使う開発用依存関係、開発・検証環境を再現するロックファイルの三つに分ける。
+依存関係については、利用者に必要な実行時依存関係と、開発者だけが使う開発用依存関係を区別する。開発・検証環境の再現にはロックファイルを使う。
 
 \begin{description}
 \item[実行時依存関係] パッケージを import して使うだけで必要なもの。今回なら \code{numpy}、\code{matplotlib}、\code{scipy} がこれに当たる。
@@ -703,12 +703,12 @@ $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{平均の関数とテストを作る。}
-\code{statistics.py} に \code{mean\_signal(values)} を作り、\code{from signal\_tools import mean\_signal} で使えるようにせよ。\code{[1.0, 2.0, 3.0]} では 2.0、空列では \code{ValueError} となる 2 件のテストを書く。\code{uv add --dev pytest ruff}、\code{uv run pytest} を実行し、関数と \code{2 passed} の結果を示せ。
+\code{statistics.py} に \code{mean\_signal(values)} を作り、\code{from signal\_tools import mean\_signal} で使えるようにせよ。\code{[1.0, 2.0, 3.0]} では 2.0、空の入力では \code{ValueError} となる 2 件のテストを書く。\code{uv add --dev pytest ruff}、\code{uv run pytest} を実行し、関数と \code{2 passed} の結果を示せ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{使い方を説明する。}
-型ヒントと docstring を付け、\code{help(mean\_signal)} で表示せよ。引数、返り値、空列の扱いが分かる使用例を一つ作り、説明文と実行結果を示せ。
+型ヒントと docstring を付け、\code{help(mean\_signal)} で表示せよ。引数、返り値、空の入力の扱いが分かる使用例を一つ作り、説明文と実行結果を示せ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}

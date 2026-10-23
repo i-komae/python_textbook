@@ -19,7 +19,7 @@ $ python --version
 $ pip --version
 \end{lstlisting}
 
-仮想環境へ入ると、プロンプトの先頭に \code{(.venv)} が付くことが多い。ターミナルの表示は次のように変わる。
+仮想環境を有効にすると、プロンプトの先頭に \code{(.venv)} が付くことが多い。ターミナルの表示は次のように変わる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 (.venv) student@host analysis_venv $
@@ -245,7 +245,7 @@ $ bash pyenv-installer.sh
 
 1 行目は公式のインストール用スクリプトを保存し、2 行目は実行前に内容を表示する。配布元と内容を確認したうえで、3 行目によって実行する。取得した内容を直接 \code{bash} へ渡す方法では、実行前の確認ができない。
 
-導入後は、pyenv が現在のシェルに必要な初期化コードを起動時の設定ファイルへ追加する。Homebrew で導入した場合と、上のスクリプトで導入した場合とでは、最初のコマンドだけが異なる。
+導入後は、現在のシェルで pyenv を使うための初期化コードを、起動時の設定ファイルへ追加する。Homebrew で導入した場合と、上のスクリプトで導入した場合とでは、最初のコマンドだけが異なる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 # Homebrew で導入した場合
@@ -261,7 +261,7 @@ $ exec "$SHELL"
 
 \code{exec "\$SHELL"} は、いま動いているシェルを、\code{\$SHELL} が示すシェルプログラムで置き換えるコマンドである。\code{SHELL} には通常、ログインシェルとして設定されたプログラムのパスが入り、\code{zsh} なら \code{/bin/zsh}、\code{bash} なら \code{/bin/bash} となる。ただし、\code{SHELL} と現在実行中の対話シェルが常に一致するとは限らない。現在のシェルは \code{ps -p \$\$ -o comm=} でも確認できる。ここでは \code{\textasciitilde/.zshrc} に追記した内容をすぐ反映させるために実行している。ターミナルをいったん閉じて開き直しても同じ目的は果たせる。
 
-シェルを読み直した後、次の 2 コマンドで \code{pyenv} のバージョンと、シェルが解決したコマンドを確認する。
+シェルを起動し直した後、次の 2 コマンドで \code{pyenv} のバージョンと、シェルが解決したコマンドを確認する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pyenv --version
