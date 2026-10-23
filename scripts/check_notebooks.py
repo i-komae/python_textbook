@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -13,6 +14,47 @@ import nbformat
 from jupyter_client import KernelManager
 from jupyter_client.kernelspec import KernelSpecManager
 from nbclient import NotebookClient
+
+
+def output_path_replacements(root: Path) -> dict[str, str]:
+    """公開する出力のパス表記を、実行環境から独立させる。"""
+    replacements = {}
+    for path, label in (
+        (root, "[教材フォルダー]"),
+        (Path(sys.base_prefix), "[Python本体]"),
+        (Path.home(), "[ホーム]"),
+        (Path(tempfile.gettempdir()), "[一時フォルダー]"),
+    ):
+        for variant in (path, path.resolve()):
+            if variant.is_absolute() and variant != Path(variant.anchor):
+                for value in (str(variant), variant.as_posix()):
+                    replacements.setdefault(value, label)
+    return replacements
+
+
+def sanitize_output_paths(nb, replacements: dict[str, str]) -> None:
+    """テキスト出力だけを処理し、教材のソースと画像を保持する。"""
+    paths = sorted(replacements.items(), key=lambda item: len(item[0]), reverse=True)
+
+    def replace(value):
+        if isinstance(value, str):
+            for path, label in paths:
+                value = value.replace(path, label)
+            return value
+        if isinstance(value, list):
+            return [replace(item) for item in value]
+        if isinstance(value, dict):
+            return {key: replace(item) for key, item in value.items()}
+        return value
+
+    for cell in nb.cells:
+        for output in cell.get("outputs", []):
+            for key in ("text", "evalue", "traceback"):
+                if key in output:
+                    output[key] = replace(output[key])
+            for mime, value in output.get("data", {}).items():
+                if mime.startswith("text/") or mime == "application/json":
+                    output.data[mime] = replace(value)
 
 
 def main() -> None:
@@ -56,6 +98,7 @@ def main() -> None:
             if manager.has_kernel:
                 manager.shutdown_kernel(now=True)
         if args.save:
+            sanitize_output_paths(nb, output_path_replacements(root))
             nbformat.write(nb, path)
         print(f"OK {path.name} ({time.perf_counter() - started:.1f} s)", flush=True)
 

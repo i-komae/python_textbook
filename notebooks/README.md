@@ -64,6 +64,8 @@ python scripts/check_notebooks.py --full
 
 `--full` は総合課題の全500日も検証します。実行結果をNotebookへ保存する場合は `--save` を加えます。特定のNotebookだけを再検証する場合はパスを指定できます。
 
+`--save` では、保存するテキスト出力内の環境固有のパスを `[教材フォルダー]`、`[Python本体]`、`[ホーム]`、`[一時フォルダー]` へ置き換えます。計算結果と図は保持します。手元でセルを実行すると、その環境の実際のパスが表示されます。
+
 ```sh
 python scripts/check_notebooks.py notebooks/10_astropy.ipynb
 ```
