@@ -3,12 +3,23 @@
 
 Polars\index{polars@Polars|textbf} は、pandas と同じく行と列からなる表を扱うライブラリである。まず 4 件の記録を表にし、信号値の列に計算を適用する。次に、条件に合う行を選び、検出器ごとに集計する。後半では、行う処理をまとめて記録してから実行する方法を扱う。
 
+本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source ~/analysis_practice/.venv/bin/activate
+$ mkdir -p ~/analysis_practice/polars
+$ cd ~/analysis_practice/polars
+\end{lstlisting}
+
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+
 \section{式と遅延実行による表処理}
 
 \subsection{index を持たない DataFrame}
 
-Polars でも、1 行を 1 件の記録、1 列を同じ種類の値として表す。pandas と違い、行に index というラベルを持たせず、位置や条件で行を選ぶ。まず次のコードで 4 行 3 列の表を表示する。
+Polars でも、1 行を 1 件の記録、1 列を同じ種類の値として表す。pandas と違い、行に index というラベルを持たせず、位置や条件で行を選ぶ。次のコードを \code{polars\_example.py} へ保存し、端末で \code{python polars\_example.py} を実行すると、4 行 3 列の表が表示される。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import polars as pl
 
@@ -22,6 +33,7 @@ df = pl.DataFrame(
 
 print(df)
 \end{lstlisting}
+\end{minipage}
 
 \noindent\begin{minipage}{\linewidth}
 このコードを実行すると、Polars の表は次のように表示される。
@@ -399,34 +411,40 @@ Polars への移行を検討する条件を次に示す。
 
 Polars の概念は Concepts~\cite{polars_concepts}、式は Expressions and contexts~\cite{polars_expressions}、遅延実行は Lazy API~\cite{polars_lazy}、入出力は IO~\cite{polars_io}、pandas との差は Coming from Pandas~\cite{polars_from_pandas} に記載されている。本章は、これらの機能を解析手順に沿って再構成した。
 
+\clearpage
 \section{章末課題：表の処理方法と結果を比較する}
 
-第~\ref{chap:pandas}~章の章末課題に示した \code{events.csv} を使う。各問では、元の 6 行から始める。
+本章の作業フォルダー \code{\textasciitilde/analysis\_practice/polars} で行う。前章の章末課題で保存した、データ 6 件の CSV を、端末で次のようにコピーする。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cp ../pandas/events.csv .
+$ mkdir -p results
+\end{lstlisting}
+コードは \code{polars\_exercises.py} へ保存し、\code{python polars\_exercises.py} で実行する。各問は \code{pl.read\_csv("events.csv")} で読み込んだ元の 6 行から始める。
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
 \textbf{列を選び、行を絞る。}
-\code{detector} と \code{signal} を選び、信号が \code{null} でなく 12.0 以上の行を取り出せ。結果の 3 行（A が 2 行、B が 1 行）を示し、抽出条件を説明せよ。
+\code{detector} 列と \code{signal} 列を選び、信号が \code{null} でなく 12.0 以上の行を取り出せ。結果の 3 行を示し、A が 2 行、B が 1 行であることを確認せよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{検出器ごとの平均からの差を求める。}
-\code{mean().over("detector")} で信号から検出器別平均を引いた列を追加せよ。さらに \code{group\_by()} で全行数、有効な信号数、平均、最大値を求めよ。全行数は A、B とも 3、有効数は 3 と 2 となる。列追加後と集計後の表を示し、行数の違いを説明せよ。
+\code{mean().over("detector")} で求めた検出器別平均を各信号値から引き、新しい列として追加せよ。次に元の表を \code{group\_by()} で検出器別に集計し、全行数、欠損していない信号の件数、平均、最大値を求める。全行数は A、B とも 3、有効な信号の件数は 3 と 2 となる。列を追加した 6 行の表と、集計後の 2 行の表を示せ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{処理をまとめてから実行する。}
-\code{pl.scan\_csv()} から、2 列の選択、欠損除去、検出器別平均を記述せよ。\code{explain()} の実行計画と \code{collect()} の結果を示し、どの段階で結果が得られるか説明せよ。
+\code{pl.scan\_csv("events.csv")} を使い、\code{detector} と \code{signal} の選択、信号の欠損行の除去、検出器別平均の計算を一つの処理として書け。\code{explain()} の表示と \code{collect()} の結果を示し、結果の数値を得るのはどちらの呼び出しかを述べよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{別表を結合し、件数表を作る。}
-係数 A: 1.02、B: 0.97 の表を \code{join()} で結合し、信号に係数を掛けよ。さらに \code{pivot()} で、検出器を行、\code{valid} を列、件数を値とする表を作れ。較正後の表と件数表を示せ。
+\textbf{元の表へ係数を結合し、件数表も作る。}
+A: 1.02、B: 0.97 の係数表を作り、検出器名をキーに元の 6 行へ \code{join()} で結合せよ。各信号値に係数を掛けた列を追加し、結果を示す。別に \code{pivot()} を使い、行を検出器、列を \code{valid} の真偽、値を記録の件数とする表を作れ。信号が欠損している行も、この件数には含める。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{pandas と結果を照合する。}
-前章の 3 問目と同じ条件で件数、平均、標準偏差（\code{ddof=1}）を求め、CSV へ保存せよ。pandas の結果と検出器名で対応付け、数値を許容誤差付きで比較した表を示せ。欠損値と行順序も確認する。
+前章の 3 問目と同じ有効条件で件数、平均、標準偏差（\code{ddof=1}）を求め、\code{results/polars\_summary.csv} へ保存せよ。前章の \code{../pandas/results/summary.csv} と検出器名で対応付け、行順に頼らずに比べる。数値の比較には許容誤差を設け、両方の値と一致・不一致を表にせよ。欠損の位置も確認する。
 \end{minipage}
 
 \end{enumerate}

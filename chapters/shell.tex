@@ -7,7 +7,7 @@
 \label{SEC:shell}
 本書では、ファイル操作やスクリプト実行をターミナル\index{たーみなる@ターミナル|textbf}から行う。初めに、ターミナルとシェルの役割を区別する。
 
-macOS では「ターミナル」を開いて以下の例を試す。Windows では、先に本節後半の WSL の手順を行い、Ubuntu の端末を開く。命令を入力したら Enter を押す。
+macOS では「ターミナル」を開いて以下の例を試す。Windows では、先に本節後半の WSL の手順を行い、Ubuntu の端末を開く。命令を入力したら Enter を押す。最初の \code{ls} や \code{pwd} は、端末を開いた直後の場所で実行してよい。本文のファイル構成と表示結果は、コマンドの働きを説明するための例である。第~\ref{sec:shell-exercises}~節では、実際にフォルダーとデータを用意して一連の操作を行う。
 
 \begin{itemize}
 \item ターミナル: 文字で命令を入力するためのアプリケーション
@@ -1048,7 +1048,7 @@ $ chmod 600 ~/.ssh/id_ed25519
 
 \subsection{スクリプトの直接実行}
 
-複数の命令を保存して実行するファイルをスクリプトという。次をテキストファイル \code{hello.sh} として保存する。
+複数の命令を保存して実行するファイルをスクリプトという。端末で \code{nano hello.sh} を実行して編集画面を開き、次を入力する。Ctrl キーを押しながら O を押し、Enter で保存先を確定する。Ctrl+X で端末へ戻る。\code{hello.sh} は、そのとき端末で開いていたフォルダーに保存される。
 
 \begin{lstlisting}[language=bash]
 #!/usr/bin/env bash
@@ -1068,21 +1068,42 @@ hello
 
 \code{u+x} は所有者に実行権限を加える指定、\code{./} は現在のフォルダーを表す。引数や繰り返しを使うシェルスクリプトは付録~\ref{app:shell_scripting} で扱う。
 
+\clearpage
 \section{章末課題：データを取得し、圧縮形式を比較する}
+\label{sec:shell-exercises}
+
+この課題は、macOS のターミナル、または Windows の Ubuntu 端末で行う。ホームディレクトリの下に専用の作業フォルダーを作り、元の CSV と圧縮後のファイルを整理する。
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
-\textbf{作業場所を用意する。}
-次を実行し、\code{pwd} と \code{ls} の結果を示せ。データ、コード、結果をどのフォルダーへ置くか説明せよ。
+\textbf{作業フォルダーを作り、現在位置を確認する。}
+端末に次を 1 行ずつ入力せよ。最後の \code{pwd} で作業場所を、\code{ls} で作成したフォルダーを確認する。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ mkdir -p earthquake_practice/{raw,compressed,scripts,figures,results}
-$ cd earthquake_practice
+$ mkdir -p ~/earthquake_practice
+$ cd ~/earthquake_practice
+$ mkdir -p raw compressed scripts figures results
+$ pwd
+$ ls
 \end{lstlisting}
+\code{pwd} の結果が \code{earthquake\_practice} で終わり、\code{ls} に上の 5 個の名前が表示されたことを示せ。各フォルダーは次の用途で使う。
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+フォルダー & 保存するもの \\
+\midrule
+\code{raw} & 取得した元の CSV \\
+\code{compressed} & 圧縮したファイル \\
+\code{scripts} & 自分で書いた Python ファイル \\
+\code{figures} & 作成した図 \\
+\code{results} & 件数や平均などの計算結果 \\
+\bottomrule
+\end{tabular}
+\end{center}
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{地震カタログの内容を調べる。}
-次の URL から CSV を取得し、データ行数、先頭と末尾の時刻、日本を含む地名の例を表にせよ。\code{wc -l} ではヘッダも数えることに注意する。取得できない場合は、第~\ref{chap:io}~章の人工データで表示と集計を試せる。
+\textbf{地震データを取得し、内容を調べる。}
+引き続き \code{earthquake\_practice} で次を実行し、CSV と検索結果の総件数を保存せよ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ curl -fL -o raw/usgs_global_2024_01.csv \
   'https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2024-01-01&endtime=2024-01-31T23:59:59.999999&limit=20000&orderby=time-asc'
@@ -1090,17 +1111,21 @@ $ curl -fL -o results/usgs_count.txt \
   'https://earthquake.usgs.gov/fdsnws/event/1/count?starttime=2024-01-01&endtime=2024-01-31T23:59:59.999999'
 $ cat results/usgs_count.txt
 \end{lstlisting}
-\code{count} は同じ検索条件の総件数を返す。取得上限の 20000 件を超える場合は、期間を分割し、イベント ID の重複を除く~\cite{usgs_api}。取得日時と検索条件も記録する。
+\code{head}、\code{tail}、\code{wc -l}、\code{grep} を使い、データ行数、先頭と末尾の \code{time}、\code{place} に \code{Japan} を含む行の例を調べ、表にせよ。先頭の列名の行は件数から除く。取得日時も記す。
+
+\code{count} の応答が 20000 件を超えると、CSV に全件は入らない。期間を分けて取得し、同じイベント ID を重複して数えないようにする~\cite{usgs_api}。通信できない場合は、第~\ref{chap:io}~章の人工 CSV を使い、その旨を記す。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{3 種類の圧縮形式を比較する。}
-同じ CSV を gzip、tar.gz、zip へ圧縮せよ。元の容量、圧縮後の容量、容量比（圧縮後／元）を表にする。それぞれ別のフォルダーへ展開し、\code{cmp 元のCSV 展開後のCSV} で全内容の一致を確かめよ。最も小さかった形式と、格納方法の違いを説明せよ。
+\textbf{同じ CSV を 3 種類の形式で圧縮する。}
+2 問目で保存した CSV を使い、gzip、tar.gz、zip のファイルを \code{compressed/} に一つずつ作れ。元ファイルは残す。元のバイト数、圧縮後のバイト数、容量比（圧縮後／元）を表にせよ。
+
+各ファイルを別の展開先へ戻し、\code{cmp} で元の CSV と比較せよ。実行した命令と終了ステータスを示し、最も小さかった形式、複数ファイルを格納できる形式を述べよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{発展：取得条件と URL の関係を調べる。}
-2 問目の URL を、取得先、パス、検索条件に分けて示せ。期間または地域を変え、取得件数と変更した項目を表にして、どの指定が結果を変えたか説明せよ。
+\textbf{発展：取得期間や地域を変える。}
+2 問目の URL のうち、サーバー名、\code{/fdsnws/event/1/query}、\code{?} 以降の検索条件を区別して示せ。期間または地域の条件を一つ変えて別名の CSV を取得し、変更した指定と取得件数を表にせよ。
 \end{minipage}
 
 \end{enumerate}

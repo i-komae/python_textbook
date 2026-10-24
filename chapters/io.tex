@@ -3,6 +3,16 @@
 
 この章では、ファイルの文字を読み、必要な値を数値へ変換し、計算結果を別のファイルへ保存する。データを読み込むことを入力、結果を書き出すことを出力という\index{にゅうしゅつりょく@入出力|textbf}。まず 3 行のファイルを表示し、その後で表の読み込みと保存を学ぶ。読み戻した内容が保存前と一致するかを確かめられることが目標である。
 
+本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source ~/analysis_practice/.venv/bin/activate
+$ mkdir -p ~/analysis_practice/io
+$ cd ~/analysis_practice/io
+\end{lstlisting}
+
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+
 \section{テキストファイルの入出力と探索}
 
 \subsection{ファイルのオープンと基本的な読み書き}
@@ -94,18 +104,26 @@ with open("out.txt", "w", encoding="utf-8") as f:
 
 \subsubsection{複数ファイルの収集}
 
-ログや測定結果が複数ファイルに分かれている場合は、処理前に対象パスの一覧を確定する。\code{glob.glob}\index{glob@\code{glob}|textbf} による再帰的な探索例を次に示す。
+複数のフォルダーに分かれたファイルをまとめて探すには、\code{glob.glob}\index{glob@\code{glob}|textbf} を使う。次を \code{find\_files.py} に保存し、\code{python find\_files.py} で実行する。前半で練習用の 3 ファイルを作り、後半でその名前を探して表示する。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import glob
+from pathlib import Path
+
+for name in ["data/2025/run01.txt", "data/2026/run01.txt", "data/2026/run02.txt"]:
+    path = Path(name)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("12.4\n", encoding="utf-8")
 
 paths = sorted(glob.glob("data/**/*.txt", recursive=True))
 print(f"count = {len(paths)}")
 for path in paths[:3]:
     print(path)
 \end{lstlisting}
+\end{minipage}
 
-例えば対象が 3 ファイルなら、出力は次のようになる。
+このコードで作った 3 ファイルについて、出力は次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 count = 3
@@ -347,9 +365,12 @@ CSV はテキストとして内容を確認できる一方、読み込み時に�
 
 Parquet は保存形式の名前であり、\code{pyarrow} は pandas が Parquet の読み書きに利用できる実装の一つである。\code{read\_parquet()} と \code{to\_parquet()} の実行には、pandas が対応するエンジンを利用できる環境が必要となる。
 
+\clearpage
 \section{章末課題：CSV を読み、要約を保存する}
 
-\code{earthquake\_practice} を作業フォルダーとする。第~\ref{chap:shell}~章で取得した CSV、または次の人工データを使う。人工データを使う場合は、実カタログと区別して \code{raw/usgs\_example.csv} へ保存する。\code{raw/} と \code{results/} は作成しておく。
+端末で \code{mkdir -p \textasciitilde/earthquake\_practice}、\code{cd \textasciitilde/earthquake\_practice}、\code{mkdir -p raw scripts results} の順に実行する。コードは \code{scripts/io\_exercises.py} へ保存し、\code{earthquake\_practice} から \code{python scripts/io\_exercises.py} で実行する。仮想環境は本章冒頭と同じものを有効にしておく。
+
+入力は、第~\ref{chap:shell}~章で取得した \code{raw/usgs\_global\_2024\_01.csv}、または次を保存した \code{raw/usgs\_example.csv} とする。後者は動作確認用の人工データである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={raw/usgs\_example.csv}]
 time,latitude,longitude,mag,place
@@ -361,17 +382,17 @@ time,latitude,longitude,mag,place
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
 \textbf{CSV の要約を JSON へ保存する。}
-\code{csv.DictReader} で読み、件数、最初と最後の時刻、\code{mag} の空欄数と、空欄を除いた最小値・最大値を求めよ。有効値がなければ最小値と最大値は \code{None} とする。\code{results/usgs\_summary.json} へ保存し、読み戻した内容を表にせよ。人工データでは 3 件、最小 2.8、最大 3.2、空欄 1 件となる。
+入力 CSV を \code{csv.DictReader} で読み、データ件数、先頭と末尾の \code{time}、\code{mag} の空欄数と空欄以外の最小値・最大値を求めよ。数値は \code{float} に変換し、有効な値がなければ最小値と最大値を \code{None} にする。\code{results/usgs\_summary.json} に保存して読み戻し、項目と値を表にせよ。人工データでは 3 件、最小 2.8、最大 3.2、空欄 1 件となる。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{途中結果を保存して読み戻す。}
-先頭 200 行までの \code{time}、\code{latitude}、\code{longitude}、\code{mag} を辞書のリストにし、\code{results/usgs\_preview.pkl} へ保存せよ。読み戻した件数と先頭 1 件を示し、保存前との一致を確認せよ。人工データでは 3 件となる。Pickle は自分で作った信頼できるファイルだけを読む。
+同じ入力の先頭 200 件までを読み、\code{time}、\code{latitude}、\code{longitude}、\code{mag} を持つ辞書のリストを作れ。列名の行は件数に含めない。\code{results/usgs\_preview.pkl} へ保存し、読み戻した件数と先頭の辞書を示せ。保存前との一致も確かめる。人工データでは 3 件となる。Pickle は自分で作ったファイルだけを読む。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{発展：不正な値を分けて記録する。}
-\code{mag} に \code{abc}、\code{NaN}、\code{inf} を持つ検証用の行を追加し、空欄、変換できない値、有限でない値の件数を別々に数えよ。有限な値だけで集計し、除外件数を \code{results/skipped\_rows.txt} へ保存せよ。追加前後の集計表を比較し、検出方法を説明せよ。
+\textbf{発展：数値として使えない行を記録する。}
+人工 CSV のコピーに、\code{mag} だけを \code{abc}、\code{NaN}、\code{inf} とした行を一つずつ追加せよ。空欄、\code{float} に変換できない値、変換できても有限でない値を別々に数え、\code{results/skipped\_rows.txt} へ保存する。有限な値だけで 1 問目の最小値・最大値を再計算し、追加前後で比較せよ。
 \end{minipage}
 
 \end{enumerate}

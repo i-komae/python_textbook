@@ -9,6 +9,7 @@
 使いたい Python が既に入っている場合は、その Python から標準ライブラリの venv でもプロジェクト専用の仮想環境\index{かそうかんきょう@仮想環境|textbf}を作れる。ここでは別の作業用フォルダーを作り、第~\ref{chap:setup}~章の環境と区別する。仮想環境が有効な場合は、\code{deactivate} で解除してから進める。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd ~
 $ mkdir -p analysis_venv
 $ cd analysis_venv
 $ python3 -m venv .venv
@@ -51,6 +52,7 @@ pip 25.0 from /Users/student/analysis_venv/.venv/lib/python3.11/site-packages/pi
 基本的なプロジェクトは \code{uv init} で作成でき、追加のオプションは必要に応じて指定する。別の仮想環境が有効な場合は \code{deactivate} で解除する。新しいディレクトリを作成して初期化する手順は次のとおりである。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd ~
 $ mkdir analysis_uv
 $ cd analysis_uv
 $ uv init --package --python 3.11
@@ -158,7 +160,7 @@ Python 3.11.11
 
 \section{\code{pyenv} による複数バージョンの管理}
 
-Python 本体の導入と切り替えには \code{pyenv} を利用できる。\code{pyenv} は、複数の Python を利用者の領域へ導入し、シェルから \code{python} などを実行したときに選ばれるバージョンを切り替える。切り替えの範囲には、利用者の既定値、ディレクトリごとの設定、一つのシェルセッションだけに適用する設定がある。
+Python 本体の導入と切り替えには \code{pyenv} を利用できる。仮想環境が有効な端末では、まず \code{deactivate} で解除してから以下を試す。\code{pyenv} は、複数の Python を利用者の領域へ導入し、シェルから \code{python} などを実行したときに選ばれるバージョンを切り替える。切り替えの範囲には、利用者の既定値、ディレクトリごとの設定、一つのシェルセッションだけに適用する設定がある。
 
 \subsection{macOS での準備}
 
@@ -312,6 +314,7 @@ Python 3.12.10
 \code{command -v python} が示す \code{shims/python} は Python 本体ではなく、pyenv が選んだ実行ファイルへ処理を渡す中継用プログラムである。\code{pyenv which python} は、中継後に実行される Python のパスを表示する。これに対して \code{pyenv local} は、あるディレクトリ以下で優先するバージョンを指定する。特定のプロジェクト用ディレクトリでバージョンを固定する手順を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd ~
 $ mkdir analysis311
 $ cd analysis311
 $ pyenv local 3.11.11
@@ -336,7 +339,7 @@ Python 3.11.11
 
 コードと説明、結果や図を一つの文書に保存したいときは、Notebook（ノートブック）という形式も使える。これは任意の補助環境であり、本書の基本例と課題は Python スクリプトで実行できる。Notebook を使う場合は、その編集・実行用アプリケーションである JupyterLab\index{jupyterlab@JupyterLab|textbf} を導入する。
 
-\code{analysis\_practice} へ移動し、仮想環境を有効にした端末で次を実行する。
+端末で \code{cd \textasciitilde/analysis\_practice}、\code{source .venv/bin/activate} の順に実行してから、次を入力する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python -m pip install jupyterlab
@@ -368,10 +371,10 @@ result = array * 2
 
 \begin{enumerate}
 \item \textbf{uv で環境を記録する。}
-\code{earthquake\_practice/usgs\_project} を \code{uv init --package} で作り、NumPy、Matplotlib、SciPy を \code{uv add} で追加せよ。生成ファイルの役割と、\code{uv run python} が使う版・場所を表にせよ。
+端末で \code{cd \textasciitilde/earthquake\_practice} と入力し、\code{uv init --package usgs\_project}、\code{cd usgs\_project} を実行せよ。NumPy、Matplotlib、SciPy を \code{uv add} で追加せよ。生成ファイルの役割と、\code{uv run python} が使う版・場所を表にせよ。
 
 \item \textbf{venv と比較する。}
-別の \code{usgs\_venv} に \code{python -m venv .venv} で環境を作れ。有効化の前後と解除後の Python の版・場所、pip の場所を表にし、uv の方式との違いを説明せよ。
+端末で \code{cd \textasciitilde/earthquake\_practice} と入力し、\code{mkdir -p usgs\_venv}、\code{cd usgs\_venv}、\code{python3 -m venv .venv} を実行せよ。有効化の前後と解除後の Python の版・場所、pip の場所を表にし、uv の方式との違いを説明せよ。
 
 \item \textbf{発展：Python の版を切り替える。}
 2 系統の Python が使える場合は、別々のフォルダーに \code{pyenv local} を設定せよ。\code{command -v python}、\code{pyenv which python}、\code{sys.executable} を比較し、中継プログラムと Python 本体の違いを説明せよ。uv の環境での結果も併記する。

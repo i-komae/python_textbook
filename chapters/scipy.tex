@@ -3,6 +3,16 @@
 
 SciPy\index{scipy@SciPy|textbf} は、データに式を当てはめる計算や、分布の推定などに使うライブラリである。この章では、まず 5 個の点に合う直線を求める。その後で分布、重み付け、補間、波形処理を学ぶ。求めた値を図へ重ね、データとのずれと適用条件を確かめられるようにする。
 
+本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source ~/analysis_practice/.venv/bin/activate
+$ mkdir -p ~/analysis_practice/scipy
+$ cd ~/analysis_practice/scipy
+\end{lstlisting}
+
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+
 \section{データに直線を当てはめる}
 
 \subsection{データに合う直線を求める}
@@ -17,7 +27,7 @@ SciPy\index{scipy@SciPy|textbf} は、データに式を当てはめる計算や
 
 \subsection{\code{curve\_fit} によるパラメータ推定}
 
-次の動作確認用のデータでは、傾きと切片を持つ直線を当てはめる。\code{linear\_model(x, a, b)} に \code{x} と候補の \code{a}、\code{b} を渡すと、直線上の \code{y} が返る。\code{curve\_fit()} はこの関数を繰り返し呼び、データとの差の二乗和が小さくなる \code{a} と \code{b} を探す。
+次の動作確認用のデータでは、傾きと切片を持つ直線を当てはめる。\code{linear\_model(x, a, b)} に \code{x} と候補の \code{a}、\code{b} を渡すと、直線上の \code{y} が返る。\code{curve\_fit()} はこの関数を繰り返し呼び、データとの差の二乗和が小さくなる \code{a} と \code{b} を探す。次を \code{fit\_line.py} へ保存し、端末で \code{python fit\_line.py} を実行する。
 
 \noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
@@ -57,7 +67,21 @@ S(\mathbf{p}) = \sum_i \left[y_i - f(x_i; \mathbf{p})\right]^2
 \]
 という残差二乗和を最小化している。
 
-得られた推定値は、データとモデルを重ねた図、別条件のデータ、単位、残差と照合する。SciPy の各関数についても、入力、返り値、仮定、失敗条件を確認する。
+直線が点の並びに合っているかを確かめるため、\code{fit\_line.py} の末尾へ次を追記して再実行する。作業フォルダーにできた \code{linear\_fit.pdf} を開き、測定点と直線の位置を見比べる。
+
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots()
+ax.scatter(xdata, ydata, label="data")
+ax.plot(xdata, linear_model(xdata, linear_params[0], linear_params[1]), label="fit")
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+ax.legend()
+fig.savefig("linear_fit.pdf")
+\end{lstlisting}
+
+数値が得られたことだけでは、直線を使ってよいとは判断できない。残差の並びや測定条件も確認する方法を、後の節で学ぶ。
 
 \section{分布と要約統計}
 
@@ -413,6 +437,8 @@ fig.savefig("interval_cdf.pdf")
 
 平均待ち時間の推定値は 136 秒となる。\code{fraction} は \code{[0.2, 0.4, 0.6, 0.8, 1.0]} であり、100 秒以下の割合は 0.6 である。\code{floc=0} は分布の開始位置を 0 秒へ固定する指定である。保存した図では、同じ横軸の値に対するデータとモデルの縦軸の差を比べる。少数の値で描画方法を確かめた後、実データでは標本数や独立性も考慮してモデルを判断する。
 
+指数分布では、すでに \(c\) 秒待っても事象が起きていなければ、その後に待つ時間も元と同じ指数分布に従う。この性質を無記憶性という。したがって、\(t\geq c\) の間隔だけを使う場合は、起点を引いた \(t-c\) に対して平均待ち時間を推定する。
+
 \subsection{補足：尤度と AIC による比較}
 
 個々の値が互いに独立で同じ分布から得られたと仮定すると、各観測値での確率密度を掛け合わせ、パラメータによってデータとの合い方を比べられる。この積を尤度という。連続値では密度を使うので、尤度を「その値が出る確率」とは呼ばない。尤度を最大にするパラメータを探す方法が最尤推定であり、SciPy の連続分布の \code{fit()} は既定でこの方法を使う~\cite{scipy_distribution_fit}。計算では自然対数を取り、密度の積を \code{logpdf(...).sum()} という和へ変える。
@@ -423,12 +449,15 @@ SciPy は、入力配列の物理的意味や、採用すべきモデルを自�
 
 本文を読み終えた後で関数名や引数を確認したいときは、SciPy User Guide~\cite{scipy_user_guide} を起点にすると探しやすい。分布や検定は Statistics~\cite{scipy_stats}、フィットや最適化は Optimization~\cite{scipy_optimize}、補間は Interpolation~\cite{scipy_interpolate}、波形処理は Signal processing~\cite{scipy_signal}、数値積分は Integration~\cite{scipy_integrate} が対応している。
 
+\clearpage
 \section{章末課題：モデルを当てはめて妥当性を確かめる}
 
-最初の 2 問では、次の人工データを使う。
+本章の作業フォルダー \code{\textasciitilde/analysis\_practice/scipy} に、次を \code{scipy\_exercises.py} として保存する。各問の処理を追記し、\code{python scipy\_exercises.py} で実行する。1・2 問目にはこの人工データを使う。\code{synthetic\_dt} は秒単位の間隔、\code{y\_obs} は直線にばらつきを加えた測定値である。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
+from scipy import stats
+from scipy.optimize import curve_fit
 
 rng = np.random.default_rng(20260412)
 synthetic_dt = rng.exponential(scale=120.0, size=5000)
@@ -441,27 +470,27 @@ y_obs = y_true + rng.normal(scale=sigma)
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
 \textbf{平均待ち時間を推定する。}
-\code{stats.expon.fit(synthetic\_dt, floc=0)} の \code{scale} を求めよ。標本平均と比べ、生成時に指定した平均 120 秒に近い値（115～125 秒）になることを \code{assert} で確認せよ。生成時の設定値、標本平均、推定値を表にせよ。
+\code{stats.expon.fit(synthetic\_dt, floc=0)} の返り値から \code{scale} を取り出せ。生成時の平均 120 秒、\code{synthetic\_dt.mean()}、推定した \code{scale} を表にせよ。推定値が 115～125 秒に入ることを \code{assert} で確かめる。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{直線を求め、残差を描く。}
-\code{y\_obs} を直線へフィットし、\code{sigma=sigma, absolute\_sigma=True} を指定せよ。傾き・切片と標準不確かさを表にし、上段にデータと直線、下段に残差を描け。生成時に指定した傾き 2.5、切片 1.2 と比較せよ。検算の目安は傾き 2.3～2.7、切片 0.7～1.7 である。
+\code{x} と \code{y\_obs} に \code{curve\_fit()} で直線を当てはめ、\code{sigma=sigma, absolute\_sigma=True} を指定せよ。上段に測定点と直線、下段に「測定値－直線の値」を描く。傾き・切片と標準不確かさを表にし、生成時の傾き 2.5、切片 1.2 と比較せよ。検算の目安は傾き 2.3～2.7、切片 0.7～1.7 である。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{実データの分布モデルを検討する。}
-実カタログの発生間隔について、ヒストグラムと経験累積分布を作れ。指数分布を含む候補を比べ、採用するモデルと範囲を選べ。図と残差を示し、選択理由を説明せよ。期間、地域、件数、地震の種別とマグニチュード尺度を記録する。実データがなければ \code{synthetic\_dt} で方法を確かめる。
+\textbf{実データへ分布を当てはめる。}
+第~\ref{chap:numpy}~章の発展課題で求めた地震の発生間隔を使う。ヒストグラムと経験累積分布を描き、指数分布と別の候補分布を当てはめて比較せよ。データがなければ \code{synthetic\_dt} を使う。経験累積分布とモデルの累積分布を重ね、同じ時刻での縦軸の差も描け。採用する分布と推定範囲を選んだ理由を述べよ。実カタログを使った場合は、期間、地域、件数、地震の種別、マグニチュード尺度を記す。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{解析条件を変えて比較する。}
-3 問目のビン幅、推定範囲、重み、モデルのいずれかを変え、推定値と不確かさを表で比較せよ。どのデータの寄与が変わったかを説明する。範囲を切って推定する場合は、その範囲で規格化した条件付き分布を使う。指数分布で \(t\geq c\) だけを使う場合は、同モデルの無記憶性に基づき \(t-c\) へ当てはめる。
+\textbf{一つの解析条件を変えて比較する。}
+3 問目のビン幅、推定範囲、重み、モデルのうち、自分の推定方法で使っている条件を一つ選んで変更せよ。変更した条件、推定値、不確かさを変更前後の表にする。範囲を限定する場合は、その範囲で規格化した条件付き分布を使う。指数分布で \(t\geq c\) だけを使う場合は、同モデルの無記憶性に基づき \(t-c\) へ当てはめる。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{発展：地震規模と累積件数の関係を調べる。}
-実カタログから、マグニチュード \(M\) の分布と累積件数 \(N(\geq M)\) を描け。記録の取りこぼしが少ないと考える下限 \(M_c\) を選び、\(\log_{10}N(\geq M)=a-bM\) の関係~\cite{gutenberg_richter_1944}を検討せよ。\(M_c\)、件数、推定法、不確かさ、図と残差を示す。累積件数の点は独立でないため、推定には個々の値の尤度か、重ならない区間の計数モデルを用いる。
+実カタログのマグニチュード \(M\) を使い、各値以上の地震数 \(N(\geq M)\) を数えて描け。小さい地震の取りこぼしが少ないと考える下限 \(M_c\) を選び、その上の範囲で \(\log_{10}N(\geq M)=a-bM\) の関係~\cite{gutenberg_richter_1944}を検討せよ。\(M_c\)、件数、推定法、不確かさ、図と残差を示す。累積件数の点は独立でないため、推定には個々の値の尤度か、重ならない区間の計数モデルを用いる。
 \end{minipage}
 
 \end{enumerate}

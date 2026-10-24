@@ -3,12 +3,23 @@
 
 Astropy\index{astropy@Astropy|textbf} は、単位や時刻、天体の座標を扱うライブラリである。この章では、数値と単位を一組にして計算し、秒とナノ秒などの換算を確かめる。次に時刻差や天体の座標を求め、単位を残したまま表へ保存する。数値だけを扱う場合との違いを説明できるようにする。
 
+本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source ~/analysis_practice/.venv/bin/activate
+$ mkdir -p ~/analysis_practice/astropy
+$ cd ~/analysis_practice/astropy
+\end{lstlisting}
+
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+
 \section{数値と単位・時刻・座標の一元的な管理}
 
 \subsection{数値への単位・時刻・座標情報の付与}
 
-Astropy の中心的な発想は、「数値そのもの」ではなく「何の単位で、どの時刻系で、どの座標系なのか」までオブジェクトへ持たせることである。例えば 100 という値だけでは、100 ns なのか 100 ms なのか分からない。数値と単位を一組にした \code{Quantity}\index{quantity@\code{Quantity}|textbf} を使えば、この曖昧さを減らせる。ns（ナノ秒）は 1 秒の 10 億分の 1、ms（ミリ秒）は 1 秒の 1000 分の 1 である。
+Astropy の中心的な発想は、「数値そのもの」ではなく「何の単位で、どの時刻系で、どの座標系なのか」までオブジェクトへ持たせることである。例えば 100 という値だけでは、100 ns なのか 100 ms なのか分からない。数値と単位を一組にした \code{Quantity}\index{quantity@\code{Quantity}|textbf} を使えば、この曖昧さを減らせる。ns（ナノ秒）は 1 秒の 10 億分の 1、ms（ミリ秒）は 1 秒の 1000 分の 1 である。次を \code{units\_example.py} へ保存し、端末で \code{python units\_example.py} を実行する。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import astropy.units as u
 
@@ -26,6 +37,7 @@ print(f"{distance.to_value(u.km):.10f} km")
 74.9481145 m
 0.0749481145 km
 \end{lstlisting}
+\end{minipage}
 
 この例では、\code{250 * u.ns} という時点で「250 ns」という意味が値に埋め込まれている。\code{u} は単位を使うための短い名前であり、\code{u.ns} はナノ秒、\code{u.m} はメートル、\code{u.s} は秒を表す。\code{.to(u.m)} は単位付きのままメートルへ換算し、\code{.to\_value(u.m)} はメートルへ換算した数値だけを取り出す。式の途中で単位を落とさない限り、単位換算はライブラリが引き受ける。
 
@@ -296,7 +308,7 @@ print(len(tbl))
 
 \subsection{座標変換に必要な観測条件}
 
-赤道座標から銀河座標への変換だけなら比較的単純だが、地平座標へ変換するには観測地点や観測時刻が必要になる。座標系だけを変えているつもりでも、背後では時刻と場所が意味を持つことがある。
+地平座標は、観測者から見た方角と、地平線からの高さで空の方向を表す。同じ天体でも、観測地点や地球の自転によって見える方向が変わるため、変換には観測地点と観測時刻が必要になる。
 
 \subsection{DataFrame への変換に伴う情報の欠落}
 
@@ -318,32 +330,35 @@ Astropy を使うべき場面は、数値とともに単位、時刻系、座標
 
 全体の導入は Getting Started~\cite{astropy_getting_started} と User Guide~\cite{astropy_user_guide}、単位は Units and Quantities~\cite{astropy_units}、時刻は Time and Dates~\cite{astropy_time}、座標は Coordinates~\cite{astropy_coordinates}、表は Tables~\cite{astropy_table}、FITS は FITS File Handling~\cite{astropy_fits} に記載されている。本章は、そのうち観測データ解析で用いる機能を扱った。
 
+\clearpage
 \section{章末課題：単位と時刻の意味を保って計算する}
+
+本章の作業フォルダー \code{\textasciitilde/analysis\_practice/astropy} に \code{astropy\_exercises.py} を作り、各問のコードを保存する。端末では \code{python astropy\_exercises.py} で実行する。ファイルを保存する 4 問目も、このフォルダーで行う。
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
-\textbf{時間窓に入る値を選ぶ。}
-\code{[120, 220, 250, 251, 800]} ns から、250 ns 以下の値を単位付きで選べ。ns と秒の両方で比較し、どちらも 3 個になることを表に示せ。境界の 250 ns を含めること。
+\textbf{単位を変えても同じ値が選ばれるか確かめる。}
+\code{[120, 220, 250, 251, 800]} に ns の単位を付け、250 ns 以下を取り出せ。次に配列と境界値を秒へ換算して同じ比較をする。選ばれた値と個数を表にし、どちらも 250 ns を含む 3 個になることを示せ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{秒をまたぐ短い時刻差を求める。}
-\code{2026-04-12T11:59:59.999999900} と \code{2026-04-12T12:00:00.000000120} を \code{Time(format="isot", scale="utc")} で作れ。差を ns で求め、約 220 ns であることと、250 ns 以内かどうかを示せ。
+\textbf{秒の境界をまたぐ時刻差を求める。}
+\code{2026-04-12T11:59:59.999999900} と \code{2026-04-12T12:00:00.000000120} を、\code{format="isot", scale="utc"} を指定した \code{Time} で作れ。後の時刻から前の時刻を引き、差を ns で表示せよ。約 220 ns になることと、250 ns 以内かどうかを示す。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{同じ瞬間を UTC と TAI で表す。}
-2 問目の最初の時刻を UTC と TAI で表示せよ。表示文字列と、時刻オブジェクト同士の差を並べ、表示が違っても同じ瞬間を表すことを説明せよ。
+2 問目の最初の時刻を \code{t} とし、\code{t.iso} と \code{t.tai.iso} を表示せよ。さらに \code{t.tai - t} を秒で表示する。二つの日時の文字列と時刻差を並べ、表示が違っても同じ瞬間を表すことを説明せよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{単位付きデータを保存する。}
-時刻 \code{[0, 120, 250]} ns、信号 \code{[12.4, 9.8, 15.1]} mV、検出器 \code{["A", "B", "A"]} の \code{QTable} を ECSV へ保存せよ。同じ信号を FITS 画像へ保存し、ヘッダに \code{BUNIT="mV"} を付ける。読み戻した行数、値、単位を表で照合せよ。\code{overwrite=True} は既存の実習ファイルを置き換える指定である。
+\textbf{単位付きの表と信号配列を保存する。}
+時刻 \code{[0, 120, 250]} ns、信号 \code{[12.4, 9.8, 15.1]} mV、検出器 \code{["A", "B", "A"]} の \code{QTable} を \code{events.ecsv} に保存せよ。同じ 3 個の信号値を \code{signal.fits} の画像データに保存し、ヘッダへ \code{BUNIT="mV"} を書く。読み戻して、表の行数、画像の要素数、信号値、単位を保存前と照合せよ。再実行して置き換える場合は \code{overwrite=True} を指定する。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{天体の座標を変換する。}
-赤経 150 度、赤緯 20 度を ICRS の \code{SkyCoord} とし、銀河座標へ変換せよ。銀河経度約 213.801 度、銀河緯度約 50.264 度と照合し、変換前後の座標系と値を表にせよ。地平座標への変換に追加で必要な観測条件も挙げよ。
+赤経 150 度、赤緯 20 度を ICRS の \code{SkyCoord} とし、銀河座標へ変換せよ。変換前後の座標系と角度を表にし、銀河経度約 213.801 度、銀河緯度約 50.264 度と照合する。地平座標へ変換する際に、観測地点と観測時刻が必要になる理由も述べよ。
 \end{minipage}
 
 \end{enumerate}

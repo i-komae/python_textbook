@@ -15,8 +15,16 @@ Python のプロファイル結果から計算量の多い関数を特定した�
 \index{scikit-build-core@scikit-build-core|textbf}
 \index{cmake@CMake|textbf}
 
-ディレクトリ構成は次のようになる。
+C++ のコンパイル環境がある端末で行う。ターミナルで \code{c++ --version} を実行して確認する。macOS で未導入の場合は、付録~\ref{app:environment}~で説明した Xcode Command Line Tools を用意する。
 
+次の命令で作業フォルダーへ移動する。以降は、この場所を基準に各ファイルを作る。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ mkdir -p ~/fastcount_cpp/cpp ~/fastcount_cpp/src/fastcount_cpp
+$ cd ~/fastcount_cpp
+\end{lstlisting}
+各節のコードを、見出しで指定した名前のファイルへ保存する。完成時の構成は次のようになる。
+
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={fastcount\_cpp/ の例}]
 pyproject.toml
 CMakeLists.txt
@@ -26,6 +34,7 @@ src/
 `-- fastcount_cpp/
     `-- __init__.py
 \end{lstlisting}
+\end{minipage}
 
 \code{pyproject.toml} はビルド方法と Python パッケージの情報、\code{CMakeLists.txt} は C++ 拡張のコンパイル方法を記述する。\code{cpp/bindings.cpp} に C++ の処理と Python への公開方法を書き、\code{src/fastcount\_cpp/\_\_init\_\_.py} から利用者向けの関数を再公開する。以下では、各ファイルの役割と内容を構成順に説明する。
 
@@ -159,7 +168,7 @@ $ uv run python -c "from fastcount_cpp import count_pairs_within_window; print(c
 
 \section{Python からの C++ 関数の呼び出し}
 
-インストール後の拡張モジュールは、Python モジュールと同じ import 文で読み込める。
+次を \code{fastcount\_cpp} の一番上の \code{check\_pairs.py} へ保存し、\code{uv run python check\_pairs.py} で実行する。インストールした拡張モジュールも、Python の \code{import} 文で読み込める。
 
 \begin{lstlisting}[language=Python]
 from fastcount_cpp import count_pairs_within_window

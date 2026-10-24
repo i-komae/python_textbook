@@ -57,7 +57,7 @@ Git が管理する状態は、次の 3 層に分けられる。
 \subsection{コミットへ記録する名前とメールアドレスの設定}
 \index{git config@\code{git config}|textbf}
 
-コミットへ記録する作成者名とメールアドレスを設定する。
+コミットへ記録する作成者名とメールアドレスを設定する。次の \code{Your Name} と \code{your\_email@example.com} は、自分の名前とメールアドレスに置き換える。この設定は端末の作業場所によらず、その利用者の Git 設定へ保存される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git config --global user.name "Your Name"
@@ -71,12 +71,15 @@ $ git config --global user.email "your_email@example.com"
 
 まだ Git で管理されていないディレクトリを初期化するコマンドが \code{git init} である。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd ~
 $ mkdir analysis_work
 $ cd analysis_work
 $ git init
 $ git status
 \end{lstlisting}
+\end{minipage}
 
 \code{git status} は、未追跡、変更済み、コミット待ちのファイルを一覧できる。編集やコミットの前後で実行すると、各変更がどの段階にあるかを確認できる。
 
@@ -86,7 +89,7 @@ $ git status
 \index{git add@\code{git add}|textbf}
 \index{git commit@\code{git commit}|textbf}
 
-日常の作業では、ファイルを編集し、差分を確認してから、必要な変更をコミットする。
+ここでは \code{\textasciitilde/analysis\_work} の中で操作する。\code{analyze.py} を作って \code{print(3 + 2)} を保存し、次を実行する。ファイルを保存しただけでは Git の履歴へ入らず、\code{git add} と \code{git commit} で記録される。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git status
@@ -146,7 +149,7 @@ dist/
 \subsubsection{すでに追跡済みなら \code{git rm --cached} が必要}
 \index{git rm cached@\code{git rm --cached}|textbf}
 
-\code{.gitignore} は「これから追跡しない」ための設定である。すでに一度コミットしたファイルには、そのままでは効かない。
+\code{.gitignore} は「これから追跡しない」ための設定である。すでに一度コミットしたファイルには、そのままでは効かない。次の命令は、列挙した生成物を既に追跡している場合の例である。まだ追跡していなければ実行する必要はない。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git rm --cached -r .venv __pycache__ build
@@ -164,7 +167,7 @@ $ git commit -m "Stop tracking generated files"
 \subsection{既存リポジトリの取得}
 \index{git clone@\code{git clone}|textbf}
 
-\code{git clone} は、GitHub 上のプロジェクトや教材を履歴ごと手元へ複製するコマンドである。
+\code{git clone} は、GitHub 上のプロジェクトや教材を履歴ごと手元へ複製するコマンドである。次の URL は説明用なので、取得したいリポジトリの画面にある SSH URL へ置き換える。複製先の親フォルダーへ移動してから実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git clone git@github.com:example/project.git
@@ -204,7 +207,7 @@ $ git push -u origin main
 
 \subsubsection{接続先の登録と最初の push}
 
-GitHub が表示する URL を確認し、ローカルリポジトリへ \code{origin} という名前で登録する。既定ブランチを \code{main} とする例を次に示す。
+対象のローカルリポジトリの一番上へ移動し、GitHub が表示する URL を \code{origin} という名前で登録する。例の \code{owner/project.git} は、自分が作成したリポジトリの URL に置き換える。既定ブランチを \code{main} とする例を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git status
@@ -258,6 +261,7 @@ git@github.com:owner/repo.git
 HTTPS URL は HTTPS 認証、SSH URL は SSH 鍵認証を用いる。一つのリポジトリでは、登録したリモート URL と認証情報の対応を記録する。
 本書では、\code{git clone}、\code{pull}、\code{push} に用いる認証方式を SSH に統一する。公開リポジトリの取得には HTTPS URL も利用できるが、push や非公開リポジトリの取得には認証が必要になる。SSH URL に統一すれば、操作ごとに認証方式を切り替える必要がない。
 
+\clearpage
 \section{認証と最小ワークフロー}
 
 \subsection{GitHub の認証: SSH 鍵を基本にし、必要なら PAT}

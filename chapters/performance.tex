@@ -3,12 +3,23 @@
 
 この章では、同じ入力を処理する二つの方法を比べ、結果を保ったまま速くする方法を学ぶ。まず処理時間を測り、次に入力が増えたときの処理回数と、メモリの使用量を調べる。改善前後の結果と実測時間を示し、どこを変えた効果かを説明できるようにする。
 
+本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source ~/analysis_practice/.venv/bin/activate
+$ mkdir -p ~/analysis_practice/performance
+$ cd ~/analysis_practice/performance
+\end{lstlisting}
+
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+
 \section{処理時間の基準測定}
 
 高速化\index{こうそくか@高速化|textbf}を始める前に、処理時間の内訳を測定する必要がある。データの読み込み、探索、図の作成のどこに時間を要しているかを区別しなければ、変更による効果を適切に評価できない。
 
-\code{time.perf\_counter}\index{perf_counter@\code{time.perf\_counter}|textbf} を使うと、処理の前後で取得した時刻の差から経過時間を求められる。解析全体の所要時間に加えて、データの読み込み、前処理、探索、書き出し、作図という段階ごとの時間も記録すると、変更すべき箇所を特定しやすい。
+\code{time.perf\_counter}\index{perf_counter@\code{time.perf\_counter}|textbf} を使うと、処理の前後で取得した時刻の差から経過時間を求められる。解析全体の所要時間に加えて、データの読み込み、前処理、探索、書き出し、作図という段階ごとの時間も記録すると、変更すべき箇所を特定しやすい。次を \code{timing\_example.py} へ保存し、端末で \code{python timing\_example.py} を実行する。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import time
 
@@ -24,6 +35,7 @@ t1 = time.perf_counter()
 print(result)
 print(f"elapsed = {t1 - t0:.3f} s")
 \end{lstlisting}
+\end{minipage}
 
 キャッシュ、OS のスケジューリング、同時に動作するプロセスによって測定値は変動する。入力と実行条件をそろえて複数回測定し、中央値や最小値など、あらかじめ定めた代表値を比較する。
 
@@ -181,6 +193,7 @@ def is_symmetric_fast(A):
 NumPy や pandas への置換だけでは、アルゴリズムの計算量は変わらない。全ペア比較などの不要な演算を削減した後、残った要素ごとの処理を配列演算へ置き換える。
 
 \subsection{メモリとコピーの管理}
+\label{sec:performance-memory}
 \index{めもりかんり@メモリ管理|textbf}
 \index{びゅー@ビュー|textbf}
 \index{こぴー@コピー}
@@ -264,6 +277,8 @@ print(streaming_mean("values.txt"))
 \index{ぼとるねっく@ボトルネック|textbf}
 
 全体の所要時間を左右する、特に時間のかかる箇所をボトルネックという。その場所を探すために、関数ごとの呼び出し回数と所要時間を測定する。この測定に使う道具がプロファイラ\index{ぷろふぁいら@プロファイラ|textbf}である。例えば \code{cProfile}\index{cprofile@\code{cProfile}|textbf} は、関数自身の処理時間と、呼び出した関数を含む累積時間を出力する。
+
+\code{timing\_example.py} の末尾に次を追記し、再実行する。
 
 \begin{lstlisting}[language=Python]
 import cProfile
@@ -376,34 +391,35 @@ count = np.count_nonzero(diffs > 0.25)
 
 図~\ref{fig:vectorization-benchmark} は実行時間の大小を比較するための図であり、結果の正しさまでは保証しない。高速化の前後で同じ \code{count} が得られることをテストし、その上で入力サイズ、反復回数、実行環境、代表値をそろえて時間を比較する必要がある。
 
+\clearpage
 \section{章末課題：正しさと処理時間を比較する}
 
-測定には同じ入力と計算機を使う。各方法を 5 回ずつ測り、中央値または最小値のどちらを使ったかを記す。
+本章の作業フォルダー \code{\textasciitilde/analysis\_practice/performance} に \code{performance\_exercises.py} を作り、各問のコードを保存する。端末では \code{python performance\_exercises.py} で実行する。同じ入力と計算機を使い、各方法を 5 回ずつ測る。報告に中央値と最小値のどちらを使ったかを記す。
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
 \textbf{ループと配列演算を比べる。}
-\code{np.arange(1\_000\_000, dtype=np.float64)} の二乗和を、\code{for} と NumPy で求めよ。\code{np.isclose()} で結果の一致を確かめ、実行時間と速度比を表にせよ。
+\code{np.arange(1\_000\_000, dtype=np.float64)} の各値を二乗して足す処理を、\code{for} と NumPy の二つの関数で書け。\code{np.isclose()} で結果の一致を確かめる。各方法の実行時間と、「ループの時間／NumPy の時間」の速度比を表にせよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{入力が増えたときの時間を比べる。}
-本文の重複判定 2 関数を、\code{np.random.default\_rng(42).permutation(N).tolist()} に適用せよ。\(N=1000,2000,4000\) の時間と、\(N\) を倍にしたときの時間比を図または表にせよ。\(O(N^2)\)、\(O(N\log N)\) の予想と比較する。入力は整列させずに使う。
+\textbf{入力件数を増やして時間を測る。}
+本文の \code{has\_duplicate\_slow()} と \code{has\_duplicate\_fast()} を使う。入力は \code{np.random.default\_rng(42).permutation(N).tolist()} で作り、\(N=1000,2000,4000\) について測定せよ。件数と時間、件数を倍にしたときの時間比を表にし、\(O(N^2)\)、\(O(N\log N)\) の予想と比べる。入力を先に整列させない。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{ビューとコピーを比べる。}
-本文の \code{values}、\code{view}、\code{copied} を作り、\code{view[0] = -1} と \code{copied[0] = -2} を実行せよ。元配列の変化と \code{np.shares\_memory()} の結果を表にせよ。同じ要素数の \code{float32} と \code{float64} の \code{nbytes} も比較する。
+\textbf{ビューとコピーの書き換えを比べる。}
+第~\ref{sec:performance-memory}~節の \code{values}、\code{view}、\code{copied} を作るコードを保存し、\code{view[0] = -1} と \code{copied[0] = -2} を実行せよ。元の \code{values} のどの要素が変わったかと、\code{np.shares\_memory()} の結果を表にせよ。同じ要素数の \code{float32} と \code{float64} の配列も作り、\code{nbytes} を比べる。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{1 行ずつ読んで平均を求める。}
-1～100000 を 1 行ずつ書いたファイルを作り、本文の \code{streaming\_mean()} と全件読み込みで平均を求めよ。両方が 50000.5 になることを確かめ、保持するデータ量が行数に対してどう増えるか説明せよ。
+1～100000 の整数を 1 行に一つずつ書いた \code{values.txt} を作れ。本文の \code{streaming\_mean()} と、全行をリストに入れてから平均を求める方法を比べよ。両方が 50000.5 になることを示し、それぞれ計算中に何をメモリへ保持するかを説明する。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{測定結果から改善対象を選ぶ。}
-1 問目の 2 実装を関数にし、\code{python -m cProfile -s cumtime script.py} で測定せよ。累積時間の上位 3 関数を表にし、改善すべき箇所を一つ選ぶ。選択理由を処理時間と呼び出し回数から説明せよ。
+\textbf{時間がかかる関数を特定する。}
+1 問目の二つの関数と、それらを呼ぶコードだけを \code{profile\_sums.py} へ保存し、\code{python -m cProfile -s cumtime profile\_sums.py} で実行せよ。自作関数を含めて累積時間の大きい関数を 3 個表にし、呼び出し回数も記せ。時間のかかる関数を一つ選び、どの処理を変えると効果があるかを説明せよ。
 \end{minipage}
 
 \end{enumerate}

@@ -6,6 +6,8 @@
 
 本付録では、引数の受取り、変数の計算、ファイルの存在確認、条件分岐、配列、\code{for} ループを扱う。最後に、設定ファイルのテンプレートを \code{sed} で置換して複数条件を実行する方法を説明する。
 
+ターミナル（Windows では Ubuntu の端末）で \code{mkdir -p \textasciitilde/shell\_practice}、\code{cd \textasciitilde/shell\_practice} を実行する。各節のコードは、このフォルダーの \code{run.sh} へ保存して試す。別の例へ進むときは、その例のコードでファイルの内容を置き換える。
+
 \section{シェルスクリプトの基礎構造}
 
 \subsection{シバンと実行権限}
@@ -232,7 +234,7 @@ done
 \subsection{複数ファイルの入出力パス生成と一括処理}
 \index{ばっちしょり@バッチ処理|textbf}
 
-特定のディレクトリにある複数のファイルを順次処理する場合にも、\code{for} ループを利用できる。次の例では、入力ファイル名（\code{data/input/run01.csv} など）から、対応する出力ファイル名（\code{data/output/run01\_result.png} など）を生成する。
+端末で \code{mkdir -p data/input} を実行し、\code{data/input/run01.csv} に \code{1,2,3} と 1 行書いて保存する。\code{for} ループを使うと、このような入力ファイルごとに出力名を作れる。次の例では、入力ファイル名（\code{data/input/run01.csv} など）から、対応する出力ファイル名（\code{data/output/run01\_result.png} など）を生成する。
 
 \code{basename} コマンドや、変数の末尾から指定した部分を除く記法（\code{\%...}）を用いることでこれを簡潔に実装できる。
 

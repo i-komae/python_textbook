@@ -6,6 +6,32 @@
 
 以下のメタ文字の説明は、主に Python の \code{re} と \code{grep -E} の拡張正規表現を対象とする~\cite{python_re,grep_manual}。\code{grep} の既定の基本正規表現とは、\code{+}、\code{?}、括弧などの扱いが異なる。Python の \code{.} は既定では改行に一致せず、\code{\textbackslash d} は ASCII の数字以外の Unicode の十進数字にも一致する。半角数字だけが対象なら \code{[0-9]} と明示する。
 
+\section{検索対象のファイルを用意する}
+
+ターミナルで \code{mkdir -p \textasciitilde/regex\_practice}、\code{cd \textasciitilde/regex\_practice} を実行する。次を \code{prepare\_regex.py} へ保存し、\code{python3 prepare\_regex.py} を実行すると、本付録の検索例で使う短いファイルができる。
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=Python]
+from pathlib import Path
+
+files = {
+    "events.txt": "det_A 12.4\ndet_B 9.8\ndet_C 15.1\n",
+    "run.log": (
+        "2026-04-04 12:00:00 det_A ready\n"
+        "WARN low signal\nERROR missing file\n"
+    ),
+    "filelist.txt": "events.txt\nfigure.pdf\nresult.txt\n",
+    "detectors.txt": "det_A\ndet_AB\nxdet_A\n",
+    "detector_ids.txt": "det_A\ndet_B\ndet_C\n",
+    "summary.txt": "det_A 3 12.4\ndet_B 2 9.8\ndet_C 1 15.1\n",
+}
+for name, content in files.items():
+    Path(name).write_text(content, encoding="utf-8")
+\end{lstlisting}
+\end{minipage}
+
+以下の \code{grep} と \code{awk} は、このフォルダーの端末で実行する。Python の例も、同じ場所の \code{regex\_example.py} に保存して試せる。
+
 \section{文字列パターンを表す正規表現}
 
 \subsection{文字どおりの一致とメタ文字}

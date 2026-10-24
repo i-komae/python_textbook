@@ -5,23 +5,21 @@
 
 この課題では、異なる検出器の記録から、時刻差が 250 ns 以内の組を探す。配布コードの誤りを修正して処理を速くし、件数、処理時間、2 種類の時間差の分布を発表する。
 
-\code{events\_data.zip} と \code{slow\_event\_analysis.py} を、配布リポジトリ（\url{https://github.com/i-komae/python_textbook}）から同じ作業フォルダーへ保存する。\code{unzip events\_data.zip} で展開すると、年・月ごとのフォルダーに 500 日分の gzip ファイルが現れる。
+端末で次を実行し、ホームディレクトリの下の \code{coincidence\_practice} を作業場所にする。第~\ref{chap:setup}~章の仮想環境を使う。
 
-配布コードには修正対象の誤りが含まれる。元のファイルを残し、\code{cp slow\_event\_analysis.py event\_analysis.py} で作業用のコピーを作る。
-
-\subsection{配布コードによる基準測定}
-
-まず本節の「小規模入力による検証」に示す 3 日分の入力を用意し、配布コードを変更せずに実行せよ。必要なライブラリは \code{matplotlib} と \code{tqdm} であり、使用する仮想環境に導入する。
-
-\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python slow_event_analysis.py events_data_small --outdir slow_output
+$ source ~/analysis_practice/.venv/bin/activate
+$ mkdir -p ~/coincidence_practice
+$ cd ~/coincidence_practice
+$ curl -fL -o events_data.zip \
+  https://raw.githubusercontent.com/i-komae/python_textbook/main/events_data.zip
+$ curl -fL -o slow_event_analysis.py \
+  https://raw.githubusercontent.com/i-komae/python_textbook/main/slow_event_analysis.py
+$ unzip events_data.zip
+$ cp slow_event_analysis.py event_analysis.py
 \end{lstlisting}
-\end{minipage}
 
-全期間の処理時間は、データ量、ストレージ、計算機によって変わる。初回の対象は数日分とし、入力形式と出力の確認後に対象期間を広げるのがよい。
-
-配布コードの処理時間と出力を変更前に記録し、その後は小さな修正と検証を繰り返す。各修正の効果は、変更前の基準値との差によって説明できる。
+展開すると \code{events\_data/} の下に年・月ごとのフォルダーができ、合計 500 日分の gzip ファイルが入る。\code{event\_analysis.py} が自分で修正するコピーであり、元の配布コードは比較用に残す。以下の端末操作はすべて \code{coincidence\_practice} で行う。
 
 \subsection{入力ファイルの構造}
 
@@ -41,7 +39,7 @@ event_id year month day hhmmss ns detector_id signal
 \end{lstlisting}
 \end{minipage}
 
-各列の型と役割を言語化すると、整数として扱う列、時刻を構成する列、識別子としてのみ使う列、物理量として解釈する列を区別できる。この区別が曖昧なままでは、型変換や時刻比較の誤りを招く。
+各行は一つの記録である。\code{event\_id} はファイル内の記録番号、\code{year}、\code{month}、\code{day} は日付、\code{hhmmss} は時・分・秒、\code{ns} は秒未満の部分、\code{detector\_id} は検出器番号、\code{signal} は信号値を表す。
 
 この課題では、異なる検出器で記録された 2 事象の時刻差を ns 単位まで含めて評価し、\(\lvert \Delta t \rvert \le 250\,\mathrm{ns}\) を満たすものを「同時観測」と定義する。したがって、\code{hhmmss} 列だけを見ればよいわけではなく、\code{ns} 列も含めて時刻を一つの量として組み立てる必要がある。秒境界や日付境界をまたぐ場合にどう振る舞うかも、この定義を満たす形で確認しなければならない。
 \index{じこくさ@時刻差|textbf}
@@ -62,6 +60,22 @@ $ cp events_data/2024/01/events_2024_01_03.txt.gz events_data_small/2024/01/
 \end{lstlisting}
 \end{minipage}
 
+\subsection{配布コードによる基準測定}
+
+今作った \code{events\_data\_small} を入力として、次を実行せよ。必要な \code{matplotlib} と \code{tqdm} は、第~\ref{sec:setup-libraries}~節の環境に導入済みである。
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ python slow_event_analysis.py events_data_small --outdir slow_output
+\end{lstlisting}
+\end{minipage}
+
+全期間の処理時間は、データ量、ストレージ、計算機によって変わる。初回の対象は数日分とし、入力形式と出力の確認後に対象期間を広げるのがよい。
+
+配布コードの処理時間と出力を変更前に記録し、その後は小さな修正と検証を繰り返す。各修正の効果は、変更前の基準値との差によって説明できる。
+
+\subsection{修正後に確認する件数}
+
 小規模入力は、修正後の結果を短時間で検証するために用いる。上記の 3 日分について正しい実装から得られる同時観測イベント対は 66 組である。小規模入力でこの件数と個々のイベント対を確認した後に、500 日分の処理を実行する。
 
 \noindent\begin{minipage}{\linewidth}
@@ -75,7 +89,7 @@ analysis_sec = <measured value>
 
 \section{検証・修正・高速化の要件}
 
-次の順に進め、結果を保存する。
+準備した \code{event\_analysis.py} を編集し、次の順に進める。例えば 3 日分の実行は \code{python event\_analysis.py events\_data\_small --outdir output\_small}、全期間の実行は入力を \code{events\_data}、保存先を \code{output\_full} に替える。
 
 \begin{enumerate}
 \item 3 日分で配布コードを実行し、件数と処理時間を記録する。
@@ -111,7 +125,7 @@ analysis_sec = <measured value>
 
 同時観測の選択では \(\lvert\Delta t\rvert\leq250\,\mathrm{ns}\) の値だけを残している。確率分布を当てはめる際は、モデル側もこの窓内の確率の合計が 1 になるように規格化する。これが、選択した範囲の条件付き分布を使うという意味である。ヒストグラムと比べる場合は、各ビン内でモデルを積分した確率に全組数を掛け、期待される件数を求める。
 
-件数と実行時間の要約を \code{summary.txt} へ保存する。必須出力をまとめると、次の 4 ファイルになる。
+件数と実行時間の要約を \code{summary.txt} へ保存する。これらの結果は、\code{--outdir} で指定したフォルダーへ保存する。必須出力は次の 4 ファイルである。
 
 \noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
@@ -150,11 +164,11 @@ plot_sec = <measured value>
 \clearpage
 \section{結果のまとめと発表}
 
-解析コードと、LaTeX で作成したレポート（ソースと PDF）を提出する。レポートと発表では、次の 4 点を順に示せ。
+解析コードと、図表を載せたレポート（PDF）を提出する。レポートと発表では、次の 4 点を順に示せ。
 
 \begin{enumerate}
 \item \textbf{問題と修正：} 元のコードの誤り、原因、修正内容を説明する。
-\item \textbf{正しさ：} 小規模入力の検算と、3 日分 66 組・全 500 日分 12033 組との照合結果を示す。境界の検証も含める。
+\item \textbf{正しさ：} 小規模入力の検算と、3 日分 66 組・全 500 日分 12033 組との照合結果を示す。250 ns と 251 ns、同じ検出器どうし、秒・日付をまたぐ時刻を小さな入力で試した結果も示す。
 \item \textbf{処理時間：} 修正前、正しく修正した後、高速化後の処理時間を、同じ入力・測定条件で測り、表で比較する。変更点と速度比を記す。
 \item \textbf{分布の解釈：} 2 枚の図、モデル、範囲、推定値と不確かさを示し、図から分かることと判断できないことを説明する。
 \end{enumerate}

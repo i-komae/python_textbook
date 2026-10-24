@@ -3,6 +3,16 @@
 
 NumPy\index{numpy@NumPy|textbf} は、複数の数値をまとめて計算するためのライブラリである。まず、記録した時刻から事象の発生間隔を求める。その後で、数値の並べ方、条件に合う値の取り出し、合計や平均、分布の集計へ進む。配列の型やメモリの共有も、実際の値を確かめながら学ぶ。
 
+本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source ~/analysis_practice/.venv/bin/activate
+$ mkdir -p ~/analysis_practice/numpy
+$ cd ~/analysis_practice/numpy
+\end{lstlisting}
+
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+
 \section{配列を作って間隔を求める}
 
 \subsection{隣り合う時刻の差を求める}
@@ -11,6 +21,7 @@ NumPy\index{numpy@NumPy|textbf} は、複数の数値をまとめて計算する
 
 この計算には、複数の数値をまとめて扱う「配列」を使う。\code{import numpy as np} は、NumPy の機能を \code{np} という短い名前で使うための準備である。\code{np.array([...])} で、角括弧の中の数値をまとめた配列を作る。次の例を \code{intervals.py} へ保存し、端末で \code{python intervals.py} を実行する。
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 
@@ -22,6 +33,7 @@ print(intervals)
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [ 5  8 18]
 \end{lstlisting}
+\end{minipage}
 
 \code{np.diff(times)} は、後ろの値から一つ前の値を引く計算を順に行う。時刻が 4 個あるので、間隔は 3 個になる。
 
@@ -665,9 +677,10 @@ values_array = df["Value"].to_numpy()
 
 NumPy の基礎を復習したいときは、NumPy quickstart~\cite{numpy_quickstart} を併読すると整理しやすい。特に、配列生成、添字とスライス、\code{shape} の変更、ブロードキャスト、コピーとビューは、解析コードを書くたびに戻って確認したくなる項目である。本章は解析で問題になりやすい点を補い、quickstart は関数名や細かな仕様を確認する資料と位置付けられる。
 
+\clearpage
 \section{章末課題：発生間隔を計算して集計する}
 
-まず、秒単位の時刻を持つ次の人工データを使う。実カタログを使う場合は、第~\ref{chap:io}~章の方法で \code{time} 列を秒へ変換する。
+本章の作業フォルダー \code{\textasciitilde/analysis\_practice/numpy} に \code{numpy\_exercises.py} を作り、次のコードと各問の処理を保存する。端末では \code{python numpy\_exercises.py} で実行する。\code{times} は、観測開始から何秒後に事象が起きたかを表す。
 
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -678,17 +691,17 @@ times = np.array([720.0, 0.0, 60.0, 4200.0, 180.0, 780.0])
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
 \textbf{発生間隔を求める。}
-\code{np.sort()} と \code{np.diff()} で、隣り合う時刻の差を求めよ。結果 \code{[60., 120., 540., 60., 3420.]} と、配列の形状・型を示せ。並べ替える前に差を取った結果と比べよ。
+\code{np.sort(times)} で小さい順に並べ、\code{np.diff()} で隣り合う時刻の差を求めよ。間隔の配列、\code{shape}、\code{dtype} を表示する。答えは \code{[60., 120., 540., 60., 3420.]} 秒となる。\code{np.diff(times)} の結果も示し、並べ替えが必要な理由を説明せよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{間隔の分布を集計する。}
-平均、0 秒を超える個数、\([0,60)\)、\([60,600)\)、\([600,3600)\) 秒の個数を求めよ。さらに 0 から 3600 秒を 600 秒幅で \code{np.histogram()} により集計し、表にせよ。検算値は平均 840 秒、正の値 5 個、3 区間は順に 0、4、1 個である。3600 秒を追加し、最後のビンだけ右端を含むことも確かめよ。
+\textbf{間隔を長さごとに数える。}
+1 問目の間隔について、平均、正の値の個数、\([0,60)\)、\([60,600)\)、\([600,3600)\) 秒の個数を表にせよ。\([a,b)\) は \(a\) 以上 \(b\) 未満を意味する。検算値は平均 840 秒、正の値 5 個、各区間は順に 0、4、1 個である。さらに 0～3600 秒を 600 秒幅で \code{np.histogram()} に渡し、各ビンの範囲と件数を表にする。間隔の配列へ 3600 秒を一つ加え、最後のビンの件数だけが増えることを確かめよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{発展：ビンの取り方と地域差を比べる。}
-実カタログの間隔を、固定幅ビンと 1～3600 秒の対数ビンで集計せよ。対数ビンは \code{np.logspace(np.log10(1), np.log10(3600), 30)} とする。空のビン、0 以下の値、範囲外の値の件数を表にせよ。さらに緯度・経度で日本近海を定義し、同じ期間・集計条件の全球データと比較せよ。
+\textbf{発展：実際の地震の間隔を比較する。}
+第~\ref{chap:shell}~章で取得した CSV の \code{time} を日時へ変換し、時刻順に並べた後、差を秒単位で求めよ。入力ファイルの場所をコードに指定する。固定幅ビンと、\code{np.logspace(np.log10(1), np.log10(3600), 30)} による対数ビンで集計する。空のビン数、0 以下の間隔数、ビンの範囲外の間隔数を表にせよ。緯度・経度で日本近海の範囲を決め、その範囲の地震だけで間隔を計算し直す。同じ期間の全球データと表で比較し、選んだ緯度・経度の範囲を記せ。
 \end{minipage}
 
 \end{enumerate}

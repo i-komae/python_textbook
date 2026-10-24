@@ -3,12 +3,25 @@
 
 pandas\index{pandas@pandas|textbf} は、行と列からなる表形式データを扱うライブラリである。この章では、観測記録を表にし、条件に合う行を選び、検出器ごとの平均を求める。値が空欄のときの扱いと、計算結果の保存も学ぶ。元の表からどの行を計算に使ったかを説明できるようにする。
 
+本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source ~/analysis_practice/.venv/bin/activate
+$ mkdir -p ~/analysis_practice/pandas
+$ cd ~/analysis_practice/pandas
+\end{lstlisting}
+
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+
 \section{DataFrame の構造と列指向処理}
 
 \subsection{Series と DataFrame}
 
 まず、検出器名、記録時刻、信号値、記録の有効性を示す値を含む 4 件の記録を表にする。1 行は 1 件の記録、1 列は同じ種類の値を表す。pandas の基本構造は \code{Series}\index{series@Series|textbf} と \code{DataFrame}\index{dataframe@DataFrame|textbf} である。\code{Series} はラベル付き 1 次元配列、\code{DataFrame} は列名付き 2 次元表である。NumPy 配列が配列全体で一つの \code{dtype} を持つのに対し、DataFrame は列ごとに異なる型と列名を保持できる。
 
+次のコードを \code{pandas\_example.py} へ保存し、端末で \code{python pandas\_example.py} を実行する。
+
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import pandas as pd
 
@@ -24,6 +37,7 @@ events = pd.DataFrame(
 print(type(events).__name__)
 print(events)
 \end{lstlisting}
+\end{minipage}
 
 \noindent\begin{minipage}{\linewidth}
 このコードを実行すると、次のような DataFrame が表示される。
@@ -343,7 +357,7 @@ print(log[["timestamp", "date", "prefix", "detector"]])
 \index{parquet@Parquet|textbf}
 \index{pandas!parquet@Parquet}
 
-pandas は、CSV、Parquet、圧縮テキストなどを DataFrame として読み書きできる。本節では、ファイル形式ごとの型と圧縮方法の指定を扱う。
+pandas は、CSV、Parquet、圧縮テキストなどを DataFrame として読み書きできる。本節では、ファイル形式ごとの型と圧縮方法の指定を扱う。以下の Parquet の読み書きには PyArrow が必要なので、未導入の場合は、仮想環境を有効にした端末で \code{python -m pip install pyarrow} を実行しておく。
 
 まず、読み込みを試すための 2 件の記録を圧縮 CSV へ保存する。
 
@@ -410,7 +424,7 @@ selected = df[df["ratio"] > 1.5]
 
 行ごとの \code{for} ループを導入する前に、同じ処理を列演算、集計、結合として表せるかを検討する。
 
-Parquet の例には、たとえば \code{python -m pip install pyarrow} で導入できるエンジンが必要である。後の \code{to\_latex()} には Jinja2 が必要なので、\code{python -m pip install jinja2} で導入する。uv のプロジェクトではそれぞれ \code{uv add} を用いる。
+
 
 \subsection{大規模 CSV の分割集計}
 \index{pandas!chunksize@\code{chunksize}}
@@ -460,7 +474,9 @@ B           2.0  12.250000
 
 分割処理が適するのは、総和、件数、最小値、最大値のようにチャンクごとの結果を統合できる計算である。全行を同時に並べ替える処理、全行どうしを結合する処理、全データに依存する順位計算では、単純な分割だけでは同じ結果にならない。その場合は、必要列を減らす、Parquet を使う、次章で説明する Polars の遅延実行やデータベースを使うといった別の方法も検討する。
 
-\subsection{表の LaTeX 出力}
+\subsection{補足：表の LaTeX 出力}
+
+LaTeX でレポートを作る場合は、この方法で表を取り込める。\code{to\_latex()} に必要な Jinja2 を、仮想環境内で \code{python -m pip install jinja2} により導入してから試す。
 \index{pandas!to_latex@\code{to\_latex()}}
 
 \code{to\_latex()} で集計結果から表を生成すれば、DataFrame の値と LaTeX 表の値を同じ処理から出力できる。
@@ -615,9 +631,10 @@ df["value_sq"] = df.parallel_apply(
 基本操作の公式資料として Getting started tutorials~\cite{pandas_tutorials} と 10 minutes to pandas~\cite{pandas_10min} がある。列選択と代入は Indexing~\cite{pandas_indexing}、欠損値処理は Missing data~\cite{pandas_missing}、表の結合は Merge, join, concatenate and compare~\cite{pandas_merging}、時刻列は Time series / date functionality~\cite{pandas_timeseries} に詳しい。本章は、これらの機能を解析手順に沿って再構成した。
 
 \clearpage
+\clearpage
 \section{章末課題：検出器ごとの信号を集計する}
 
-次を \code{events.csv} として保存する。各問では、この元の 6 行を読み込む。
+本章の作業フォルダー \code{\textasciitilde/analysis\_practice/pandas} に次の CSV を \code{events.csv} として保存する。データは 6 件であり、先頭の列名の行は件数に含めない。端末で \code{mkdir -p results} を実行しておく。各問のコードは \code{pandas\_exercises.py} へ保存し、\code{python pandas\_exercises.py} で実行する。各問の入力には、この元の 6 行を使う。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={events.csv}]
 detector,time_ns,signal,valid
@@ -631,28 +648,28 @@ B,2050,13.2,true
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
-\textbf{表の内容を確認する。}
-\code{pd.read\_csv()} で読み、先頭 3 行、行数・列数、各列の型と欠損数を表示せよ。6 行 4 列、信号の欠損 1 件となることを確かめ、表の特徴を説明せよ。
+\textbf{読み込んだ行と列を確認する。}
+\code{pd.read\_csv("events.csv")} で読み、先頭 3 行、行数・列数、各列の型と欠損数を表示せよ。6 行 4 列で、\code{signal} の欠損が 1 件あることを示せ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{強い信号を取り出す。}
-\code{valid} が真で \code{signal >= 12.0} の 3 行を取り出し、その 3 行の平均で信号を割った \code{signal\_ratio} 列を追加せよ。抽出前後の件数と結果の表を示せ。
+\code{valid} が真で \code{signal >= 12.0} の 3 行を取り出せ。その 3 行の信号値の平均を求め、各信号値をその平均で割った \code{signal\_ratio} 列を追加する。抽出前後の件数、平均、追加後の表を示せ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{検出器ごとに集計し、較正係数を結合する。}
-元の表で、\code{valid} が真かつ信号が欠損していない行を使い、検出器別の件数、平均、標準偏差（\code{ddof=1}）を求めよ。件数は A が 3、B が 2、平均は約 12.8333 と 11.5 となる。係数 A: 1.02、B: 0.97 の表を \code{merge()} で結合し、信号に係数を掛けた結果も示せ。
+\textbf{検出器ごとの集計と、各行の較正を行う。}
+元の表から \code{valid} が真で信号が欠損していない行を選び、検出器別の件数、平均、標準偏差（\code{ddof=1}）を表にせよ。件数は A が 3、B が 2、平均は約 12.8333 と 11.5 となる。信号値を補正するため、A: 1.02、B: 0.97 の係数表を作り、検出器名をキーとして元の 6 行へ \code{merge()} で結合せよ。各行の信号に係数を掛けた列を追加し、較正前後の値を示せ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{分割して読んでも同じ平均になるか確かめる。}
-\code{chunksize=2} で読み、3 問目と同じ有効条件で件数と平均を求めよ。一括読み込みと値を照合し、比較表を作れ。各分割の合計と件数を使う理由も説明せよ。
+\textbf{分割して読んだ結果を比較する。}
+\code{pd.read\_csv("events.csv", chunksize=2)} で 2 行ずつ読み、3 問目と同じ条件で検出器別の件数と平均を求めよ。分割ごとの合計と件数を足し合わせてから平均を計算し、一括読み込みの結果と表で比べよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{集計表を保存して読み戻す。}
-3 問目の集計表を CSV と Parquet へ保存し、列名と値が保持されたかを表にせよ。CSV は \code{index=False} とする。Parquet の読み書きには、対応するエンジン（例えば PyArrow）が必要である。
+3 問目で作った検出器別の集計表を、\code{results/summary.csv} と \code{results/summary.parquet} へ保存せよ。CSV は \code{index=False} とする。両方を読み戻し、列名と数値を保存前の表と比較せよ。Parquet 用のライブラリが未導入なら、仮想環境を有効にした端末で \code{python -m pip install pyarrow} を実行する。
 \end{minipage}
 
 \end{enumerate}

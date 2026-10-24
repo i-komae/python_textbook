@@ -34,6 +34,7 @@ $ sh uv-install.sh
 次の命令を 1 行ずつ実行する。\code{analysis\_practice} には、この章で作るファイルを保存する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd ~
 $ mkdir -p analysis_practice
 $ cd analysis_practice
 $ uv venv --python 3.12 --seed .venv
@@ -77,9 +78,10 @@ $ python first_calculation.py
 
 \subsection{作業を終える・再開する}
 
-作業を終えたら、端末で \code{deactivate} を実行して仮想環境の利用を終える。作成したファイルや環境は削除されない。再開するときは、\code{analysis\_practice} へ移動してから、次を実行する。環境を毎回作り直す必要はない。
+作業を終えたら、端末で \code{deactivate} を実行して仮想環境の利用を終える。作成したファイルや環境は削除されない。再開するときは、新しく開いた端末で次を実行する。環境を毎回作り直す必要はない。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd ~/analysis_practice
 $ source .venv/bin/activate
 $ python first_calculation.py
 12
@@ -141,19 +143,22 @@ OK
 
 自分で保存した \code{first\_calculation.py} を実行し、値を書き換えた後に答えが変わることを確認できれば、次章へ進める。作業を再開するときに、作業フォルダーへ移動して仮想環境を有効にする手順も確認しておく。
 
+\clearpage
 \section{章末課題：保存したプログラムを実行する}
+
+第~\ref{sec:setup-first}~節で作った \code{\textasciitilde/analysis\_practice} で行う。端末で \code{cd \textasciitilde/analysis\_practice}、\code{source .venv/bin/activate} の順に実行してから始める。
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
 \textbf{計算を変更して実行する。}
-\code{first\_calculation.py} を実行し、\code{count} が 3 の場合と 10 の場合の表示を表にせよ。実行した命令と、編集・保存・実行の順序を説明せよ。
+\code{first\_calculation.py} の \code{count} を 3 にして保存し、\code{python first\_calculation.py} を実行せよ。次に 10 へ書き換え、保存して再実行する。入力値と表示結果を表にし、それぞれ 5 と 12 になることを確かめよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{使っている環境を確認する。}
-仮想環境の Python の版と場所、ライブラリの導入確認の結果を記録せよ。作業を終了して再開し、同じファイルを再実行できることを示せ。
+\textbf{Python とライブラリを確認し、作業を再開する。}
+\code{python --version} と \code{python -c "import sys; print(sys.executable)"} の結果を示せ。第~\ref{sec:setup-libraries}~節の導入確認も実行する。\code{python -m pip list} を実行し、表~\ref{tab:packages} のライブラリの名前と版を表にせよ。最後に \code{deactivate} で終了し、課題冒頭の命令で移動・有効化して \code{first\_calculation.py} を再実行せよ。再開後も 12 が出たことを示せ。
 \end{minipage}
 
 \end{enumerate}
 
-別方式での環境作成や、ライブラリの版を記録・切り替える方法、環境管理の演習は付録~\ref{app:environment}~にまとめた。
+別方式での環境作成や、版を記録・切り替える方法は付録~\ref{app:environment}~で扱う。

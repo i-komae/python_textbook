@@ -3,9 +3,19 @@
 
 平均の計算や図の作成を複数の解析で繰り返すときは、その処理を一つのファイルへまとめておくと、使うたびに書き直さずに済む。まず短い平均の関数を保存し、別のファイルから呼び出してみる。その後で、他のプロジェクトへも配れるパッケージの構成と、インストール方法を扱う。
 
+本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ source ~/analysis_practice/.venv/bin/activate
+$ mkdir -p ~/analysis_practice/modules
+$ cd ~/analysis_practice/modules
+\end{lstlisting}
+
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+
 \section{平均の関数を別のファイルから使う}
 
-まず、2 つの測定値の平均を別のファイルから求める。新しい作業用フォルダーを作り、次の内容を \code{signal\_stats.py} という名前で保存する。
+まず、2 つの測定値の平均を別のファイルから求める。本章の作業フォルダー \code{modules} に、次の内容を \code{signal\_stats.py} という名前で保存する。
 
 \begin{lstlisting}[language=Python, title={signal\_stats.py}]
 def mean_signal(values):
@@ -15,6 +25,7 @@ def mean_signal(values):
     return sum(values) / len(values)
 \end{lstlisting}
 
+\noindent\begin{minipage}{\linewidth}
 同じフォルダーに \code{analyze.py} を作り、次を保存する。
 
 \begin{lstlisting}[language=Python, title={analyze.py}]
@@ -30,6 +41,7 @@ print(mean_signal(values))
 $ python analyze.py
 13.75
 \end{lstlisting}
+\end{minipage}
 
 \code{from signal\_stats import mean\_signal} は、\code{signal\_stats.py} に書いた関数を読み込む命令である。\code{mean\_signal(values)} がその関数を呼び、2 つの測定値の平均を返す。このように読み込んで使う Python ファイルをモジュール\index{もじゅーる@モジュール|textbf}という。
 
@@ -104,12 +116,14 @@ print(window_ns)
 \subsection{作業用プロジェクトの作成}
 \index{src layout@src レイアウト|textbf}
 
-本書では、他のコードから \code{import} するライブラリを作るため、\code{uv init --lib} を用いる。次のコマンドによって、ヒストグラム作図用ライブラリの初期構成と依存関係を作成する。
+本書では、他のコードから \code{import} するライブラリを作るため、\code{uv init --lib} を用いる。ここからは \code{modules} の下に \code{histfit\_tools} という別のフォルダーを作る。次のコマンドで、ライブラリの初期構成と依存関係を用意する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ deactivate
+$ cd ~/analysis_practice/modules
 $ mkdir histfit_tools
 $ cd histfit_tools
-$ uv init --lib
+$ uv init --lib --python 3.12
 $ uv add numpy matplotlib scipy
 $ uv add --dev pytest ruff
 $ uv sync
@@ -117,7 +131,7 @@ $ uv sync
 
 \code{uv add} で追加した \code{numpy}、\code{matplotlib}、\code{scipy} は、このパッケージの実行時依存関係である。\code{pytest} と \code{ruff} は開発時にだけ使うため、\code{--dev} 付きで追加する。\code{pytest} は公開関数の返り値と例外を検証し、\code{ruff} は \code{uv run ruff check .} によって未使用 import や規則違反を変更記録前に検出する。本章では、公開関数のテストをパッケージ構成の一部として扱う。
 
-この例で作成するディレクトリ構成を次に示す。
+ここから先の端末操作は、\code{histfit\_tools} の中で行う。\code{src/histfit\_tools/models.py} などのパスも、この場所を基準にする。次に示すのは完成時の構成であり、\code{models.py}、\code{plotting.py}、\code{tests/} は以下の手順で自分で作る。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={histfit\_tools/ の例}]
 .gitignore
@@ -189,7 +203,7 @@ dev = [
 
 \subsection{モデル関数の分離}
 
-まず、フィット関数群を \code{models.py} へ切り出す。
+\code{nano src/histfit\_tools/models.py} で新しいファイルを開き、次の関数を保存する。
 
 \begin{lstlisting}[language=Python, title={src/histfit\_tools/models.py}]
 from collections.abc import Callable
@@ -280,7 +294,7 @@ def test_resolve_model_rejects_unknown_name() -> None:
 
 最初のテストは一次関数の出力を既知の値と比較する。2 つ目は、ガウス関数が平均値の位置で最大となり、平均値から等距離にある 2 点で同じ値を返すことを検証する。3 つ目は、登録されていないモデル名に対して \code{ValueError} が発生することを検証する。
 
-テストは次のコマンドで実行できる。
+先に \code{mkdir -p tests} でフォルダーを作り、上のコードを \code{tests/test\_models.py} に保存する。\code{histfit\_tools} の一番上のフォルダーで、次のコマンドを実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv run pytest
@@ -291,7 +305,7 @@ $ uv run ruff check .
 
 \subsection{ヒストグラムの作成・保存関数}
 
-ヒストグラムの作成、フィット、保存を担う \code{save\_histogram\_with\_fit} の実装を \code{plotting.py} に置く。
+ヒストグラムの作成、フィット、保存を担う \code{save\_histogram\_with\_fit} の実装を \code{src/histfit\_tools/plotting.py} に保存する。
 
 \begin{lstlisting}[language=Python, title={src/histfit\_tools/plotting.py}]
 from collections.abc import Sequence
@@ -455,7 +469,7 @@ def save_histogram_with_fit(
 \subsection{\code{\_\_init\_\_.py} による公開インタフェースの整理}
 \index{こうかいapi@公開 API|textbf}
 
-他のプログラムから使ってよい関数名や呼び出し方を、公開 API という。パッケージの公開 API に含める関数とクラスは、\code{\_\_init\_\_.py} で再公開する。
+他のプログラムから使ってよい関数名や呼び出し方を、公開 API という。パッケージの公開 API に含める関数とクラスは、\code{src/histfit\_tools/\_\_init\_\_.py} に次の内容を保存して再公開する。
 
 \begin{lstlisting}[language=Python, title={src/histfit\_tools/\_\_init\_\_.py}]
 """Histogram plotting and fitting utilities."""
@@ -477,7 +491,7 @@ __all__ = [
 
 \subsection{使い方の例}
 
-実際にこのパッケージを使うスクリプトは、たとえば次のようになる。
+次のコードを \code{histfit\_tools} の一番上に \code{plot\_example.py} として保存し、\code{uv run python plot\_example.py} で実行する。
 
 \begin{lstlisting}[language=Python]
 from pathlib import Path
@@ -604,7 +618,7 @@ print(result.counts)
 
 ## Requirements
 
-Python >= 3.11; NumPy, Matplotlib, SciPy.
+Python >= 3.12; NumPy, Matplotlib, SciPy.
 Dependencies are installed from pyproject.toml.
 \end{lstlisting}
 
@@ -645,7 +659,9 @@ $ .venv/bin/python -c "import histfit_tools; print(histfit_tools.__file__)"
 
 この import テストは、パッケージ名と公開関数を解決できることを確認する。依存関係、計算、ファイル出力を含む動作は、既知の小規模入力で関数を実行し、返り値と保存ファイルを検証する統合テストで確認する。
 
-\section{Git リポジトリによるパッケージの共有}
+\section{補足：Git リポジトリによるパッケージの共有}
+
+GitHub で他の人と共有する場合に使う手順である。Git の基本操作は付録~\ref{app:git}、接続用の鍵の準備は付録~\ref{app:ssh}~を先に参照する。
 
 研究室内や共同研究で共有する場合は、Git リポジトリによってソース、テスト、設定の変更履歴を管理できる。\code{uv init --lib} は、外側に既存の Git リポジトリがなく、\code{--vcs none} も指定していなければ、初期化対象に \code{.git/} を作る。
 
@@ -693,32 +709,51 @@ $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 
 開発中には、テストや説明文の作成に使う道具も必要になる。これらをすべて実行時依存関係へ含めると、利用者のインストール量と依存関係の衝突リスクが増す。公開 API と実行時依存関係は必要最小限に保ち、開発用の道具は開発用依存関係へ分ける。
 
+\clearpage
 \section{章末課題：平均を求めるパッケージを作る}
+
+本文の \code{histfit\_tools} とは別に、平均を求める小さなパッケージを作る。端末で \code{cd \textasciitilde/analysis\_practice/modules} と入力してから始める。以下のパスは、1 問目で移動する \code{signal\_tools} の中を基準にする。
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
-\textbf{パッケージを準備する。}
-\code{uv init --lib signal\_tools} で作成し、\code{pyproject.toml} と \code{src/signal\_tools/} を確認せよ。ファイル構成を図にし、設定ファイルとコードの役割を説明せよ。
+\textbf{パッケージのフォルダーを作る。}
+次を実行せよ。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ uv init --lib --python 3.12 signal_tools
+$ cd signal_tools
+$ uv add --dev pytest ruff
+$ mkdir -p tests
+\end{lstlisting}
+\code{ls} と \code{ls src/signal\_tools} の結果を示し、\code{pyproject.toml} が設定、\code{src/signal\_tools/} が Python コードの保存先であることを確認せよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{平均の関数とテストを作る。}
-\code{statistics.py} に \code{mean\_signal(values)} を作り、\code{from signal\_tools import mean\_signal} で使えるようにせよ。\code{[1.0, 2.0, 3.0]} では 2.0、空の入力では \code{ValueError} となる 2 件のテストを書く。\code{uv add --dev pytest ruff}、\code{uv run pytest} を実行し、関数と \code{2 passed} の結果を示せ。
+\code{src/signal\_tools/statistics.py} に \code{mean\_signal(values)} を作れ。\code{src/signal\_tools/\_\_init\_\_.py} から公開し、\code{from signal\_tools import mean\_signal} で使えるようにする。\code{tests/test\_statistics.py} に、\code{[1.0, 2.0, 3.0]} では 2.0、空のリストでは \code{ValueError} となる 2 件のテストを書け。\code{uv run pytest} を実行し、関数・テストのコードと \code{2 passed} の結果を示せ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{使い方を説明する。}
-型ヒントと docstring を付け、\code{help(mean\_signal)} で表示せよ。引数、返り値、空の入力の扱いが分かる使用例を一つ作り、説明文と実行結果を示せ。
+\textbf{関数の使い方を説明する。}
+平均の関数に型ヒントと docstring を付け、引数、返り値、空のリストの扱いを書け。\code{usage\_example.py} に、パッケージを import して \code{help(mean\_signal)} と平均の計算結果を表示するコードを書け。\code{uv run python usage\_example.py} で実行し、説明文と使用例の結果を示せ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
-\textbf{発展：インストール方法を比べる。}
-別々の仮想環境へ通常形式と \code{-e} 付きでインストールせよ。実習用に関数の返り値を変更し、再インストール前に反映されるかを表で比較せよ。確認後は正しい関数へ戻し、テストを再実行する。
+\textbf{発展：二つのインストール方法を比べる。}
+\code{signal\_tools} の中で、次を実行して比較用の環境を二つ作れ。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ uv venv --python 3.12 .venv-normal
+$ uv venv --python 3.12 .venv-editable
+$ uv pip install --python .venv-normal/bin/python .
+$ uv pip install --python .venv-editable/bin/python -e .
+$ .venv-normal/bin/python usage_example.py
+$ .venv-editable/bin/python usage_example.py
+\end{lstlisting}
+\code{mean\_signal} の \code{return} 文を一時的に書き換え、最後の 2 命令を再実行せよ。再インストールせずに変更が反映されるかを表で比較する。確認後は正しい関数へ戻し、テストを再実行せよ。
 \end{minipage}
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{共有するファイルを選ぶ。}
-NumPy を実行時、pytest と ruff を開発用の依存関係へ追加せよ。\code{.venv/}、\code{\_\_pycache\_\_/}、\code{.pytest\_cache/}、\code{dist/} を \code{.gitignore} へ書く。共有するファイルと生成物を表にし、\code{uv.lock} の扱いも理由とともに説明せよ。
+\code{.venv*/}、\code{\_\_pycache\_\_/}、\code{.pytest\_cache/}、\code{dist/} を \code{.gitignore} に書け。\code{.venv*/} は比較用の二つの仮想環境も除外する。ソース、テスト、設定、生成物のうち、どれを共有するかを表にして理由を述べよ。pytest と ruff が開発用の依存関係に入っていることを確認し、\code{uv.lock} を共有する目的も説明する。
 \end{minipage}
 
 \end{enumerate}
