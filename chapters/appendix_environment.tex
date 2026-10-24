@@ -8,6 +8,7 @@
 
 使いたい Python が既に入っている場合は、その Python から標準ライブラリの venv でもプロジェクト専用の仮想環境\index{かそうかんきょう@仮想環境|textbf}を作れる。ここでは別の作業用フォルダーを作り、第~\ref{chap:setup}~章の環境と区別する。仮想環境が有効な場合は、\code{deactivate} で解除してから進める。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ~
 $ mkdir -p analysis_venv
@@ -19,21 +20,26 @@ $ command -v pip
 $ python --version
 $ pip --version
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 仮想環境を有効にすると、プロンプトの先頭に \code{(.venv)} が付くことが多い。ターミナルの表示は次のように変わる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 (.venv) student@host analysis_venv $
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{command -v python} 以降の結果は、たとえば次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /Users/student/analysis_venv/.venv/bin/python
 /Users/student/analysis_venv/.venv/bin/pip
 Python 3.11.11
 pip 25.0 from /Users/student/analysis_venv/.venv/lib/python3.11/site-packages/pip
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{command -v} の結果から、\code{python} と \code{pip} が \code{.venv/bin} で見つかることが分かる。これは、\code{source .venv/bin/activate} が \code{\$PATH} の先頭に \code{.venv/bin} を追加するためである。Python 本体の確認には、\code{python -c "import sys; print(sys.executable)"} も利用できる。表示したバージョンとパスは説明用の例である。
 
@@ -45,21 +51,24 @@ pip 25.0 from /Users/student/analysis_venv/.venv/lib/python3.11/site-packages/pi
 
 \subsection{uv の導入を確認する}
 
-\code{uv --version} を実行して番号が表示されることを確認する。第~\ref{sec:setup-first}~節で導入してあれば、そのまま次へ進める。未導入の場合は、第~\ref{sec:setup-first}~節の保存・確認・実行の手順を使う。以降では、作る構成を明示するため \code{uv init --package} を用いる。uv 0.12 より前と以降で既定のひな形が異なる場合も、この指定でビルド可能な構成を作れる。
+\code{uv --version} を実行して番号が表示されることを確認する。第~\ref{sec:setup-first}~節で導入してあれば、そのまま次へ進める。未導入の場合は、第~\ref{sec:setup-first}~節の保存・確認・実行の手順を使う。以降では、作る構成を明示するため \code{uv init --package} を用いる。この指定は、他の環境へインストールして使うための構成も用意する。
 
 \subsection{プロジェクトの初期化}
 
 基本的なプロジェクトは \code{uv init} で作成でき、追加のオプションは必要に応じて指定する。別の仮想環境が有効な場合は \code{deactivate} で解除する。新しいディレクトリを作成して初期化する手順は次のとおりである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ~
 $ mkdir analysis_uv
 $ cd analysis_uv
 $ uv init --package --python 3.11
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-現在の \code{uv init} は、既定でコマンドラインアプリケーションとして配布できる構成を作る。\code{ls -a} と \code{find src -maxdepth 2 -type f} で確認できる主要な項目を次に示す。外側に既存の Git リポジトリがある場合など、Git 関連項目の有無は実行場所によって異なる。
+上の \code{--package} の指定では、コマンドラインアプリケーションとして配布できる構成を作る。\code{ls -a} と \code{find src -maxdepth 2 -type f} で確認できる主要な項目を次に示す。外側に既存の Git リポジトリがある場合など、Git 関連項目の有無は実行場所によって異なる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={analysis\_uv/ の初期構成}]
 .git/
 .gitignore
@@ -70,6 +79,7 @@ src/
 `-- analysis_uv/
     `-- __init__.py
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{src/analysis\_uv/\_\_init\_\_.py} には、\code{pyproject.toml} の \code{[project.scripts]} から呼び出す関数が置かれる。\code{uv init} の直後には、通常 \code{.venv} と \code{uv.lock} はまだない。これらは、最初の \code{uv add}、\code{uv sync}、または \code{uv run} によって依存関係を解決し、環境を同期するときに作られる。
 
@@ -89,12 +99,15 @@ src/
 
 \code{uv add} は依存ライブラリを追加し、\code{pyproject.toml} とロック情報を更新する。次の例では、7 個の解析用ライブラリをまとめて追加する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv add numpy pandas polars matplotlib scipy astropy tqdm
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{uv add} を実行すると、依存関係の解決結果が要約表示される。たとえば次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Resolved 18 packages in 0.42s
 Installed 7 packages in 0.31s
@@ -102,38 +115,47 @@ Installed 7 packages in 0.31s
 + pandas==2.3.0
 + scipy==1.15.0
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{Resolved ... packages} は、直接指定したライブラリだけでなく、その依存先も含めて必要な集合を決めたことを表す。\code{Installed ... packages} は実際に環境へ追加した数であり、その下の \code{+} 付き行は今回入った主なパッケージ名とバージョンである。
 
 \code{uv sync} は、\code{pyproject.toml} とロックファイルに基づいて環境をそろえる。\code{uv init} 後にまだ環境を同期していなければ、この実行時に \code{.venv} と \code{uv.lock} が作られる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv sync
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{uv sync} の後は、たとえば次のような行が見える。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Creating virtual environment at: .venv
 Installed 18 packages in 0.54s
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{Creating virtual environment at: .venv} と表示された場合、プロジェクト用の仮想環境が \code{.venv/} に作られている。\code{uv sync} は、\code{pyproject.toml} と \code{uv.lock} に基づいて依存関係をその環境へ同期する。リポジトリの取得と変更履歴の確認に必要な Git の操作は、付録~\ref{app:git} で説明する。
 
 \subsection{コマンドの実行とバージョン固定}
 
-\code{uv run} は、そのプロジェクトの環境でコマンドを実行する。スクリプトのパスを指定する場合と、Python 本体へ引数を渡す場合では、コマンドの構成が異なる。両者の例を次に示す。
+\code{uv run} は、そのプロジェクトの環境でコマンドを実行する。登録済みのコマンドを指定する場合と、Python 本体を起動する場合では、書き方が異なる。両者の例を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv run analysis-uv
 $ uv run python --version
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 たとえば \code{uv run python --version} の結果は次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Python 3.11.11
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この 1 行は、現在のプロジェクト設定に従って起動された Python のバージョンを示す。既定構成では、\code{pyproject.toml} の \code{[project.scripts]} に登録された \code{analysis-uv} を \code{uv run analysis-uv} で実行する。\code{-m} を使う場合や Python 本体へオプションを渡す場合には、\code{uv run python ...} と記述する。ここに示したバージョン番号は説明用の例である。
 
@@ -141,18 +163,22 @@ Python 3.11.11
 
 \code{uv} は、プロジェクトで使用する Python の版を \code{.python-version} に記録できる。\code{uv} はプロジェクト設定とコマンドの \code{--python} 指定に基づいて実行環境を選択する。プロジェクトの既定値と、1 回のコマンドだけに適用する指定を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv python pin 3.12
 $ uv run python --version
 $ uv run --python 3.11 python --version
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 結果の例は次の通りである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Python 3.12.10
 Python 3.11.11
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 1 行目は、\code{uv python pin 3.12} によってプロジェクトの既定が 3.12 系になっていることを示す。2 行目は、\code{--python 3.11} を指定した実行に限って 3.11 系を使用した結果である。\code{pin} はプロジェクトの既定値を設定し、\code{--python} は個別のコマンドに対して使用する Python を指定する。
 
@@ -166,64 +192,80 @@ Python 本体の導入と切り替えには \code{pyenv} を利用できる。�
 
 \code{pyenv}\index{pyenv@\code{pyenv}|textbf} は Python 本体をビルドして入れるので、macOS では Xcode Command Line Tools が必要になる。すでに Homebrew が正常に動いているなら、Command Line Tools は入っていることが多い。インストール済みかどうかは、次のコマンドで確認できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ xcode-select -p
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 すでにインストールされていれば、結果の例は次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /Library/Developer/CommandLineTools
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 このように開発ツールのパスが表示されれば、選択された場所を確認できる。Xcode 本体を導入した環境では、そのアプリケーション内のパスが表示されることもある。パスの代わりにエラーが出る場合は、未導入または設定不備の可能性がある。
 未導入の場合のインストールコマンドは次のとおりである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ xcode-select --install
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 以下の macOS の手順は Homebrew を利用する。未導入なら、Homebrew の公式案内~\cite{homebrew_docs} に従って導入し、\code{brew --version} が表示されることを確認する。pyenv による Python のビルドには追加のライブラリも必要になるため、pyenv のビルド環境の案内~\cite{pyenv_build} に従って用意する。代表的な macOS 用の指定は次のとおりである。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 brew install openssl@3 readline sqlite3 xz tcl-tk@8 libb2 zstd zlib pkgconfig
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 必要なパッケージや追加設定は、導入する Python と OS の版によって異なる。
 
 \subsection{WSL / Ubuntu での準備}
 
 WSL の Ubuntu では、ビルドに必要なライブラリを先に入れておく。次のコマンドで、パッケージ一覧の更新と必要なライブラリの導入を続けて行える。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ sudo apt update
 $ sudo apt install -y build-essential curl git libssl-dev zlib1g-dev \
   libbz2-dev libreadline-dev libsqlite3-dev libffi-dev liblzma-dev tk-dev
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{apt update} の出力は長いが、末尾でたとえば次のように \code{Done} が見えれば、パッケージ一覧の更新は完了している。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Reading package lists... Done
 Building dependency tree... Done
 Reading state information... Done
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{apt install} でも多くの行が流れる。このコマンド例には \code{-y} を付けているため、通常は確認なしで続行する。\code{-y} を外した場合は、途中で次のような確認が出ることがある。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Need to get 48.2 MB of archives.
 After this operation, 201 MB of additional disk space will be used.
 Do you want to continue? [Y/n]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この表示が出たら、示されているパッケージや使用量に問題がないことを確認し、続けるなら \code{y} を入力して \code{Enter} を押す。\code{n} を入力すると処理は中止され、インストールは行われない。
 
 インストールの終盤では、次のように \code{Setting up ...} が並ぶことがある。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Setting up libffi-dev:amd64 (3.4.4-1) ...
 Setting up libsqlite3-dev:amd64 (3.40.1-2ubuntu0.2) ...
 Setting up build-essential (12.9ubuntu3) ...
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 これは各パッケージの設定を進めている段階であり、この表示自体は正常である。最後まで流れたあとでエラーが出ずにシェルのプロンプトへ戻れば、インストールは完了している。
 
@@ -231,24 +273,29 @@ Setting up build-essential (12.9ubuntu3) ...
 
 macOS では、次のコマンドで \code{pyenv} を導入できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ brew install pyenv
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 導入後の確認には、後述する \code{pyenv --version} と \code{command -v pyenv} を用いる。Homebrew の途中経過や保存先はバージョンによって変わるため、特定の表示文字列を成功条件にはしない。
 
 一方、WSL / Ubuntu では通常 Homebrew を前提にしないので、前節の依存パッケージを入れたあとにインストーラスクリプトを使う。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ curl -fsSL -o pyenv-installer.sh https://pyenv.run
 $ less pyenv-installer.sh
 $ bash pyenv-installer.sh
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 1 行目は公式のインストール用スクリプトを保存し、2 行目は実行前に内容を表示する。配布元と内容を確認したうえで、3 行目によって実行する。取得した内容を直接 \code{bash} へ渡す方法では、実行前の確認ができない。
 
 導入後は、現在のシェルで pyenv を使うための初期化コードを、起動時の設定ファイルへ追加する。Homebrew で導入した場合と、上のスクリプトで導入した場合とでは、最初のコマンドだけが異なる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 # Homebrew で導入した場合
 $ pyenv init --install
@@ -258,6 +305,7 @@ $ ~/.pyenv/bin/pyenv init --install
 
 $ exec "$SHELL"
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{pyenv init --install} は、実行中のシェルを判別し、推奨される初期化コードを対応する起動時設定ファイルへ追加する。実行前に変更内容が表示された場合は、対象のファイルと追記内容を確認する。bash で環境変数 \code{BASH\_ENV} が \code{.bashrc} を指している特殊な構成では自動設定を避け、pyenv の公式文書にある手動設定を用いる。
 
@@ -265,12 +313,14 @@ $ exec "$SHELL"
 
 シェルを起動し直した後、次の 2 コマンドで \code{pyenv} のバージョンと、シェルが解決したコマンドを確認する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pyenv --version
 pyenv 2.x.x
 $ command -v pyenv
 /Users/student/.pyenv/bin/pyenv
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 1 行目でバージョン番号が出れば、シェルから \code{pyenv} を実行できる状態にある。2 行目のパスは導入方法によって異なり、Homebrew で導入した場合は Homebrew の \code{bin} ディレクトリが表示されることもある。\code{command not found} になる場合は、\code{pyenv init --install} が変更したファイル、現在のシェル、再起動後の \code{PATH} を順に調べる。表示したバージョン番号とパスは説明用の例であり、同じ文字列になる必要はない。
 
@@ -278,41 +328,50 @@ $ command -v pyenv
 
 \code{pyenv} を使う場合は、\code{pyenv install} でバージョンを追加し、\code{pyenv global}、\code{pyenv local}、\code{pyenv shell} で切り替える。次の例では、2 系統の Python を追加してから一覧を表示する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pyenv install 3.11.11
 $ pyenv install 3.12.10
 $ pyenv versions
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{pyenv install} は数分かかることがあり、途中でビルドログが多数流れる。完了後に \code{pyenv versions} を実行すると、たとえば次のように表示される。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 * system (set by /Users/student/.pyenv/version)
   3.11.11
   3.12.10
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{system} は、pyenv の shim より後ろにある \code{PATH} から選ばれる実行ファイルを表す。OS に付属する Python とは限らず、Homebrew などで導入した Python が先に見つかる場合もある。\code{3.11.11} と \code{3.12.10} が一覧にあれば、そのバージョンは pyenv の管理下に導入されている。先頭の \code{*} は現在選ばれている設定を示す。
 
 その利用者がディレクトリ固有の設定を持たない場合に使う既定バージョンは、\code{pyenv global} で指定する。他の利用者や OS 全体の設定は変更しない。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pyenv global 3.12.10
 $ python --version
 $ command -v python
 $ pyenv which python
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 結果の例は次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Python 3.12.10
 /Users/student/.pyenv/shims/python
 /Users/student/.pyenv/versions/3.12.10/bin/python
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{command -v python} が示す \code{shims/python} は Python 本体ではなく、pyenv が選んだ実行ファイルへ処理を渡す中継用プログラムである。\code{pyenv which python} は、中継後に実行される Python のパスを表示する。これに対して \code{pyenv local} は、あるディレクトリ以下で優先するバージョンを指定する。特定のプロジェクト用ディレクトリでバージョンを固定する手順を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ~
 $ mkdir analysis311
@@ -321,13 +380,16 @@ $ pyenv local 3.11.11
 $ python --version
 $ cat .python-version
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 結果の例は次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Python 3.11.11
 3.11.11
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{pyenv local} を実行すると \code{.python-version} が作られ、指定した \code{3.11.11} が記録される。この設定は、そのディレクトリと下位のディレクトリに適用される。ただし、さらに下位に別の \code{.python-version} があれば、そちらが優先される。同じマシンでも、プロジェクトごとに異なる Python を選択できる。
 
@@ -341,10 +403,12 @@ Python 3.11.11
 
 端末で \code{cd \textasciitilde/analysis\_practice}、\code{source .venv/bin/activate} の順に実行してから、次を入力する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python -m pip install jupyterlab
 $ python -m jupyterlab
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 ブラウザが開いたら「Python 3」の Notebook を作る。コードを入力する枠をコードセルという。例えば \code{print(3 + 2)} を入力して Shift+Enter を押すと、セルの下に \code{5} が表示される。保存するときは Ctrl+S を押し、ファイル名を付ける。説明文は Markdown という種類のセルへ書ける。
 
@@ -358,10 +422,12 @@ $ python -m jupyterlab
 
 Jupyter の \code{\%timeit}\index{timeit@\code{\%timeit}|textbf} と \code{\%\%timeit} は、短い式またはセルを複数回実行し、所要時間の統計量を表示する。短い処理の比較に用いる。次の例では、別のセルで \code{import numpy as np} と \code{array = np.arange(1000000)} を実行してから、計測セルを実行する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 %%timeit
 result = array * 2
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 ただし、\code{\%timeit} はノートブックや IPython で短い処理を測定する機能であり、スクリプト全体の読み込みや入出力を含めた時間の測定には適さない。短い式や関数には \code{\%timeit}、解析全体には \code{perf\_counter} を使う。
 

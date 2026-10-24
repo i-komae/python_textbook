@@ -5,13 +5,15 @@ NumPy\index{numpy@NumPy|textbf} は、複数の数値をまとめて計算する
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/numpy
 $ cd ~/analysis_practice/numpy
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。本文の Python コードは、別のファイル名を指定した例と章末課題を除き、\code{intervals.py} へ先頭から順に追記する。保存後、端末で \code{python intervals.py} を実行し、追加した処理の結果を表示例と比べる。
 
 \section{配列を作って間隔を求める}
 
@@ -21,7 +23,7 @@ $ cd ~/analysis_practice/numpy
 
 この計算には、複数の数値をまとめて扱う「配列」を使う。\code{import numpy as np} は、NumPy の機能を \code{np} という短い名前で使うための準備である。\code{np.array([...])} で、角括弧の中の数値をまとめた配列を作る。次の例を \code{intervals.py} へ保存し、端末で \code{python intervals.py} を実行する。
 
-\noindent\begin{minipage}{\linewidth}
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 
@@ -33,7 +35,7 @@ print(intervals)
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [ 5  8 18]
 \end{lstlisting}
-\end{minipage}
+\end{minipage}\par\addvspace{6pt}
 
 \code{np.diff(times)} は、後ろの値から一つ前の値を引く計算を順に行う。時刻が 4 個あるので、間隔は 3 個になる。
 
@@ -49,6 +51,7 @@ print(intervals)
 
 \code{np.array()} で作った配列の種類を \code{ndarray} という。配列に付随する情報は、\code{a.shape} のように名前の後ろへドットと項目名を付けて取り出せる。この情報を属性という。\code{a.sum()} のように計算を実行するメソッドと異なり、属性を読むときは丸括弧を付けない。次の例で、行数・列数、数値の型、要素数を確認する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 
@@ -61,9 +64,11 @@ print(a.dtype)     # float64
 print(a.size)      # 6
 print(a.itemsize)  # 8
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{shape}\index{shape@\code{shape}|textbf} は各軸の長さ、\code{ndim} は次元数、\code{dtype}\index{dtype@\code{dtype}|textbf} は要素型、\code{size} は総要素数、\code{itemsize} は 1 要素あたりのバイト数である。値だけでなく \code{shape} と \code{dtype} も確認すると、形状不一致と型変換に起因する不具合を切り分けられる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 (2, 3)
 2
@@ -71,6 +76,7 @@ float64
 6
 8
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この出力は、\code{a} が 2 行 3 列、2 次元、6 要素の \code{float64} 配列であり、1 要素が 8 バイトであることを示す。形状の不一致を調べるときは \code{shape} と \code{ndim}、型変換の影響を調べるときは \code{dtype} と \code{itemsize} を確認する。
 
@@ -80,6 +86,7 @@ float64
 
 配列の生成時には、形状、要素型、初期値を定める。\code{np.array} は既存の値から配列を作り、\code{np.zeros} と \code{np.ones} は一定値で初期化し、\code{np.arange} と \code{np.linspace} は規則的な数列を作る。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 a = np.array([1, 2, 3], dtype=np.float64)
 zeros = np.zeros((2, 3))
@@ -93,13 +100,16 @@ print(zeros.shape)
 print(grid)
 print(x)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [1. 2. 3.]
 (2, 3)
 [0 2 4 6 8]
 [0.   0.25 0.5  0.75 1.  ]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{np.array}\index{numpy@NumPy!np.array@\code{np.array}|textbf} は既存の Python リストなどから配列を作る。\code{np.zeros}\index{numpy@NumPy!np.zeros@\code{np.zeros}} と \code{np.ones}\index{numpy@NumPy!np.ones@\code{np.ones}} は、すべての要素をそれぞれ 0 と 1 で初期化する。\code{np.arange}\index{numpy@NumPy!np.arange@\code{np.arange}} は指定した刻み幅の数列、\code{np.linspace}\index{numpy@NumPy!np.linspace@\code{np.linspace}} は指定区間を等分する数列を作る。後者はビン中心、時間軸、周波数軸の生成に利用できる。
 
@@ -107,8 +117,9 @@ print(x)
 
 \subsection{条件抽出・ソート・差分・ヒストグラム}
 
-条件に合う要素の抽出、値のソート、隣接要素の差分、ヒストグラム\index{ひすとぐらむ@ヒストグラム|textbf}を、一つの時刻配列へ順に適用する例を示す。
+条件に合う要素の抽出、値のソート、隣接要素の差分、ヒストグラム\index{ひすとぐらむ@ヒストグラム|textbf}を、一つの時刻配列へ順に適用する例を示す。ヒストグラムは、値を区間に分け、各区間の個数を数えたものである。一つの区間をビンという。\([a,b)\) は \(a\) 以上 \(b\) 未満、\([a,b]\) は両端を含む区間を表す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 times = np.array([41, 10, 23, 15, 42])
 
@@ -123,7 +134,9 @@ print(deltas)
 print(hist)
 print(edges)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none]
 [41 23 42]
 [10 15 23 41 42]
@@ -131,6 +144,7 @@ print(edges)
 [2 1 2]
 [ 0 20 40 60]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この例で行っていることは次のとおりである。
 
@@ -143,7 +157,7 @@ print(edges)
 
 条件式が返すブール配列は、そのまま添字に指定できる。複数条件には \code{(times > 20) \& (times < 40)} のように要素ごとの論理演算を用いる。\code{np.diff} の結果は要素の順序に依存するため、時刻差を求める前に入力の順序を確認し、必要ならソートする。
 
-ヒストグラムは、ビン境界 \(b_0, b_1, \dots, b_n\) に対して
+以下の式の \(\#\{\cdots\}\) は、条件を満たす値の個数を表す。ヒストグラムは、ビン境界 \(b_0, b_1, \dots, b_n\) に対して
 \[
 h_k = \#\{ t_i \mid b_k \le t_i < b_{k+1} \}
 \]
@@ -153,6 +167,7 @@ h_k = \#\{ t_i \mid b_k \le t_i < b_{k+1} \}
 
 NumPy の演算子や多くの関数は、原則として要素ごとに働く。NumPy の公式ドキュメント~\cite{numpy_docs} では、\code{exp}、\code{sqrt}、\code{sin} のような要素ごとに作用する関数をユニバーサル関数\index{ゆにばーさるかんすう@ユニバーサル関数 (ufunc)|textbf}（ufunc）と呼んでいる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 a = np.array([1.0, 2.0, 3.0])
 b = np.array([10.0, 20.0, 30.0])
@@ -163,7 +178,9 @@ print(a ** 2)
 print(np.exp(a))
 print(np.sqrt(a))
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [11. 22. 33.]
 [2. 4. 6.]
@@ -171,6 +188,7 @@ print(np.sqrt(a))
 [ 2.71828183  7.3890561  20.08553692]
 [1.         1.41421356 1.73205081]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 配列どうしの四則演算は、形がそろっていれば要素ごとに実行される。\code{np.exp(a)} や \code{np.sqrt(a)} も同様である。関数が 1 要素に対して何をするかを知っていれば、その関数が配列全体へどう作用するかも追いやすい。
 
@@ -186,7 +204,7 @@ print(np.sqrt(a))
 
 次の 2 行 3 列の配列で、全体の合計、列ごとの合計、行ごとの合計を求める。\code{sum()} は合計を求める操作であり、\code{axis}\index{axis@\code{axis}|textbf} は、どの方向に並ぶ値を足すかを指定する。まず出力を見て、実際の足し算と対応させる。
 
-\noindent\begin{minipage}{\linewidth}
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 matrix = np.array([[1.0, 2.0, 3.0],
                    [4.0, 5.0, 6.0]])
@@ -208,7 +226,7 @@ print(col_max)
 [ 6. 15.]
 [4. 5. 6.]
 \end{lstlisting}
-\end{minipage}
+\end{minipage}\par\addvspace{6pt}
 
 \code{total} は全要素を足した \code{21.0} である。\code{axis=0} では、各列を上から下へ足す。1 列目は \code{1 + 4}、2 列目は \code{2 + 5}、3 列目は \code{3 + 6} なので、\code{[5., 7., 9.]} になる。
 
@@ -225,6 +243,7 @@ print(col_max)
 
 NumPy の添字には、Python リストと同じ整数・スライスに加え、多次元の軸指定とブール配列を使用できる。\index{すらいす@スライス|textbf}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 times = np.array([10, 15, 23, 41, 42])
 print(times[0])
@@ -237,7 +256,9 @@ print(grid[1, 2])
 print(grid[:, 1])
 print(grid[1, :])
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 10
 42
@@ -247,11 +268,13 @@ print(grid[1, :])
 [1 5 9]
 [4 5 6 7]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{times[1:4]} は添字 1 から 3、すなわち 2 番目から 4 番目までを取り出す。\code{grid[:, 1]} は全行の 2 列目、\code{grid[1, :]} は 2 行目全体である。多次元配列に対する \code{for row in grid:} は、第 0 軸に沿って 1 行ずつ反復する。同じ演算を全行へ適用する場合は、明示的な反復と配列演算のどちらが入力と出力の関係を直接表すかを比較する。
 
 スライスを使うと、章の冒頭の間隔計算を次のようにも書ける。途中の配列を表示して、どの値同士を引くかを確認する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 times = np.array([10, 15, 23, 41], dtype=np.int64)
 later = times[1:]
@@ -260,19 +283,23 @@ print(later)
 print(earlier)
 print(later - earlier)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [15 23 41]
 [10 15 23]
 [ 5  8 18]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{times[1:]} は先頭を除いた 3 個、\code{times[:-1]} は末尾を除いた 3 個を取り出す。配列同士の引き算では、同じ位置の値同士を引くため、\code{15 - 10}、\code{23 - 15}、\code{41 - 23} をまとめて計算できる。これが \code{np.diff(times)} と同じ結果になる。
 
 \subsection{配列形状の変更}
 
-配列の \code{shape} は、演算時の軸の対応を決める。1 次元配列、2 次元行列、2 次元の列ベクトルでは、同じ演算子を用いてもブロードキャスト後の結果が異なる。
+配列の \code{shape} は、演算時の軸の対応を決める。この節では、配列を行と列へ並べ直す操作を確認する。異なる形の配列どうしを計算する「ブロードキャスト」の規則は、後の節で説明する。1 次元配列、2 次元行列、2 次元の列ベクトルでは、同じ演算子を用いてもブロードキャスト後の結果が異なる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 a = np.arange(12)
 matrix = a.reshape(3, 4)
@@ -287,7 +314,9 @@ print(transposed)
 print(column.shape)
 print(column)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 (3, 4)
 [[ 0  1  2  3]
@@ -303,6 +332,7 @@ print(column)
  [2.]
  [3.]]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{reshape} は配列の形状を変える。\code{ravel} は、可能であればビューのまま 1 次元配列へ変換する。\code{T} は転置を表す。\code{[:, None]} は新しい軸を 1 本追加し、1 次元配列を列ベクトルのように扱う書き方である。この軸の追加は、後述するブロードキャストで配列同士の対応関係を指定する役割を持つ。
 
@@ -310,6 +340,7 @@ print(column)
 
 前処理済みデータを縦方向に連結する場合や、複数の特徴量を列方向に並べる場合には、連結する軸を指定する。逆に、一つの配列を同じ軸に沿って複数部分へ分割できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 x = np.array([1, 2, 3])
 y = np.array([4, 5, 6])
@@ -326,7 +357,9 @@ print(stacked)
 print(left)
 print(right)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [1 2 3 4 5 6]
 (2, 3)
@@ -339,6 +372,7 @@ print(right)
  [ 6  7]
  [10 11]]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{concatenate} は既存の軸に沿って配列を連結し、\code{stack} は新しい軸を追加して配列を並べる。\code{split} は指定した軸に沿って配列を分割する。これらの操作では、実行後の \code{shape} が意図した値と一致するかを確認する。
 
@@ -346,6 +380,7 @@ print(right)
 
 NumPy では、配列の形状をそろえなくても、自動拡張の規則に従って演算できる場合がある。この規則をブロードキャスト\index{ぶろーどきゃすと@ブロードキャスト|textbf}という。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 x = np.array([1.0, 2.0, 3.0])
 y = np.array([10.0, 20.0, 30.0])
@@ -357,9 +392,11 @@ print(z)
 print("\nmatrix =")
 print(matrix)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 後半の \code{matrix} では、1 次元配列に軸を追加して、3 行 3 列の和の表を作っている。このように、形状が異なる配列を一定の規則で拡張して演算する仕組みをブロードキャストという。二つの 1 次元配列から要素の全組合せを計算できる一方、結果の要素数は両配列の要素数の積になる。この例の結果を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 z =
 [11. 22. 33.]
@@ -369,6 +406,7 @@ matrix =
  [12. 22. 32.]
  [13. 23. 33.]]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この結果から、\code{z} は要素ごとの和、\code{matrix} は全組み合わせの表であることが分かる。\code{x} と \code{y} の要素数がそれぞれ \(N_x\) と \(N_y\) なら、\code{matrix} の要素数は \(N_xN_y\) になる。大きな配列では、生成前に形状、要素数、\code{dtype} から必要なメモリ量を見積もる。
 
@@ -385,6 +423,7 @@ M_{ij} = x_i + y_j
 
 平均は値の合計を個数で割ったものである。値が平均の周りにどの程度広がっているかは、分散と標準偏差で表せる。\code{ddof=0} の分散は、各値と平均との差を二乗して平均した値であり、その平方根が標準偏差になる。例えば \code{[1, 3]} は平均 2、平均との差が \code{[-1, 1]} なので、分散も標準偏差も 1 である。\code{ddof} を変えた場合の割り算は、例の後で説明する。NumPy には、これらの統計量や最小値、最大値、ヒストグラムを求める関数がある。代表的な統計量\index{numpy@NumPy!np.mean@\code{np.mean}}\index{numpy@NumPy!np.std@\code{np.std}}とヒストグラムを計算する例を下に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 values = np.array([1.0, 2.0, 2.0, 3.0, 4.0])
 mean = values.mean()
@@ -396,15 +435,18 @@ print(f"std = {std:.2f}")
 print(hist)
 print(edges)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{np.histogram} は、指定したビンごとの要素数とビン境界 \code{edges} を返し、図は作成しない。同じビン境界による複数データの比較や、度数に対するモデル計算を作図処理から独立させられる。これらの統計量を出力した結果を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 mean = 2.40
 std = 1.02
 [1 3 1]
 [0. 2. 4. 6.]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この例では、\code{[0, 2)} に 1 個、\code{[2, 4)} に 3 個、\code{[4, 6]} に 1 個入っている。平均や標準偏差だけでは分布の形は分からず、ヒストグラムだけでは条件間比較がしにくい。数値要約と分布表示を組み合わせて読むことが、データ解析では基本になる。
 
@@ -426,6 +468,7 @@ NumPy の \code{std()} の既定は \code{ddof=0}、pandas の \code{std()} の�
 
 \code{*} は要素ごとの積であり、行列積ではない。行列積の計算には \code{@} または \code{np.dot} を用いる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 A = np.array([[1.0, 2.0],
               [3.0, 4.0]])
@@ -435,6 +478,7 @@ B = np.array([[5.0, 6.0],
 print(A * B)
 print(A @ B)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 演算子を取り違えても、形状が適合すれば例外が発生せず、意味の異なる数値が得られる場合がある。線形代数や座標変換では、期待する数式と演算子を対応付け、既知の小さな入力で結果を検証する。
 
@@ -442,6 +486,7 @@ print(A @ B)
 
 2 次元配列を集計するとき、\code{axis=0} は第 0 軸を縮約して列ごとの値を返し、\code{axis=1} は第 1 軸を縮約して行ごとの値を返す。また、配列どうしの条件結合では \code{and} や \code{or} ではなく、要素ごとの論理演算子 \code{\&} や \code{|} を使う。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 matrix = np.array([[1, 2, 3],
                    [4, 5, 6]])
@@ -453,13 +498,16 @@ mask = (times > 10) & (times < 40)
 print(mask)
 print(times[mask])
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [5 7 9]
 [ 6 15]
 [False  True  True False False]
 [15 23]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{times > 10 \& times < 40} のように括弧を省略すると、演算子の優先順位によって意図した比較にならない。各比較を括弧で囲み、その結果を \code{\&} または \code{|} で結合する。
 
@@ -467,6 +515,7 @@ print(times[mask])
 
 NumPy では、異なる型の値を同じ配列へ入れると、一定の変換規則に従って配列全体の \code{dtype} が決まる。その結果、数値計算を意図した配列が文字列配列になる場合がある。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 a = np.array([1, 2.5])
 b = np.array([1, "2"])
@@ -478,7 +527,9 @@ print(np.issubdtype(a.dtype, np.number))
 print(np.issubdtype(b.dtype, np.number))
 print(tmp.shape)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 float64
 U
@@ -486,6 +537,7 @@ True
 False
 (5,)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{a} は浮動小数点へそろえられる。これに対して \code{b} は \code{dtype.kind == "U"}、つまり Unicode 文字列の配列であり、数値演算には使えない。\code{tmp} は 0 で初期化されないため、読み出し前に全要素へ値を代入する。配列の生成方法に応じて、\code{dtype} と初期化の有無を確認する。
 
@@ -495,6 +547,7 @@ NumPy の整数型は固定長であり、表現範囲を超えるとオーバ�
 
 配列のコピーは独立したメモリを使用するため、大きな配列を繰り返しコピーするとメモリ使用量と転送時間が増える。一方、ビューは元配列とメモリを共有する。ビューに値を代入すると、元の配列も変わる。各操作がコピーとビューのどちらを返すかを区別する必要がある。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 a = np.arange(6)
 
@@ -509,14 +562,17 @@ print("a after view =", a)
 print("copy         =", copy)
 print("safe         =", safe)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この例では、スライスで作った \code{view} は元の \code{a} とデータを共有するので、\code{view[:] = -1} とすると \code{a} も変わる。これに対して、整数配列やブール配列による取り出しは新しい配列を返すので、\code{copy[:] = 99} としても元の \code{a} は変わらない。\code{reshape} や \code{ravel} も可能ならビューを返す。元配列から独立したデータ領域が必要な場合は、\code{copy()} を明示する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 a after view = [ 0 -1 -1 -1  4  5]
 copy         = [99 99 99]
 safe         = [ 0 -1 -1 -1  4  5]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この出力では、\code{view} を書き換えた時点で元配列 \code{a} が変化しているのに対し、\code{copy} は独立していることが見て取れる。
 
@@ -524,16 +580,20 @@ safe         = [ 0 -1 -1 -1  4  5]
 
 浮動小数点数では、計算手順による丸め誤差のため、数学的に等しい値がビット単位では一致しない場合がある。許容する相対誤差と絶対誤差を定められる場合は、直接比較の代わりに \code{np.isclose} または \code{np.allclose} を用いる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 a = 0.1 + 0.2
 print(a == 0.3)
 print(np.isclose(a, 0.3))
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 False
 True
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 有限値に対する \code{np.isclose(a, b)} は、\(\lvert a-b\rvert\leq\mathrm{atol}+\mathrm{rtol}\lvert b\rvert\) を判定する。既定の許容差が測定精度に適するとは限らないため、単位と値の大きさに合わせて指定する。\code{np.allclose()} もブロードキャストするので、配列の同一性を検証する際は形状の一致を先に確認する。欠損値を一致とみなすかどうかも別に定める。
 
@@ -592,6 +652,7 @@ NumPy の配列演算と Python の要素別ループには、主に次の三つ
 
 解析では、まず時刻順に並べ、次に差分を取り、その後で条件に合う値を選んで分布を見る、という流れがよく現れる。NumPy ではこの流れをほぼそのまま式として書ける。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 times = np.array([10, 15, 23, 41, 42])
 order = np.argsort(times)
@@ -604,32 +665,40 @@ print("sorted_times =", sorted_times)
 print("deltas       =", deltas)
 print("peak_bin     =", peak_bin)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{np.argsort} は並べ替え順の添字を返す。\code{np.diff} は隣接差分である。\code{hist.argmax()} は最も高いビンの位置を返す。イベント時刻、スペクトル、波形特徴量のいずれでも、この種の処理は頻出である。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 sorted_times = [10 15 23 41 42]
 deltas       = [ 5  8 18  1]
 peak_bin     = 0
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \subsection{\code{numpy.linalg} による連立一次方程式の求解}
 
 \code{numpy.linalg} は、連立一次方程式、行列分解、固有値などの線形代数演算を提供する。次の例では、2 元連立一次方程式 \(A\boldsymbol{x}=\boldsymbol{b}\) を \code{solve} で解く。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 A = np.array([[1.0, 1.0],
               [1.0, -1.0]])
 b = np.array([3.0, 1.0])
 x = np.linalg.solve(A, b)
+print(x)
+print(A @ x)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-行列演算は、校正係数の決定、座標変換、最小二乗法の前処理に現れる。制約付き最適化や疎行列など、\code{numpy.linalg} の範囲を越える機能は SciPy の公式資料~\cite{scipy_docs} を参照するとよい。
+この行列は \(x_1+x_2=3\)、\(x_1-x_2=1\) を表す。出力は解 \code{[2., 1.]} と、それを左辺へ代入した \code{[3., 1.]} になる。行列演算は、校正係数の決定、座標変換、最小二乗法の前処理に現れる。制約付き最適化や疎行列など、\code{numpy.linalg} の範囲を越える機能は SciPy の公式資料~\cite{scipy_docs} を参照するとよい。
 
 \subsubsection{Python リストで要素ごとに計算する場合}
 
 Python の標準リストは異なる型のオブジェクトを同じリストに保持できる。一方、同じ数値演算を大量の要素へ適用する場合は、各要素について Python の演算を呼び出す必要がある。次の例では、100 万個の整数を 2 倍する処理を内包表記で記述している。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 # 100万要素のリストを作る
 py_list = list(range(1000000))
@@ -637,6 +706,7 @@ py_list = list(range(1000000))
 # 内包表記の反復で、すべての要素を2倍にする
 doubled_list = [x * 2 for x in py_list]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 一般的な CPython のリストは、値そのものではなく Python オブジェクトへの参照を並べて保持する。内包表記では、各参照から値を取り出し、Python の整数演算を呼び出し、新しい整数オブジェクトへの参照を結果リストへ格納する。この反復処理が、固定長の数値配列を低レベルのループで処理する場合との差になる。
 
@@ -644,6 +714,7 @@ doubled_list = [x * 2 for x in py_list]
 
 NumPy 配列では、\code{int64} や \code{float64} のような共通の型に従って要素を格納する。\code{np\_array * 2} と書くと、Python で要素ごとのループを記述せず、NumPy 内部のループへ配列全体の処理を渡せる。リストを NumPy 配列へ変換してから計算する例を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 
@@ -656,11 +727,13 @@ doubled_array = np_array * 2
 # 3. 必要な出力形式がリストの場合にだけ変換する
 back_to_list = doubled_array.tolist()
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-\subsubsection{pandas DataFrame との変換}
+\subsubsection{補足：pandas DataFrame との変換}
 
 後述する pandas DataFrame は、列名と行ラベルを持つ表形式のデータ構造であり、列の内部では NumPy 配列や拡張配列が使われる。解析の途中で NumPy の関数を使いたい場合は、DataFrame や Series を NumPy 配列へ変換できる。pandas の DataFrame・Series と NumPy 配列を相互変換する基本形は次の通りである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import pandas as pd
 
@@ -670,8 +743,25 @@ df = pd.DataFrame(np_array, columns=["Value"])
 # pandas の列から NumPy 配列を得る
 values_array = df["Value"].to_numpy()
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{to\_numpy()} がコピーを作るかどうかは、列の型、列数、必要な型変換に依存する。単一の数値列では元データとメモリを共有する場合もあるが、常に共有されるとは限らない。コピーの有無が性能や書き換えに影響する場面では、\code{np.shares\_memory()} で確認し、必要なら \code{to\_numpy(copy=True)} で独立した配列を要求する。
+
+\subsection{配列を保存して次の解析へ渡す}
+
+NumPy 配列は、型と形を保つ NPY 形式で保存できる。次のコードは \code{saved\_intervals.npy} を作り、同じ値を読み戻す。
+
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=Python]
+saved_intervals = np.array([5.0, 8.0, 18.0])
+np.save("saved_intervals.npy", saved_intervals)
+loaded_intervals = np.load("saved_intervals.npy")
+print(loaded_intervals)
+print(np.array_equal(saved_intervals, loaded_intervals))
+\end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
+
+表示は \code{[5., 8., 18.]} と \code{True} になる。\code{np.array\_equal()} は形と各要素が一致するかを確かめる。この形式は数値配列の受け渡しに使い、時刻の基準や単位はファイル名や解析記録にも残す。
 
 \subsection{公式資料の使い方}
 
@@ -682,11 +772,13 @@ NumPy の基礎を復習したいときは、NumPy quickstart~\cite{numpy_quicks
 
 本章の作業フォルダー \code{\textasciitilde/analysis\_practice/numpy} に \code{numpy\_exercises.py} を作り、次のコードと各問の処理を保存する。端末では \code{python numpy\_exercises.py} で実行する。\code{times} は、観測開始から何秒後に事象が起きたかを表す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 
 times = np.array([720.0, 0.0, 60.0, 4200.0, 180.0, 780.0])
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
@@ -701,7 +793,7 @@ times = np.array([720.0, 0.0, 60.0, 4200.0, 180.0, 780.0])
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{発展：実際の地震の間隔を比較する。}
-第~\ref{chap:shell}~章で取得した CSV の \code{time} を日時へ変換し、時刻順に並べた後、差を秒単位で求めよ。入力ファイルの場所をコードに指定する。固定幅ビンと、\code{np.logspace(np.log10(1), np.log10(3600), 30)} による対数ビンで集計する。空のビン数、0 以下の間隔数、ビンの範囲外の間隔数を表にせよ。緯度・経度で日本近海の範囲を決め、その範囲の地震だけで間隔を計算し直す。同じ期間の全球データと表で比較し、選んだ緯度・経度の範囲を記せ。
+第~\ref{chap:shell}~章で取得した CSV の \code{time} を日時へ変換し、時刻順に並べた後、差を秒単位で求めよ。入力ファイルの場所をコードに指定する。0～3600 秒の 600 秒幅のビンと、\code{np.logspace(np.log10(1), np.log10(3600), 30)} による対数ビンで集計する。この指定は、1 秒と 3600 秒を両端とし、比が一定になる 30 個の境界を作るので、ビンは 29 個になる。浮動小数点数の丸めを避けるため、境界配列の最後の値を 3600.0 に設定してから使う。空のビン数、0 以下の間隔数、ビンの範囲外の間隔数を表にせよ。緯度・経度で日本近海の範囲を決め、その範囲の地震だけで間隔を計算し直す。同じ期間の全球データと表で比較し、選んだ緯度・経度の範囲を記せ。全球データから求めた秒単位の間隔を \code{real\_intervals} とし、\code{np.save("real\_intervals.npy", real\_intervals)} で保存する。
 \end{minipage}
 
 \end{enumerate}

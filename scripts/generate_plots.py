@@ -388,4 +388,45 @@ fig.tight_layout()
 fig.savefig("../assets/figures/histfit_module_example.pdf")
 plt.close(fig)
 
+# 7. Heatmap and colorbars (same inputs and axes as the textbook)
+from matplotlib.colors import LogNorm
+
+x = np.linspace(-3.0, 3.0, 160)
+y = np.linspace(-2.5, 2.5, 140)
+xx, yy = np.meshgrid(x, y)
+image = np.exp(-(xx**2 + 1.6 * yy**2)) + 0.02
+rng = np.random.default_rng(1234)
+sample_x = rng.normal(loc=0.0, scale=1.0, size=80000)
+sample_y = 0.7 * sample_x + rng.normal(loc=0.0, scale=0.8, size=80000)
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+im = axes[0].imshow(image, origin="lower", cmap="viridis", aspect="auto")
+fig.colorbar(im, ax=axes[0], label="intensity")
+h = axes[1].hist2d(sample_x, sample_y, bins=90, norm=LogNorm(), cmap="magma")
+fig.colorbar(h[3], ax=axes[1], label="counts")
+fig.tight_layout()
+fig.savefig("../assets/figures/heatmap_colorbar_example.pdf")
+plt.close(fig)
+
+# 8. Projections of the same synthetic points as the textbook
+lon_deg = np.linspace(-180.0, 180.0, 241)
+lat_deg = 25.0 * np.sin(np.deg2rad(2.0 * lon_deg))
+lon = np.deg2rad(lon_deg)
+lat = np.deg2rad(lat_deg)
+
+fig = plt.figure(figsize=(10, 4))
+ax1 = fig.add_subplot(1, 2, 1, projection="hammer")
+ax2 = fig.add_subplot(1, 2, 2, projection="mollweide")
+ax1.scatter(lon, lat, s=8)
+ax2.scatter(lon, lat, s=8)
+ax1.set_title("Hammer")
+ax2.set_title("Mollweide")
+ax1.tick_params(labelsize=8)
+ax2.tick_params(labelsize=8)
+ax1.grid(True)
+ax2.grid(True)
+fig.tight_layout()
+fig.savefig("../assets/figures/projection_examples.pdf")
+plt.close(fig)
+
 print("Figures generated successfully.")

@@ -16,23 +16,29 @@ macOS では「ターミナル」を開く。Windows では前章の手順で WS
 
 \code{uv --version} で番号が表示される場合は、次の小節へ進む。\code{command not found} と表示される場合は、公式の導入スクリプト~\cite{uv_install} を保存する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ cd ~
 $ curl -fLsS https://astral.sh/uv/install.sh -o uv-install.sh
 $ less uv-install.sh
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{less} の表示は \code{q} で閉じる。取得元とスクリプトの内容を確認したうえで、次を実行する。導入先や変更内容はスクリプトが表示する案内で確認する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ sh uv-install.sh
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-導入後は、新しい端末を開いて \code{uv --version} を実行する。\code{uv 0.x.y} のように番号が出れば、次へ進める。番号自体は導入時期によって変わる。
+導入後は、新しい端末を開いて \code{uv --version} を実行する。\code{uv 0.x.y} のように番号が出れば、次へ進める。番号自体は導入時期によって変わる。新しい端末でも見つからない場合は、\code{source "\$HOME/.local/bin/env"} を実行して、もう一度確認する。導入時に別の保存先が案内された場合は、その案内に従う。
 
 \subsection{作業用フォルダーと Python を用意する}
 
 次の命令を 1 行ずつ実行する。\code{analysis\_practice} には、この章で作るファイルを保存する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ~
 $ mkdir -p analysis_practice
@@ -41,6 +47,7 @@ $ uv venv --python 3.12 --seed .venv
 $ source .venv/bin/activate
 $ python --version
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{uv venv} は、使用する Python と追加ライブラリをまとめる作業用の環境を \code{.venv} に作る。指定した Python が手元になければ、uv が取得する。\code{--seed} は後で使う pip もこの環境へ入れる指定である。\code{source} の行は、この端末でその環境を使い始める命令である。
 
@@ -50,25 +57,31 @@ $ python --version
 
 コードを書くには、文字だけのファイルを編集するテキストエディタを使う。ここでは、端末内で使えるエディタ \code{nano} を例にする。\code{analysis\_practice} にいることを \code{pwd} で確認し、次を入力する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ nano first_calculation.py
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 編集画面が開いたら、次の 2 行を入力する。左側の行番号は入力しない。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, title={first\_calculation.py}]
 count = 3
 print(count + 2)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 Ctrl キーを押しながら O を押すと、保存するファイル名の確認が出る。Enter で確定し、Ctrl+X でエディタを閉じる。\code{nano} を使えない場合や使い慣れたエディタがある場合は、そのエディタで同じ内容を保存してよい。ファイル形式は標準テキスト、文字コードは UTF-8 とし、名前の末尾が \code{.py.txt} にならないようにする。
 
 ターミナルへ戻ったら、保存したファイルを実行する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python first_calculation.py
 5
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{python} は Python を起動する命令であり、後ろの \code{first\_calculation.py} は実行するファイル名である。\code{print()} は括弧内の計算結果を画面に表示する。\code{5} が表示されれば、保存したコードを実行できている。
 
@@ -80,12 +93,14 @@ $ python first_calculation.py
 
 作業を終えたら、端末で \code{deactivate} を実行して仮想環境の利用を終える。作成したファイルや環境は削除されない。再開するときは、新しく開いた端末で次を実行する。環境を毎回作り直す必要はない。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ~/analysis_practice
 $ source .venv/bin/activate
 $ python first_calculation.py
 12
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \section{使っている Python を確認する}
 
@@ -93,11 +108,13 @@ $ python first_calculation.py
 
 以下は、\code{analysis\_practice} フォルダーへ移動し、\code{source .venv/bin/activate} で仮想環境を有効にした端末で実行する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python --version
 $ command -v python
 $ python -c "import sys; print(sys.executable)"
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 1 行目は版、2 行目はシェルが見つけた命令の場所、3 行目は実際に起動した Python の実行ファイルの場所を表示する。\code{-c} は、後ろの引用符内を Python コードとして実行する指定である。ここでは \code{sys} という Python 付属の機能で、実行ファイルの場所を表示している。仮想環境を使っていれば、2 行目と 3 行目には通常 \code{analysis\_practice/.venv/bin/python} を含むパスが出る。値が異なる場合は、現在のフォルダーと仮想環境の有効化を確認する。
 
@@ -126,16 +143,20 @@ tqdm & 処理の進み具合の表示 \\
 
 \code{analysis\_practice} の仮想環境を有効にした端末で、次を実行する。\code{pip} は外部ライブラリを導入する道具である。\code{python -m pip} と書くことで、現在使っている Python に対応する pip を実行できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python -m pip install numpy pandas polars matplotlib scipy astropy tqdm
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 途中には取得状況やライブラリ名が表示される。最後にエラーが出ずに入力待ちへ戻ったら、次の命令で、導入した機能を Python から読み込めるか確認する。\code{import} はライブラリを使うための読み込み命令である。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python -c "import numpy, pandas, polars, matplotlib, scipy, astropy, tqdm; print('OK')"
 OK
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{ModuleNotFoundError} が出た場合は、表示された名前のライブラリを読み込めていない。仮想環境を有効にしたか、導入時の名前を間違えていないかを確認する。
 

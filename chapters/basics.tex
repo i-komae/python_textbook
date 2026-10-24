@@ -5,11 +5,13 @@
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/basics
 $ cd ~/analysis_practice/basics
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
 
@@ -18,11 +20,13 @@ $ cd ~/analysis_practice/basics
 準備した端末で \code{python} と入力すると、Python を対話モード（インタラクティブモード）で起動できる。
 インタラクティブモードでは、Python のバージョン情報に続いて入力待ちを表す \code{>>>} が表示される。次は表示の一部を示した例である。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 $ python
 Python 3.12.14 ...
 >>>
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この章の前半には、インタラクティブモードへの入力と、その直後に表示される値を対にして示す。\code{\$}、\code{>>>}、継続行の \code{...} は入力待ちを表すプロンプトであり、入力するコードには含めない。複数行の処理は空行で確定し、\code{exit()} で Python を終了する。スクリプトでは、式だけを書いても値は表示されず、\code{print()} などによる出力が必要になる。
 
@@ -30,7 +34,7 @@ Python 3.12.14 ...
 
 測定値を後の計算でも使いたいときは、値に名前を付ける。次の例では、最初の測定値を \code{first}、次の測定値を \code{second} という名前で使う。対話モードでは、\code{>>>} の後へ 1 行ずつ入力する。ファイルで試す場合は、4 行を \code{mean.py} へ保存して \code{python mean.py} で実行する。
 
-\noindent\begin{minipage}{\linewidth}
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 first = 12.4
 second = 15.1
@@ -41,7 +45,7 @@ print(mean)
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 13.75
 \end{lstlisting}
-\end{minipage}
+\end{minipage}\par\addvspace{6pt}
 
 \code{mean} には、2 つの測定値の平均が入る。このように、値を使うために付けた名前を「変数」という。\code{=} は、右側の値を左側の名前で使えるようにする代入の記号である。数学の等号とは意味が異なり、値を比較するときには \code{==} を使う。比較は第~\ref{subsec:if}~節で扱う。
 
@@ -51,6 +55,7 @@ print(mean)
 
 次に、数値の \code{12} と、引用符で囲んだ \code{"12"} を比べる。対話モードで入力すると、次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> count = 12
 >>> text = "12"
@@ -59,9 +64,11 @@ print(mean)
 >>> text + "3"
 '123'
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{count + 3} は数値を足す。一方、\code{text + "3"} は文字を後ろにつなげるため、\code{'123'} になる。引用符で囲んだ値を「文字列」という。ファイルから読み込んだ \code{"12"} を数値として計算したいときは、\code{int(text)} のように変換する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> int(text) + 3
 15
@@ -70,6 +77,7 @@ print(mean)
 >>> type(text)
 <class 'str'>
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{type()} は、その値がどの種類かを返す。この種類を「型」という。\code{int} は整数、\code{str} は文字列を表す。
 
@@ -77,7 +85,7 @@ print(mean)
 
 小数を扱う型を浮動小数点型（\code{float}）という。最初の例の \code{12.4} と \code{15.1} はこの型である。条件を満たすかどうかを表す \code{True} と \code{False} は真偽値（\code{bool}）である。
 
-\noindent\begin{minipage}{\linewidth}
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> type(12.4)
 <class 'float'>
@@ -85,18 +93,20 @@ print(mean)
 >>> type(use_log)
 <class 'bool'>
 \end{lstlisting}
-\end{minipage}
+\end{minipage}\par\addvspace{6pt}
 
 件数には整数、平均値のように小数になり得る値には浮動小数点数、名前には文字列を使う。Python では、使い始める前に変数の型を宣言する必要はないが、値ごとの型は区別される。NumPy で大量の値を扱うときの型は、第~\ref{sec:numpy-types}~節で説明する。
 
 \code{None} は「値がない」ことを表す特別な値であり、0、空文字列、\code{False} とは異なる。測定できなかった信号を表す場合などに使い、\code{value is None} で判定する。
 
+コードの \code{\#} から行末までは、動作を説明するコメントである。Python はその部分を命令として実行しない。例えば \code{print(3 + 2) \# 5} は、\code{5} を表示する命令に、結果を説明するコメントを添えたものである。
+
 \subsection{数値と演算子}\index{えんざんし@演算子|textbf}\index{しそくえんざん@四則演算}\index{べきじょう@べき乗}\index{じょうよ@剰余}\index{せいすうじょざん@整数除算}
 
 対話モードでは、式を入力するたびに評価結果が表示される。四則演算、べき乗、剰余、床除算の例を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
-$ python
 >>> 2 + 3
 5
 >>> 2 * 3
@@ -110,10 +120,12 @@ $ python
 >>> 2 ** 10
 1024
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{/} は通常の除算を行い、整数どうしでも浮動小数点数を返す。\code{//} は商を負の無限大方向へ切り下げる床除算であり、正の整数どうしでは小数部分を切り捨てた結果と一致する。特に負の値を含む場合、\code{-7 // 3} は \code{-3} であり、0 方向へ切り捨てる \code{int(-7 / 3)} の \code{-2} とは一致しない。計算の順序を明確にするため、必要な箇所を括弧で囲む。
 
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> 2 + 3 * 4
 14
@@ -126,6 +138,7 @@ $ python
 >>> int(7 / 3)
 2
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この例では、\code{7 // 3} と \code{int(7 / 3)} はどちらも \code{2} になるが、計算規則は異なる。\code{//} は床除算であり、\code{int(7 / 3)} はまず浮動小数点数の除算を行い、その結果を 0 方向へ切り捨てて整数へ変換している。正の値だけでは差が見えないため、負の値を含む処理では両者を混同してはならない。
 
@@ -137,6 +150,7 @@ $ python
 Python では、\code{"} や \code{'} で挟まれたものを文字列として認識する。
 文字列には、分割、検索、置換、前後の空白除去などの操作を適用できる。次の例では、\code{name.upper()} で文字を大文字にする。このように、値の後ろへ \code{.操作名()} を付けて呼び出す関数をメソッドという。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> name = "detector_A"
 >>> date = "2026-04-04"
@@ -152,6 +166,7 @@ Python では、\code{"} や \code{'} で挟まれたものを文字列として
 >>> f"{name}_{date}.txt"
 'detector_A_2026-04-04.txt'
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{date.replace("-", "/")} は、\code{-} を \code{/} へ置き換えた文字列を返す。丸括弧の中に渡す \code{"-"} と \code{"/"} を引数、処理の結果として得る \code{'2026/04/04'} を返り値という。\code{upper()} のように引数がなくても、操作を実行するときは丸括弧を付ける。
 
@@ -165,14 +180,17 @@ f文字列\index{もじれつ@文字列!fもじれつ@f文字列|textbf}を用�
 
 複数の値をまとめて保持するデータ構造として、リスト、タプル、辞書がある。三つの定義例を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> labels = ["A", "B", "C", "D"]
 >>> point = (12, 18)
 >>> row = {"id": 42, "value": 3.5, "flag": True}
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 リストとタプルは要素の順序を保つ。リストの要素は変更できるが、タプルの要素は差し替えられない。辞書ではキーと値を対応付ける。実際に要素を取り出すときは、リストやタプルでは位置を、辞書ではキーを使う。対話モードで試すと次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> labels[0]
 'A'
@@ -183,6 +201,7 @@ f文字列\index{もじれつ@文字列!fもじれつ@f文字列|textbf}を用�
 >>> row["value"]
 3.5
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この例では、\code{labels[0]} は最初のラベル、\code{point[1]} は 2 番目の座標成分、\code{row["id"]} は \code{"id"} というキーに対応する値を表す。位置を示す番号を添字といい、先頭を 0 として数える。辞書のキーは、\code{"id"} のように値を取り出すための名前である。
 
@@ -191,26 +210,33 @@ Python が扱う数値、文字列、リスト、辞書などの値をまとめ�
 データ構造は、必要な操作に応じて選ぶ。位置で要素を取り出す場合はリストやタプル、キーによって値を取り出す場合は辞書が適する。選択によって、コードの可読性、変更可能性、メモリ使用量、処理時間が変わる。
 
 リストは作成後に要素を変更できる。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> labels[1] = "B_detector"
 >>> labels
 ['A', 'B_detector', 'C', 'D']
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 一方、タプルは作った後で要素を書き換えられない。たとえば次のようにするとエラーになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> point[0] = 15
 Traceback (most recent call last):
   ...
 TypeError: 'tuple' object does not support item assignment
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 座標のように、複数の成分を一組の値として保持し、作成後に要素を変更しない場合にはタプルが向く。ラベルや処理対象ファイルの一覧など、要素を追加、削除、更新する場合にはリストが向く。辞書は、列名や設定名などのキーによって値を参照する場合に、対応関係を明示できる。
 
 \subsection{集合と要素の所属}
+
+ここまでと同じ対話モードで試す。以下で \code{>>>} の印がない短い Python コードも、1 行ずつ入力してよい。関数の節へ進んだら、例をファイルへ保存して実行する方法へ切り替える。
 \index{しゅうごう@集合|textbf}\index{set@\code{set}|textbf}\index{len@\code{len()}|textbf}
 集合（\code{set}）は、重複を持たない要素の集まりである。要素の表示順序や添字による位置は保証されない。\code{in} は要素が含まれるかを判定し、\code{len()} は要素数を返す。両者はリストや辞書などにも使え、辞書に対する \code{in} はキーの存在を調べる。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 detectors = {"A", "B", "A"}
 print(len(detectors))                 # 2
@@ -218,11 +244,13 @@ print("A" in detectors)               # True
 print(detectors & {"B", "C"})          # {'B'}
 empty_set = set()
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 \code{\&} は共通部分、\code{|} は和集合、\code{-} は差集合を求める。空の集合は \code{set()} で作る。\code{\{\}} は空の辞書である。集合の要素と辞書のキーには、文字列や整数など、検索に使う数値（ハッシュ値）を計算できる値を使う。この性質をハッシュ可能という。リストはそのままでは使えない。
 
 \subsection{代入とコピー}
 \index{こぴー@コピー!りすと@リスト}
-\code{b = a} は、\code{a} が参照する値に別の名前を付ける代入であり、リストのコピーを作る操作ではない。
+\code{append()} はリストの末尾に値を追加する操作である。\code{b = a} は、\code{a} が参照する値に別の名前を付ける代入であり、リストのコピーを作る操作ではない。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 a = [1, 2]
 b = a
@@ -232,12 +260,14 @@ c = a.copy()
 c.append(4)
 print(a)                       # [1, 2, 3]
 \end{lstlisting}
-\code{copy()} は外側のリストを複製する浅いコピーである。入れ子になったリストなどの要素は共有される。タプルは要素の差し替えができないが、その中にあるリスト自体の変更までは禁止しない。
+\end{minipage}\par\addvspace{6pt}
+\code{copy()} は外側のリストを複製する浅いコピーである。例えば、リストの中にさらにリストを入れたものを「入れ子のリスト」という。入れ子になったリストなどの要素は共有される。タプルは要素の差し替えができないが、その中にあるリスト自体の変更までは禁止しない。
 
 \subsection{リストのメソッド}\index{めそっど@メソッド|textbf}\index{append@\code{append()}|textbf}\index{sort@\code{sort()}|textbf}\index{sorted@\code{sorted()}|textbf}\index{pop@\code{pop()}|textbf}
 
 リストの要素追加、並べ替え、取り出しに用いる主なメソッドを次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> values = [3, 1, 4]
 >>> values
@@ -254,12 +284,14 @@ print(a)                       # [1, 2, 3]
 >>> values
 [1, 1, 3]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{append()} は末尾へ追加し、\code{sort()} はその場で並べ替え、\code{pop()} は末尾要素を取り出して削除する。
 
 リストメソッドの多くは「その場で変更する」点に注意が必要である。新しいリストを返すのではなく、元のリスト自体を書き換える操作が多いので、どこで状態が変わるかを意識して読む必要がある。
 
 特に \code{sort()} は、並べ替えたリストを返すのではなく、元のリストそのものを変更する。そのため、次のように書くと意図とずれることがある。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> values = [3, 1, 4]
 >>> result = values.sort()
@@ -268,8 +300,10 @@ None
 >>> values
 [1, 3, 4]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 元のリストを保持し、並べ替えた新しいリストを作る場合は \code{sorted()} を用いる。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> values = [3, 1, 4]
 >>> new_values = sorted(values)
@@ -278,11 +312,13 @@ None
 >>> new_values
 [1, 3, 4]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \subsection{インデックスとスライス}\index{いんでっくす@インデックス|textbf}\index{そえじ@添字|see{インデックス}}\index{すらいす@スライス|textbf}\index{ふのそえじ@負の添字}
 
 解析では、配列や文字列の一部を取り出す操作が頻出する。Python では、\code{[]} の中に位置を指定して要素を取り出す。この位置を表す整数をインデックスとよぶ。\code{:} を用いて範囲を切り出す操作はスライスとよばれる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> values = [10, 20, 30, 40, 50]
 >>>
@@ -299,12 +335,14 @@ None
 >>> values[:-1]
 [10, 20, 30, 40]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 リストのインデックスは \code{0} から始まる。負のインデックスは末尾から数え、\code{-1} は最後の要素を表す。
 この例では、\code{values[1:4]} はインデックス 1 から 3 までの要素、\code{values[:3]} は \code{values[3]} より前の要素、\code{values[2:]} は \code{values[2]} 以降の要素を取り出す。
 リストのスライスでは、\code{:} の左側に指定した位置の要素は含まれるが、右側に指定した位置の要素は含まれない。
 
 文字列に対しても同じ考え方が使える。例えば次のようになる。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> hhmmss = "123045"
 >>> hhmmss[0:2]
@@ -314,6 +352,7 @@ None
 >>> hhmmss[4:6]
 '45'
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{hhmmss[0:2]}、\code{hhmmss[2:4]}、\code{hhmmss[4:6]} は、それぞれ時、分、秒に対応する 2 文字を取り出す。開始位置を含み終了位置を含まないスライス規則は、いずれの部分文字列にも共通する。
 
@@ -322,8 +361,11 @@ None
 \subsection{条件分岐}\index{じょうけんぶんき@条件分岐|textbf}\index{if@\code{if}|textbf}\index{elif@\code{elif}}\index{else@\code{else}}\index{ひかくえんざんし@比較演算子}\index{ろんりえんざんし@論理演算子}
 \label{subsec:if}
 
+\code{if} などの末尾のコロン \code{:} に続く処理のまとまりをブロックと呼ぶ。Python では、行頭の空白による字下げ（インデント）でブロックを表し、同じ深さの処理をそろえる。通常は 1 段につき空白 4 個を使い、タブと空白を混在させない。
+
 条件によって処理を変えるには \code{if} を使う。最も基本的な形は次の通りである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> value = 2.5
 >>> threshold = 3.0
@@ -334,8 +376,10 @@ None
 ...
 small
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 比較に使う主な演算子には、\code{==}、\code{!=}、\code{<}、\code{<=}、\code{>}、\code{>=} がある。たとえば \code{value <= threshold} は「\code{value} が \code{threshold} 以下なら真」を意味する。条件式そのものの値は真偽値であり、\code{True} か \code{False} のどちらかになる。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> value = 5
 >>> threshold = 3
@@ -344,9 +388,11 @@ True
 >>> value == threshold
 False
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 条件が 3 通り以上に分かれる場合は、\code{if} に続けて \code{elif} を置く。条件は上から順に評価され、最初に真となった分岐だけが実行される。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> value = 3.0
 >>> threshold = 3.0
@@ -359,6 +405,7 @@ False
 ...
 equal
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 解析コードでは、閾値判定、ファイル名の選別、欠損値の除外などに条件分岐を用いる。条件を決めたら、境界値、採用理由、条件を満たす場合と満たさない場合の処理を記録する。
 
@@ -366,6 +413,7 @@ equal
 
 複数の条件を同時に満たす場合には \code{and}、少なくとも一方を満たす場合には \code{or}、真偽を反転する場合には \code{not} を用いる。条件が長い場合は、物理的または解析上の意味ごとに変数へ分けると、各条件を個別に検証できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> value = 5
 >>> lower = 3
@@ -378,15 +426,15 @@ False
 >>> not use_log
 True
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 否定が重なる条件や、複数の \code{and} と \code{or} が混在する条件では、括弧で評価順序を明示するか、意味を表す一時変数に分割する。条件式には、境界値と真偽の組み合わせを検証するテストを用意する。
-
-\code{if} などの末尾のコロン \code{:} に続く処理のまとまりをブロックと呼ぶ。Python では、行頭の空白による字下げ（インデント）でブロックを表し、同じ深さの処理をそろえる。通常は 1 段につき空白 4 個を使い、タブと空白を混在させない。
 
 \subsection{反復処理}
 
 \code{for} 文は、複数の値を順に取り出して同じ処理を適用する構文である。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> for label in labels:
 ...     print(label)
@@ -396,9 +444,11 @@ B_detector
 C
 D
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 要素とその番号（添字）の両方が必要な場合は、\code{enumerate} を組み合わせる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> for i, value in enumerate(labels):
 ...     print(i, value)
@@ -408,6 +458,7 @@ D
 2 C
 3 D
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 一方、大規模なデータでは、Python レベルの \code{for} ループが処理時間のボトルネックになることがある。その回避方法は本書の後半で扱う。
 
@@ -415,8 +466,11 @@ D
 
 \subsubsection{\code{range} と \code{while}}
 
+\code{count += 1} は \code{count = count + 1} の短い書き方であり、今の値へ 1 を足して更新する。繰り返しが止まらなくなったときは、端末で Ctrl+C を押して中断する。
+
 \code{for} 文と並んで、反復処理では \code{range} と \code{while} もよく用いる。\code{range} は連続した整数を順に生成し、\code{while} は条件が成り立つ間くり返す。記述例を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> for i in range(5):
 ...     print(i)
@@ -435,6 +489,7 @@ D
 1
 2
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{range(5)} は \code{0} から \code{4} までの整数を順に生成し、ファイル番号やビン番号を使う反復処理に利用できる。\code{while} は、各反復の開始時に条件を評価し、真である間だけ処理を続ける。時刻順のデータについて、時間差が閾値以下である間だけ比較する処理などに対応する。終了条件に関係する変数を更新しなければ反復が終了しないため、境界条件をテストする必要がある。
 
@@ -442,6 +497,7 @@ D
 
 反復処理では、途中で打ち切ったり、条件に合う要素の処理を飛ばしたりしたくなる。Python では \code{break} と \code{continue} がそのために使える。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> values = [-1, 1, 3, 5]
 >>> threshold = 4
@@ -455,6 +511,7 @@ D
 1
 3
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{continue} は現在の反復だけを打ち切り、\code{break} はループ全体を終了する。さらに \code{for ... else} 構文では、\code{break} せずに反復を終えた場合だけ \code{else} 節が実行される。探索対象が見つかった場合に \code{break} し、最後まで見つからなかった場合の処理を \code{else} 節へ置く用途などに使える。
 
@@ -462,6 +519,7 @@ D
 
 各要素に一つの変換を施す処理や、一つの条件で要素を抽出する処理は、内包表記によって一つの式として記述できる。複数の分岐や副作用を含む処理では、通常の \code{for} 文を用いる方が処理順序を明示しやすい。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> values = [1, 2, 3, 4, 5]
 >>> squares = [x * x for x in values]
@@ -471,6 +529,7 @@ D
 >>> large_values
 [3, 4, 5]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 内包表記に複数段階の条件や複雑な変換を詰め込むと、処理順序を追いにくくなる。その場合は、複数行の \code{for} 文または名前を付けた補助関数へ分ける。
 
@@ -480,6 +539,7 @@ D
 
 入力に対する処理をひとまとめにし、名前を付けたものが関数である。処理の結果は返り値として渡せる。一例として、時刻を表す文字列から秒数を計算する関数を考える。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def hhmmss_to_seconds(hhmmss):
     hour = int(hhmmss[0:2])
@@ -487,9 +547,11 @@ def hhmmss_to_seconds(hhmmss):
     second = int(hhmmss[4:6])
     return hour * 3600 + minute * 60 + second
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この関数は短いが、「文字列で与えられた時刻を秒へ変換する」という役割が明確である。ここから先は、複数行の処理をファイルへ保存して実行する。対話モードを使っていた場合は \code{exit()} で終了し、端末に戻る。たとえば次の内容を \code{time\_conversion.py} という名前で保存すれば、ターミナルで \code{python3 time\_conversion.py} と実行できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, title=time\_conversion.py]
 def hhmmss_to_seconds(hhmmss):
     hour = int(hhmmss[0:2])
@@ -499,20 +561,26 @@ def hhmmss_to_seconds(hhmmss):
 
 print(hhmmss_to_seconds("013015"))
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python3 time_conversion.py
-4515
+5415
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{return} に値を付けない場合や、\code{return} がない関数では、\code{None} が返る。平均のような結果を次の計算で使いたい場合は、返す値を明示する。
 
-\code{def} は関数を定義するための語であり、続く名前が関数名である。\code{hhmmss} は受け取る文字列の名前である。\code{return} の後ろに、返す値や計算式を書く。\code{"013015"} は 1 時間 30 分 15 秒なので、\(3600+1800+15=4515\) 秒になる。関数を定義しただけでは計算は始まらず、\code{hhmmss\_to\_seconds("013015")} と呼んだときに中の処理が実行される。
+\code{def} は関数を定義するための語であり、続く名前が関数名である。\code{hhmmss} は受け取る文字列の名前である。\code{return} の後ろに、返す値や計算式を書く。\code{"013015"} は 1 時間 30 分 15 秒なので、\(3600+1800+15=5415\) 秒になる。関数を定義しただけでは計算は始まらず、\code{hhmmss\_to\_seconds("013015")} と呼んだときに中の処理が実行される。
+
+ここから章末課題の前まで、別のファイル名を指定しない Python コードは \code{function\_examples.py} へ順に追記し、\code{python function\_examples.py} で試す。
 
 \subsubsection{関数の引数}\index{かんすう@関数!ひきすう@引数|textbf}\index{でふぉるとひきすう@デフォルト引数|textbf}\index{きーわーどひきすう@キーワード引数|textbf}
 
 関数の引数には、値の意味と省略時の既定値を定める。Python では位置引数、既定値付き引数、キーワード引数を使用できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def histogram_path(name, suffix=".pdf"):
     return f"{name}{suffix}"
@@ -520,35 +588,45 @@ def histogram_path(name, suffix=".pdf"):
 print(histogram_path("value_hist"))
 print(histogram_path("value_hist", suffix=".png"))
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 value_hist.pdf
 value_hist.png
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 引数に既定値（デフォルト値）を設定しておくと、呼び出し時に省略できる。呼び出し側は、その値を使う場合には引数を省略し、別の値が必要な場合には位置引数またはキーワード引数で上書きする。
 
 ただし、可変オブジェクトをデフォルト引数に置くと、複数回の関数呼び出しで同じオブジェクトが共有される。Python 公式チュートリアル~\cite{python_tutorial} でも説明されているように、リストや辞書をデフォルト値として直接指定する次の書き方は避ける。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def bad_append(value, buffer=[]):
     buffer.append(value)
     return buffer
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この例では、\code{buffer} が呼び出しのたびに新しく作られるわけではない。そのため、前回の状態が次回にも残る。実際に呼ぶと次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 print(bad_append(1))
 print(bad_append(2))
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [1]
 [1, 2]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 可変オブジェクトを既定値として必要とする場合は、既定値を \code{None}\index{none@\code{None}|textbf} とし、関数内部で新しいオブジェクトを作る。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def good_append(value, buffer=None):
     if buffer is None:
@@ -556,16 +634,21 @@ def good_append(value, buffer=None):
     buffer.append(value)
     return buffer
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 print(good_append(1))
 print(good_append(2))
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [1]
 [2]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{bad\_append()} は引数を省略した呼び出しの間でリストを共有する。\code{good\_append()} は省略時に毎回新しいリストを作るため、その共有を避けられる。ただし、呼び出し側がリストを明示的に渡した場合は、そのリストを変更する。
 
@@ -573,17 +656,21 @@ print(good_append(2))
 
 別ファイルに書かれた関数を使うには次のように \code{import} する。たとえば標準ライブラリの \code{math} を使うと、円周率や平方根を次のように扱える。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import math
 
 print(math.pi)
 print(math.sqrt(2.0))
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 3.141592653589793
 1.4142135623730951
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 Python の解析では、標準ライブラリと外部ライブラリを組み合わせて使う。各名前の定義元を確認すると、規模の大きいコードでも関数やクラスの役割を追いやすい。
 
@@ -593,15 +680,18 @@ Python の解析では、標準ライブラリと外部ライブラリを組み�
 
 解析コードの規模が大きくなると、一つのファイルでは機能ごとの境界を追いにくくなる。再利用する関数や定数を別ファイルへ分け、モジュールとして読み込む構成を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 analysis_project/
 |-- constants.py
 |-- physics.py
 `-- main.py
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-この構成にすると、\code{physics.py} に書いた関数を \code{main.py} から読み込める。次の例は、その最小形である。
+端末で \code{mkdir -p analysis\_project} を実行する。次の例は二つのファイルへ分けて保存する。前半の \code{physics.py} は \code{analysis\_project/physics.py}、後半の \code{main.py} は \code{analysis\_project/main.py} とする。\code{constants.py} は構成例に挙げた定数用ファイルであり、この計算には使わない。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 # physics.py
 import math
@@ -614,20 +704,25 @@ def deg_to_rad(degrees):
 import physics
 
 theta = physics.deg_to_rad(45.0)
+print(theta)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-この形にしておくと、座標変換、時刻変換、定数定義のような再利用しやすい処理を 1 か所へまとめられる。たとえば \code{main.py} 側で \code{print(theta)} と書けば、結果は次のようになる。
+この形にしておくと、座標変換、時刻変換、定数定義のような再利用しやすい処理を 1 か所へまとめられる。端末で \code{python analysis\_project/main.py} を実行すると、結果は次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 0.7853981633974483
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 同じ Python ファイルは、モジュールとして別のファイルから import することも、スクリプトとして直接実行することもできる。次に示す \code{if \_\_name\_\_ == "\_\_main\_\_":} は、直接実行した場合だけ処理を呼び出す条件である。
 
 \subsubsection{スクリプトとしての実行}
 
-Python ファイルは、他のファイルから読み込まれることもあれば、直接実行されることもある。その違いを区別する基本形が次である。
+Python ファイルは、他のファイルから読み込まれることもあれば、直接実行されることもある。その違いを区別する基本形が次である。\code{entry\_example.py} へ保存し、\code{python entry\_example.py} で \code{run} が表示されることを確認する。続けて \code{python -c "import entry\_example"} を実行すると、\code{run} は表示されない。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def main():
     print("run")
@@ -635,6 +730,7 @@ def main():
 if __name__ == "__main__":
     main()
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 import した場合は関数定義だけが読み込まれ、\code{main()} は呼び出されない。ファイルを直接実行した場合は条件が真となり、\code{main()} が呼び出される。
 
@@ -643,6 +739,7 @@ import した場合は関数定義だけが読み込まれ、\code{main()} は�
 
 入力ディレクトリや出力先が実行ごとに変わる解析スクリプトでは、それらをコードへ埋め込まず、コマンドライン引数として受け取る。Python 標準ライブラリの \code{argparse} を用いた最小構成を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import argparse
 
@@ -653,21 +750,25 @@ args = parser.parse_args()
 
 print(args.input_dir, args.outdir)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-このスクリプトを \code{analyze.py} として保存した場合の実行例を次に示す。
+このコードは \code{analyze.py} として保存する。ここでは受け取った文字列を表示するだけなので、入力フォルダーの作成やファイルの読み込みは行わない。実行例を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python analyze.py data/run001
 data/run001 output
 $ python analyze.py data/run001 --outdir results/figures
 data/run001 results/figures
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 1 行目では、位置引数 \code{input\_dir} に \code{data/run001} が入り、\code{--outdir} は省略したため既定値 \code{output} が使われる。2 行目では、\code{--outdir} の指定によって \code{results/figures} が使われる。この出力から、\code{input\_dir} が必須の位置引数、\code{--outdir} が既定値を持つオプション引数であることを確認できる。
 
 \subsection{短い関数と値の展開}
 \index{lambda@\code{lambda}|textbf}\index{あんぱっく@アンパック|textbf}
-\code{lambda 引数: 式} は、式の値を返す名前のない短い関数を作る。複数の処理が必要な場合は \code{def} で名前付きの関数を定義する。
+この例の \code{key=} は、並べ替えに使う値を取り出す関数を指定する。\code{lambda row: row[1]} は各組の 2 番目の数値を返すため、1.0 の組、3.0 の組の順に並ぶ。\code{lambda 引数: 式} は、式の値を返す名前のない短い関数を作る。複数の処理が必要な場合は \code{def} で名前付きの関数を定義する。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 rows = [("A", 3.0), ("B", 1.0)]
 print(sorted(rows, key=lambda row: row[1]))
@@ -675,6 +776,7 @@ print(sorted(rows, key=lambda row: row[1]))
 name, value = rows[0]
 print(name, value)                  # A 3.0
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 \code{name, value = rows[0]} は、二つの要素を二つの変数へ分けるアンパックである。また、関数呼び出しの \code{f(*params)} は、リストやタプルの要素を位置引数として展開する。たとえば \code{params = (2, 3)} なら \code{f(*params)} は \code{f(2, 3)} と同じ呼び出しになる。
 
 \section{例外・docstring・命名・設定値}
@@ -683,19 +785,23 @@ print(name, value)                  # A 3.0
 
 処理を続けられない問題が起きたことを知らせる仕組みを例外という。例外が起きると、通常はそこで実行が止まり、トレースバックというエラーの記録が表示される。この記録には、呼び出された処理、問題が起きた行、例外名、詳しい理由が示される。原因を調べるときは、末尾から順に確認する。
 
-たとえば \code{FileNotFoundError} ならファイルパスが違うかもしれないし、\code{ValueError} なら想定した形式でデータを読めていないかもしれない。実際のエラー表示は次のようになる。
+たとえば \code{FileNotFoundError} ならファイルパスが違うかもしれないし、\code{ValueError} なら想定した形式でデータを読めていないかもしれない。次を \code{read\_missing\_file.py} として保存し、\code{python read\_missing\_file.py} で実行する。\code{missing.txt} を作っていなければ、次のエラーが出る。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 with open("missing.txt") as f:
     text = f.read()
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Traceback (most recent call last):
   File "read_missing_file.py", line 1, in <module>
     with open("missing.txt") as f:
 FileNotFoundError: [Errno 2] No such file or directory: 'missing.txt'
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 まず例外名と末尾の数行を確認し、発生したファイルと行番号を特定する。
 
@@ -705,29 +811,38 @@ FileNotFoundError: [Errno 2] No such file or directory: 'missing.txt'
 
 関数定義の直後に置いた文字列は、\code{docstring}（ドキュメント文字列）として \code{help()} などから参照できる。役割、引数、返り値、例外条件を記述する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def read_table(path):
     """空白区切りの表を読み、各行を辞書として返す。"""
     ...
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
+
+この例の \code{...} は処理を省略した印であり、表を読む機能はまだ実装していない。ここでは関数の説明を表示する方法だけを確認する。
 
 \code{help(read\_table)} を実行すると、この説明を後から確認できる。たとえば要約だけの docstring なら、次のように表示される。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 help(read_table)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Help on function read_table:
 
 read_table(path)
     空白区切りの表を読み、各行を辞書として返す。
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 docstring はコメントと異なり、実行時に \code{help()} から参照できる。\code{関数名.\_\_doc\_\_} でも読み取れる。このように、値や関数に付随し、ドットと項目名で取り出す情報を属性という。公開関数には、入力、返り値、例外条件を記録する。
 
 1 行の要約だけでは使い方を説明できない関数では、引数、返り値、例外条件を複数行の docstring に記述する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def read_table(path):
     """空白区切りの表を読み込む。
@@ -743,6 +858,7 @@ def read_table(path):
     """
     ...
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 最初の 1 行には関数の要約を置き、空行の後に引数、返り値、例外条件などの詳細を置く。\code{help()} やエディタの補完表示は、この docstring を関数の説明として利用する。
 
@@ -750,6 +866,7 @@ def read_table(path):
 
 Python には PEP 8 という代表的なスタイルガイドがある。変数名、関数名、空白の入れ方をそろえるだけでも、コードの構造を追いやすくなる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 MAX_EVENTS = 1000
 
@@ -757,6 +874,7 @@ def read_event_table(path):
     total_count = 0
     ...
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 本書では、変数名と関数名に \code{snake\_case}、定数名に \code{UPPER\_CASE} を用いる。演算子の前後の空白や改行位置も統一し、同じ構造を同じ書式で表す。
 
@@ -778,6 +896,7 @@ PEP 8 のうち、本書の例で一貫して用いる規則を次に示す。
 
 コード中に \code{250} や \code{3600} のような数値が説明なしに直接記述されていると、その意味や単位を読む側が推測しなければならない。このような数値をマジックナンバーと呼ぶ。次の例では、意味と単位を表す名前を付ける。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 NS_PER_SECOND = 1_000_000_000
 COINCIDENCE_WINDOW_NS = 250
@@ -788,8 +907,9 @@ dt_ns = second_diff * NS_PER_SECOND + ns_diff
 print(dt_ns)            # 220
 is_coincident = abs(dt_ns) <= COINCIDENCE_WINDOW_NS
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-\code{COINCIDENCE\_WINDOW\_NS} という名前は、\code{250} が一致判定の時間窓であり、単位が ns であることを表す。同様に、\code{SECONDS\_PER\_HOUR} と \code{SECONDS\_PER\_DAY} は、\code{3600} と \code{86400} の意味を名前で表している。
+\code{abs()} は数値の絶対値を求める。ns（ナノ秒）は 1 秒の 10 億分の 1 である。ここでは、1 秒をまたぐ二つの記録の差を、秒の部分と秒未満の部分から組み立て、220 ns と計算している。\code{COINCIDENCE\_WINDOW\_NS} という名前は、\code{250} が一致判定の時間窓であり、単位が ns であることを表す。同様に、\code{SECONDS\_PER\_HOUR} と \code{SECONDS\_PER\_DAY} は、\code{3600} と \code{86400} の意味を名前で表している。
 
 物理定数や単位換算のように定義として固定する値は、名前と単位を明示したコード内定数にする。一方、入力パス、出力先、閾値、検出器番号のように実行条件として変わる値は、コマンドライン引数または設定ファイルへ分離する。値の変更頻度と共有範囲が、配置を決める基準となる。
 
@@ -797,16 +917,20 @@ is_coincident = abs(dt_ns) <= COINCIDENCE_WINDOW_NS
 
 エラーは読むべき情報だが、予想される失敗を自分で受け止めたい場面もある。例えば、1 行だけ形式が壊れているデータを見つけて記録し、解析全体は続けたいことがある。そのときに使うのが次のような \code{try} と \code{except} の組み合わせである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
+text = "abc"
 try:
     value = float(text)
 except ValueError:
     print("数値へ変換できませんでした")
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 たとえば \code{text = "abc"} のような文字列に対して \code{float(text)} を呼ぶと、\code{ValueError} が起きる。すべての例外を \code{except:} で捕捉すると、本来停止すべき不具合まで隠れる。捕捉する例外を明示し、失敗した入力の記録、処理を中止する条件、除外して継続する条件をあらかじめ定める。
 
 入力が関数の条件を満たさない場合は、\code{raise} で例外を発生させる。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def positive_seconds(value):
     seconds = float(value)
@@ -814,13 +938,15 @@ def positive_seconds(value):
         raise ValueError("seconds must be positive")
     return seconds
 \end{lstlisting}
-この例は正の有限値だけを保証する検査ではなく、\code{nan} や \code{inf} も入力し得る場合には \code{math.isfinite(seconds)} による検査を追加する。命名や字下げの慣例は Python のスタイルガイド PEP 8~\cite{pep8} にまとめられている。
+\end{minipage}\par\addvspace{6pt}
+この例は正の有限値だけを保証する検査ではなく、\code{nan}（数値として定まらない値）や \code{inf}（無限大）も入力し得る場合には \code{math.isfinite(seconds)} による検査を追加する。命名や字下げの慣例は Python のスタイルガイド PEP 8~\cite{pep8} にまとめられている。
 
 \clearpage
 \section{章末課題：記録を選び、平均と時刻差を求める}
 
 次のデータを、本章の作業フォルダー \code{\textasciitilde/analysis\_practice/basics} の \code{basics\_exercises.py} へ保存する。1～3 問目の処理をその下へ書き、端末の作業場所をこのフォルダーにして \code{python basics\_exercises.py} を実行する。\code{time\_ns} は記録時刻 [ns]、\code{signal} は信号値、\code{None} は欠測を表す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 events = [
     {"detector": "A", "time_ns": 1000, "signal": 12.4},
@@ -829,6 +955,7 @@ events = [
     {"detector": "B", "time_ns": 1510, "signal": None},
 ]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}

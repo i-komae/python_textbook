@@ -6,7 +6,7 @@
 
 本付録では、引数の受取り、変数の計算、ファイルの存在確認、条件分岐、配列、\code{for} ループを扱う。最後に、設定ファイルのテンプレートを \code{sed} で置換して複数条件を実行する方法を説明する。
 
-ターミナル（Windows では Ubuntu の端末）で \code{mkdir -p \textasciitilde/shell\_practice}、\code{cd \textasciitilde/shell\_practice} を実行する。各節のコードは、このフォルダーの \code{run.sh} へ保存して試す。別の例へ進むときは、その例のコードでファイルの内容を置き換える。
+ターミナル（Windows では Ubuntu の端末）で \code{mkdir -p \textasciitilde/shell\_script\_practice}、\code{cd \textasciitilde/shell\_script\_practice} を実行する。各節のコードは、このフォルダーの \code{run.sh} へ保存して試す。別の例へ進むときは、その例のコードでファイルの内容を置き換える。
 
 \section{シェルスクリプトの基礎構造}
 
@@ -15,19 +15,23 @@
 
 シェルスクリプトの先頭には、どのシェルで解釈するかを指定するシバン（shebang）を書く。本付録の例は Bash の配列と算術式を使うため、\code{env} で \code{bash} の所在を検索する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 #!/usr/bin/env bash
 
 echo "Hello, Shell Scripting!"
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{run.sh} という名前で保存した場合は、実行権限を付けてから直接実行する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod u+x run.sh
 $ ./run.sh
 Hello, Shell Scripting!
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{chmod u+x} はファイル所有者に実行権限を追加し、\code{./run.sh} は現在のディレクトリにあるファイルを実行する。最後の行がスクリプトの標準出力である。
 
@@ -45,6 +49,7 @@ Hello, Shell Scripting!
 
 次のスクリプトは、二つの位置引数を検査してから入力名と出力名を表示する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 #!/usr/bin/env bash
 
@@ -58,6 +63,7 @@ INPUT="$1"
 OUTPUT="$2"
 echo "Reading from $INPUT, writing to $OUTPUT"
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{./run.sh input.csv result.csv} と実行すると、\code{Reading from input.csv, writing to result.csv} と表示される。引数が二つでなければ使用法を表示し、終了状態 1 で処理を打ち切る。
 
@@ -68,6 +74,7 @@ echo "Reading from $INPUT, writing to $OUTPUT"
 
 シェルで変数を定義する際は、イコールの前後に空白を入れてはならない。また、変数の値を参照するときは先頭に \code{\$} を付ける。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 COUNT=100
 NAME="data_analysis"
@@ -75,9 +82,11 @@ NAME="data_analysis"
 echo "The count is $COUNT."       # 展開される
 echo 'The count is $COUNT.'       # シングルクォートでは展開されず "$COUNT" と表示される
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 Bash では、要素を空白で区切って括弧 \code{()} で囲むと配列を定義できる。各要素を引用符で囲めば、要素内の空白やワイルドカードが意図せず展開されることを防げる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 # 配列の定義
 targets=("background" "signal" "noise")
@@ -91,12 +100,14 @@ echo "First element: ${targets[0]}"
 # 配列全体を展開する（for ループでよく使う）
 echo "All elements: ${targets[@]}"
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \subsection{数値計算（算術式展開）}
 \index{さんじゅつしきてんかい@算術式展開|textbf}
 
 Bash で整数の加減乗除を行う場合は、算術式展開 \code{\$((...))} または算術評価 \code{((...))} を用いる。この中では変数名の \code{\$} を省略できる。Bash の算術評価は浮動小数点計算に対応しないため、小数を扱う場合は Python、\code{bc}、\code{awk} などを用いる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 A=10
 B=5
@@ -108,7 +119,11 @@ MUL=$((A * B))
 # 変数を直接加算・インクリメントする
 (( A++ ))
 (( B += 20 ))
+echo "$SUM $MUL $A $B"  # 15 50 11 25
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
+
+上の例を \code{run.sh} へ保存して \code{bash run.sh} で実行すると、15、50、11、25 がこの順で表示される。
 
 \subsection{条件式（\code{test} コマンド）}
 \index{test command@\code{test}|textbf}
@@ -148,6 +163,7 @@ MUL=$((A * B))
 
 前節の条件式を組み合わせて処理を分岐する。\code{then} と \code{fi} でブロックを囲むのがシェルの特徴である。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 #!/usr/bin/env bash
 
@@ -173,12 +189,16 @@ else
     exit 1
 fi
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
+
+\code{bash run.sh run.sh} ではファイルを発見した表示、\code{bash run.sh missing.csv} では存在しないという表示になる。後者の直後に \code{echo \$?} を実行すると、失敗を表す 1 が出る。
 
 \subsection{\code{case} 文による分岐}
 \index{bash@Bash!case@\code{case} 文}
 
 条件が特定の文字列パターンとの一致で表せる場合は、\code{case} 文を用いると \code{elif} を重ねずに分岐を列挙できる。拡張子の判定や、\code{-h}、\code{--version} などのオプション処理に利用できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 #!/usr/bin/env bash
 
@@ -203,8 +223,9 @@ case "$MODE" in
         ;;
 esac
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-各区分の終わりは \verb|;;| で締めくくる。アスタリスク \code{*} は「上記以外のすべて」にマッチするワイルドカードとして機能する。
+\code{bash run.sh start} で開始、\code{bash run.sh stop} で停止の表示になる。\code{bash run.sh other} では使用できる値とエラーが表示される。各区分の終わりは \verb|;;| で締めくくる。アスタリスク \code{*} は「上記以外のすべて」にマッチするワイルドカードとして機能する。
 
 \section{反復処理と一括自動化 (\code{for})}
 
@@ -213,6 +234,7 @@ esac
 
 指定した値のリストや、配列の全要素に対して処理を繰り返す \code{for} 文の例を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 #!/usr/bin/env bash
 
@@ -228,6 +250,7 @@ for num in 10 20 30; do
     echo "Number is $num"
 done
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{if} は直後のコマンドの終了ステータスが 0 なら条件成立とする。\code{[ ... ]} も条件を調べるコマンドであり、括弧の内側の空白が必要である。\code{command1 \&\& command2} は前段が成功した場合だけ、\code{command1 || command2} は失敗した場合だけ後段を実行する。エラーを表示するだけでは処理は止まらないため、必要な箇所で \code{exit 1} を使う。詳細は Bash の公式資料~\cite{bash_manual} を参照する。
 
@@ -269,13 +292,13 @@ for filepath in "$INPUT_DIR"/*.csv; do
     # 新しい出力パスを組み立て直す
     output_path="$OUTPUT_DIR/${name_no_ext}_result.png"
 
-    echo "Running analysis Python code for: $name_no_ext"
+    echo "Input: $filepath -> Output: $output_path"
     # 実際の処理コマンド（例: python analyze.py <in> <out>）
     # python analyze.py "$filepath" "$output_path"
 done
 \end{lstlisting}
 
-この例では、入力ファイルごとに拡張子を除いた名前を作り、対応する出力パスを組み立てている。解析コマンドを有効にする前に、\code{echo} で表示される入出力の対応を確認すれば、意図しない上書きを防げる。
+\code{bash run.sh} で入出力の名前を確認する。この例では解析命令をコメントにしているため、画像ファイル自体はまだ作られない。この例では、入力ファイルごとに拡張子を除いた名前を作り、対応する出力パスを組み立てている。解析コマンドを有効にする前に、\code{echo} で表示される入出力の対応を確認すれば、意図しない上書きを防げる。
 
 \section{\code{sed} による条件別設定ファイルの生成}
 \index{sed@\code{sed}|textbf}
@@ -286,14 +309,16 @@ done
 
 \subsection{テンプレートファイルの準備}
 
-テンプレートでは、書き換えるパラメータをファイル内の他の場所に現れないプレースホルダーへ置き換える。次の例では、\verb|__THRESHOLD__| と \verb|__OUTFILENAME__| を用いる。
+テンプレートでは、書き換えるパラメータをファイル内の他の場所に現れないプレースホルダーへ置き換える。次の例では、\verb|__THRESHOLD__| と \verb|__OUTFILENAME__| を用いる。内容を作業フォルダーの \code{config\_template.ini} へ保存する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, title={config\_template.ini}]
 [Simulation]
 Events = 10000
 Threshold = __THRESHOLD__
 OutputFile = __OUTFILENAME__
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \subsection{\code{sed} による置換の実行}
 
@@ -329,4 +354,4 @@ for thresh in "${thresholds[@]}"; do
 done
 \end{lstlisting}
 
-この方法は、設定ファイルを入力とする Python プログラムだけでなく、コンパイル済みのシミュレーションプログラムにも適用できる。各反復で生成した設定ファイルを別名で保存すれば、どの条件で各結果を得たかを後から確認できる。ただし、置換値に \code{/} や \code{\&} が含まれる場合は、\code{sed} の区切り文字やエスケープ方法を調整する必要がある。
+この \code{run.sh} を \code{bash run.sh} で実行すると、閾値 0.5、1.0、2.5 を設定した 3 個の INI ファイルができ、その内容が表示される。最後の実行命令はコメントなので、シミュレーションや DAT ファイルの生成は行わない。この方法は、設定ファイルを入力とする Python プログラムだけでなく、コンパイル済みのシミュレーションプログラムにも適用できる。各反復で生成した設定ファイルを別名で保存すれば、どの条件で各結果を得たかを後から確認できる。ただし、置換値に \code{/} や \code{\&} が含まれる場合は、\code{sed} の区切り文字やエスケープ方法を調整する必要がある。

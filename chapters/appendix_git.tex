@@ -54,15 +54,19 @@ Git が管理する状態は、次の 3 層に分けられる。
 
 \section{ローカル履歴の作成}
 
+ターミナルで \code{git --version} を実行し、番号が表示されることを確認する。macOS で未導入の場合は付録~\ref{app:environment}~の Command Line Tools、Ubuntu では \code{sudo apt install git} で用意できる。ここから最初のコミットまでは、接続先の登録なしで手元だけで試せる。
+
 \subsection{コミットへ記録する名前とメールアドレスの設定}
 \index{git config@\code{git config}|textbf}
 
 コミットへ記録する作成者名とメールアドレスを設定する。次の \code{Your Name} と \code{your\_email@example.com} は、自分の名前とメールアドレスに置き換える。この設定は端末の作業場所によらず、その利用者の Git 設定へ保存される。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git config --global user.name "Your Name"
 $ git config --global user.email "your_email@example.com"
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 これをしておかないと、コミット時に誰の変更なのかが分からなくなる。
 
@@ -71,7 +75,7 @@ $ git config --global user.email "your_email@example.com"
 
 まだ Git で管理されていないディレクトリを初期化するコマンドが \code{git init} である。
 
-\noindent\begin{minipage}{\linewidth}
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ~
 $ mkdir analysis_work
@@ -79,7 +83,7 @@ $ cd analysis_work
 $ git init
 $ git status
 \end{lstlisting}
-\end{minipage}
+\end{minipage}\par\addvspace{6pt}
 
 \code{git status} は、未追跡、変更済み、コミット待ちのファイルを一覧できる。編集やコミットの前後で実行すると、各変更がどの段階にあるかを確認できる。
 
@@ -91,6 +95,7 @@ $ git status
 
 ここでは \code{\textasciitilde/analysis\_work} の中で操作する。\code{analyze.py} を作って \code{print(3 + 2)} を保存し、次を実行する。ファイルを保存しただけでは Git の履歴へ入らず、\code{git add} と \code{git commit} で記録される。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git status
 $ git diff
@@ -99,8 +104,9 @@ $ git diff --cached
 $ git commit -m "Add first analysis script"
 $ git log --oneline
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-\code{git diff} は、作業ツリーとステージングエリアの差分を表示する。\code{git diff --cached} は、ステージングエリアと直前のコミットの差分を表示する。\code{git log --oneline} は、コミット履歴を 1 件 1 行で表示する。
+最初の \code{git status} では \code{analyze.py} が未追跡と表示され、\code{git add} 後はコミット予定になる。未追跡ファイルの内容は \code{git diff} に出ないため、初回のこの命令は何も表示しなくてもよい。\code{git diff --cached} では追加したコード、コミット後の \code{git log --oneline} では記録した説明が見える。\code{git diff} は、作業ツリーとステージングエリアの差分を表示する。\code{git diff --cached} は、ステージングエリアと直前のコミットの差分を表示する。\code{git log --oneline} は、コミット履歴を 1 件 1 行で表示する。
 
 \subsubsection{\code{git status} の読み方}
 
@@ -116,13 +122,15 @@ $ git log --oneline
 
 \subsubsection{\code{git add} による変更内容のステージング}
 
-\code{git add} は「変更を次のコミット候補として選ぶ」コマンドである。保存ではない。したがって、\code{git add} した後でも、コミット前にさらに編集すれば、その追加分はまだコミット対象へ入っていない。
+\code{analyze.py} を \code{print(3 + 9)} へ書き換えて保存してから、次の命令を試す。\code{git diff} に計算式の変更が出て、\code{git add} 後は \code{git diff --cached} に同じ変更が出る。\code{git add} は「変更を次のコミット候補として選ぶ」コマンドである。保存ではない。したがって、\code{git add} した後でも、コミット前にさらに編集すれば、その追加分はまだコミット対象へ入っていない。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git diff
 $ git add analyze.py
 $ git diff --cached
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この 2 種類の \code{diff} を区別すると、作業ツリーと次のコミット候補の差を把握できる。
 
@@ -135,6 +143,7 @@ $ git diff --cached
 
 \code{.gitignore} は、Git に「このパターンのファイルは追跡しなくてよい」と教えるためのファイルである。リポジトリのルートに置くことが多い。Python 解析用の最小例は次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={.gitignore}]
 .venv/
 __pycache__/
@@ -143,6 +152,7 @@ build/
 dist/
 .pytest_cache/
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 このファイルを作ると、まだ追跡されていない \code{.venv/} や \code{build/} は無視され、通常の \code{git status} には表示されない。すでに追跡中のファイルには、この設定は適用されない。
 
@@ -151,10 +161,12 @@ dist/
 
 \code{.gitignore} は「これから追跡しない」ための設定である。すでに一度コミットしたファイルには、そのままでは効かない。次の命令は、列挙した生成物を既に追跡している場合の例である。まだ追跡していなければ実行する必要はない。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git rm --cached -r .venv __pycache__ build
 $ git commit -m "Stop tracking generated files"
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{git rm --cached} は、作業ディレクトリの実ファイルを残したまま、インデックスに登録されたパスだけを削除する。実行後の削除をコミットすると、そのパスは Git の追跡対象から外れる。
 
@@ -169,11 +181,13 @@ $ git commit -m "Stop tracking generated files"
 
 \code{git clone} は、GitHub 上のプロジェクトや教材を履歴ごと手元へ複製するコマンドである。次の URL は説明用なので、取得したいリポジトリの画面にある SSH URL へ置き換える。複製先の親フォルダーへ移動してから実行する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git clone git@github.com:example/project.git
 $ cd project
 $ git remote -v
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{git clone} は、リポジトリのファイルと履歴をローカルへ複製する。\code{git remote -v} は、接続先として登録された URL を表示する。本書の例では、取得と push の双方に SSH URL を用いる。公開鍵の準備は付録~\ref{app:ssh} で説明する。
 
@@ -189,10 +203,11 @@ GitHub の Web 画面で \code{New repository} を開き、リポジトリ名と
 
 README や \code{.gitignore} を GitHub 側で追加すると、リモート側にローカルとは別のコミットが作られる。その場合、双方の履歴を統合してから push する必要がある。空のリモートリポジトリであれば、この統合は不要である。
 
-\subsubsection{README や LICENSE を先に作っていた場合}
+\subsubsection{補足：README や LICENSE を先に作っていた場合}
 
 GitHub 側で README や LICENSE を作成した場合、リモートリポジトリにはローカルと異なるコミットが存在する。リモート側の履歴をローカルへ取り込んで統合した後に push する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git branch -M main
 $ git remote add origin git@github.com:owner/project.git
@@ -200,6 +215,7 @@ $ git fetch origin
 $ git merge --allow-unrelated-histories origin/main
 $ git push -u origin main
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{--allow-unrelated-histories} が必要なのは、手元のリポジトリと GitHub 側のリポジトリが別々に作られており、履歴の出発点が一致していないからである。この \code{fetch} と \code{merge} によって、GitHub 側の README や LICENSE のコミットを自分の履歴へ取り込んでから、その続きとして push できるようになる。
 
@@ -207,8 +223,11 @@ $ git push -u origin main
 
 \subsubsection{接続先の登録と最初の push}
 
+以下は、空のリポジトリを作った場合の手順である。直前の補足の命令を既に実行した場合は、接続先の確認だけを行う。作業場所は \code{\textasciitilde/analysis\_work} とし、\code{.gitignore} を作った場合は、先に \code{git add .gitignore} と \code{git commit -m "Add ignore rules"} で記録する。
+
 対象のローカルリポジトリの一番上へ移動し、GitHub が表示する URL を \code{origin} という名前で登録する。例の \code{owner/project.git} は、自分が作成したリポジトリの URL に置き換える。既定ブランチを \code{main} とする例を次に示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git status
 $ git branch --show-current
@@ -217,8 +236,9 @@ $ git remote add origin git@github.com:owner/project.git
 $ git remote -v
 $ git push -u origin main
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-\code{git branch --show-current} は現在のブランチ名を表示する。\code{git branch -M main} は現在のブランチ名を \code{main} へ変更する。既存のブランチ名を維持する場合は、以後のコマンドにその名前を指定する。
+ブランチは、変更履歴に付けた名前である。ここでは一つの履歴を \code{main} という名前で扱う。\code{git branch --show-current} は現在のブランチ名を表示する。\code{git branch -M main} は現在のブランチ名を \code{main} へ変更する。既存のブランチ名を維持する場合は、以後のコマンドにその名前を指定する。
 
 \code{git remote add origin ...} は、GitHub の URL を \code{origin} という名前で登録する。\code{git remote -v} は登録後の取得用 URL と送信用 URL を表示する。\code{git push -u origin main} の \code{-u} は、ローカルの \code{main} に対する上流ブランチを \code{origin/main} に設定する。この設定後は、接続先とブランチ名を省略した \code{git push} と \code{git pull} を利用できる。
 
@@ -226,11 +246,13 @@ $ git push -u origin main
 
 すでに \code{origin} が登録されている状態で \code{git remote add origin ...} を実行すると、エラーになる。その場合は、いま何が設定されているかを確認してから、必要なら URL を差し替える。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git remote -v
 $ git remote set-url origin git@github.com:owner/project.git
 $ git remote -v
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 教材を別のリポジトリから複製して流用した場合や、HTTPS から SSH へ切り替えたい場合に、この操作が必要になることがある。
 
@@ -240,10 +262,12 @@ $ git remote -v
 
 ローカルでコミットしただけでは、まだ GitHub には反映されない。GitHub 側から最新を取り込むのが \code{pull}、手元のコミットを送るのが \code{push} である。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git pull --ff-only
 $ git push origin main
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{git pull --ff-only} は、ローカルブランチをリモートブランチまで早送りできる場合にだけ更新する。ローカルとリモートの両方に異なるコミットがあり履歴が分岐している場合は停止するため、意図しないマージコミットを作らない。
 
@@ -253,10 +277,12 @@ $ git push origin main
 
 GitHub のリポジトリ URL には、少なくとも HTTPS と SSH の 2 通りがある。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 https://github.com/owner/repo.git
 git@github.com:owner/repo.git
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 HTTPS URL は HTTPS 認証、SSH URL は SSH 鍵認証を用いる。一つのリポジトリでは、登録したリモート URL と認証情報の対応を記録する。
 本書では、\code{git clone}、\code{pull}、\code{push} に用いる認証方式を SSH に統一する。公開リポジトリの取得には HTTPS URL も利用できるが、push や非公開リポジトリの取得には認証が必要になる。SSH URL に統一すれば、操作ごとに認証方式を切り替える必要がない。

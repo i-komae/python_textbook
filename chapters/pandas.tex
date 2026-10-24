@@ -5,13 +5,15 @@ pandas\index{pandas@pandas|textbf} は、行と列からなる表形式データ
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/pandas
 $ cd ~/analysis_practice/pandas
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。本文の Python コードは、別のファイル名を指定した例と章末課題を除き、\code{pandas\_example.py} へ先頭から順に追記する。保存後、端末で \code{python pandas\_example.py} を実行し、追加した処理の結果を表示例と比べる。
 
 \section{DataFrame の構造と列指向処理}
 
@@ -21,7 +23,7 @@ $ cd ~/analysis_practice/pandas
 
 次のコードを \code{pandas\_example.py} へ保存し、端末で \code{python pandas\_example.py} を実行する。
 
-\noindent\begin{minipage}{\linewidth}
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import pandas as pd
 
@@ -37,7 +39,7 @@ events = pd.DataFrame(
 print(type(events).__name__)
 print(events)
 \end{lstlisting}
-\end{minipage}
+\end{minipage}\par\addvspace{6pt}
 
 \noindent\begin{minipage}{\linewidth}
 このコードを実行すると、次のような DataFrame が表示される。
@@ -50,7 +52,7 @@ DataFrame
 2        B     1055    14.8  False
 3        B     1244     9.7   True
 \end{lstlisting}
-\end{minipage}
+\end{minipage}\par\addvspace{6pt}
 
 この表では、行番号 0, 1, 2, 3 は index、\code{"detector"} や \code{"signal"} は列名である。index は行を識別するラベルであり、列名は各列が表す量を示す。値だけでなく、列名、型、単位、欠損値の有無を合わせて確認する。
 
@@ -63,14 +65,17 @@ DataFrame の列選択は辞書のキーによる値の参照、行の条件抽�
 
 DataFrame の作成または読み込みの直後には、\code{head()}、\code{shape}、\code{dtypes}、\code{info()} で行の例、形状、列型、欠損値数を確認する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 print(events.head())
 print(events.shape)
 print(events.dtypes)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 出力は次の通りである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
   detector  time_ns  signal  valid
 0        A     1032    12.4   True
@@ -84,6 +89,7 @@ signal      float64
 valid          bool
 dtype: object
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{shape} は行数と列数、\code{dtypes} は各列の型である。\code{object} 型は任意の Python オブジェクトを格納できるため、その表示だけでは列が文字列だけで構成されるか、複数の型が混在するかを判定できない。数値として演算する列が \code{object} 型なら、実際の値と変換条件を確認する。
 
@@ -94,11 +100,13 @@ dtype: object
 
 pandas では、整数位置とラベルを区別して行と列を選択する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 print(events["signal"])
 print(events.loc[1:2, ["detector", "signal"]])
 print(events.iloc[1:3, 0:2])
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{events["signal"]} は列名による選択、\code{loc}\index{loc@\code{loc}|textbf} はラベルによる選択、\code{iloc}\index{iloc@\code{iloc}|textbf} は整数位置による選択である。pandas の indexing ガイド~\cite{pandas_indexing} でも、選択対象に応じて \code{[]}、\code{loc}、\code{iloc}、\code{at}、\code{iat} を使い分けている。解析コードでは、列名・ラベル・整数位置のどれを指定しているかを明確にする。
 
@@ -114,6 +122,7 @@ pandas の列演算は、要素ごとに Python 関数を呼び出すループ�
 
 列選択と条件による行抽出を組み合わせる例を示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 selected = events[["detector", "signal"]]
 valid_events = events.loc[events["valid"], :]
@@ -123,9 +132,11 @@ print(selected)
 print(valid_events)
 print(strong)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 各変数に残る行と列は次のとおりである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
   detector  signal
 0        A    12.4
@@ -140,6 +151,7 @@ print(strong)
 0        A    12.4
 2        B    14.8
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 例えば最初の行の信号値は 12.4 なので、\code{events["signal"] > 11.0} の条件を満たす。2 行目の 10.1 と 4 行目の 9.7 は条件を満たさず、信号が大きい行を選ぶ表には残らない。ブール配列で行を絞る操作は NumPy と似ているが、pandas では列名を介して意味を保ったまま書ける。\code{events["signal"] > 11.0} の結果は行ごとの真偽値であり、それを \code{loc} に渡すと条件に合う行だけが残る。
 
@@ -149,15 +161,18 @@ print(strong)
 
 元の列から比、差、判定結果を求める場合は、列全体を入力とする式を記述する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 events["signal_ratio"] = events["signal"] / events["signal"].mean()
 events["is_late"] = events["time_ns"] > 1100
 
 print(events)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 新しい列は、元の表の右端に追加される。出力は次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
   detector  time_ns  signal  valid  signal_ratio  is_late
 0        A     1032    12.4   True      1.055319    False
@@ -165,9 +180,11 @@ print(events)
 2        B     1055    14.8  False      1.259574    False
 3        B     1244     9.7   True      0.825532     True
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{assign()} を使うと、途中の DataFrame を明示しながら複数列をまとめて追加できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 derived = (
     events
@@ -177,6 +194,7 @@ derived = (
     )
 )
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{assign()} は新しい DataFrame を返すため、メソッドチェーンの途中で列を追加できる。一方、\code{events["new\_col"] = ...} は既存の DataFrame に列を直接追加する。元の表を変更するか、新しい表を返すかに応じて選択する。
 
@@ -186,6 +204,7 @@ derived = (
 
 実際のデータには、値が記録されていないことがある。pandas では、そのような欠損値を \code{NaN} や \code{NA} で表す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df = pd.DataFrame(
     {
@@ -199,9 +218,11 @@ print(df.isna())
 print(df.dropna(subset=["signal"]))
 print(df["signal"].fillna(df["signal"].mean()))
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{isna()} の真偽表、\code{dropna()}\index{pandas!dropna@\code{dropna()}} の結果、\code{fillna()}\index{pandas!fillna@\code{fillna()}} 後の列を順に表示すると、欠損処理の違いが見えやすい。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
       id  signal  comment
 0  False   False    False
@@ -218,17 +239,21 @@ print(df["signal"].fillna(df["signal"].mean()))
 3     9.700000
 Name: signal, dtype: float64
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 欠損値は \code{==} で判定しない。\code{isna()}、\code{notna()}、\code{dropna()}、\code{fillna()} を使う。また、整数列に欠損が入ると \code{float64} に変わることがあるので、必要なら pandas の nullable integer 型である \code{Int64} を使う。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df["id"] = df["id"].astype("Int64")
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \subsection{要約統計と \code{groupby}}
 
-\code{describe()} は数値列の件数、平均、標準偏差、分位点、最小値、最大値を返す。\code{groupby()}\index{groupby@\code{groupby}|textbf} は、行をカテゴリごとに分け、それぞれを集計する。
+\code{describe()} は数値列の件数、平均、標準偏差、分位点、最小値、最大値を返す。分位点は、値を小さい順に並べたときの位置を割合で示す値であり、50\% は中央値を表す。25\% と 75\% を見れば、中央の半数の値が広がる範囲を把握できる。\code{groupby()}\index{groupby@\code{groupby}|textbf} は、行をカテゴリごとに分け、それぞれを集計する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 print(events.describe())
 
@@ -245,9 +270,11 @@ summary = (
 
 print(summary)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{describe()} は全体の要約、\code{groupby()} の結果は検出器ごとの集計である。出力は次の通りである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
            time_ns     signal  signal_ratio
 count     4.000000   4.000000      4.000000
@@ -263,8 +290,9 @@ detector
 A             2        11.25    1.626346            0.5
 B             2        12.25    3.606245            0.5
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-\code{groupby()} は、検出器、日、run などのカテゴリごとに同じ集計を適用する。\code{agg()} の名前付き集計では、出力列の名前、入力列、集計関数を対応付けて記述できる。上の数値は、この節の \code{events} を pandas で計算した出力例である。pandas のバージョンによって空白や型の表示形式は変わる場合があるが、数値は同じ入力と計算定義に対応していなければならない。
+\code{groupby()} は、検出器、日、run などのカテゴリごとに同じ集計を適用する。\code{agg()} の名前付き集計では、出力列の名前、入力列、集計関数を対応付けて記述できる。\code{is\_late} の平均では、真を 1、偽を 0 として計算するので、遅い記録の割合になる。この入力では両検出器とも 2 件中 1 件で 0.5 である。上の数値は、この節の \code{events} を pandas で計算した出力例である。pandas のバージョンによって空白や型の表示形式は変わる場合があるが、数値は同じ入力と計算定義に対応していなければならない。
 
 欠損値を含む列の平均や標準偏差は、既定では欠損値を除いて計算する。\code{groupby().size()} は行数を、列に対する \code{count()} は非欠損値の個数を数える。\code{std()} の既定は \code{ddof=1} であり、有効値が 1 個だけの群では標準偏差は \code{NaN} になる。未知の文字列は必ずしも欠損値として認識されない。\code{pd.to\_numeric(..., errors="coerce")} で変換できなかった値を欠損にする場合は、その件数と元の値を記録する。平均値による補完は分散などを変えるため、解析上の根拠なしに適用しない。
 
@@ -273,8 +301,9 @@ B             2        12.25    3.606245            0.5
 \index{pandas!concat@\code{concat()}}
 \index{pandas!pivot_table@\code{pivot\_table()}}
 
-Getting started tutorials~\cite{pandas_tutorials} でも、表を縦長から横長へ変える操作や、複数表を結合する操作が扱われている。解析では、観測値と較正値を結び付けたり、日別表をまとめたりする場面で用いる。
+Getting started tutorials~\cite{pandas_tutorials} でも、表を縦長から横長へ変える操作や、複数表を結合する操作が扱われている。較正とは、測定値を基準に合わせて補正することである。ここでは検出器別の係数を信号値へ掛ける準備として、元の表へ係数列を結合する。解析では、観測値と較正値を結び付けたり、日別表をまとめたりする場面で用いる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 gain = pd.DataFrame(
     {
@@ -299,9 +328,11 @@ wide = long_df.pivot(index="detector", columns="kind", values="value")
 print(merged[["detector", "signal", "gain"]])
 print(wide)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 次の出力は、\code{merge()} による較正係数列の追加と、\code{pivot()} による種別 \code{kind} の値から列への変換を示す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
   detector  signal  gain
 0        A    12.4  1.02
@@ -313,6 +344,7 @@ detector
 A         12.7  12.4
 B         14.4  14.8
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{merge()} はキー列に基づいて表を結合し、\code{concat()} は表を行方向または列方向に連結する。\code{pivot()} と \code{pivot\_table()} は縦長データを横長形式へ変換し、\code{melt()} は横長データを縦長形式へ変換する。
 
@@ -324,6 +356,7 @@ B         14.4  14.8
 
 時刻や文字列は、そのままでは解析しにくい。pandas には時刻用の \code{dt} アクセサ、文字列用の \code{str} アクセサ、カテゴリ型がある。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 log = pd.DataFrame(
     {
@@ -336,20 +369,23 @@ log = pd.DataFrame(
 # 元のタイムゾーンなし文字列が UTC を表すと確認した場合
 log["timestamp"] = pd.to_datetime(log["timestamp"], utc=True)
 log["date"] = log["timestamp"].dt.date
-log["prefix"] = log["run_name"].str.extract(r"^(run_[A-Z])")
+log["prefix"] = log["run_name"].str.slice(0, 5).where(log["run_name"].str.startswith("run_"))
 log["detector"] = log["detector"].astype("category")
 
 print(log[["timestamp", "date", "prefix", "detector"]])
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-時刻列と文字列列を分解すると、日付や接頭辞を独立した列として扱える。出力は次の通りである。
+\code{str.slice(0, 5)} は先頭 5 文字を取り出す。\code{str.startswith("run\_")} が偽の行は、\code{where()} によって欠損値になる。\code{dt} と \code{str} は、それぞれ日時列と文字列列に使う操作の入口である。時刻列と文字列列を分解すると、日付や接頭辞を独立した列として扱える。出力は次の通りである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
                   timestamp        date prefix detector
 0 2026-04-01 12:00:00+00:00  2026-04-01  run_A        A
 1 2026-04-01 12:00:05+00:00  2026-04-01  run_A        A
 2 2026-04-02 09:30:00+00:00  2026-04-02    NaN        B
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{to\_datetime()} で日時型へ変換すると、時刻差の計算、年月日の取り出し、時刻順の並べ替えができる。文字列の列には \code{str.contains()}、\code{str.extract()}、\code{str.strip()} などのベクトル化メソッドがある。カテゴリ型は、有限個のカテゴリ値と整数コードを分けて保持し、カテゴリの順序も定義できる。
 
@@ -361,6 +397,7 @@ pandas は、CSV、Parquet、圧縮テキストなどを DataFrame として読�
 
 まず、読み込みを試すための 2 件の記録を圧縮 CSV へ保存する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 sample = pd.DataFrame({
     "detector": ["A", "B"],
@@ -369,8 +406,10 @@ sample = pd.DataFrame({
 })
 sample.to_csv("events.csv.gz", index=False, compression="gzip")
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \index{pandas!read\_csv@\code{read\_csv()}|textbf}
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df = pd.read_csv(
     "events.csv.gz",
@@ -382,11 +421,13 @@ df = pd.read_csv(
 df.to_parquet("events.parquet")
 small = pd.read_parquet("events.parquet", columns=["detector", "signal"])
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 この例は、ヘッダ付きのカンマ区切り CSV を gzip 圧縮した \code{events.csv.gz} を想定している。第 1 引数は入力パス、\code{compression="gzip"} は圧縮方式、\code{usecols} は読み込む列、\code{dtype} は列ごとの型である。\code{to\_parquet()} は表全体を Parquet へ保存し、\code{read\_parquet(..., columns=...)} は指定した 2 列だけを読み込む。
 
 \code{read\_csv()} では、必要な列、列の型、コメント行の扱いを入力時に指定できる。次は、空白区切りの 2 行を gzip へ保存し、必要な列だけを指定した型で読み込む例である。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import gzip
 
@@ -406,6 +447,7 @@ df = pd.read_csv(
     dtype={"id": "int64", "value": "float64"},
 )
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 必要な列だけを読み込むと、読み込み時間とメモリ消費を減らせる場合がある。さらに \code{dtype=} を指定すれば、読み込み後の型変換も減らせる。列数や行数が大きいデータでは、必要な列を入力段階で選ぶことが後続処理の負荷軽減につながる。
 
@@ -417,10 +459,12 @@ Parquet はファイル形式の名前であり、\code{pyarrow} はその読み
 
 列同士の演算をそのまま式として書ける点も pandas の強みである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df["ratio"] = df["value"] / df["value"].mean()
 selected = df[df["ratio"] > 1.5]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 行ごとの \code{for} ループを導入する前に、同じ処理を列演算、集計、結合として表せるかを検討する。
 
@@ -430,9 +474,10 @@ selected = df[df["ratio"] > 1.5]
 \index{pandas!chunksize@\code{chunksize}}
 \index{ぶんかつよみこみ@分割読み込み|textbf}
 
-pandas の DataFrame は主としてメモリ上で処理されるが、\code{read\_csv()} の \code{chunksize} を使えば、CSV を一定行数ずつ読みながら集計できる。例として、次の \code{events.csv} を考える。
+pandas の DataFrame は主としてメモリ上で処理されるが、\code{read\_csv()} の \code{chunksize} を使えば、CSV を一定行数ずつ読みながら集計できる。例として、次の内容を \code{chunk\_events.csv} へ保存する。
 
-\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={events.csv}]
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={chunk\_events.csv}]
 detector,signal
 A,12.4
 B,14.8
@@ -440,15 +485,17 @@ A,10.1
 B,9.7
 A,13.0
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 検出器ごとの件数と信号値の合計は、次のように 2 行ずつ読んでも計算できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 counts = pd.Series(dtype="int64")
 sums = pd.Series(dtype="float64")
 
 for chunk in pd.read_csv(
-    "events.csv",
+    "chunk_events.csv",
     usecols=["detector", "signal"],
     dtype={"detector": "string", "signal": "float64"},
     chunksize=2,
@@ -460,15 +507,18 @@ for chunk in pd.read_csv(
 summary = pd.DataFrame({"count": counts, "mean": sums / counts})
 print(summary)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 実行結果は次の通りである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
           count       mean
 detector
 A           3.0  11.833333
 B           2.0  12.250000
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{chunksize=2} は、反復ごとに最大 2 行の DataFrame を返す指定である。実データでは 10 万行など、利用可能なメモリと処理時間を見ながら値を決める。\code{Series.add(..., fill\_value=0)} は、あるチャンクに片方の検出器しか含まれない場合にも、存在しない集計値を 0 として足す。平均値をチャンク平均の単純平均として求めると、チャンクごとの件数が違う場合に誤るため、全体の合計を全体の件数で割っている。
 
@@ -481,6 +531,7 @@ LaTeX でレポートを作る場合は、この方法で表を取り込める�
 
 \code{to\_latex()} で集計結果から表を生成すれば、DataFrame の値と LaTeX 表の値を同じ処理から出力できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from pathlib import Path
 
@@ -496,6 +547,7 @@ tex_table = summary.reset_index().to_latex(
 with open("tables/detector_summary.tex", "w", encoding="utf-8") as f:
     f.write(tex_table)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 ここで \code{index=False} は左端の連番インデックスを出力しない指定であり、\code{reset\_index()} は groupby 結果の index を通常の列へ戻す操作である。ここでは \code{escape=True} によってセル中の TeX の特殊文字をエスケープする。pandas 2.0 以降では既定値に頼るとエスケープされない場合がある~\cite{pandas_latex}。検証済みの TeX 記法を意図的に埋め込む場合に限り、入力内容を限定したうえで \code{escape=False} を指定する。
 
@@ -505,11 +557,16 @@ with open("tables/detector_summary.tex", "w", encoding="utf-8") as f:
 
 pandas の \code{plot()} は、DataFrame または Series の内容を Matplotlib へ渡す簡易作図インターフェースである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
-summary.plot(kind="bar", y="mean")
+ax = summary.plot(kind="bar", y="mean", legend=False)
+ax.set_ylabel("mean signal")
+ax.figure.tight_layout()
+ax.figure.savefig("summary_bar.pdf")
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-\code{DataFrame.plot()} は表から概形を確認する場合に用いる。提出図や論文用図では、軸、凡例、余白、保存形式を明示するため、Matplotlib の \code{Figure} と \code{Axes} を直接扱う。本書では第~\ref{sec:matplotlib-object}~節以降の方法を基準とする。
+この例は \code{summary\_bar.pdf} を作る。開くと、A の平均約 11.83 と B の平均 12.25 を棒の高さで比べられる。\code{DataFrame.plot()} は表から概形を確認する場合に用いる。提出図や論文用図では、軸、凡例、余白、保存形式を明示するため、Matplotlib の \code{Figure} と \code{Axes} を直接扱う。本書では第~\ref{sec:matplotlib-object}~節以降の方法を基準とする。
 
 \section{コピー・型・行処理に関する注意点}
 
@@ -518,16 +575,20 @@ summary.plot(kind="bar", y="mean")
 
 DataFrame の一部を切り出した後の代入では、元の DataFrame を更新するのか、独立した表を作るのかを明示する必要がある。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 subset = events[events["signal"] > 11.0]
 subset["flag"] = True
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 pandas 2 系の従来の動作では、この書き方で \code{SettingWithCopyWarning} が出ることがある。独立した部分表が必要なら抽出後に \code{.copy()} を付け、意図を明示する。pandas 3 系は Copy-on-Write が標準であり、部分表の変更は元の表へ反映されない~\cite{pandas_cow}。元の表の条件に合う行へ代入する場合は、次のように行条件と列名を \code{loc} の一つの添字指定へまとめる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 events.loc[events["signal"] > 11.0, "flag"] = True
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \subsection{\code{object} 型のまま計算しない}
 \index{object dtype@\code{object} 型|textbf}
@@ -544,6 +605,7 @@ pandas の DataFrame では、同じ処理でも列演算と行単位の Python 
 
 DataFrame の行を一つずつ取り出す処理は記述しやすいが、列単位の演算よりオーバーヘッドが大きくなる場合がある。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df = pd.DataFrame({"value": [1.0, 2.0, 3.0]})
 
@@ -555,6 +617,7 @@ for index, row in df.iterrows():
     results.append(heavy_computation(row["value"]))
 df["value_sq"] = results
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{iterrows()} は各行を \code{Series} として生成するため、元の列型が行単位の Series に保たれない場合があり、行ごとのオブジェクト生成も生じる。行反復が必要なら \code{itertuples()} との処理時間を測定する。列ごとに独立して計算できる処理には、列演算または既存のベクトル化メソッドを用いる。
 
@@ -562,24 +625,29 @@ df["value_sq"] = results
 
 行ごとに処理を適用したい場合、pandas が用意している \code{apply()} メソッドを使うと、コードを DataFrame の処理として記述できる。\code{axis=1} は「各行へ関数を適用する」という意味であり、\code{axis=0} なら各列に適用する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df["value_sq"] = df.apply(lambda row: heavy_computation(row["value"]), axis=1)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 ただし、\code{axis=1} を付けた \code{apply()} も各行に対して Python 関数を呼ぶため、列演算とは処理方式が異なる。単に二乗する場合は、次の列演算が演算対象と式を直接表す。実行時間は対象データを用いて測定する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df["value_sq"] = df["value"] ** 2
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{apply()} は、既存の列演算や NumPy 関数では表しにくい処理に Python 関数を適用する手段である。列演算、\code{apply()}、並列化の候補について、同じ入力と同じ出力条件で処理時間を測定して選ぶ。
 
 以下の \code{pandarallel} は追加ライブラリであり、使用する環境に \code{python -m pip install pandarallel} などで導入する。二乗程度の軽い処理では並列化の起動・転送コストが支配的になり得るため、この例自体が高速化の推奨例というわけではない。
 
-\subsubsection{\code{pandarallel} による行処理の並列化}
+\subsubsection{補足：\code{pandarallel} による行処理の並列化}
 
 通常の \code{apply()} は、Python 関数を行ごとに順番に呼び出す。本当に計算が重く、列演算や既存の NumPy 関数へ置き換えられない場合に、マルチプロセスによる並列化が選択肢に入る。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from pandarallel import pandarallel
 
@@ -589,6 +657,7 @@ df["value_sq"] = df.parallel_apply(
     axis=1,
 )
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 図~\ref{fig:pandas-benchmark} は、\code{iterrows()}、\code{apply()}、\code{pandarallel} の処理時間に生じ得る違いを模式的に示す。実測値ではなく、処理方式を比較するときに確認すべきオーバーヘッドの違いを表した図である。
 
@@ -619,7 +688,7 @@ df["value_sq"] = df.parallel_apply(
 \item 必要な列の選択と、欠損値・異常値の整理
 \item \code{groupby()} と \code{merge()} による集計・結合
 \item Matplotlib への受け渡しと作図
-\item \code{to\_latex()} による集計表の書き出し
+\item \code{to\_csv()} や \code{to\_parquet()} による集計表の保存
 \end{enumerate}
 
 この流れでは、列名と列型を保ったまま抽出、集計、結合、保存を記述している。観測条件、検出器 ID、run 名、欠損フラグのように型の異なる列を一つの記録として扱う場合は、列ごとに型を持つ DataFrame を利用できる。
@@ -631,11 +700,11 @@ df["value_sq"] = df.parallel_apply(
 基本操作の公式資料として Getting started tutorials~\cite{pandas_tutorials} と 10 minutes to pandas~\cite{pandas_10min} がある。列選択と代入は Indexing~\cite{pandas_indexing}、欠損値処理は Missing data~\cite{pandas_missing}、表の結合は Merge, join, concatenate and compare~\cite{pandas_merging}、時刻列は Time series / date functionality~\cite{pandas_timeseries} に詳しい。本章は、これらの機能を解析手順に沿って再構成した。
 
 \clearpage
-\clearpage
 \section{章末課題：検出器ごとの信号を集計する}
 
 本章の作業フォルダー \code{\textasciitilde/analysis\_practice/pandas} に次の CSV を \code{events.csv} として保存する。データは 6 件であり、先頭の列名の行は件数に含めない。端末で \code{mkdir -p results} を実行しておく。各問のコードは \code{pandas\_exercises.py} へ保存し、\code{python pandas\_exercises.py} で実行する。各問の入力には、この元の 6 行を使う。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={events.csv}]
 detector,time_ns,signal,valid
 A,1000,12.4,true
@@ -645,6 +714,7 @@ B,1510,,false
 A,1760,11.0,true
 B,2050,13.2,true
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \begin{enumerate}
 \item \begin{minipage}[t]{\linewidth}
@@ -669,7 +739,7 @@ B,2050,13.2,true
 
 \item \begin{minipage}[t]{\linewidth}
 \textbf{集計表を保存して読み戻す。}
-3 問目で作った検出器別の集計表を、\code{results/summary.csv} と \code{results/summary.parquet} へ保存せよ。CSV は \code{index=False} とする。両方を読み戻し、列名と数値を保存前の表と比較せよ。Parquet 用のライブラリが未導入なら、仮想環境を有効にした端末で \code{python -m pip install pyarrow} を実行する。
+3 問目で作った検出器別の集計表を、\code{results/summary.csv} と \code{results/summary.parquet} へ保存せよ。検出器名が index にある場合は、\code{reset\_index()} で通常の列へ戻してから、両形式へ保存する。CSV は \code{index=False} とする。両方を読み戻し、列名と数値を保存前の表と比較せよ。Parquet 用のライブラリが未導入なら、仮想環境を有効にした端末で \code{python -m pip install pyarrow} を実行する。
 \end{minipage}
 
 \end{enumerate}

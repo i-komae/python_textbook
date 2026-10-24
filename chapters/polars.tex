@@ -5,13 +5,15 @@ Polars\index{polars@Polars|textbf} は、pandas と同じく行と列からな�
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/polars
 $ cd ~/analysis_practice/polars
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
+以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。本文の Python コードは、別のファイル名を指定した例と章末課題を除き、\code{polars\_example.py} へ先頭から順に追記する。保存後、端末で \code{python polars\_example.py} を実行し、追加した処理の結果を表示例と比べる。
 
 \section{式と遅延実行による表処理}
 
@@ -19,7 +21,7 @@ $ cd ~/analysis_practice/polars
 
 Polars でも、1 行を 1 件の記録、1 列を同じ種類の値として表す。pandas と違い、行に index というラベルを持たせず、位置や条件で行を選ぶ。次のコードを \code{polars\_example.py} へ保存し、端末で \code{python polars\_example.py} を実行すると、4 行 3 列の表が表示される。
 
-\noindent\begin{minipage}{\linewidth}
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import polars as pl
 
@@ -33,7 +35,7 @@ df = pl.DataFrame(
 
 print(df)
 \end{lstlisting}
-\end{minipage}
+\end{minipage}\par\addvspace{6pt}
 
 \noindent\begin{minipage}{\linewidth}
 このコードを実行すると、Polars の表は次のように表示される。
@@ -51,34 +53,40 @@ shape: (4, 3)
 | B        | 1244    | 9.7    |
 +----------+---------+--------+
 \end{lstlisting}
-\end{minipage}
+\end{minipage}\par\addvspace{6pt}
 
-\code{shape: (4, 3)} は 4 行 3 列であることを示し、各列名の下にはデータ型が表示される。Polars の式は行ラベルではなく列名を参照し、その列に適用する処理を表す。
+\code{shape: (4, 3)} は 4 行 3 列であることを示し、各列名の下にはデータ型が表示される。\code{str} は文字列、\code{i64} は 64 ビット整数、\code{f64} は 64 ビット浮動小数点数である。Polars の式は行ラベルではなく列名を参照し、その列に適用する処理を表す。
 
 \subsection{式による列変換}
 
 まず、各信号値に 1 を足す。\code{pl.col("signal")} は \code{signal} 列を選ぶ指定であり、\code{+ 1} を続けると「この列の各値へ 1 を足す」という式になる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 expr = pl.col("signal") + 1
 result = df.select(expr.alias("signal_plus_one"))
 print(result["signal_plus_one"].to_list())
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [13.4, 11.1, 15.8, 10.7]
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{expr} は計算の指定であり、4 個の答えそのものではない。\code{df.select(...)} に渡すと表へ適用され、\code{alias()} で結果の列名を付けられる。ここでは先頭の信号値 \code{12.4} が \code{13.4} になったことを確認する。
 
 Polars の基本となるのは expression（式）\index{expression@expression|textbf}である。式は、列に対してどの計算を適用するかを表し、その時点の値そのものではない。\code{pl.col("signal")} は \code{signal} 列を参照する式であり、四則演算、比較、集計などと組み合わせられる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 expr = pl.col("signal") / pl.col("signal").mean()
 print(expr)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-表示されるのは、概ね \code{[(col("signal")) / (col("signal").mean())]} のような式であり、4 行分の数値ではない。実際の値を得るには、\code{df.select(expr.alias("signal\_ratio"))} のように、式を DataFrame の処理へ渡す。\code{alias()} は式の結果へ列名を付ける。Polars の公式ドキュメント~\cite{polars_expressions} でも、expression は列処理を構成する基本概念として説明されている。\code{select()}、\code{with\_columns()}、\code{filter()}、\code{group\_by()} の多くは、式を受け取る API で統一されている。
+表示されるのは、概ね \code{[(col("signal")) / (col("signal").mean())]} のような式であり、4 行分の数値ではない。実際の値を得るには、\code{df.select(expr.alias("signal\_ratio"))} のように、式を DataFrame の処理へ渡す。\code{alias()} は式の結果へ列名を付ける。Polars の公式ドキュメント~\cite{polars_expressions} でも、expression は列処理を構成する基本概念として説明されている。\code{select()}、\code{with\_columns()}、\code{filter()}、\code{group\_by()} の多くは、式を受け取る API で統一されている。API は、プログラムから機能を呼び出すための関数名や引数の指定方法を指す。
 
 \subsection{eager と lazy}
 \index{polars@Polars!eager api@eager API}
@@ -86,11 +94,13 @@ print(expr)
 
 命令ごとに結果の表を得る方法を eager（即時実行）API という。処理内容を記録し、後でまとめて実行する方法を lazy（遅延実行）API という。例えば、列の選択や行の抽出を先に記録しておけば、必要な部分だけを読むように実行方法を調整できる。以下では、上で作った 4 行の表を実習用の \code{events.csv} へ保存してから、二つの読み方を比べる。同名ファイルがあれば置き換わるので、この章の実習用フォルダーで実行する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df.write_csv("events.csv")
 eager_df = pl.read_csv("events.csv")
 lazy_df = pl.scan_csv("events.csv")
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{read\_csv()} は呼び出し時に読み込んで DataFrame を作る。\code{scan\_csv()} は、これから行う処理を記録する \code{LazyFrame}\index{lazyframe@LazyFrame|textbf} を返す。\code{lazy\_df.collect()} を呼ぶと、記録した処理が実行され、結果の DataFrame が得られる。遅延実行では、必要な列だけを読む列射影や、不要な行を早い段階で除く述語プッシュダウンなどを適用できる場合がある。処理時間とメモリ使用量への効果は、入力形式と処理内容に依存するため、同じ入力で測定する。
 
@@ -100,6 +110,7 @@ lazy_df = pl.scan_csv("events.csv")
 
 列の選択には \code{select()}\index{select@\code{select}|textbf}、条件に合う行の抽出には \code{filter()}\index{filter@\code{filter}|textbf} を用いる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 selected = df.select("detector", "signal")
 strong = df.filter(pl.col("signal") > 11.0)
@@ -107,9 +118,11 @@ strong = df.filter(pl.col("signal") > 11.0)
 print(selected)
 print(strong)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{select()} で列が減り、\code{filter()} で条件に合う行だけが残る。出力の例を示す。表の罫線や型の表示は一部簡略化している。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shape: (4, 2)
 +----------+--------+
@@ -128,6 +141,7 @@ shape: (2, 3)
 | B        | 1055    | 14.8   |
 +----------+---------+--------+
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{df["signal"]} は列を Series として取り出す。これに対して、\code{select()} や \code{filter()} へ渡した式は、複数列の変換や遅延実行の実行計画にも使用できる。値を取り出す操作と、表に適用する式を区別する。
 
@@ -135,6 +149,7 @@ shape: (2, 3)
 
 新しい列は \code{with\_columns()}\index{with_columns@\code{with\_columns}|textbf} で追加する。複数の式を一度に渡すと、それぞれの評価結果が列として追加または置換される。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 derived = df.with_columns(
     (pl.col("signal") / pl.col("signal").mean()).alias("signal_ratio"),
@@ -143,9 +158,11 @@ derived = df.with_columns(
 
 print(derived)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 列追加後の表を見ると、式で作った列がどの位置へ入るかを確認できる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shape: (4, 5)
 +----------+---------+--------+--------------+---------+
@@ -157,6 +174,7 @@ shape: (4, 5)
 | B        | 1244    | 9.7    | 0.825532     | true    |
 +----------+---------+--------+--------------+---------+
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{alias()} は式の結果へ列名を付ける操作である。式を複数組み合わせる場合は、出力列名を明示すると後続の選択や集計との対応を追いやすい。
 
@@ -166,6 +184,7 @@ shape: (4, 5)
 
 集計も式として書く。\code{group\_by()}\index{group_by@\code{group\_by}|textbf} と \code{agg()} は、pandas の \code{groupby()} に対応する中心的な道具である。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 summary = (
     derived
@@ -181,9 +200,11 @@ summary = (
 
 print(summary)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 集計結果は、検出器ごとに 1 行の表になる。出力の例を示す。表の罫線や型の表示は一部簡略化している。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shape: (2, 5)
 +----------+-------+-------------+------------+---------------+
@@ -193,15 +214,18 @@ shape: (2, 5)
 | B        | 2     | 12.25       | 3.606245   | 0.5           |
 +----------+-------+-------------+------------+---------------+
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 Polars の \code{group\_by()} は、集計方法も式で指定するため、同じ書き方のまま統計量を増やしやすい。\code{count}、\code{mean}、\code{std} のような基本操作は、式の名前を見れば意味を追いやすい。
 
 \code{pl.len()} は群の行数、\code{pl.col("signal").count()} はその列の非 null 値の個数を数える。標準偏差の既定は \code{ddof=1} である。群の平均を元の各行へ付けるには、\code{over()} を使う。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 with_group_mean = derived.with_columns(
     pl.col("signal").mean().over("detector").alias("detector_mean")
 )
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 \code{group\_by().agg()} が群ごとに行をまとめるのに対し、この \code{over()} は元の行数を保つ。
 
 \subsection{join と表の変形}
@@ -209,6 +233,7 @@ with_group_mean = derived.with_columns(
 
 別表の較正係数や run 情報を結び付けるなら \code{join()}\index{join@\code{join}|textbf} を使う。縦長と横長の変換も行える。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 gain = pl.DataFrame(
     {
@@ -233,9 +258,11 @@ wide = (
 print(merged.select("detector", "signal", "gain"))
 print(wide)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 2 つの出力は次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shape: (4, 3)
 +----------+--------+------+
@@ -254,8 +281,9 @@ shape: (2, 3)
 | B        | 14.8 | 14.4 |
 +----------+------+------+
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-\code{join()} の \code{on="detector"} は両方の表で照合するキー列を指定し、\code{how="left"} は左側の \code{derived} の全行を残す結合方法を指定する。\code{pivot()} では、\code{index="detector"} が出力表で行を識別する列、\code{on="kind"} が新しい列名になる値、\code{values="value"} がセルへ入る値を表す。Polars には pandas のような index がないため、結合や変形に使う列を引数で明示する。
+\code{join()} の \code{on="detector"} は両方の表で照合するキー列を指定し、\code{how="left"} は左側の \code{derived} の全行を残す結合方法を指定する。\code{pivot()} では、\code{index="detector"} が出力表で行を識別する列、\code{on="kind"} が新しい列名になる値、\code{values="value"} がセルへ入る値を表す。同じ行キーと列キーの組が複数ある場合は、\code{aggregate\_function} で集計方法を指定する。記録の件数を表にする場合は \code{aggregate\_function="len"} とする。Polars には pandas のような index がないため、結合や変形に使う列を引数で明示する。
 
 \subsection{欠損値、\code{null}、\code{NaN}}
 \index{polars@Polars!null@\code{null}}
@@ -263,6 +291,7 @@ shape: (2, 3)
 
 Polars では、欠損値を表す \code{null} と、浮動小数点の特殊値 \code{NaN} を区別する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 missing = pl.DataFrame(
     {
@@ -275,9 +304,11 @@ print(missing.with_columns(
     pl.col("signal").is_nan().alias("is_nan"),
 ))
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 判定結果のうち、主要部分は次のようになる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 signal  is_null  is_nan
 12.4    false    false
@@ -285,13 +316,15 @@ null    true     null
 14.8    false    false
 NaN     false    true
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{null} は値が存在しないこと、\code{NaN} は浮動小数点の特殊値である。\code{is\_nan()} へ \code{null} を渡した結果も \code{null} になる点に注意する。両方を除くなら、例えば \code{pl.col("signal").is\_not\_null() \& pl.col("signal").is\_finite()} をフィルタ条件にする。どちらを除くかによって使う式が変わる。
 
 \subsection{文字列と条件分岐}
 
-式ベースの API では、文字列処理や条件分岐も列全体に対する式として書く。
+式ベースの API では、文字列処理や条件分岐も列全体に対する式として書く。以下の「接頭辞」は名前の先頭部分を指す。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 names = pl.DataFrame(
     {
@@ -301,7 +334,9 @@ names = pl.DataFrame(
 )
 
 classified = names.with_columns(
-    pl.col("run_name").str.extract(r"^(run_[A-Z])", 1).alias("prefix"),
+    pl.when(pl.col("run_name").str.starts_with("run_"))
+      .then(pl.col("run_name").str.slice(0, 5))
+      .otherwise(None).alias("prefix"),
     pl.when(pl.col("signal") > 12.0)
       .then(pl.lit("high"))
       .otherwise(pl.lit("normal"))
@@ -310,17 +345,20 @@ classified = names.with_columns(
 
 print(classified)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 追加した 2 列を含む結果は次の通りである。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 run_name    signal  prefix  quality
 run_A_001   12.4    run_A   high
 run_A_002   10.1    run_A   normal
 test_B_001  14.8    null    high
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
-\code{str.extract()} の第 1 引数は正規表現、第 2 引数の \code{1} は取り出すキャプチャグループの番号である。一致しない \code{test\_B\_001} の \code{prefix} は \code{null} になる。\code{when}、\code{then}、\code{otherwise} は、条件、真の場合の値、偽の場合の値を順に組み立てる。
+\code{str.starts\_with("run\_")} は \code{run\_} で始まるかを判定し、\code{str.slice(0, 5)} は先頭 5 文字を取り出す。\code{pl.lit("high")} は列名ではなく文字列 \code{high} を値として使う指定である。一致しない \code{test\_B\_001} の \code{prefix} は \code{null} になる。\code{when}、\code{then}、\code{otherwise} は、条件、真の場合の値、偽の場合の値を順に組み立てる。
 
 \code{when().then().otherwise()} では、Python の \code{if} のように選ばれた分岐だけが評価されるとは限らない。各分岐の式は、それぞれ単独でも有効でなければならない。条件外の行で不正な型変換が起きる場合も、分岐を書くだけでは回避できない。
 
@@ -330,6 +368,7 @@ test_B_001  14.8    null    high
 
 遅延実行は、複数の読み込み、抽出、列選択、集計を一つの実行計画として最適化する場合に用いる。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from pathlib import Path
 
@@ -349,6 +388,7 @@ lf = (
 result = lf.collect()
 print(result)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 \code{scan\_parquet()} の引数 \code{"events/*.parquet"} は、一致する複数の Parquet ファイルを入力にする。返り値は \code{LazyFrame} であり、この時点ではデータを実体化しない。\code{collect()} を呼ぶとクエリが実行され、返り値として DataFrame が得られる。実行時には、\code{select()} で使う列だけを読む列射影や、\code{filter()} を早い段階へ移す最適化が適用されることがある。最適化内容を確認したい場合は、実行前に \code{print(lf.explain())} として計画を表示できる。
 
@@ -358,6 +398,7 @@ print(result)
 
 直前の例の表を CSV へ保存してから読み直し、読み込み方による型の違いを確認する。
 
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df.write_csv("events.csv")
 df = pl.read_csv("events.csv")
@@ -370,6 +411,7 @@ print(type(df).__name__)
 print(type(lf).__name__)
 print(type(result).__name__)
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 
 表示される型名は順に \code{DataFrame}、\code{LazyFrame}、\code{DataFrame} である。\code{read\_csv()} はその場で読み込み、\code{scan\_csv()} は読み込み計画を作り、\code{collect()} が計画を実行する。\code{write\_parquet()} の第 1 引数は保存先であり、同名のファイルがある場合は上書きされるため、保存先を確認してから実行する。
 
@@ -415,10 +457,12 @@ Polars の概念は Concepts~\cite{polars_concepts}、式は Expressions and con
 \section{章末課題：表の処理方法と結果を比較する}
 
 本章の作業フォルダー \code{\textasciitilde/analysis\_practice/polars} で行う。前章の章末課題で保存した、データ 6 件の CSV を、端末で次のようにコピーする。
+\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cp ../pandas/events.csv .
 $ mkdir -p results
 \end{lstlisting}
+\end{minipage}\par\addvspace{6pt}
 コードは \code{polars\_exercises.py} へ保存し、\code{python polars\_exercises.py} で実行する。各問は \code{pl.read\_csv("events.csv")} で読み込んだ元の 6 行から始める。
 
 \begin{enumerate}
