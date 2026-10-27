@@ -7,13 +7,11 @@ Matplotlib\index{matplotlib@Matplotlib|textbf} は、Python でグラフや画�
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/matplotlib
 $ cd ~/analysis_practice/matplotlib
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。本文の Python コードは、別のファイル名を指定した例と章末課題を除き、\code{histogram.py} へ先頭から順に追記する。保存後、端末で \code{python histogram.py} を実行し、追加した処理の結果を表示例と比べる。
 
@@ -21,9 +19,12 @@ $ cd ~/analysis_practice/matplotlib
 
 \subsection{最小限のヒストグラム}
 
-最初に、測定値がどの範囲に何個あるかを棒の高さで表すヒストグラムを作る。例えば 0 から 1 の範囲にある値が 10 個なら、その範囲の棒の高さは 10 になる。数える範囲の一つ一つをビンという。ここでは動作確認用の値を 2500 個作り、40 個のビンに分けて数え、ヒストグラムを PDF に保存する。乱数を作るときの番号（シード）を固定し、同じ環境では同じ入力を作れるようにする。\code{rng.normal()} は正規分布から値を作る関数であり、\code{loc} は分布の中心、\code{scale} は標準偏差、\code{size} は作る個数を指定する。ここでは中心 0、標準偏差 1.2 の分布を使う。入力は \code{values}、作図処理は \code{plt.hist()}、出力先は \code{histogram.pdf} である。次のコードを \code{histogram.py} へ保存し、端末で \code{python histogram.py} を実行する。
+最初に、測定値がどの範囲に何個あるかを棒の高さで表すヒストグラムを作る。例えば 0 から 1 の範囲にある値が 10 個なら、その範囲の棒の高さは 10 になる。数える範囲の一つ一つをビンという。ここでは動作確認用の値を 2500 個作り、40 個のビンに分けて数える。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
+値の生成には、正規分布から乱数を作る \code{rng.normal()} を使う。\code{loc} は分布の中心、\code{scale} は標準偏差、\code{size} は作る個数を指定する。ここでは中心 0、標準偏差 1.2 とし、乱数生成の出発点となる番号（シード）を固定して、同じ環境で入力を再現する。
+
+入力配列 \code{values} を \code{plt.hist()} へ渡し、図を \code{histogram.pdf} へ保存する。次のコードを \code{histogram.py} へ保存し、端末で \code{python histogram.py} を実行する。
+
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,9 +37,8 @@ plt.xlabel("value")
 plt.ylabel("count")
 plt.savefig("histogram.pdf")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-端末に数値が表示されなくても、作業フォルダーに \code{histogram.pdf} ができれば保存できている。開いて、0 付近の棒が高く、両端へ向かうほど低くなる分布を確認する。線、文字、マーカーを主体とする図は、ベクタ形式の PDF で保存すると拡大時にも輪郭を保てる。PDF は LaTeX 文書へ直接挿入できる。図~\ref{fig:basic-histogram-example} は、この最小例の出力である。
+端末に数値が表示されなくても、作業フォルダーに \code{histogram.pdf} ができれば保存できている。開いて、0 付近の棒が高く、両端へ向かうほど低くなる分布を確認する。図~\ref{fig:basic-histogram-example} は、この例の出力である。
 
 \code{plt.show()} は対話的な確認に、\code{savefig()} は出力条件を指定したファイル保存に用いる。保存先、ファイル形式、解像度、同名ファイルを上書きするかどうかを作図コード内で明示すると、図の生成条件を再現できる。
 
@@ -55,7 +55,6 @@ plt.savefig("histogram.pdf")
 
 次のコードの \code{r"..."} は、バックスラッシュをそのまま渡す文字列の書き方である。ラベル内の \code{\$...\$} は数式を囲み、\code{\textbackslash mathrm\{s\}} は秒の記号を立体で表示する。これらの詳しい使い方は本章後半で扱う。図には、各軸が表す量と単位、系列を識別する凡例、比較に必要な目盛りを記す。これらが欠けると、数値の物理的意味や系列間の対応を図だけから判定できない。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -73,7 +72,6 @@ ax.legend(loc="upper right")
 fig.savefig("labeled_plot_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 図~\ref{fig:labeled-plot-example} には、横軸の量と単位、縦軸の量、系列名、比較に必要な目盛りが示されている。配色を調整する前に、これらの情報が図だけから読み取れるかを確認する。
 
@@ -88,7 +86,6 @@ plt.close(fig)
 
 Matplotlib の多くの作図関数は、NumPy 配列や Python リストのような「配列に変換できるもの」を受け取る。加えて、辞書や DataFrame のように列名で参照できるオブジェクトなら、\code{data=} を使って列名指定で描くこともできる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -108,7 +105,6 @@ ax.set_ylabel("value")
 fig.savefig("plot_data_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{plot\_data\_example.pdf} を開くと、二つの呼び方で描いた線が同じ場所に重なる。\code{np.asarray} は、入力を NumPy 配列として扱うことを明示する。\code{data=} を用いる場合は列名を文字列で指定するため、存在しない列名を渡したときのエラーも確認する。独立した配列を渡す場合は、\code{x} と \code{y} を明示する。
 
@@ -116,7 +112,6 @@ plt.close(fig)
 
 線図には \code{plot()}\index{matplotlib@Matplotlib!plot@\code{plot()}|textbf}、散布図には \code{scatter()}\index{matplotlib@Matplotlib!scatter@\code{scatter()}|textbf}、鉛直および水平の参照線には \code{axvline()}\index{matplotlib@Matplotlib!axvline@\code{axvline()}} と \code{axhline()}\index{matplotlib@Matplotlib!axhline@\code{axhline()}}、誤差付きの点には \code{errorbar()}\index{matplotlib@Matplotlib!errorbar@\code{errorbar()}|textbf} を用いる。次の例は、これらの関数と出力図の対応を示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -139,7 +134,6 @@ axes[1, 1].errorbar(t[::4], y_noise[::4], yerr=y_err[::4], fmt="o")
 fig.savefig("basic_plot_types_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 図~\ref{fig:basic-plot-types-example} は、主要な描画関数の出力を並べたものである。線図は順序を持つ系列や関数形、散布図は 2 変量の対応とばらつき、参照線は閾値や基準値、エラーバーは測定値の不確かさを表す。
 
@@ -156,7 +150,6 @@ plt.close(fig)
 
 格子上で定義された 2 次元配列は \code{imshow()}\index{matplotlib@Matplotlib!imshow@\code{imshow()}|textbf} で色に対応させる。これに対して、点群を格子ごとに数え上げる場合は \code{hist2d()}\index{matplotlib@Matplotlib!hist2d@\code{hist2d()}|textbf} を用いる。いずれの場合も、色が表す量と尺度をカラーバーに記す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -180,7 +173,6 @@ fig.tight_layout()
 fig.savefig("heatmap_colorbar_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{meshgrid(x, y)} は、横方向の座標 \code{x} と縦方向の座標 \code{y} を格子状に組み合わせる。ここでは、その格子上に中央ほど値が大きい配列 \code{image} を作っている。\code{imshow()} の軸には、既定では座標 \code{x}、\code{y} の値ではなく、配列の列番号と行番号が表示される。
 
@@ -195,11 +187,12 @@ plt.close(fig)
 
 \code{imshow()} は格子上に並んだ値を描くため、シミュレーションで得た場や画像データをそのまま表示できる。一方、\code{hist2d()} は点群を格子ごとに数え上げる。格子ごとの点数が数桁にわたる場合は、\code{LogNorm()} による対数的な色割り当てによって、高密度領域と低密度領域を同じ図に表示できる。
 
+\code{LogNorm} は 0 以下の値を対数へ写せないため、空のビンなどは通常マスクされる。背景と同じ色で表示された領域を、微小な正の度数と混同しないようにする。また、\code{imshow()} の既定の座標は画像の画素位置である。物理的な座標で表示する場合は、\code{origin} と \code{extent=(xmin, xmax, ymin, ymax)} で上下の向きと画像の外縁を明示する。
+
 \subsection{全天図と投影: Hammer 図法と Mollweide 図法}
 
 経度と緯度のような球面上のデータを平面へ描くには、投影法\index{とうえいほう@投影法}が必要になる。Matplotlib には、地図ライブラリなしでも使える全天図向けの投影として、Hammer\index{hammer@Hammer projection} 図法や Mollweide\index{mollweide@Mollweide projection} 図法が用意されている。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -217,17 +210,22 @@ ax1.scatter(lon, lat, s=8)
 ax2.scatter(lon, lat, s=8)
 ax1.set_title("Hammer")
 ax2.set_title("Mollweide")
-ax1.tick_params(labelsize=8)
-ax2.tick_params(labelsize=8)
+ax1.tick_params(labelsize=14)
+ax2.tick_params(labelsize=14)
+ax1.set_longitude_grid(60)
+ax2.set_longitude_grid(60)
+ax1.set_latitude_grid(30)
+ax2.set_latitude_grid(30)
 ax1.grid(True)
 ax2.grid(True)
 fig.tight_layout()
 fig.savefig("projection_examples.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-この例では、経度に沿って緯度が波状に変わる人工的な点群を作っている。\code{deg2rad()} は度をラジアンへ変換する。図~\ref{fig:projection-examples} では、同じ点群を Hammer 図法と Mollweide 図法で投影している。どちらも経度の全範囲と両極を有限の領域に写すため、全天イベント分布や銀河座標図に利用できる。\code{projection="hammer"} と \code{projection="mollweide"} の座標値にはラジアンを渡す。
+この例では、経度に沿って緯度が波状に変わる人工的な点群を作っている。\code{deg2rad()} は度をラジアンへ変換する。点の座標にはラジアンを渡すが、\code{set\_longitude\_grid()} と \code{set\_latitude\_grid()} で指定する目盛りの間隔は度である。ここでは経度を 60 度、緯度を 30 度間隔とする。
+
+図~\ref{fig:projection-examples} では、同じ点群を Hammer 図法と Mollweide 図法で投影している。どちらも経度の全範囲と両極を有限の領域に写すため、全天イベント分布や銀河座標図に利用できる。
 
 \begin{figure}[tbp]
 \centering
@@ -241,7 +239,7 @@ plt.close(fig)
 
 \section{分布・相関・密度に応じた図の選択}
 
-2 変数の関係を調べるときに、データ量を確認せず散布図を描くだけでは、点の重なりによって密度構造を見落とす場合がある。この節の対象は、データ点数と確認したい性質に応じた散布図、透過表示、2 次元ヒストグラムの選択である。
+2 変数の関係を散布図にすると、点の重なりによって密度の違いが見えなくなる場合がある。ここでは、点の数と調べたい性質に応じて、散布図、透過表示、2 次元ヒストグラムを使い分ける。
 
 \subsection{度数と確率密度の区別}
 \index{ひすとぐらむ@ヒストグラム!せいきか@正規化|textbf}\index{かくりつみつど@確率密度|textbf}
@@ -255,7 +253,6 @@ plt.close(fig)
 
 2 変数の対応を点ごとに示す基本的な方法が散布図（\code{scatter}）である。ただし、データ点が多い場合は同じ領域に点が重なり、局所的な密度差を判別できなくなる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -270,7 +267,6 @@ ax.scatter(x, y, s=10, c='black')
 fig.savefig("scatter_bad.png", dpi=150)
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{figure}[htbp]
 \centering
@@ -285,7 +281,6 @@ plt.close(fig)
 
 2 次元ヒストグラム（\code{hist2d}）は、領域ごとの点数を色で表すため、点の重なりがある場合にも密度を定量的に示せる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 fig, ax = plt.subplots(figsize=(6, 5))
 h_lin = ax.hist2d(x, y, bins=50, cmap='viridis')
@@ -293,7 +288,6 @@ cbar = fig.colorbar(h_lin[3], ax=ax, label="Counts (Linear)")
 fig.savefig("hist2d_linear_bad.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{figure}[htbp]
 \centering
@@ -308,7 +302,6 @@ plt.close(fig)
 
 物理イベントの頻度が 1、10、100、1000 のように数桁にわたる場合には、線形カラースケールだけでは低密度領域の差を表しにくい。\code{LogNorm} は、正のカウントを対数尺度で色へ割り当てる。\index{matplotlib@Matplotlib!LogNorm@\code{LogNorm}|textbf}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import matplotlib.colors as mcolors
 
@@ -319,7 +312,6 @@ cbar = fig.colorbar(h_log[3], ax=ax, label="Counts (Log Scale)")
 fig.savefig("hist2d_lognorm_good.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{figure}[htbp]
 \centering
@@ -334,7 +326,6 @@ plt.close(fig)
 
 関連する分布を同じ尺度で比較する場合は、1 枚のキャンバス（\code{Figure}\index{matplotlib@Matplotlib!Figure@\code{Figure}|textbf}）の中に複数のパネル（\code{Axes}\index{matplotlib@Matplotlib!Axes@\code{Axes}|textbf}）を配置する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -361,7 +352,6 @@ fig.tight_layout()
 fig.savefig("histogram_pair_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 複数パネルの図では、\code{axes[0]} のように描画先の \code{Axes} を明示する。これにより、各処理がどのパネルに作用するかをコード上で追跡できる。\code{Figure} と \code{Axes} の役割は、第~\ref{sec:matplotlib-object}~節以降で詳しく説明する。
 
@@ -369,7 +359,6 @@ plt.close(fig)
 
 上段の主結果に広い領域を割り当て、下段に補助図を 2 枚置くなど、パネルごとに面積を変える場合は、\code{subplot\_mosaic()}\index{subplot_mosaic@subplot\_mosaic} または \code{GridSpec}\index{gridspec@GridSpec} を用いる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -390,7 +379,6 @@ fig.tight_layout()
 fig.savefig("subplot_mosaic_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 図~\ref{fig:subplot-mosaic-example} のように、\code{"A"} を 2 回書くと、上段の 2 列を一つの Axes が占める。主図と補助図に異なる面積を割り当てる場合に利用できる。
 
@@ -402,8 +390,6 @@ plt.close(fig)
 \end{figure}
 
 \code{subplot\_mosaic()} は文字列の名前で Axes を参照できる。\code{GridSpec} は、列幅、行高、結合するセルを数値で指定する。Axes の参照方法と、行や列の大きさをどこまで調整したいかに応じて選ぶ。
-
-\code{LogNorm} は 0 以下の値を対数へ写せないため、空のビンなどは通常マスクされる。背景と同じ色で表示された領域を、微小な正の度数と混同しないようにする。また、\code{imshow()} の既定の座標は画像の画素位置である。物理的な座標で表示する場合は、\code{origin} と \code{extent=(xmin, xmax, ymin, ymax)} で上下の向きと画像の外縁を明示する。
 
 \subsection{凡例とレイアウト}
 
@@ -466,7 +452,6 @@ plt.close(fig)
 \label{fig:errorbar-example}
 \end{figure}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -492,7 +477,6 @@ fig.tight_layout()
 fig.savefig("errorbar_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \subsection{分布図における軸・色・密度の読み取り}
 
@@ -516,7 +500,6 @@ plt.close(fig)
     \item \textbf{ラスタ形式 (\code{.png}, \code{.jpg})}：図をピクセルの集合として保存するため、拡大率によっては輪郭に画素が見える。ベクタ形式では各点が個別要素となるので、密集した散布図や各セルを図形として描くヒートマップではファイルサイズと描画負荷が増える。\code{imshow()} の画像は PDF 内にもラスタ画像として埋め込まれる。多数の点やセルだけに \code{rasterized=True} を指定すれば、文字をベクタのまま残すこともできる。図全体を画像にする場合は、\code{savefig("plot.png", dpi=150)} のように必要な解像度を指定して PNG で保存する。
 \end{itemize}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 x = np.array([0.0, 1.0, 2.0, 3.0])
 y = np.array([1.0, 2.0, 1.5, 3.0])
@@ -529,7 +512,6 @@ fig.savefig("spectrum.pdf")
 fig.savefig("spectrum.png", dpi=150)
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 同じ図でも、\code{spectrum.pdf} は線と文字をベクタ要素として保持し、\code{spectrum.png} は指定した画素数のラスタ画像として保存する。線図や要素数の少ないヒストグラムには PDF を用いる。点や格子の数が多く、ベクタ形式ではファイルサイズと描画負荷が増える散布図やヒートマップには、必要な解像度を指定した PNG を用いる。
 
@@ -557,7 +539,6 @@ Matplotlib では、\code{Figure}、\code{Axes}、\code{Axis} が異なる階層
 
 図の構成要素の関係を木構造で示すと、次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Figure
 |-- Axes
@@ -568,20 +549,18 @@ Figure
 |   `-- Legend
 `-- Figure-level Text / Colorbar / ...
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 図~\ref{fig:anatomy-example} に、Figure、Axes、Axis、Artist の位置関係を示す。Figure は一つ以上の Axes を持ち、各 Axes は x 軸と y 軸を表す Axis、および線、文字、凡例などを持つ。Figure、Axes、Axis 自体も Artist の一種であり、四者が互いに独立した分類というわけではない。
 
 \begin{figure}[tbp]
 \centering
-\includegraphics[width=0.75\linewidth]{anatomy_example.pdf}
+\includegraphics[width=0.95\linewidth]{anatomy_example.pdf}
 \caption{Figure、Axes、Axis、Artist の関係を示した例。1 つの Figure の中に Axes があり、その Axes の中で線、文字、凡例などの Artist が描かれている。}
 \label{fig:anatomy-example}
 \end{figure}
 
 \noindent この対応を実際の Python オブジェクトの型で示すコードを次に掲げる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
 
@@ -604,11 +583,9 @@ print(len(fig.axes))
 fig.savefig("line.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 このコードを実行すると、次の出力が得られる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Figure
 Axes
@@ -617,13 +594,11 @@ Line2D
 Legend
 1
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 最後の \code{1} は、この Figure の中に Axes が 1 枚だけ入っていることを表す。もし \code{plt.subplots(2, 2)} と書けば、Figure は 1 つのままで、Axes が 4 枚入る。
 
 \code{Artist} は線だけを指す名称ではない。タイトルや軸ラベルは \code{Text}、ヒストグラムの各棒は \code{Rectangle} として管理される。次のコードは、それぞれの返り値の型を表示する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
 
@@ -638,24 +613,20 @@ print(type(bars).__name__)
 print(type(bars[0]).__name__)
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \noindent このコードの出力は次のとおりである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Text
 Text
 BarContainer
 Rectangle
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 ここで \code{bars} 全体は \code{BarContainer} であり、その中の 1 本 1 本は \code{Rectangle} である。したがって、「ヒストグラムの棒だけ色を変える」といった細かい調整は、個々の Artist の設定を変えて行う。
 
 Figure 側の要素も、コード上の型を見ると役割を区別しやすい。図全体のタイトル \code{suptitle} や colorbar は、特定の Axes だけでなく Figure 全体の構成に関わる。次のコードは、これらの型を表示する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -669,22 +640,18 @@ print(type(suptitle).__name__)
 print(type(cbar).__name__)
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \noindent このコードでは、次の出力が得られる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Text
 Colorbar
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{suptitle} は Figure 全体に付く \code{Text} であり、\code{colorbar} は Figure に追加される補助要素である。複数パネルに共通するタイトルや colorbar は、Figure のメソッドを通じて追加する。
 
 Axis は目盛り、目盛りラベル、表示範囲、尺度を管理する。次の操作は、Axes のメソッドを通じて x Axis の設定を変更する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.plot([1, 10, 100], [2, 3, 5], marker="o")
@@ -693,7 +660,6 @@ ax.set_xscale("log")
 fig.savefig("log_axis_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{log\_axis\_example.pdf} を開くと、横軸の 1、10、100 が等間隔に並ぶ。\code{set\_xlim} は表示範囲を、\code{set\_xscale("log")} は座標値から表示位置への変換を対数尺度へ変更する。多くの設定は、\code{ax.xaxis} を直接操作せず、Axes のメソッドから変更できる。
 
@@ -706,13 +672,12 @@ plt.close(fig)
 \item 特定の線だけ色や太さを変える、凡例や文字を細かく調整する: Artist
 \end{itemize}
 
-保存には \code{fig.savefig(...)}、凡例には \code{ax.legend()}、対数軸には \code{ax.set\_xscale("log")} を用いるのは、それぞれの操作対象が Figure または Axes だからである。各メソッドの呼び出し元が \code{fig} と \code{ax} のどちらかを追うと、処理対象を判別しやすい。
+図全体の保存は \code{fig.savefig(...)} で行う。描画領域の凡例は \code{ax.legend()}、横軸の尺度は \code{ax.set\_xscale("log")} で設定する。呼び出し元の \code{fig} と \code{ax} に注目すれば、設定が及ぶ範囲を区別しやすい。
 
 \subsection{オブジェクト指向 API による描画}
 
 Matplotlib には、現在の作図状態へ描画する \code{pyplot} API と、\code{Figure} と \code{Axes} を明示的に操作するオブジェクト指向 API がある。複数パネルや再利用する作図関数では、描画先を引数として渡せる後者を用いる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -727,7 +692,6 @@ ax.set_ylabel("count")
 fig.savefig("histogram.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 描画先の \code{ax} を明示すると、同じ処理を複数の Figure や Axes に適用できる。また、関数の引数として Axes を受け取れるため、作図処理を再利用できる。
 
@@ -737,7 +701,6 @@ plt.close(fig)
 
 同じ体裁の図を反復して作成する場合は、Axes を引数に取る補助関数へ作図処理をまとめる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -760,7 +723,6 @@ plot_hist(axes[1], values2, bin_edges, "sample B")
 fig.savefig("histogram_pair_helper.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 ビン境界も引数で渡すため、両パネルで同じ値の範囲を比較できる。この補助関数は描画先の Axes を引数として受け取るため、比較図の各パネルや条件ごとの反復描画に同じ処理を適用できる。
 
@@ -782,7 +744,6 @@ plt.close(fig)
 
 Matplotlib では、点の形\index{marker@marker}、線種\index{linestyle@linestyle}、色をそれぞれ独立に指定できる。対応する主な引数は次の 5 つである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 x = [0, 1, 2, 3]
 y = [1.0, 2.0, 1.5, 3.0]
@@ -799,7 +760,6 @@ ax.plot(
 fig.savefig("line_style_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{itemize}
 \item \code{marker}: 点の形を決める。
@@ -874,7 +834,6 @@ plt.close(fig)
 
 Matplotlib では、図のフォントや線幅などの既定値を \code{rcParams}\index{rcparams@\code{rcParams}} という辞書オブジェクトで管理する。複数の図に共通する設定は、作図スクリプトの冒頭でこの辞書へ指定する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import matplotlib as mpl
 
@@ -892,7 +851,6 @@ mpl.rcParams.update(
     }
 )
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{itemize}
 \item \code{font.family}: 既定フォント族を指定する。本文と図で同じフォント族を使う場合に設定する。
@@ -933,7 +891,6 @@ Categorical & \code{tab10} & 離散的な系列の識別 \\
 
 作業ディレクトリに置く \code{my\_style.mplstyle} の記述例を次に示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 font.family: serif
 mathtext.fontset: cm
@@ -945,11 +902,9 @@ ytick.direction: in
 axes.linewidth: 1.2
 legend.frameon: False
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 各解析スクリプトの先頭でこの設定ファイルを読み込むと、以降の図に共通の設定が適用される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
 
@@ -962,7 +917,6 @@ ax.plot([0, 1, 2], [1, 3, 2])
 fig.savefig("styled_line.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 設定をファイルへ分離すると、解析スクリプトごとのフォントやグリッドの不統一を防げる。学会発表用に文字を大きくした別の設定へも容易に切り替えられる。
 
@@ -972,15 +926,12 @@ plt.close(fig)
 
 次の内容は \code{presentation\_style.mplstyle} へ保存する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={presentation\_style.mplstyle}]
 font.size: 16
 axes.grid: False
 legend.fontsize: 11
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -996,7 +947,6 @@ ax.grid(False)  # この Axes だけグリッドを消す
 fig.savefig("presentation_line.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 二つの \code{.mplstyle} を配列で渡すと、後ろに書いたファイルの設定が優先される。したがって、基準となる \code{my\_style.mplstyle} を保ったまま、文字サイズやグリッドの有無だけを差し替えられる。さらに、\code{mpl.rcParams} の変更はその後に作成する図へ、\code{ax.grid(False)} のような Axes メソッドは指定したパネルへ適用される。スタイルファイル、スクリプト内の既定値、個別の Axes の順に、適用範囲が狭くなる。
 
@@ -1007,7 +957,6 @@ plt.close(fig)
 
 Matplotlib では、軸ラベルや凡例に数式を書ける。既定では LaTeX そのものではなく、TeX に似た \code{MathText}\index{mathtext@MathText} という仕組みが使われる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 fig, ax = plt.subplots()
 ax.plot([0, 100, 200], [5, 8, 3])
@@ -1016,7 +965,6 @@ ax.set_ylabel(r"$N$")
 fig.savefig("math_label_example.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 単位を数式の中へ入れる場合は、上の例のように \code{\textbackslash{}mathrm} を使って立体で表す。図中の記号、字体、単位は、本文での定義と一致させる。
 
@@ -1035,7 +983,6 @@ MathText は、Matplotlib 内部で数式の一部を組版する機能であり
 
 数字に見える列でも、実際には文字列として読まれていると、Matplotlib は数値軸ではなくカテゴリ軸として解釈する。すると、\code{1}, \code{2}, \code{10}, \code{20} が数値間隔ではなく、単なる 4 つのラベルとして等間隔に並ぶ。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
 
@@ -1050,7 +997,6 @@ ax.plot([float(value) for value in x_str], y, marker="o")
 fig.savefig("numeric_axis.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{string\_axis.pdf} と \code{numeric\_axis.pdf} を開き、点の横方向の間隔を比較する。図~\ref{fig:string-axis-example} の左では文字列がカテゴリ軸として扱われ、右では数値への変換によって数値軸になっている。CSV の読み込み後に軸間隔が数値に比例しない場合は、作図に渡した配列の \code{dtype} を確認する。
 
@@ -1078,12 +1024,10 @@ plt.close(fig)
 
 \code{Plot types} は図種ごとの選択肢、\code{Gallery} は完成例と実装、\code{Cheatsheets} は主要な引数と書式、\code{Quick start} は \code{Figure} と \code{Axes} の基本構造を示す。目的に近い公式例を選び、入力データ、軸、単位、保存形式を解析条件に合わせて変更する。
 
-\clearpage
 \section{章末課題：分布の特徴が伝わる図を作る}
 
 本章の作業フォルダー \code{\textasciitilde/analysis\_practice/matplotlib} で \code{mkdir -p figures} を実行する。次を \code{plot\_exercises.py} へ保存し、各問の描画処理を追記して \code{python plot\_exercises.py} で実行する。経度・緯度・マグニチュードは 5 件の人工データ、\code{dt} は秒単位の発生間隔である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1093,29 +1037,21 @@ latitude = np.array([35.0, 36.1, 34.8, 37.0, 33.9])
 magnitude = np.array([3.2, 4.1, 2.8, 4.8, 3.7])
 dt = np.array([1.0, 4.0, 12.0, 60.0, 180.0, 900.0, 3600.0])
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{enumerate}
-\item \begin{minipage}[t]{\linewidth}
-\textbf{位置とマグニチュードを図にする。}
+\item \textbf{位置とマグニチュードを図にする。}
 横軸を経度、縦軸を緯度、点の色をマグニチュードとする散布図を作れ。軸ラベル、カラーバー、「人工データ 5 件」と分かるタイトルを付け、\code{figures/usgs\_global\_scatter.pdf} に保存する。図を開き、最も規模の大きい地震の位置を色から読み取って述べよ。実カタログを使う場合は、タイトルに実際の対象期間・地域を記す。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{同じ発生間隔を二つの目盛りで描く。}
+\item \textbf{同じ発生間隔を二つの目盛りで描く。}
 \code{dt} のヒストグラムを 2 枚並べよ。左は 0～3600 秒の 600 秒幅ビンと線形の横軸、右は \code{np.logspace(0, np.log10(3600), 15)} が作る 14 個の対数ビンと対数の横軸を使う。境界配列の最後の値は 3600.0 に設定する。縦軸はいずれも件数の対数表示とし、単位、ビンの決め方、表示範囲を記す。0 以下と範囲外の値は別に数え、図を \code{figures/interval\_comparison.pdf} に保存せよ。短い間隔と長い間隔が、それぞれどちらの図で区別しやすいかを述べよ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{発展：地震の位置へ海岸線を重ねる。}
+\item \textbf{発展：地震の位置へ海岸線を重ねる。}
 Cartopy を使える環境では、下のコードを同じファイルへ追記せよ。\code{figures/usgs\_map.pdf} を開き、点と海岸線の位置関係を示す。\code{projection} が地図側、\code{transform} が入力した経度・緯度側の座標系を指定することを確認せよ。初回は海岸線データの取得に通信が必要な場合がある。
-\end{minipage}
 
 \end{enumerate}
 
 発展課題の出発点を次に示す。全球図では \code{set\_extent()} を \code{set\_global()} に替える。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
@@ -1133,4 +1069,3 @@ fig.colorbar(points, ax=ax, label="magnitude")
 fig.savefig("figures/usgs_map.pdf")
 plt.close(fig)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}

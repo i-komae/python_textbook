@@ -18,15 +18,12 @@ Python のプロファイル結果から計算量の多い関数を特定した�
 C++ のコンパイル環境がある端末で行う。ターミナルで \code{c++ --version} を実行して確認する。macOS で未導入の場合は、付録~\ref{app:environment}~で説明した Xcode Command Line Tools を用意する。
 
 仮想環境が有効な端末では \code{deactivate} で解除する。この付録には Python に加えて C++ の基本的な知識を使う。次の命令で作業フォルダーへ移動する。以降は、この場所を基準に各ファイルを作る。
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p ~/fastcount_cpp/cpp ~/fastcount_cpp/src/fastcount_cpp
 $ cd ~/fastcount_cpp
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 各節のコードを、見出しで指定した名前のファイルへ保存する。完成時の構成は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={fastcount\_cpp/ の例}]
 pyproject.toml
 CMakeLists.txt
@@ -36,7 +33,6 @@ src/
 `-- fastcount_cpp/
     `-- __init__.py
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{pyproject.toml} はビルド方法と Python パッケージの情報、\code{CMakeLists.txt} は C++ 拡張のコンパイル方法を記述する。\code{cpp/bindings.cpp} に C++ の処理と Python への公開方法を書き、\code{src/fastcount\_cpp/\_\_init\_\_.py} から利用者向けの関数を再公開する。以下では、各ファイルの役割と内容を構成順に説明する。
 
@@ -44,7 +40,6 @@ src/
 
 C++ 拡張には、Python パッケージの情報に加えてコンパイル方法を定めるビルドバックエンドが必要である。ここでは、\code{scikit-build-core}、pybind11、CMake を組み合わせる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={pyproject.toml}]
 [build-system]
 requires = [
@@ -62,7 +57,6 @@ dependencies = []
 [tool.scikit-build]
 wheel.packages = ["src/fastcount_cpp"]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{build-system} に書いたパッケージは、拡張モジュールのビルド環境で用いられる。インストール後の実行に必要なパッケージは \code{project.dependencies} に分けて記述する。この例の呼び出しは Python のリストを使うため、実行時の追加ライブラリはない。
 
@@ -71,7 +65,6 @@ wheel.packages = ["src/fastcount_cpp"]
 
 \code{CMakeLists.txt} には、使用する C++ 規格、コンパイル対象、インストール先を記述する。最小構成は次の通りである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={CMakeLists.txt}]
 cmake_minimum_required(VERSION 3.15)
 project(fastcount_cpp LANGUAGES CXX)
@@ -82,7 +75,6 @@ pybind11_add_module(_core cpp/bindings.cpp)
 target_compile_features(_core PRIVATE cxx_std_17)
 install(TARGETS _core DESTINATION fastcount_cpp)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{pybind11\_add\_module} が、Python から import できる共有ライブラリを作る中心になる。ここで作るモジュール名を \code{\_core} にしておくと、Python 側では \code{fastcount\_cpp.\_core} として参照できる。
 
@@ -141,7 +133,6 @@ PYBIND11_MODULE(_core, m) {
 
 C++ 拡張を内部モジュール \code{\_core} として直接公開すると、利用者が実装上の名前を知る必要が生じる。そこで、パッケージの \code{\_\_init\_\_.py} から公開関数だけを再公開する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, title={src/fastcount\_cpp/\_\_init\_\_.py}]
 """Python interface for the C++ pair counter."""
 
@@ -149,7 +140,6 @@ from ._core import count_pairs_within_window
 
 __all__ = ["count_pairs_within_window"]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この \code{\_\_init\_\_.py} に公開関数を再エクスポートすると、利用側は \code{from fastcount\_cpp import count\_pairs\_within\_window} と記述できる。C++ 側の内部モジュール名 \code{\_core} は、公開 API に現れない。
 
@@ -158,22 +148,18 @@ __all__ = ["count_pairs_within_window"]
 
 開発中は、プロジェクトの仮想環境へ editable install する。Python 側のファイルはインストール元を参照し、C++ ソースは再ビルドによってコンパイル済み拡張へ反映される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv python pin 3.12
 $ uv sync
 $ uv pip install -e .
 $ uv run python -c "from fastcount_cpp import count_pairs_within_window; print(count_pairs_within_window([0.0, 0.1, 0.4], 0.25))"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 最後の出力は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 1
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 これは、\code{(0.0, 0.1)} だけが窓 \code{0.25} の中に入っていることを表している。
 
@@ -183,7 +169,6 @@ $ uv run python -c "from fastcount_cpp import count_pairs_within_window; print(c
 
 次を \code{fastcount\_cpp} の一番上の \code{check\_pairs.py} へ保存し、\code{uv run python check\_pairs.py} で実行する。インストールした拡張モジュールも、Python の \code{import} 文で読み込める。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from fastcount_cpp import count_pairs_within_window
 
@@ -193,7 +178,6 @@ window = 0.2
 count = count_pairs_within_window(times, window)
 print(count)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 出力は 2 であり、\code{(0.0, 0.1)} と \code{(0.4, 0.55)} の 2 組を表す。Python へ公開する関数を限定し、その関数の引数、返り値、例外条件をテストで固定する。C++ への移植後もこの契約を保てば、利用側のコードを変更せずに内部実装を置き換えられる。
 

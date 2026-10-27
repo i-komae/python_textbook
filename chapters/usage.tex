@@ -29,7 +29,7 @@
 
 最初は、第~\ref{chap:shell}~章から第~\ref{chap:io}~章までを順に進め、ファイルを読み書きする短いプログラムを実行できるようにする。その後は、扱うデータと目的に応じて各ライブラリの章へ進む。例えば、数値の列を計算して図にしたい場合は NumPy と Matplotlib、表を集計したい場合は pandas が出発点になる。Polars は別の表処理方法として、Astropy は単位や天体データを扱うときに参照できる。「補足」と「発展課題」は、基本の例を理解してから取り組む。
 
-例えば、CSV に保存された数値の平均を求めたいときは、まずファイルの場所と内容を確認し、それから読み込んで計算する。結果だけを見て判断せず、入力が何件あり、どの値を計算に使ったかも確かめる。
+例えば、CSV（値をカンマで区切って表を保存する形式）の数値から平均を求めたいときは、まずファイルの場所と内容を確認し、それから読み込んで計算する。結果だけを見て判断せず、入力が何件あり、どの値を計算に使ったかも確かめる。
 
 \section{コード例と実行結果の読み方}
 
@@ -37,26 +37,24 @@
 
 ここでは、コードと表示結果の区別を見ておく。次は、計算する内容を記したコードである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 count = 3
 print(count + 2)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 表示結果は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 5
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目では、\code{3} という値に \code{count} という名前を付ける。2 行目では、その値に \code{2} を足し、\code{print()} で結果を画面に表示する。丸括弧の中に、表示したい値や計算式を書く。この例では \code{5} が表示されれば、同じ計算を実行できている。
 
 \code{count = 3} を \code{count = 10} へ変えると、計算結果は \code{12} になる。ファイルを書き換えた場合は、保存してからもう一度実行し、表示が変わることを確認する。
 
 第~\ref{chap:basics}~章には、Python を起動して 1 行ずつ試す「対話モード」の例もある。この場合は入力行に \code{>>>}、続きの行に \code{...} を示す。どちらの印も入力しない。コードの左に付いた行番号も入力しない。
+
+長い行は紙面上で折り返し、続きの行頭に \(\hookrightarrow\) を付ける。この印は入力せず、直前の行につなげて書く。
 
 各章の冒頭に、作業フォルダーへ移動する命令を示す。その場所で Python ファイルを実行すると、ファイル名だけで指定した入力や出力も、その場所を基準に扱われる。例えば、\code{python scripts/read.py} で実行しても、コードの \code{open("data.csv")} が探すのは端末の作業フォルダーにある \code{data.csv} であり、\code{scripts/} の中ではない。
 

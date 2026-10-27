@@ -7,6 +7,7 @@
 \usepackage{xurl}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
 \usepackage{listings}
+\usepackage{needspace}
 \usepackage{makeidx}
 \usepackage{booktabs}
 \usepackage{cite}
@@ -15,23 +16,23 @@
 \hypersetup{pdftitle={Pythonによるデータ解析と高速化},pdfauthor={Ichiro KOMAE},pdfsubject={自然科学のためのPython入門}}
 
 \IfFontExistsTF{HackGen35 Console NF}{
-    \setmonofont{HackGen35 Console NF}[Scale=MatchLowercase]
+    \setmonofont{HackGen35 Console NF}
     \setmonojfont{HackGen35 Console NF}
 }{
     \IfFontExistsTF{HackGen Console NF}{
-        \setmonofont{HackGen Console NF}[Scale=MatchLowercase]
+        \setmonofont{HackGen Console NF}
         \setmonojfont{HackGen Console NF}
     }{
         \IfFontExistsTF{Menlo}{
-            \setmonofont{Menlo}[Scale=MatchLowercase]
+            \setmonofont{Menlo}
         }{
             \IfFontExistsTF{Monaco}{
-                \setmonofont{Monaco}[Scale=MatchLowercase]
+                \setmonofont{Monaco}
             }{
                 \IfFontExistsTF{Courier New}{
-                    \setmonofont{Courier New}[Scale=MatchLowercase]
+                    \setmonofont{Courier New}
                 }{
-                    \setmonofont{Latin Modern Mono}[Scale=MatchLowercase]
+                    \setmonofont{Latin Modern Mono}
                 }
             }
         }
@@ -49,8 +50,9 @@
     stringstyle={\small\ttfamily \color[rgb]{0.75,0,0.2}},
     frame={tb},
     breaklines=true,
+    postbreak={\mbox{\textcolor{BookLine}{\(\hookrightarrow\)}\space}},
     keepspaces=true,
-    columns=fixed,
+    columns=fullflexible,
     numbers=left,
     xrightmargin=0\zw,
     xleftmargin=3\zw,
@@ -60,6 +62,11 @@
     showstringspaces=false,
 }
 \renewcommand{\lstlistingname}{リスト}
+% Keep a listing's top rule with its first few lines; long listings may still break.
+\AddToHook{env/lstlisting/before}{\Needspace{4\baselineskip}}
+% Avoid leaving a paragraph's first or last line alone across a page break.
+\clubpenalty=10000
+\widowpenalty=10000
 \renewcommand{\indexname}{索引}
 \providecommand{\bibname}{参考文献}
 \renewcommand{\seename}{$\rightarrow$}

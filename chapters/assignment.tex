@@ -7,7 +7,6 @@
 
 端末で次を実行し、ホームディレクトリの下の \code{coincidence\_practice} を作業場所にする。第~\ref{chap:setup}~章の仮想環境を使う。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/coincidence_practice
@@ -19,7 +18,6 @@ $ curl -fL -o slow_event_analysis.py \
 $ unzip events_data.zip
 $ cp slow_event_analysis.py event_analysis.py
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 展開すると \code{events\_data/} の下に年・月ごとのフォルダーができ、合計 500 日分の gzip ファイルが入る。\code{event\_analysis.py} が自分で修正するコピーであり、元の配布コードは比較用に残す。以下の端末操作はすべて \code{coincidence\_practice} で行う。
 
@@ -27,19 +25,15 @@ $ cp slow_event_analysis.py event_analysis.py
 
 解析を始める前に、gzip ファイルを一つ開き、各列の意味を確認せよ。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ gzip -cd events_data/2024/01/events_2024_01_01.txt.gz | head
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 先頭の \code{\#} で始まる行は列の説明であり、読み込むときに除く。それ以外の各行は、空白区切りで次の順に 8 列が並ぶ。下の行は列の説明であり、データへ追加しない。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 event_id year month day hhmmss ns detector_id signal
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 各行は一つの記録である。\code{event\_id} はファイル内の記録番号、\code{year}、\code{month}、\code{day} は日付、\code{hhmmss} は時・分・秒、\code{ns} は秒未満の部分、\code{detector\_id} は検出器番号、\code{signal} は信号値を表す。
 
@@ -53,24 +47,20 @@ event_id year month day hhmmss ns detector_id signal
 
 500 日分の全データを処理する前に、数日分を別ディレクトリへコピーし、短時間で再実行できる検証用入力を用意せよ。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p events_data_small/2024/01
 $ cp events_data/2024/01/events_2024_01_01.txt.gz events_data_small/2024/01/
 $ cp events_data/2024/01/events_2024_01_02.txt.gz events_data_small/2024/01/
 $ cp events_data/2024/01/events_2024_01_03.txt.gz events_data_small/2024/01/
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \subsection{配布コードによる基準測定}
 
 今作った \code{events\_data\_small} を入力として、次を実行せよ。必要な \code{matplotlib} と \code{tqdm} は、第~\ref{sec:setup-libraries}~節の環境に導入済みである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python slow_event_analysis.py events_data_small --outdir slow_output
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 全期間の処理時間は、データ量、ストレージ、計算機によって変わる。初回の対象は数日分とし、入力形式と出力の確認後に対象期間を広げるのがよい。
 
@@ -80,12 +70,10 @@ $ python slow_event_analysis.py events_data_small --outdir slow_output
 
 小規模入力は、修正後の結果を短時間で検証するために用いる。上記の 3 日分について正しい実装から得られる同時観測イベント対は 66 組である。小規模入力でこの件数と個々のイベント対を確認した後に、500 日分の処理を実行する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 n_pairs_total = 66
 analysis_sec = <measured value>
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この段階では、期待件数との一致、個々のイベント対の正しさ、再実行時の一致をそれぞれ確認する。件数が毎回変わる、出力ファイルの形式が揺れる、といった状態では、その先の高速化に進むべきではない。
 
@@ -137,41 +125,34 @@ N\,\frac{F(b)-F(a)}{F(250)-F(-250)}
 
 件数と実行時間の要約を \code{summary.txt} へ保存する。これらの結果は、\code{--outdir} で指定したフォルダーへ保存する。必須出力は次の 4 ファイルである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 coincidence_pairs.csv
 pair_dt_hist.pdf
 pair_mean_gap_hist.pdf
 summary.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \subsection{正しさを検証する基準値}
 \index{ただしさのけんしょう@正しさの検証|textbf}
 
 今回の配布データは 500 日分であり、前述の定義に従って全期間から得られる同時観測イベント対は
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 n_pairs_total = 12033
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 となる。この値を全期間処理の基準値とする。
 
 ただし、この値に合ったからといって、それだけで実装が正しいとは限らない。偶然件数だけ一致している可能性もある。実装の検証には、可能な範囲で個々のイベント対の内容と、ファイル境界付近の振る舞いも含める必要がある。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 n_pairs_total = 12033
 analysis_sec = <measured value>
 plot_sec = <measured value>
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 このような要約ファイルを保存しておくと、コード変更の前後で結果を比較しやすい。件数と処理時間を同じファイルへ記録すれば、正しさと速度を同時に追跡できる。処理時間は計算機と実行時の状態に依存するため、例示した欄には各自の実測値を記入する。
 
-\clearpage
 \section{結果のまとめと発表}
 
 解析コードと、図表を載せたレポート（PDF）を提出する。レポートと発表では、次の 4 点を順に示せ。

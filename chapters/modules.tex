@@ -5,13 +5,11 @@
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/modules
 $ cd ~/analysis_practice/modules
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。
 
@@ -19,7 +17,6 @@ $ cd ~/analysis_practice/modules
 
 まず、2 つの測定値の平均を別のファイルから求める。本章の作業フォルダー \code{modules} に、次の内容を \code{signal\_stats.py} という名前で保存する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, title={signal\_stats.py}]
 def mean_signal(values):
     """数値列の算術平均を返す。空列ではValueErrorを出す。"""
@@ -27,9 +24,7 @@ def mean_signal(values):
         raise ValueError("入力列が空です。")
     return sum(values) / len(values)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\noindent\begin{minipage}{\linewidth}
 同じフォルダーに \code{analyze.py} を作り、次を保存する。
 
 \begin{lstlisting}[language=Python, title={analyze.py}]
@@ -45,7 +40,6 @@ print(mean_signal(values))
 $ python analyze.py
 13.75
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{from signal\_stats import mean\_signal} は、\code{signal\_stats.py} に書いた関数を読み込む命令である。\code{mean\_signal(values)} がその関数を呼び、2 つの測定値の平均を返す。このように読み込んで使う Python ファイルをモジュール\index{もじゅーる@モジュール|textbf}という。
 
@@ -84,7 +78,6 @@ $ python analyze.py
 
 実行のたびには変えないものの、解析条件として変更する可能性がある値は、設定ファイルへまとめられる。形式には JSON や TOML などがある。ここでは標準ライブラリだけで扱える JSON の例（\code{config.json}）を示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={config.json}]
 {
   "calibration_path": "calib/detector_a.csv",
@@ -92,11 +85,9 @@ $ python analyze.py
   "figure_format": "pdf"
 }
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この JSON ファイルを本章の \code{modules} に保存する。次のコードは同じ場所の \code{read\_config.py} へ保存し、\code{python read\_config.py} で実行する。例では条件の読み込みだけを行い、\code{calib/detector\_a.csv} 自体は開かない。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import json
 from pathlib import Path
@@ -105,15 +96,12 @@ config = json.loads(Path("config.json").read_text(encoding="utf-8"))
 window_ns = config["coincidence_window_ns"]
 print(window_ns)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 実行結果は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 250
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この \code{250} は、JSON の \code{coincidence\_window\_ns} から読み込んだ値であり、Python コードには直接記述されていない。そのため、コードを変更せずに設定ファイルだけを差し替えられる。Python 3.11 以降では、標準ライブラリの \code{tomllib} で TOML も読み込める。入力パス、出力先、閾値など、実行ごとに変わり得る条件はコードから設定ファイルまたは引数へ分離する。
 
@@ -128,7 +116,6 @@ print(window_ns)
 
 本書では、他のコードから \code{import} するライブラリを作るため、\code{uv init --lib} を用いる。ここからは \code{modules} の下に \code{histfit\_tools} という別のフォルダーを作る。次のコマンドで、ライブラリの初期構成と依存関係を用意する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ deactivate
 $ cd ~/analysis_practice/modules
@@ -139,13 +126,11 @@ $ uv add numpy matplotlib scipy
 $ uv add --dev pytest ruff
 $ uv sync
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 依存関係とは、そのパッケージを使うために必要な別のライブラリのことである。\code{uv add} で追加した \code{numpy}、\code{matplotlib}、\code{scipy} は、このパッケージの実行時依存関係である。\code{pytest} と \code{ruff} は開発時にだけ使うため、\code{--dev} 付きで追加する。\code{pytest} は公開関数の返り値と例外を検証し、\code{ruff} は \code{uv run ruff check .} によって未使用 import や規則違反を変更記録前に検出する。本章では、公開関数のテストをパッケージ構成の一部として扱う。
 
-ここから先の端末操作は、\code{histfit\_tools} の中で行う。\code{src/histfit\_tools/models.py} などのパスも、この場所を基準にする。次に示すのは完成時の構成であり、\code{models.py}、\code{plotting.py}、\code{tests/} は以下の手順で自分で作る。
+以降の作業場所は \code{histfit\_tools} とし、パスもこの場所を基準に指定する。次に示すのは完成時の構成であり、\code{models.py}、\code{plotting.py}、\code{tests/} は以下の手順で自分で作る。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={histfit\_tools/ の例}]
 .gitignore
 .python-version
@@ -160,7 +145,6 @@ src/
 tests/
 `-- test_models.py
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 ここで \code{src/} の下にパッケージを置く構成を \code{src} レイアウトという。プロジェクトのルートをカレントディレクトリにしただけでは \code{src/histfit\_tools} を直接 import できないため、インストールされていない作業ツリーを誤って読み込む問題を検出しやすい。\code{py.typed} は、配布したパッケージの型情報を型検査器が利用できることを示す。
 
@@ -168,7 +152,6 @@ tests/
 
 パッケージ開発では、\code{pyproject.toml}\index{pyproject.toml@\code{pyproject.toml}|textbf} が中心になる。ここにはパッケージ名、Python バージョン条件、依存関係\index{いそんかんけい@依存関係|textbf}、ビルド方法などを書く。次は各項目の役割を示す簡略例であり、\code{uv init --lib} と \code{uv add} が生成する下限バージョンは実行時の解決結果によって異なる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={pyproject.toml}]
 [project]
 name = "histfit_tools"
@@ -192,7 +175,6 @@ dev = [
   "ruff",
 ]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{dependencies} に列挙したライブラリは、このパッケージをインストールするときに実行時依存関係として解決される。実際に生成された \code{pyproject.toml} の \code{[build-system]} には、\code{uv} と互換性のある \code{uv\_build} のバージョン範囲も記録されるため、その範囲を理由なく削除しない。
 
@@ -282,7 +264,6 @@ def resolve_model(model: str | ModelFunc) -> ModelFunc:
 
 \code{tests/test\_models.py} は、\code{models.py} の公開関数が最低限期待通りに振る舞うかを確認するためのファイルである。ここでは、式の値そのもの、ガウス関数の基本的な形、未知のモデル名に対する例外の 3 点だけを確かめておく。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, title={tests/test\_models.py}]
 import numpy as np
 import pytest
@@ -308,18 +289,15 @@ def test_resolve_model_rejects_unknown_name() -> None:
     with pytest.raises(ValueError):
         resolve_model("lorentzian")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 最初のテストは一次関数の出力を既知の値と比較する。2 つ目は、ガウス関数が平均値の位置で最大となり、平均値から等距離にある 2 点で同じ値を返すことを検証する。3 つ目は、登録されていないモデル名に対して \code{ValueError} が発生することを検証する。
 
 先に \code{mkdir -p tests} でフォルダーを作り、上のコードを \code{tests/test\_models.py} に保存する。\code{histfit\_tools} の一番上のフォルダーで、次のコマンドを実行する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv run pytest
 $ uv run ruff check .
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この段階では \code{3 passed} と \code{All checks passed!} が出ることを確認する。\code{assert} は条件が偽なら失敗にし、\code{pytest.approx()} は丸め誤差を許容して数値を比べる。\code{with pytest.raises(ValueError):} は、内側の処理で指定の例外が出ることを確かめる。\code{pytest} は関数の出力と例外条件を検証し、\code{ruff} は未使用 import や設定した規則への違反を検出する。実行結果と静的検査を分けることで、テストされていない動作と、実行前に検出できる記述上の問題を区別できる。
 
@@ -493,7 +471,6 @@ def save_histogram_with_fit(
 
 他のプログラムから使ってよい関数名や呼び出し方を、公開 API という。パッケージの公開 API に含める関数とクラスは、\code{src/histfit\_tools/\_\_init\_\_.py} に次の内容を保存して再公開する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python, title={src/histfit\_tools/\_\_init\_\_.py}]
 """Histogram plotting and fitting utilities."""
 
@@ -509,9 +486,8 @@ __all__ = [
     "save_histogram_with_fit",
 ]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-こうしておけば、利用側は \code{from histfit\_tools import save\_histogram\_with\_fit} と短く書ける。内部ファイル構成を後で整理し直しても、公開 API を保っている限り、利用者側のコードを壊しにくい。
+\code{from histfit\_tools import save\_histogram\_with\_fit} という import 文で、利用側から関数を読み込める。内部ファイル構成を後で整理し直しても、公開 API を保っている限り、利用者側のコードを壊しにくい。
 
 \subsection{使い方の例}
 
@@ -604,7 +580,7 @@ docstring\index{docstring@docstring|textbf} には、引数の意味と既定値
 
 \code{save\_histogram\_with\_fit} には、\code{data: ArrayLike}、\code{output\_path: str | Path}、\code{fit: bool = True} のような型ヒント\index{かたひんと@型ヒント|textbf}が付いている。VS Code などのエディタでは、関数名にカーソルを合わせたときや補完候補を開いたときに、これらの型ヒントと docstring の先頭が表示されることが多い。したがって、docstring は文書であると同時に、コーディング中に参照できる説明でもある。
 
-docstring の第 1 行には、関数の役割を一文で記述する。たとえば「ヒストグラムと誤差棒を描き、必要ならフィット線も重ねて保存する。」と書き、その後に引数、返り値、例外条件を続ける。
+docstring の第 1 行には、関数の役割を一文で記述する。例えば「ヒストグラムと誤差棒を描き、必要ならフィット線も重ねて保存する。」と書き、その後に引数、返り値、例外条件を続ける。
 
 \subsection{README に書くべきこと}
 
@@ -617,9 +593,8 @@ docstring の第 1 行には、関数の役割を一文で記述する。たと�
 \item 主要な依存関係
 \end{itemize}
 
-たとえば最小限の README は次のようになる。
+例えば最小限の README は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={README.md}]
 # histfit_tools
 
@@ -646,7 +621,6 @@ print(result.counts)
 Python >= 3.12; NumPy, Matplotlib, SciPy.
 Dependencies are installed from pyproject.toml.
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 README はパッケージ全体の目的、導入方法、最小使用例を示し、docstring は関数の引数、返り値、例外条件を示す。両者の対象範囲を分け、同じ情報を重複して保守しない。
 
@@ -656,11 +630,9 @@ README はパッケージ全体の目的、導入方法、最小使用例を示�
 
 現在のプロジェクト用仮想環境へパッケージを通常インストールするには、パッケージのルートディレクトリで \code{uv pip install .}\index{pip@\code{pip}!install@\code{install}|textbf} を実行する。\code{uv pip} は pip 互換のインターフェースであり、仮想環境内に \code{pip} コマンドがインストールされていない場合にも利用できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv pip install .
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 これは現在のソースからビルドしたパッケージを環境へインストールする操作である。後から \code{src/histfit\_tools/plotting.py} を編集しても、その変更はインストール済みのパッケージへ自動では反映されない。変更後に \code{uv pip install .} を再実行する。
 
@@ -669,11 +641,9 @@ $ uv pip install .
 
 開発中は、\code{uv pip install -e .}\index{pip@\code{pip}!install -e@\code{install -e}|textbf} による editable install を利用できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv pip install -e .
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{-e} は editable の略であり、インストール先から手元のソースディレクトリを参照できる形でパッケージを登録する。したがって、Python ソースの変更を再インストールせずに import 側へ反映できる。関数定義や docstring を反復して変更する開発環境で用いる。
 
@@ -683,11 +653,9 @@ $ uv pip install -e .
 
 インストール後は、その仮想環境の Python を直接起動して読み込み元を確認する。\code{uv run} は環境を再同期してプロジェクトを editable install へ戻す場合があるため、通常インストールの確認にはここでは使わない。読み込み済みモジュールはプロセス内に保持されるので、変更後の確認には新しい Python プロセスを使う。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ .venv/bin/python -c "import histfit_tools; print(histfit_tools.__file__)"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 通常インストールでは \code{.venv/} 内の \code{site-packages/}、editable install では手元の \code{src/histfit\_tools/} を含むパスになる。この表示で、どちらのコードを読み込んだかを確認する。依存関係、計算、ファイル出力を含む動作は、既知の小規模入力で関数を実行し、返り値と保存ファイルを検証する統合テストで確認する。
 
@@ -701,7 +669,6 @@ GitHub\index{github@GitHub|textbf} で共有する場合は、GitHub の Web 画
 
 空のリモートリポジトリを作成した後、記録対象を確認して次のコマンドを実行する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git add pyproject.toml uv.lock README.md src tests .python-version .gitignore
 $ git commit -m "Create histfit_tools package"
@@ -709,7 +676,6 @@ $ git branch -M main
 $ git remote add origin git@github.com:username/histfit_tools.git
 $ git push -u origin main
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{uv init --vcs none} のように Git 初期化を明示的に無効化して始めた場合には、最初に \code{git init} が必要になる。
 
@@ -717,19 +683,15 @@ $ git push -u origin main
 
 GitHub などに置いたリポジトリを別環境から直接インストールするコマンドは、次のとおりである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 タグやコミットを固定したいなら、URL の末尾に \code{@v0.1.0} や \code{@9f3c1a2} を付ける。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 タグまたはコミットハッシュを URL に含めると、後日の再インストールでも同じリビジョンを指定できる。研究ノートには、インストールに用いた URL とリビジョンを記録する。
 
@@ -740,21 +702,19 @@ $ uv pip install "git+ssh://git@github.com/username/histfit_tools.git@v0.1.0"
 \begin{description}
 \item[実行時依存関係] パッケージを import して使うだけで必要なもの。今回なら \code{numpy}、\code{matplotlib}、\code{scipy} がこれに当たる。
 \item[開発用依存関係] テスト、整形、静的解析にだけ必要なもの。今回なら \code{pytest} や \code{ruff} がこれに当たる。
-\item[ローカル環境の固定] 開発者どうしで完全に同じ環境を再現したいときの情報。これは \code{uv.lock} が担う。
+\item[ローカル環境の固定] 開発に使う依存ライブラリの版を \code{uv.lock} に記録する。Python と OS の版も併記する。
 \end{description}
 
-ライブラリの \code{dependencies} には、実装とテストによって確認した互換範囲を記述する。根拠なく \code{numpy==2.0.0} のような完全固定を行うと、利用者側の他の依存関係と両立しない場合がある。下限だけを検証した場合は \code{numpy>=2.0} のように記述し、非互換の上限が判明している場合はその上限も記述する。リポジトリ内の開発・検証環境は \code{uv.lock} で再現する。
+ライブラリの \code{dependencies} には、実装とテストに基づくバージョン条件を記述する。根拠なく \code{numpy==2.0.0} のように完全固定すると、利用者側の他の依存関係と両立しない場合がある。必要な最低バージョンが 2.0 なら \code{numpy>=2.0} と表し、非互換となる上限が判明していればそれも記述する。この指定は将来の全バージョンの動作を保証するものではない。動作を確認した版も記録し、開発・検証用の具体的な版は \code{uv.lock} でそろえる。
 
 開発中には、テストや説明文の作成に使う道具も必要になる。これらをすべて実行時依存関係へ含めると、利用者のインストール量と依存関係の衝突リスクが増す。公開 API と実行時依存関係は必要最小限に保ち、開発用の道具は開発用依存関係へ分ける。
 
-\clearpage
 \section{章末課題：平均を求めるパッケージを作る}
 
 本文の \code{histfit\_tools} とは別に、平均を求める小さなパッケージを作る。端末で \code{cd \textasciitilde/analysis\_practice/modules} と入力してから始める。以下のパスは、1 問目で移動する \code{signal\_tools} の中を基準にする。
 
 \begin{enumerate}
-\item \begin{minipage}[t]{\linewidth}
-\textbf{パッケージのフォルダーを作る。}
+\item \textbf{パッケージのフォルダーを作る。}
 次を実行せよ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv init --lib --python 3.12 signal_tools
@@ -763,20 +723,14 @@ $ uv add --dev pytest ruff
 $ mkdir -p tests
 \end{lstlisting}
 \code{ls} と \code{ls src/signal\_tools} の結果を示し、\code{pyproject.toml} が設定、\code{src/signal\_tools/} が Python コードの保存先であることを確認せよ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{平均の関数とテストを作る。}
+\item \textbf{平均の関数とテストを作る。}
 \code{src/signal\_tools/statistics.py} に \code{mean\_signal(values)} を作れ。\code{src/signal\_tools/\_\_init\_\_.py} から公開し、\code{from signal\_tools import mean\_signal} で使えるようにする。\code{tests/test\_statistics.py} に、\code{[1.0, 2.0, 3.0]} では 2.0、空のリストでは \code{ValueError} となる 2 件のテストを書け。\code{uv run pytest} を実行し、関数・テストのコードと \code{2 passed} の結果を示せ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{関数の使い方を説明する。}
+\item \textbf{関数の使い方を説明する。}
 平均の関数に型ヒントと docstring を付け、引数、返り値、空のリストの扱いを書け。\code{usage\_example.py} に、パッケージを import して \code{help(mean\_signal)} と平均の計算結果を表示するコードを書け。\code{uv run python usage\_example.py} で実行し、説明文と使用例の結果を示せ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{発展：二つのインストール方法を比べる。}
+\item \textbf{発展：二つのインストール方法を比べる。}
 \code{signal\_tools} の中で、次を実行して比較用の環境を二つ作れ。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv venv --python 3.12 .venv-normal
@@ -787,11 +741,8 @@ $ .venv-normal/bin/python usage_example.py
 $ .venv-editable/bin/python usage_example.py
 \end{lstlisting}
 \code{mean\_signal} の \code{return} 文を一時的に書き換え、最後の 2 命令を再実行せよ。再インストールせずに変更が反映されるかを表で比較する。確認後は正しい関数へ戻し、テストを再実行せよ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{共有するファイルを選ぶ。}
+\item \textbf{共有するファイルを選ぶ。}
 \code{.venv*/}、\code{\_\_pycache\_\_/}、\code{.pytest\_cache/}、\code{dist/} を \code{.gitignore} に書け。\code{.venv*/} は比較用の二つの仮想環境も除外する。ソース、テスト、設定、生成物のうち、どれを共有するかを表にして理由を述べよ。pytest と ruff が開発用の依存関係に入っていることを確認し、\code{uv.lock} を共有する目的も説明する。
-\end{minipage}
 
 \end{enumerate}

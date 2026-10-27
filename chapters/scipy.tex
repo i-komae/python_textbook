@@ -5,13 +5,11 @@ SciPy\index{scipy@SciPy|textbf} は、データに式を当てはめる計算や
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/scipy
 $ cd ~/analysis_practice/scipy
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。本文の Python コードは、別のファイル名を指定した例と章末課題を除き、\code{fit\_line.py} へ先頭から順に追記する。保存後、端末で \code{python fit\_line.py} を実行し、追加した処理の結果を表示例と比べる。
 
@@ -31,7 +29,6 @@ $ cd ~/analysis_practice/scipy
 
 次の動作確認用のデータでは、傾きと切片を持つ直線を当てはめる。\code{linear\_model(x, a, b)} に \code{x} と候補の \code{a}、\code{b} を渡すと、直線上の \code{y} が返る。\code{curve\_fit()} はこの関数を繰り返し呼び、データとの差の二乗和が小さくなる \code{a} と \code{b} を探す。次を \code{fit\_line.py} へ保存し、端末で \code{python fit\_line.py} を実行する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 from scipy.optimize import curve_fit
@@ -48,18 +45,17 @@ linear_errors = np.sqrt(np.diag(linear_cov))
 print(linear_params)
 print(linear_errors)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 最初の行が傾きと切片、次の行がそれぞれの標準誤差である。標準誤差は、仮定した誤差モデルの下で推定値がどの程度変わり得るかの目安であり、その計算は後で説明する。まず傾きが約 1.01、切片が約 1.08 になったことを確認する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [1.01 1.08]
 [0.02516611 0.06164414]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\code{linear\_params} は推定した傾きと切片である。\code{linear\_cov} は、それらの不確かさを 2 行 2 列にまとめた共分散行列である。左上と右下を対角成分と呼び、それぞれ傾きと切片の分散を表す。\code{np.diag(linear\_cov)} はこの 2 個を取り出し、\code{np.sqrt(...)} は平方根を求めるため、各パラメータの標準誤差が得られる。上の例では \code{linear\_params[0]} が傾き、\code{linear\_params[1]} が切片である。非対角成分はパラメータ間の共分散を表すため、相関を調べる場合は各パラメータの標準偏差で規格化する。\code{curve\_fit()} の出力は、仮定したモデル、残差の定義、\code{sigma} の指定に依存する。
+\code{linear\_params} には傾きと切片が入り、\code{linear\_cov} にはそれらの不確かさを表す 2 行 2 列の共分散行列が入る。行列の左上と右下を対角成分と呼び、それぞれ傾きと切片の分散を表す。\code{np.diag(linear\_cov)} はこの 2 個を取り出し、\code{np.sqrt(...)} は平方根を求めるため、各パラメータの標準誤差が得られる。上の例では \code{linear\_params[0]} が傾き、\code{linear\_params[1]} が切片である。
+
+非対角成分はパラメータ間の共分散を表すため、相関を調べる場合は各パラメータの標準偏差で規格化する。\code{curve\_fit()} の出力は、仮定したモデル、残差の定義、\code{sigma} の指定に依存する。
 
 上の直線モデル \(f(x; a, b) = ax + b\) なら、\code{curve\_fit()} は概ね
 \[
@@ -73,7 +69,6 @@ S(\mathbf{p}) = \sum_i \left[y_i - f(x_i; \mathbf{p})\right]^2
 
 直線が点の並びに合っているかを確かめるため、\code{fit\_line.py} の末尾へ次を追記して再実行する。作業フォルダーにできた \code{linear\_fit.pdf} を開き、測定点と直線の位置を見比べる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
 
@@ -85,7 +80,6 @@ ax.set_ylabel("y")
 ax.legend()
 fig.savefig("linear_fit.pdf")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 数値が得られたことだけでは、直線を使ってよいとは判断できない。残差の並びや測定条件も確認する方法を、後の節で学ぶ。
 
@@ -110,7 +104,7 @@ SciPy の多くの関数は NumPy 配列を入力とし、NumPy 配列または�
 
 多数の独立な微小変動の和は、条件を満たせば正規分布で近似できる。事象が互いに独立に一定の発生率で起こる Poisson（ポアソン）過程では、事象間の待ち時間が指数分布に従う。対象データがこれらの仮定を満たすかは、生成過程、残差、代替モデルとの比較によって検証する。
 
-正規分布は中心の周りで左右対称に広がる釣鐘形の分布であり、ガウス分布ともいう。指数分布は短い待ち時間が多く、長い待ち時間ほど少なくなる分布であり、時定数 \(\tau\) はその平均待ち時間を表す。たとえば、平均 \(\mu\)、標準偏差 \(\sigma\) の正規分布の確率密度は
+正規分布は中心の周りで左右対称に広がる釣鐘形の分布であり、ガウス分布ともいう。指数分布は短い待ち時間が多く、長い待ち時間ほど少なくなる分布であり、時定数 \(\tau\) はその平均待ち時間を表す。例えば、平均 \(\mu\)、標準偏差 \(\sigma\) の正規分布の確率密度は
 \[
 p(x) = \frac{1}{\sqrt{2\pi}\sigma}
 \exp\!\left[-\frac{(x-\mu)^2}{2\sigma^2}\right]
@@ -126,7 +120,6 @@ p(t) = \frac{1}{\tau} \exp\!\left(-\frac{t}{\tau}\right)
 
 配列の要素数、中心、広がり、形状を数値で確認する方法を示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 from scipy import stats
@@ -138,23 +131,19 @@ print(summary.nobs)
 print(f"{summary.mean:.3f}")
 print(f"{summary.variance:.3f}")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この例では、要素数、平均、分散が順に表示される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 5
 1.100
 0.075
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\code{stats.describe()} は、要素数、平均、分散、最小値、最大値、歪度、尖度を名前付きタプルとして返す。分散の既定は \code{ddof=1} であり、NumPy の \code{var()} の既定とは異なる。各統計量の定義と単位を確認してから利用する。
+\code{stats.describe()} は、要素数、平均、分散に加え、最小値・最大値や分布の形を表す統計量を名前付きタプルとして返す。分散の既定は \code{ddof=1} であり、NumPy の \code{var()} の既定とは異なる。各統計量の定義と単位を確認してから利用する。
 
 SciPy の分布オブジェクトは、確率密度関数や累積分布関数を同じ API で扱える。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 x = np.linspace(-3.0, 3.0, 7)
 pdf = stats.norm.pdf(x, loc=0.0, scale=1.0)
@@ -163,18 +152,15 @@ cdf = stats.norm.cdf(x, loc=0.0, scale=1.0)
 print(pdf)
 print(cdf)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{pdf} と \code{cdf} を同じ点列で評価すると、次のような値が得られる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [0.00443185 0.05399097 0.24197072 0.39894228 0.24197072 0.05399097
  0.00443185]
 [0.0013499  0.02275013 0.15865525 0.5        0.84134475 0.97724987
  0.9986501 ]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 確率密度は、ある範囲に入る確率を、その範囲で積分して求めるための量である。\code{cdf} は、その値以下に入る確率を表す。\code{pdf} は確率密度関数、\code{cdf} は累積分布関数、\code{rvs} は乱数生成、\code{ppf} は累積確率から分位点を求める逆関数に対応する。正規分布では \code{loc} は平均、\code{scale} は標準偏差であるが、これらの引数の意味は分布ごとに確認する。
 
@@ -202,7 +188,6 @@ F(x) = \int_{-\infty}^{x} p(t)\,dt
 
 モデルによっては、初期値や制約を与えないと不安定になる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def exp_model(x, a, tau, c):
     return a * np.exp(-x / tau) + c
@@ -221,7 +206,6 @@ exp_params, exp_cov = curve_fit(
 )
 print(exp_params)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 出力は振幅が約 4、時定数が約 2.5、定数項が約 0.3 となる。人工データに加えた乱数のため、生成時の値と完全には一致しない。\code{p0}\index{p0@\code{p0}|textbf} は初期値、\code{bounds}\index{bounds@\code{bounds}|textbf} はパラメータ範囲である。どちらも収束を保証するものではないが、物理的にあり得ない範囲を除外する際に有効である。モデルによっては、初期値によって収束先が変わる。また、物理的に非負であるパラメータには、0 を下限とする制約を指定できる。
 
@@ -259,19 +243,16 @@ fig.savefig("normal_fit.pdf")
 
 \code{normal\_fit.pdf} を開き、ヒストグラムの中心と幅が曲線とおおむね一致するかを確認する。図~\ref{fig:distribution-examples} では、フィットした分布名と推定パラメータを凡例へ記載している。左パネルは上の正規乱数と同じ入力を用い、右パネルは同じ乱数生成器で続けて生成した時定数 2.5 s、3000 個の指数乱数を用いる。本文には推定方法と解釈、キャプションには図の対象と条件、凡例には系列の識別情報を置く。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 model_y = linear_model(xdata, *linear_params)
 residual = ydata - model_y
 print(residual)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 最適化が終了して推定値を返したことは、モデルの妥当性を保証しない。残差を横軸に対して表示し、符号や大きさに系統的な構造が残っていないか、特定の範囲だけ偏差が大きくないかを確認する。
 
 外れ値やモデルの適用範囲外にある領域を含めると、推定値が変化する場合がある。フィット範囲と除外条件を推定値とともに記録する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 mask = (xdata >= 0.0) & (xdata <= 3.0)
 range_params, range_cov = curve_fit(
@@ -281,7 +262,6 @@ range_params, range_cov = curve_fit(
 )
 print(range_params)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 フィット範囲は、モデルを適用する領域を定義する解析条件である。範囲をデータ確認後に変更した場合は、その判断基準と変更前後の結果も報告する。
 
@@ -289,7 +269,6 @@ print(range_params)
 
 物理の実データでは、各データ点の不確かさが等しいとは限らない。点ごとの標準偏差が既知であり、その大きさが異なる場合は、\code{sigma}\index{sigma@\code{sigma}|textbf} を使って残差を標準偏差で割る。このように比較の基準となる大きさで割る操作を、ここでは規格化と呼ぶ。同じ 1 のずれでも、標準偏差が 0.5 なら規格化した残差は 2、標準偏差が 2 なら 0.5 となる。\code{sigma} を与えないフィットはすべての点を等しい重みで扱うため、不確かさが点ごとに異なるデータでは目的と一致しない場合がある。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 y_err = np.array([0.2, 0.2, 1.5, 0.2, 0.2])
 
@@ -303,7 +282,6 @@ weighted_params, weighted_cov = curve_fit(
 print(weighted_params)
 print(np.sqrt(np.diag(weighted_cov)))
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 最初の行が傾きと切片、次の行がそれぞれの標準誤差である。章の最初の重みなしの出力と比較する。この定義では、\code{sigma} が大きい点ほど規格化残差が小さくなり、目的関数への寄与が小さくなる。図~\ref{fig:fit-sigma} は、その差を模式的に示している。
 
@@ -333,7 +311,6 @@ print(np.sqrt(np.diag(weighted_cov)))
 
 補間は、測定点の間における値を仮定した関数形から推定する操作である。ここでは、1 次元データに対する区分線形補間を扱う。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from scipy.interpolate import make_interp_spline
 
@@ -346,15 +323,12 @@ y_new = linear_interp(x_new, extrapolate=False)
 
 print(y_new)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 補間点 \code{x\_new} に対しては、次の値が返る。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [1.  1.5 2. ]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 入力の \code{x} は重複がなく、昇順に並んでいる必要がある。区分線形補間は測定点を通る連続関数だが、接続点で傾きが不連続になり得る。上の \code{extrapolate=False} は入力範囲の外で \code{NaN} を返し、外挿を行わない指定である。範囲外まで同じ傾向が続くとは限らない。
 
@@ -368,7 +342,6 @@ y(x) = y_i + \frac{y_{i+1}-y_i}{x_{i+1}-x_i}(x-x_i)
 
 波形や時系列では、ピークの検出や軽い平滑化がよく必要になる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from scipy.signal import savgol_filter, find_peaks
 
@@ -381,24 +354,22 @@ peaks, props = find_peaks(smooth, height=0.7, distance=15)
 print(peaks)
 print(np.round(props["peak_heights"], 3))
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この例では、検出されたピーク位置とその高さが次のように表示される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 [ 13  76 138]
 [0.977 1.048 0.994]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\code{savgol\_filter()} は、近くに並ぶ 11 点を 3 次式で近似して細かな変動を抑える。\code{window\_length=11} が使う点数、\code{polyorder=3} が式の次数である。\code{peaks} は時刻そのものではなく配列内の位置であり、時刻は \code{x[peaks]} で得る。\code{find\_peaks()} は高さ、試料点間の距離、prominence などの条件でピーク候補を抽出する。検出条件をサンプリング間隔と対応付け、既知の合成波形で検出率と誤検出を確認してから実データへ適用する。
+\code{savgol\_filter()} は、近くに並ぶ 11 点を 3 次式で近似して細かな変動を抑える。\code{window\_length=11} が使う点数、\code{polyorder=3} が式の次数である。\code{peaks} は配列内の位置を表し、対応する時刻は \code{x[peaks]} で得る。
+
+\code{find\_peaks()} の \code{height=0.7} は高さの下限を、\code{distance=15} はピーク間の最小距離を点数で指定する。検出条件をサンプリング間隔と対応付け、既知の合成波形で検出率と誤検出を確認してから実データへ適用する。
 
 \subsection{\code{scipy.integrate} と \code{scipy.constants}}
 
 \code{scipy.integrate} は離散点または関数の数値積分を、\code{scipy.constants} は物理定数の数値と単位情報を提供する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from scipy import constants
 from scipy.integrate import simpson
@@ -410,16 +381,13 @@ area = simpson(y, x=x)
 print(area)
 print(constants.c)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この積分値と光速定数は、次のように出力される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 2.0000000108245044
 299792458.0
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{simpson()} は、ここでは
 \[
@@ -455,7 +423,6 @@ c = 299792458\ \mathrm{m\,s^{-1}}
 
 図では、ある値以下に入る標本の割合を階段状に描くと、分布の形を比較できる。例えば 5 個の間隔のうち 3 個が 100 秒以下なら、100 秒での割合は \(3/5=0.6\) である。この図を経験累積分布関数（ECDF）と呼び、モデルの累積分布関数（CDF）と重ねる。次は、5 個の人工的な間隔を指数分布と比べる例である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 import matplotlib.pyplot as plt
@@ -476,7 +443,6 @@ ax.set_ylabel("cumulative fraction")
 ax.legend()
 fig.savefig("interval_cdf.pdf")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 平均待ち時間の推定値は 136 秒となる。\code{fraction} は \code{[0.2, 0.4, 0.6, 0.8, 1.0]} であり、100 秒以下の割合は 0.6 である。\code{floc=0} は分布の開始位置を 0 秒へ固定する指定である。保存した図では、同じ横軸の値に対するデータとモデルの縦軸の差を比べる。少数の値で描画方法を確かめた後、実データでは標本数や独立性も考慮してモデルを判断する。
 
@@ -486,18 +452,18 @@ fig.savefig("interval_cdf.pdf")
 
 指数分布と比較する候補の一つに、ガンマ分布がある。正の値を扱う分布で、形状を決める値 \code{shape} が 1 のとき指数分布になる~\cite{scipy_gamma}。\code{intervals} には、直前の例と同じ秒単位の正の間隔を使う。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 shape, gamma_loc, gamma_scale = stats.gamma.fit(intervals, floc=0)
 gamma_cdf = stats.gamma.cdf(ordered, shape, loc=gamma_loc, scale=gamma_scale)
 print(shape, gamma_scale)
 print(gamma_cdf)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{gamma\_cdf} を、先ほどの図の \code{ordered} と組にして重ねれば、同じ時刻で二つの候補を比較できる。5 件だけで分布を決めるのではなく、ここでは呼び出し方を確かめる。
 
-位置を 0 に固定した指数分布では、平均待ち時間の最尤推定値は標本平均になる。独立な指数分布から \(N\) 件を得たと仮定すると、指数分布の標準偏差が \(\tau\) であることから~\cite{scipy_expon}、平均の標準誤差を \(\hat{\tau}/\sqrt{N}\) で近似できる。\code{intervals.mean() / np.sqrt(len(intervals))} で計算できる。実際の地震のように独立性を仮定できない場合は、この値をそのまま不確かさとして採用しない。
+位置を 0 に固定した指数分布では、平均待ち時間の最尤推定値は標本平均になる。独立な指数分布から \(N\) 件を得たと仮定すると、平均の標準誤差は \(\tau/\sqrt{N}\) となる。これは、指数分布の標準偏差も \(\tau\) であることによる~\cite{scipy_expon}。
+
+未知の \(\tau\) を推定値 \(\hat{\tau}\) へ置き換えた近似値は、\code{intervals.mean() / np.sqrt(len(intervals))} で求められる。実際の地震のように独立性を仮定できない場合は、この値をそのまま不確かさとして採用しない。
 
 \code{assert 条件式} は、条件が真なら先へ進み、偽なら \code{AssertionError} で止める命令である。課題の検算では、例えば \code{assert 115 <= scale <= 125} と書ける。
 
@@ -517,12 +483,10 @@ SciPy は、入力配列の物理的意味や、採用すべきモデルを自�
 
 関数名や引数は SciPy User Guide~\cite{scipy_user_guide} で確認できる。分布は Statistics~\cite{scipy_stats}、最適化は Optimization~\cite{scipy_optimize}、補間は Interpolation~\cite{scipy_interpolate}、波形処理は Signal processing~\cite{scipy_signal}、数値積分は Integration~\cite{scipy_integrate} を参照する。
 
-\clearpage
 \section{章末課題：モデルを当てはめて妥当性を確かめる}
 
 本章の作業フォルダー \code{\textasciitilde/analysis\_practice/scipy} に、次を \code{scipy\_exercises.py} として保存する。各問の処理を追記し、\code{python scipy\_exercises.py} で実行する。1・2 問目にはこの人工データを使う。\code{synthetic\_dt} は秒単位の間隔、\code{y\_obs} は直線にばらつきを加えた測定値である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 from scipy import stats
@@ -535,32 +499,21 @@ y_true = 2.5 * x + 1.2
 sigma = np.full_like(x, 0.5)
 y_obs = y_true + rng.normal(scale=sigma)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{enumerate}
-\item \begin{minipage}[t]{\linewidth}
-\textbf{平均待ち時間を推定する。}
+\item \textbf{平均待ち時間を推定する。}
 \code{stats.expon.fit(synthetic\_dt, floc=0)} の返り値から \code{scale} を取り出せ。生成時の平均 120 秒、\code{synthetic\_dt.mean()}、推定した \code{scale} を表にせよ。推定値が 115～125 秒に入ることを \code{assert} で確かめる。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{直線を求め、残差を描く。}
+\item \textbf{直線を求め、残差を描く。}
 \code{x} と \code{y\_obs} に \code{curve\_fit()} で直線を当てはめ、\code{sigma=sigma, absolute\_sigma=True} を指定せよ。上段に測定点と直線、下段に「測定値－直線の値」を描く。傾き・切片と、共分散の対角成分の平方根から求めた標準誤差を表にし、生成時の傾き 2.5、切片 1.2 と比較せよ。検算の目安は傾き 2.3～2.7、切片 0.7～1.7 である。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{実データへ分布を当てはめる。}
+\item \textbf{実データへ分布を当てはめる。}
 第~\ref{chap:numpy}~章の発展課題で保存した間隔を、\code{np.load("../numpy/real\_intervals.npy")} で読む。ヒストグラムと経験累積分布を描き、0 以下と非有限値は件数を記録して除き、正の有限な間隔を使う。指数分布とガンマ分布を、本文の \code{fit(..., floc=0)} で当てはめて比較せよ。データがなければ \code{synthetic\_dt} を使う。経験累積分布とモデルの累積分布を重ね、同じ時刻での縦軸の差も描け。採用する分布と推定範囲を選んだ理由を述べよ。実カタログを使った場合は、期間、地域、件数、地震の種別、マグニチュード尺度を記す。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{一つの解析条件を変えて比較する。}
+\item \textbf{一つの解析条件を変えて比較する。}
 指数分布について、全ての正の間隔を使う場合と、60 秒以上の間隔だけを使う場合を比べよ。後者では \(t-60\) へ \code{stats.expon.fit(..., floc=0)} を適用する。使った件数、推定した平均待ち時間を表にせよ。人工データでは、本文の式で標準誤差も求める。実データでは、この式に必要な独立性を仮定できるかも述べよ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{発展：地震規模と累積件数の関係を調べる。}
+\item \textbf{発展：地震規模と累積件数の関係を調べる。}
 実カタログのマグニチュード \(M\) を使い、各値以上の地震数 \(N(\geq M)\) を数えて描け。小さい地震の取りこぼしが少ないと考える下限 \(M_c\) を選び、その上の範囲で \(\log_{10}N(\geq M)=a-bM\) の関係~\cite{gutenberg_richter_1944}を検討せよ。\(M_c\)、件数、推定法、不確かさ、図と残差を示す。本文の \(M-M_c\) に対する指数分布の推定を出発点にし、実データでの丸めや独立性の問題も述べる。カタログを取得できない場合は、\code{3 + rng.exponential(1 / np.log(10), 5000)} の人工標本を使い、\(M_c=3\)、生成時の \(b=1\) と比較する。
-\end{minipage}
 
 \end{enumerate}

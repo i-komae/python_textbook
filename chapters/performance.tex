@@ -5,13 +5,11 @@
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/performance
 $ cd ~/analysis_practice/performance
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。本文の Python コードは、別のファイル名を指定した例、Cython の構文例、章末課題を除き、\code{timing\_example.py} へ先頭から順に追記する。保存後、端末で \code{python timing\_example.py} を実行し、追加した処理の結果を表示例と比べる。
 
@@ -21,7 +19,6 @@ $ cd ~/analysis_practice/performance
 
 \code{time.perf\_counter}\index{perf_counter@\code{time.perf\_counter}|textbf} を使うと、処理の前後で取得した時刻の差から経過時間を求められる。解析全体の所要時間に加えて、データの読み込み、前処理、探索、書き出し、作図という段階ごとの時間も記録すると、変更すべき箇所を特定しやすい。次を \code{timing\_example.py} へ保存し、端末で \code{python timing\_example.py} を実行する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import time
 
@@ -37,7 +34,6 @@ t1 = time.perf_counter()
 print(result)
 print(f"elapsed = {t1 - t0:.6f} s")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 キャッシュ、OS のスケジューリング、同時に動作するプロセスによって測定値は変動する。入力と実行条件をそろえて複数回測定し、中央値や最小値など、あらかじめ定めた代表値を比較する。
 
@@ -72,7 +68,7 @@ N^2 + N \rightarrow O(N^2)
 \item $O(N^2)$: すべての組み合わせを調べる処理。全ペアの逐次比較など
 \end{itemize}
 
-\(\log_2 N\) は、2 を何乗すると \(N\) になるかを表す。例えば \(2^{10}=1024\) なので、\(\log_2 1024=10\) である。たとえば $N = 10^6$ なら、$\log_2 N$ はおよそ 20、$N \log_2 N$ はおよそ $2 \times 10^7$、$N^2$ は $10^{12}$ である。この場合、\(N^2\) と \(N\log_2 N\) の間には約 5 万倍の差がある。小さなテストデータでは判別しにくい差も、入力が大きくなると処理時間を支配し得る。
+\(\log_2 N\) は、2 を何乗すると \(N\) になるかを表す。例えば \(2^{10}=1024\) なので、\(\log_2 1024=10\) である。例えば $N = 10^6$ なら、$\log_2 N$ はおよそ 20、$N \log_2 N$ はおよそ $2 \times 10^7$、$N^2$ は $10^{12}$ である。この場合、\(N^2\) と \(N\log_2 N\) の間には約 5 万倍の差がある。小さなテストデータでは判別しにくい差も、入力が大きくなると処理時間を支配し得る。
 
 ただし、オーダーが同じ実装どうしでも、1 要素あたりの演算数、メモリアクセス、関数呼び出しなどの違いによって処理時間は変わる。まず計算量を確認し、次に測定結果に基づいて定数倍の差を調べる。
 
@@ -82,7 +78,6 @@ $O(\log N)$ は問題サイズを反復ごとに一定比率で縮小する処�
 
 \(\log N\) は、反復ごとに候補数を一定の比率で減らす処理に現れる。昇順に並んだ列から値を探す二分探索では、中央の値との比較によって、次に調べる範囲を左半分または右半分へ限定する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def binary_search(values, target):
     left = 0
@@ -98,9 +93,10 @@ def binary_search(values, target):
             right = mid - 1
     return -1
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-例えば \code{print(binary\_search([10, 20, 30, 40], 30))} は位置 2 を返し、見つからない 25 を探すと \code{-1} を返す。要素数が \(N\) 個の場合、候補数は \(N \to N/2 \to N/4 \to \cdots \to 1\) と減少する。反復回数 \(k\) は \(N/2^k \leq 1\) を満たすため、\(k \geq \log_2 N\) である。したがって、二分探索の計算量は \(O(\log N)\) となる。
+例えば \code{binary\_search([10, 20, 30, 40], 30)} は位置 2 を返す。これを \code{print()} へ渡すと \code{2} が表示される。見つからない 25 を探す呼び出しでは、返り値は \code{-1} になる。
+
+候補数は、反復のたびにおよそ半分へ減る。要素数を \(N\geq1\) とすると、この実装の反復回数は多くても \(\lfloor\log_2 N\rfloor+1\) 回である。\(\lfloor x\rfloor\) は、\(x\) を超えない最大の整数を表す。各反復で行う比較は一定回数なので、最悪の場合の計算量も \(O(\log N)\) となる。
 
 \subsubsection{ソートではなぜ \texorpdfstring{$O(N \log N)$}{O(N log N)} になるか}
 
@@ -126,7 +122,6 @@ O(N \log N)
 
 最も素朴な方法は、すべての組 $(i, j)$ を比べることである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def has_duplicate_slow(values):
     for i in range(len(values)):
@@ -135,13 +130,11 @@ def has_duplicate_slow(values):
                 return True
     return False
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この方法では、最悪の場合ほぼすべてのペアを比べるので $O(N^2)$ になる。データ量が 10 倍になると、比較回数はおおよそ 100 倍に増える。
 
 列をソートすると、同じ値は隣接して並ぶ。したがって、隣接要素の比較だけで重複を判定できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def has_duplicate_fast(values):
     values_sorted = sorted(values)
@@ -150,7 +143,6 @@ def has_duplicate_fast(values):
             return True
     return False
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{sorted()} は最悪 $O(N \log N)$、その後の走査は $O(N)$ なので、全体の最悪計算量は $O(N \log N)$ である。全ペア比較を隣接要素の比較へ置き換えたことにより、計算量が $O(N^2)$ から $O(N \log N)$ へ変わる。
 
@@ -164,7 +156,6 @@ Python の \code{set(values)} を使えば、重複判定は平均的に $O(N)$ 
 
 ここでは入力が有限な実数だけを含む正方行列であるとする。NaN は自分自身とも等しくないため、対角成分を省略する前に除外する必要がある。最も素朴な方法は、すべての $(i, j)$ について比較することである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def is_symmetric_slow(A):
     n = len(A)
@@ -174,13 +165,11 @@ def is_symmetric_slow(A):
                 return False
     return True
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-これは $n^2$ 回程度の比較を行うので $O(n^2)$ である。
+すべての組を比べる場合は $n^2$ 回の比較が必要となり、計算量は $O(n^2)$ となる。
 
 対称性の判定では、\(A_{ij}=A_{ji}\) と \(A_{ji}=A_{ij}\) が同じ比較に当たる。そこで、対角成分を除く上三角だけを調べれば、判定結果を変えずに重複を除ける。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def is_symmetric_fast(A):
     n = len(A)
@@ -190,7 +179,6 @@ def is_symmetric_fast(A):
                 return False
     return True
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 こちらも計算量のオーダーは $O(n^2)$ だが、比較回数は $n(n-1)/2$ 回であり、素朴な実装のおよそ半分である。入力サイズに対する増加率は変わらないものの、重複する比較を除いた分だけ実行時間の定数因子が小さくなる。
 
@@ -200,7 +188,7 @@ def is_symmetric_fast(A):
 
 \subsection{NumPy と pandas による高速化}
 
-アルゴリズムを見直した後は、NumPy や pandas へ処理を移すことで、Python レベルのループを減らせる。特に差分計算、ソート、列抽出、フィルタは、これらのライブラリが得意とする。図~\ref{fig:vectorization-benchmark} からも、ベクトル化\index{べくとるか@ベクトル化|textbf}が速度に与える効果を視覚的に確認できる。
+アルゴリズムを見直した後は、NumPy や pandas へ処理を移すことで、Python レベルのループを減らせる。差分計算、ソート、列抽出、フィルタなどが対象になる。図~\ref{fig:vectorization-benchmark} は、ベクトル化\index{べくとるか@ベクトル化|textbf}の比較方法を示す模式例であり、実際の効果は同じ入力で測定する。
 
 NumPy や pandas の要素ごとの演算へ置き換えるだけでは、通常はアルゴリズムの計算量は変わらない。全ペア比較などの不要な演算を削減した後、残った要素ごとの処理を配列演算へ置き換える。
 
@@ -216,7 +204,6 @@ NumPy や pandas の要素ごとの演算へ置き換えるだけでは、通常
 
 NumPy では、スライスが元配列とメモリを共有するビューになる一方、条件抽出は新しい配列を作る。次のコードで両者を確認できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 
@@ -228,17 +215,14 @@ print(values.nbytes)
 print(view.nbytes, np.shares_memory(values, view))
 print(copied.nbytes, np.shares_memory(values, copied))
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 実行結果は次の通りである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 8000000
 800 True
 4000000 False
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{nbytes} は配列要素が占めるバイト数を表す。\code{np.shares\_memory(a, b)} は 2 配列が同じメモリ領域を共有するかを調べる。この例では、\code{view} 自体が参照する要素は 800 バイト分だが、元配列のメモリを共有するため、\code{view} の要素を書き換えると対応する \code{values} の要素も変わる。\code{copied} は 50 万要素の独立した配列であり、新たに 4 MB を使う。なお、\code{nbytes} は Python オブジェクト自体の管理領域を含まないため、プロセス全体のメモリ使用量と完全には一致しない。
 
@@ -253,16 +237,13 @@ print(copied.nbytes, np.shares_memory(values, copied))
 
 例えば、次の 4 行を作業フォルダーの \code{values.txt} へ保存する。その平均は、全行をリストへ保存せずに求められる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={values.txt}]
 1.5
 2.0
 4.0
 2.5
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 def streaming_mean(path):
     count = 0
@@ -287,7 +268,6 @@ def streaming_mean(path):
 
 print(streaming_mean("values.txt"))
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 出力は \code{2.5} となる。引数 \code{path} は入力ファイルの場所であり、\code{enumerate(..., start=1)} はエラー箇所をファイルと同じ 1 始まりの行番号で報告するために使う。この関数が保持するのは現在行、件数、合計だけなので、入力行数が増えても集計用メモリはほぼ一定である。ただし、中央値や全体のソートのように全データの順序が必要な統計量は、この単純な方法だけでは正確に求められない。
 
@@ -300,22 +280,18 @@ print(streaming_mean("values.txt"))
 
 \code{timing\_example.py} の末尾に次を追記し、再実行する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import cProfile
 
 cProfile.run("run_analysis()", sort="cumtime")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 先に定義した \code{run\_analysis()} を使うと、その関数が 1 回呼ばれたことを確認できる。表示される列のうち、\code{ncalls} は呼び出し回数、\code{tottime} は関数自身の処理時間、\code{cumtime} は呼び出し先も含めた時間である。次は列の読み方を示す抜粋例であり、秒数は実行環境によって変わる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 ncalls  tottime  cumtime  function
      1   0.001    0.001   run_analysis
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この関数は中で別の Python 関数を呼ばないため、関数自身の時間と累積時間はほぼ同じになる。別の関数を呼ぶ解析では、累積時間にその呼び出し先の時間も入る。親と子の累積時間を足すと同じ処理を二重に数えるため、どの列を比較しているかを確かめる。ファイルの読み書きでは待ち時間も入るので、解析全体の経過時間も併せて測定する。
 
@@ -327,7 +303,6 @@ Python で作成した解析コードでも、計算量の多い部分だけを 
 
 次は比較回数を説明するための C++ の抜粋であり、単独で実行するプログラムではない。コンパイルして試す手順は付録で扱う。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=C++]
 for (std::size_t i = 0; i < n; ++i) {
     for (std::size_t j = i + 1; j < n; ++j) {
@@ -337,7 +312,6 @@ for (std::size_t i = 0; i < n; ++i) {
     }
 }
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 C++ への書き換えによって 1 回の比較に要する時間が減っても、上の二重ループの計算量は $O(N^2)$ のままである。アルゴリズム変更による演算回数の削減と、実装言語変更による 1 演算あたりの時間短縮を分けて測定する。
 
@@ -349,7 +323,6 @@ Python から低水準の実装を呼び出す方法には、\code{ctypes}、Pyt
 
 この断片は Python の \code{.py} ファイルへそのまま書いて実行するコードではなく、Cython の \code{.pyx} ファイル内で、配列と長さを定義した関数に組み込んでコンパイルする例である。配列の要素アクセスも低水準化するには、配列側の型指定も必要になる。ここで \code{cdef} は Cython 特有の宣言であり、変数を Python オブジェクトではなく C の整数や浮動小数点数として扱わせるために使う。これにより、ループ内部の型判定やボックス化のコストを減らせる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 cdef int i
 cdef double total = 0.0
@@ -357,7 +330,6 @@ cdef double total = 0.0
 for i in range(n):
     total += values[i]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 実装方法は、既存コードの言語、必要なインタフェース、測定された処理時間、保守とビルドの負担に基づいて選ぶ。
 
@@ -393,19 +365,16 @@ Python 側の引数、返り値、例外条件をテストで確認すれば、�
 
 高速化の結果は、変更前後の所要時間、比、測定条件を同じ表または出力欄へ記録する。次は報告形式を示すための仮想的な数値例である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 slow version : 182.4 s
 vectorized   :  12.7 s
 streaming    :   4.8 s
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 報告には、この形式で測定した値を記載し、続けて「比較回数を減らした」「Python ループを配列演算へ移した」「全件保持をやめた」など、変化を生じさせた実装上の差を示す。測定条件、測定値、変更内容を一組として記録する。
 
 高速化の報告では、$O(N^2)$ から $O(N \log N)$ または $O(N)$ へ計算量を変えた改善と、同じオーダーのまま NumPy、Cython、C++ などで定数倍を変えた改善を区別する。前者はアルゴリズム、後者は実装効率の変更である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 
@@ -415,7 +384,6 @@ diffs = np.diff(values)
 count = np.count_nonzero(diffs > 0.25)
 print(count)  # 2
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{figure}[tbp]
 \centering
@@ -426,35 +394,24 @@ print(count)  # 2
 
 図~\ref{fig:vectorization-benchmark} は実行時間の大小を比較するための図であり、結果の正しさまでは保証しない。高速化の前後で同じ \code{count} が得られることをテストし、その上で入力サイズ、反復回数、実行環境、代表値をそろえて時間を比較する必要がある。
 
-\clearpage
 \section{章末課題：正しさと処理時間を比較する}
 
-本章の作業フォルダー \code{\textasciitilde/analysis\_practice/performance} に \code{performance\_exercises.py} を作り、各問のコードを保存する。端末では \code{python performance\_exercises.py} で実行する。同じ入力と計算機を使い、各方法を 5 回ずつ測る。報告に中央値と最小値のどちらを使ったかを記す。
+課題も本章冒頭で用意した作業フォルダーで行う。各問のコードを \code{performance\_exercises.py} へ保存し、端末で \code{python performance\_exercises.py} を実行する。同じ入力と計算機を使い、各方法を 5 回ずつ測る。報告に中央値と最小値のどちらを使ったかを記す。
 
 \begin{enumerate}
-\item \begin{minipage}[t]{\linewidth}
-\textbf{ループと配列演算を比べる。}
+\item \textbf{ループと配列演算を比べる。}
 \code{np.arange(1\_000\_000, dtype=np.float64)} の各値を二乗して足す処理を、\code{for} と NumPy の二つの関数で書け。\code{np.isclose()} で結果の一致を確かめる。各方法の実行時間と、「ループの時間／NumPy の時間」の速度比を表にせよ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{入力件数を増やして時間を測る。}
-本文の \code{has\_duplicate\_slow()} と \code{has\_duplicate\_fast()} を使う。入力は \code{np.random.default\_rng(42).permutation(N).tolist()} で作り、\(N=1000,2000,4000\) について測定せよ。この命令は 0～\(N-1\) を重複なしで無作為に並べるので、どちらの判定結果も \code{False} になる。件数と時間、件数を倍にしたときの時間比を表にし、\(O(N^2)\)、\(O(N\log N)\) の予想と比べる。入力を先に整列させない。
-\end{minipage}
+\item \textbf{入力件数を増やして時間を測る。}
+本文の \code{has\_duplicate\_slow()} と \code{has\_duplicate\_fast()} を使う。入力件数は \(N=1000,2000,4000\) の 3 通りとする。各 \(N\) で \code{rng = np.random.default\_rng(42)} としてから、\code{rng.permutation(N).tolist()} で入力を作れ。この入力は 0～\(N-1\) を重複なしで無作為に並べるので、どちらの判定結果も \code{False} になる。件数、時間、件数を倍にしたときの時間比を表にし、\(O(N^2)\)、\(O(N\log N)\) の予想と比べよ。入力を先に整列させない。
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{ビューとコピーの書き換えを比べる。}
+\item \textbf{ビューとコピーの書き換えを比べる。}
 第~\ref{sec:performance-memory}~節の \code{values}、\code{view}、\code{copied} を作るコードを保存し、\code{view[0] = -1} と \code{copied[0] = -2} を実行せよ。元の \code{values} のどの要素が変わったかと、\code{np.shares\_memory()} の結果を表にせよ。同じ要素数の \code{float32} と \code{float64} の配列も作り、\code{nbytes} を比べる。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{1 行ずつ読んで平均を求める。}
+\item \textbf{1 行ずつ読んで平均を求める。}
 1～100000 の整数を 1 行に一つずつ書いた \code{values.txt} を作れ。本文の \code{streaming\_mean()} と、全行をリストに入れてから平均を求める方法を比べよ。両方が 50000.5 になることを示し、それぞれ計算中に何をメモリへ保持するかを説明する。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{時間がかかる関数を特定する。}
+\item \textbf{時間がかかる関数を特定する。}
 1 問目の二つの関数と、それらを呼ぶコードだけを \code{profile\_sums.py} へ保存し、\code{python -m cProfile -s cumtime profile\_sums.py} で実行せよ。自作関数を含めて累積時間の大きい関数を 3 個表にし、呼び出し回数も記せ。時間のかかる関数を一つ選び、どの処理を変えると効果があるかを説明せよ。
-\end{minipage}
 
 \end{enumerate}

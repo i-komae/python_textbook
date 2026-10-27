@@ -16,11 +16,9 @@ macOS では「ターミナル」を開いて以下の例を試す。Windows で
 
 ターミナルを開くと、シェルはコマンドを入力できる位置に短い文字列を表示する。この文字列をプロンプト\index{ぷろんぷと@プロンプト|textbf}という。表示内容は環境によって異なるが、末尾には \code{\$} が使われることが多い。例えば、実際の画面には次のように表示される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 student@host ~ $
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この表示は、シェルが入力を待っていることを意味する。本書の実行例では、実際のプロンプト全体を省略し、読者が入力する行の先頭に \code{\$} だけを置く。\code{\$} は入力行を見分けるための印であり、読者が入力する文字には含まれない。
 
@@ -30,11 +28,9 @@ student@host ~ $
 
 本書のコマンド例は macOS や Linux のシェルを前提にしている。Windows では、WSL\index{wsl@WSL|textbf} (Windows Subsystem for Linux) 上の Ubuntu などを利用すると、同じコマンド例を実行しやすい。WSL は、管理者権限で開いた PowerShell から次のコマンドで導入できる。PowerShell のプロンプトは、本書の UNIX シェル用プロンプトと区別して示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 PS C:\> wsl --install
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 導入時に再起動を求められたら、再起動して Ubuntu を開き、画面の案内に従って利用者名とパスワードを設定する。その後の本書のコマンドは Ubuntu の端末へ入力する。
 
@@ -46,11 +42,9 @@ WSL 上では、本書の Linux 用コマンドとディレクトリ構造を Wi
 
 まず、今いるフォルダーの内容を詳しく表示する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -l .
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{ls} は実行するコマンド、\code{-l} は詳しい表示へ切り替えるオプション、\code{.} は対象を指定する引数である。\code{.} は現在のフォルダーを表す。このように、コマンドの後ろへ動作の指定や対象を続けて書く。表示される項目の読み方は、次の節で説明する。
 
@@ -58,11 +52,9 @@ $ ls -l .
 
 使い方を調べるには、\code{man} の後ろへコマンド名を書く。例えば次を実行すると、\code{ls} の説明書が開く。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ man ls
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{NAME} は名前と機能、\code{SYNOPSIS} は命令の書き方、\code{DESCRIPTION} は詳しい説明を示す。書式の角括弧 \code{[...]} は省略できる部分を表す。上下キーや Space で移動し、\code{q} で閉じる。
 
@@ -74,7 +66,6 @@ $ man ls
 
 ファイルやフォルダーの場所を文字で表したものをパスという。シェルでは、現在作業しているディレクトリがパス解釈の基準となる。このディレクトリをカレントディレクトリという。現在位置は \code{pwd}、その場所にある項目は \code{ls} で確認できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pwd
 $ ls
@@ -83,37 +74,30 @@ $ ls -lh
 $ ls -a
 $ ls -lah
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\code{pwd}\index{pwd@\code{pwd}|textbf} は、現在のカレントディレクトリの絶対パスを表示する。\code{ls}\index{ls@\code{ls}|textbf} は、そのディレクトリにあるファイルやディレクトリの一覧を表示する。たとえば \code{pwd} の結果が次のようであれば、
+\code{pwd}\index{pwd@\code{pwd}|textbf} は、現在のカレントディレクトリの絶対パスを表示する。\code{ls}\index{ls@\code{ls}|textbf} は、そのディレクトリにあるファイルやディレクトリの一覧を表示する。例えば \code{pwd} の結果が次のようであれば、
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /Users/student/shell_practice
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 現在の作業場所は \code{/Users/student/shell\_practice} である。この状態で \code{ls} を実行すると、その中にある項目が表示される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls
 data	scripts
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この結果から、\code{/Users/student/shell\_practice} の中には \code{data} と \code{scripts} という 2 つのディレクトリがあることが分かる。
 
 \code{ls} の表示内容はオプションで変更できる。\code{-l} は、各項目の種別、アクセス権、リンク数、所有者、グループ、サイズ、最終更新日時、名前を表示する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -l
 total 0
 drwxr-xr-x  3 student  staff  96  4月 12 23:19 data
 drwxr-xr-x  3 student  staff  96  4月 12 23:19 scripts
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 先頭の \code{total} は表示対象のディスク割当量の要約であり、ファイル数ではない。ここでは各行の名前、種別、サイズの欄を確認する。
 
@@ -133,16 +117,14 @@ drwxr-xr-x  3 student  staff  96  4月 12 23:19 scripts
 
 リンク数は、同じデータを指す名前の数に関係する値であり、フォルダー内のファイル数ではない。本章の基本操作では、この値を使った判断は行わない。
 
-\code{ls -l} のサイズ欄はバイト単位である。バイトはデータ容量の単位であり、1 バイトは 8 ビットに当たる。ビットは 0 または 1 を表す最小の単位である。\code{-h} を併用すると、同じ値が \code{K}、\code{M}、\code{G} などの接頭辞付きで表示される。表示の丸めを避けて正確なバイト数を記録する場合は、\code{-h} を付けない出力を用いる。
+\code{ls -l} のサイズ欄はバイト単位で表示される。1 バイトは、0 または 1 を表すビット 8 個分に当たる。\code{-h} を併用すると、同じ値に \code{K}、\code{M}、\code{G} などの接尾辞が付く。正確なバイト数を記録するときは、丸めを避けるため \code{-h} を付けない。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -lh
 total 0
 drwxr-xr-x  3 student  staff    96B  4月 12 23:19 data
 drwxr-xr-x  3 student  staff    96B  4月 12 23:19 scripts
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この例の \code{96B} はディレクトリ項目そのものの大きさであり、配下のファイルサイズの合計ではない。中のファイルの容量は、そのファイル自体を指定して確認する。
 
@@ -150,20 +132,17 @@ drwxr-xr-x  3 student  staff    96B  4月 12 23:19 scripts
 
 一方、\code{-a} オプションを付けると、ドットで始まる隠し項目も含めて表示できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -a
 .	..	.config	data	scripts
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-名前が \code{.}（ドット）で始まるファイルやディレクトリは隠し項目として扱われ、通常の \code{ls} では表示されない。たとえば \code{.config}、\code{.gitignore}、\code{.bashrc} などがこれにあたる。設定ファイルなど、通常の一覧に常時表示する必要のない項目にこの命名が用いられる。
+名前が \code{.}（ドット）で始まるファイルやディレクトリは隠し項目として扱われ、通常の \code{ls} では表示されない。例えば \code{.config}、\code{.gitignore}、\code{.bashrc} などがこれにあたる。設定ファイルなど、通常の一覧に常時表示する必要のない項目にこの命名が用いられる。
 
 上の \code{ls -a} に現れる \code{.} と \code{..} にも意味がある。\code{.} は現在のディレクトリ自身を表し、\code{..} は1つ上の親ディレクトリを表す。これらは後でディレクトリ移動をするときにも重要になる。
 
 \code{-lah} は、詳細表示の \code{-l}、隠し項目を含める \code{-a}、サイズに接尾辞を付ける \code{-h} を組み合わせた指定である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -lah
 total 96
@@ -173,7 +152,6 @@ drwxr-xr-x  5 student  staff   160B  4月 12 23:18 ..
 drwxr-xr-x  3 student  staff    96B  4月 12 23:19 data
 drwxr-xr-x  3 student  staff    96B  4月 12 23:19 scripts
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この例では \code{.config} という通常のファイルも表示されており、\code{ls -l} の場合とは \code{total} の値が異なる。\code{total} は各行のサイズ欄の合計ではなく、表示対象へ割り当てられたファイルシステムブロック数に基づく。
 
@@ -183,23 +161,19 @@ drwxr-xr-x  3 student  staff    96B  4月 12 23:19 scripts
 
 ここからは、自分のホームディレクトリの下に作業場所を作る。ホームディレクトリは、その利用者のファイルを置く基本の場所であり、シェルでは \code{\textasciitilde} と書ける。次の \code{mkdir -p} は、指定したフォルダーと、必要な親フォルダーを作る命令である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p ~/shell_practice/data ~/shell_practice/scripts
 $ cd ~/shell_practice
 $ nano data/events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{nano} は文字だけのファイルを編集する道具である。Ubuntu で \code{command not found} と出た場合は、\code{sudo apt update}、\code{sudo apt install nano} の順で導入してから開く。\code{sudo} は管理者の権限で操作する指定であり、パスワードを求められたら Ubuntu の利用者のパスワードを入力する。入力中に文字が表示されなくても受け付けている。編集画面へ次の 3 行を入力する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, title={data/events.txt}]
 det_A 1 12.4
 det_B 2 9.8
 det_A 3 15.1
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 Ctrl キーを押しながら O を押し、Enter で保存先を確定する。Ctrl+X で端末へ戻る。以後も \code{nano ファイル名} で同じ手順を使える。\code{nano scripts/plot.py} も開き、\code{\# drawing script} と 1 行書いて保存する。このファイルは、今は移動先を確認するための目印として使う。
 
@@ -209,7 +183,6 @@ Ctrl キーを押しながら O を押し、Enter で保存先を確定する。
 
 \code{cd}\index{cd@\code{cd}|textbf} はカレントディレクトリを変更するコマンドである。\code{ls}、\code{cat}、\code{cp} などへ相対パスを渡すと、そのパスはカレントディレクトリを基準に解釈される。次のディレクトリ構成を例に、移動前後でパスの指す対象を確認する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shell_practice/
 |-- data/
@@ -217,22 +190,18 @@ shell_practice/
 `-- scripts/
     `-- plot.py
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 いま \code{/Users/student/shell\_practice} にいるとする。まず \code{pwd} と \code{ls} を実行すると、現在位置とその場にある項目は次のように分かる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pwd
 /Users/student/shell_practice
 $ ls
 data	scripts
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-この状態で \code{cd data} を実行すると、\code{analysis} の下にある \code{data} ディレクトリへ移動する。
+この状態で \code{cd data} を実行すると、\code{shell\_practice} の下にある \code{data} ディレクトリへ移動する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd data
 $ pwd
@@ -240,25 +209,21 @@ $ pwd
 $ ls
 events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{data} は相対パスなので、カレントディレクトリ \code{/Users/student/shell\_practice} を基準とする \code{/Users/student/shell\_practice/data} を指す。
 
 次に \code{cd ..} を実行すると、1 つ上の親ディレクトリへ戻る。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ..
 $ pwd
 /Users/student/shell_practice
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 ここで使っている \code{..} は、\code{ls -a} でも見た「親ディレクトリ」を表す特別な名前である。
 
 カレントディレクトリに依存しない指定で直接移動することもできる。\code{\textasciitilde} は、シェルがホームディレクトリのパスへ展開する記号である。次の指定では、現在位置に関係なく \code{scripts} へ移動できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ~/shell_practice/scripts
 $ pwd
@@ -266,26 +231,21 @@ $ pwd
 $ ls
 plot.py
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-また、\code{cd -} は 1 つ前にいた場所へ戻る。たとえば上の状態で実行すると、直前にいた \code{/Users/student/shell\_practice} へ戻る。
+また、\code{cd -} は 1 つ前にいた場所へ戻る。例えば上の状態で実行すると、直前にいた \code{/Users/student/shell\_practice} へ戻る。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd -
 /Users/student/shell_practice
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 引数なしの \code{cd} は、現在位置にかかわらずホームディレクトリへ移動する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd
 $ pwd
 /Users/student
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{cd} には、相対パスによる移動、絶対パスによる移動、\code{..} による親ディレクトリへの移動、\code{-} による直前のディレクトリへの移動がある。移動後に \code{pwd} と \code{ls} を実行すれば、現在位置とその内容を確認できる。
 
@@ -316,7 +276,6 @@ $ pwd
 
 次のディレクトリ構成を考える。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shell_practice/
 |-- data/
@@ -324,24 +283,20 @@ shell_practice/
 `-- scripts/
     `-- plot.py
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 現在位置が \code{/Users/student/shell\_practice} なら、次の 2 つのコマンドは同じファイルを指している。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ pwd
 /Users/student/shell_practice
 $ cat data/events.txt
 $ cat ~/shell_practice/data/events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-1 つ目の \code{data/events.txt} は、カレントディレクトリ \code{/Users/student/shell\_practice} を基準とする相対パスである。2 つ目の \code{\textasciitilde/shell\_practice/data/events.txt} はホームからの指定であり、シェルが絶対パスへ展開するため、カレントディレクトリに依存しない。この状態では、両者とも同じファイルを指す。
+1 つ目の指定は、現在の作業場所を基準にした相対パスである。2 つ目はホームディレクトリから指定しており、シェルが絶対パスへ展開する。この状態では両者は同じファイルを指すが、2 つ目の指定はカレントディレクトリが変わっても同じ場所を指す。
 
 一方で、現在位置が \code{/Users/student/shell\_practice/scripts} に変わると、同じ相対パスでも意味が変わる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd scripts
 $ pwd
@@ -350,7 +305,6 @@ $ cat data/events.txt
 cat: data/events.txt: No such file or directory
 $ cat ../data/events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この場所で \code{data/events.txt} と指定すると、シェルは \code{scripts/data/events.txt} を探す。そのファイルは存在しないため、\code{data/events.txt: No such file or directory} というエラー文が表示される。
 相対パスで \code{events.txt} を指定するには、1 つ上へ戻る \code{..} を使って \code{../data/events.txt} と書く必要がある。
@@ -363,39 +317,32 @@ $ cat ../data/events.txt
 
 端末で \code{cd \textasciitilde/shell\_practice} と入力してから試す。\code{scripts/} も既にあるが、次の構成図では移動に関係する項目だけを示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shell_practice/
 `-- data/
     `-- events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{output} というディレクトリを 1 つ作るだけなら、次のように実行すればよい。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir output
 $ ls
 data	output	scripts
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目では、現在のカレントディレクトリの直下に \code{output} が新しくできる。2 行目の \code{ls} で、それが確認できる。
 
 一方、\code{output/2026/04} のような深い階層をまとめて作る場合もある。途中の \code{output/2026} がまだ無ければ、\code{mkdir output/2026/04} だけではエラーになる。\code{-p} オプションを付けると、存在しない親ディレクトリも含めて作成される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir output/2026/04
 mkdir: output/2026: No such file or directory
 $ mkdir -p output/2026/04
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 実行後は、次のようなディレクトリ構成になる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 shell_practice/
 |-- data/
@@ -404,7 +351,6 @@ shell_practice/
     `-- 2026/
         `-- 04/
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 観測日ごとの出力先や \code{figures/summary/} のような階層を一度に作る場合は、\code{mkdir -p} を用いる。\code{-p} は必要な親ディレクトリも作成し、指定したディレクトリがすでに存在する場合にはエラーにしない。
 
@@ -414,37 +360,30 @@ shell_practice/
 
 \code{cp}\index{cp@\code{cp}|textbf} は元のファイルやディレクトリを残したまま複製を作るコマンドである。最後の引数が既存のディレクトリならその中へ同じ名前でコピーされ、ファイル名ならその名前で複製が作られる。コピーの練習は別のフォルダーで行う。次を実行し、先ほど作ったファイルを練習用の元データにする。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p ~/shell_practice/work/raw ~/shell_practice/work/backup
 $ cd ~/shell_practice/work
 $ cp ../data/events.txt raw/events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 以下は、この時点の構成である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- backup/
 `-- raw/
     `-- events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-ここで \code{raw/events.txt} を \code{backup} へコピーするには、たとえば次のように実行できる。
+ここで \code{raw/events.txt} を \code{backup} へコピーするには、例えば次のように実行できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cp raw/events.txt backup/
 $ cp raw/events.txt backup/events_20260412.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目では、\code{backup/} が既存のディレクトリなので、その中に同じ名前の \code{events.txt} が作られる。2 行目では、コピー先の名前まで明示しているので、同じ内容を \code{events\_20260412.txt} という別名で保存できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- backup/
@@ -453,19 +392,15 @@ work/
 `-- raw/
     `-- events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{cp} の実行後も \code{raw/events.txt} は残り、コピー先に独立したファイルが作成される。元データを保持したまま加工用ファイルを作る場合は、入力と出力のパスを分ける。
 
 ディレクトリごと複製したい場合は \code{-r} を付ける。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cp -r raw raw_backup
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- backup/
@@ -476,7 +411,6 @@ work/
 `-- raw_backup/
     `-- events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{-r} は、指定したディレクトリ以下を再帰的にコピーする。コピー先に同名の項目が存在する可能性がある場合、\code{-i} を指定すると上書き前に確認が表示される。自動処理では対話入力に依存させず、出力先の存在を事前に検査する。
 
@@ -486,51 +420,39 @@ work/
 
 引き続き \code{work} で行う。\code{cp raw/events.txt result.txt} で移動用のコピーを作り、\code{mkdir -p output} で移動先を用意する。まず、同じディレクトリの中で名前だけを変える例を見る。以下の構成図では関係する項目だけを示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- result.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mv result.txt result_old.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- result_old.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この場合は、同じ場所にあるファイルの名前だけが \code{result\_old.txt} へ変わる。
 
 次に、別のディレクトリへ移動しながら名前も変える例を考える。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- output/
 `-- result_old.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mv result_old.txt output/final.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 `-- output/
     `-- final.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{mv result\_old.txt output/final.txt} では、\code{result\_old.txt} が \code{output} の中へ移り、名前も \code{final.txt} に変わる。もし \code{mv result\_old.txt output/} と書けば、名前はそのままで場所だけが変わる。
 
@@ -542,23 +464,19 @@ work/
 
 削除の練習用に、端末で \code{mkdir -p old\_output}、\code{cp raw/events.txt old\_output/events.txt}、\code{cp output/final.txt result\_old.txt} を実行する。次のような状態になる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 work/
 |-- old_output/
 |   `-- events.txt
 `-- result_old.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 ここで使う基本形は次の通りである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rm -i result_old.txt
 $ rm -ri old_output
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{rm -i result\_old.txt} は通常のファイルを削除する前に確認を表示する。\code{rm -ri old\_output} は、ディレクトリの内部を再帰的にたどり、各対象の削除前に確認する。削除してよい場合は \code{y}、残す場合は \code{n} を入力し、Enter を押す。確認が不要で対象を確定できている場合は、それぞれ \code{-i} を外した \code{rm result\_old.txt} または \code{rm -r old\_output} を用いる。これらは別々の初期状態に対する代替例であり、同じ対象に順番に実行するものではない。
 
@@ -570,7 +488,6 @@ $ rm -ri old_output
 
 端末で次を実行し、名前を選ぶ練習に使うコピーを作る。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p data/subdir
 $ cp raw/events.txt data/run01.csv
@@ -581,11 +498,9 @@ $ cp raw/events.txt data/test_20260412.csv
 $ cp raw/events.txt data/test_20260413.csv
 $ cp raw/events.txt data/subdir/run04.csv
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 拡張子は名前の一部であり、ここではファイル名の選択を試す。コピーした内容は空白区切りのままである。構成は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 data/
 |-- run01.csv
@@ -597,18 +512,15 @@ data/
 `-- subdir/
     `-- run04.csv
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 このとき、次のような書き方ができる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls data/*.csv
 $ cp data/*.csv backup/
 $ ls data/test_*.csv
 $ rm -i data/test_*.csv
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{data/*.csv} は、\code{data} ディレクトリ直下にある \code{.csv} ファイルすべてを意味する。したがって、この例では \code{run01.csv} と \code{run02.csv} は対象になるが、\code{subdir/run04.csv} は含まれない。\code{*} は \code{/} をまたいで階層全体を探すわけではないからである。
 
@@ -621,14 +533,12 @@ $ rm -i data/test_*.csv
 
 データを処理する前には、ファイル形式と内容の一部を確認する。端末で \code{cd \textasciitilde/shell\_practice} を実行する。\code{data/events.txt} は先ほど保存した 3 行を使う。さらに \code{nano log.txt} で次の 4 行を保存する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, title={log.txt}]
 INFO start
 ERROR missing input
 WARNING low signal
 INFO end
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この節の例は、この二つのファイルに対して実行する。表~\ref{tab:file-inspection-commands} に、内容表示、行抽出、列処理に用いるコマンドと主要なオプションを示す。
 
@@ -668,13 +578,11 @@ INFO end
 
 \code{cat}\index{cat@\code{cat}|textbf} は、指定したファイルの内容を順に標準出力へ送る。複数のファイルを渡すと、引数の順に内容を連結する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cat data/events.txt
 $ cat data/events.txt log.txt
 $ cat -n data/events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目は 3 行の測定値、2 行目は測定値に続けて 4 行のログ、3 行目は行番号付きの測定値を表示する。ただし、長いログや観測データでは出力が画面の範囲を超える。短いファイルの全体表示には \code{cat}、長いファイルの閲覧や一部表示には \code{less}、\code{head}、\code{tail} を用いる。
 
@@ -686,12 +594,10 @@ $ cat -n data/events.txt
 
 \code{less}\index{less@\code{less}|textbf} は、ファイルを画面単位で表示し、開いたまま移動と検索を行うコマンドである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ less data/events.txt
 $ less -N data/events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{less} では、ファイルを開いたまま検索と移動を行える。主要な操作を次に示す。
 
@@ -699,21 +605,19 @@ $ less -N data/events.txt
 \item[\code{-N}] 行番号を表示する。後で「どの行に何があったか」を参照しやすくなる。
 \item[\code{Space}] 1 画面ぶん先へ進む。
 \item[\code{b}] 1 画面ぶん戻る。
-\item[\code{/pattern}] 指定した文字列を前方検索する。たとえば \code{/ERROR} と入力すると、\code{ERROR} を含む次の行が表示位置となる。
+\item[\code{/pattern}] 指定した文字列を前方検索する。例えば \code{/ERROR} と入力すると、\code{ERROR} を含む次の行が表示位置となる。
 \item[\code{n}] 直前の検索条件の次の一致へ進む。
 \item[\code{q}] 表示を終了してターミナルへ戻る。
 \end{description}
 
 \subsection{\code{head}}
 
-\code{head}\index{head@\code{head}|textbf} は、ファイルの先頭から指定した行数を表示する。ヘッダ、コメント行、区切り文字の確認に用いる。
+\code{head}\index{head@\code{head}|textbf} は、ファイルの先頭から指定した行数を表示する。ヘッダー、コメント行、区切り文字の確認に用いる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ head data/events.txt
 $ head -n 20 data/events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{description}
 \item[\code{-n N}] 先頭から \code{N} 行を表示する。指定しない場合は 10 行である。
@@ -723,13 +627,11 @@ $ head -n 20 data/events.txt
 
 \code{tail}\index{tail@\code{tail}|textbf} はファイル末尾の行を表示する。ログの直近部分の確認や、末尾へ追記される計算結果の監視に用いる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ tail log.txt
 $ tail -n 30 log.txt
 $ tail -f log.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{description}
 \item[\code{-n N}] 末尾から \code{N} 行を表示する。
@@ -738,16 +640,14 @@ $ tail -f log.txt
 
 \subsection{\code{wc}}
 
-\code{wc}\index{wc@\code{wc}|textbf} は、ファイルの行数、単語数、バイト数を数える。1 行が 1 レコードに対応する形式では、\code{-l} の結果からヘッダ行とコメント行を除くことでレコード数を確認できる。
+\code{wc}\index{wc@\code{wc}|textbf} は、ファイルの行数、単語数、バイト数を数える。1 行が 1 レコードに対応する形式では、\code{-l} の結果からヘッダー行とコメント行を除くことでレコード数を確認できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ wc data/events.txt
 $ wc -l data/events.txt
 $ wc -w data/events.txt
 $ wc -c data/events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{description}
 \item[\code{-l}] 改行の数を行数として表示する。末尾に改行がない最終行の扱いに注意する。
@@ -759,7 +659,6 @@ $ wc -c data/events.txt
 
 \code{grep}\index{grep@\code{grep}|textbf} は、指定したパターンに一致する行を出力する。大文字・小文字の無視、非一致行の出力、行番号や前後行の付加をオプションで指定できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ grep "ERROR" log.txt
 $ grep -n "ERROR" log.txt
@@ -768,10 +667,9 @@ $ grep -i "warning" log.txt
 $ grep -v "ERROR" log.txt
 $ grep -rn "det_A" data/
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{description}
-\item[\code{-i}] 大文字と小文字を区別せずに検索する。たとえば、\code{error} と \code{ERROR} の両方に一致する。
+\item[\code{-i}] 大文字と小文字を区別せずに検索する。例えば、\code{error} と \code{ERROR} の両方に一致する。
 \item[\code{-v}] 一致しなかった行を出す。コメント行や除外対象の行を取り除ける。
 \item[\code{-n}] 一致した行とともに、元ファイル内の行番号を表示する。
 \item[\code{-A N}] 一致した行に続く \code{N} 行も表示する。エラー行と直後の補足メッセージを同時に確認できる。
@@ -785,14 +683,12 @@ $ grep -rn "det_A" data/
 
 \code{awk}\index{awk@\code{awk}|textbf} は、入力行を区切り文字で列へ分け、列条件による抽出、列の並べ替え、集計を行うコマンドである。既定の区切りは連続する空白であり、\code{-F} で別の区切り文字を指定できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ awk '{print $1}' data/events.txt
 $ awk '{print $1, $3}' data/events.txt
 $ awk '{ if ($3 > 10) print $1, $3 }' data/events.txt
 $ awk '{ sum += $3 } END { print sum }' data/events.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 既定では空白やタブが区切り文字として使われる。そのため、空白区切りの観測データでは \code{\$1} が 1 列目、\code{\$2} が 2 列目を表す。条件分岐を \code{if} で明示すれば、「3 列目が 10 より大きい行だけを表示する」という処理を記述できる。この入力では、3 列目が 10 より大きい行は det\_A の 2 行であり、3 列目の合計は 37.3 になる。
 
@@ -809,13 +705,11 @@ $ awk '{ sum += $3 } END { print sum }' data/events.txt
 
 パイプ\index{ぱいぷ@パイプ|textbf}（\code{|}）は、左側のコマンドの標準出力を、右側のコマンドの標準入力へ接続する。中間ファイルを作らずに、抽出、並べ替え、行数の集計などを連結できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ grep "ERROR" log.txt | head -n 10
 $ grep "ERROR" log.txt | wc -l
 $ grep "det_A" data/events.txt | awk '{print $3}'
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目は \code{ERROR} を含む行を抽出し、その先頭 10 行だけを表示する。2 行目は同じ抽出結果を \code{wc -l} へ渡し、件数を数える。3 行目は det\_A の行を選び、信号値 12.4 と 15.1 を表示する。2 行目の件数は 1 になる。
 
@@ -827,17 +721,15 @@ $ grep "det_A" data/events.txt | awk '{print $3}'
 
 \subsection{\code{curl}}
 
-\code{curl}\index{curl@\code{curl}|textbf} は、URL から受信した内容を標準出力へ出すか、指定したファイルへ保存する。標準出力、URL 末尾の名前、指定した名前という 3 通りの出力先を次に示す。
+\code{curl}\index{curl@\code{curl}|textbf} は、URL から受信した内容を標準出力へ送る。ファイルへ保存する場合は、URL 末尾の名前を使うか、保存名を自分で指定する。
 
 次を \code{\textasciitilde/shell\_practice} で実行し、この教材の案内文を \code{guide.md} へ保存する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ curl -fL -o guide.md \
   https://raw.githubusercontent.com/i-komae/python_textbook/main/README.md
 $ head -n 2 guide.md
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{-o guide.md} は保存名を指定し、\code{-L} は URL の転送先をたどり、\code{-f} は取得先のエラーを失敗として扱う。先頭にこの教材の題名が表示されれば、案内文を保存できている。URL はインターネット上の場所を表す文字列である。例えば、この URL のサーバー名は \code{raw.githubusercontent.com}、その後ろはサーバー上のファイルの場所を指定する部分である。
 
@@ -855,13 +747,11 @@ $ head -n 2 guide.md
 
 \code{wget} を既に使える場合は、次の命令でも同じ案内文を保存できる。\code{curl} の例を実行できた場合は、この節を飛ばしてよい。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ wget -O guide_wget.md \
   https://raw.githubusercontent.com/i-komae/python_textbook/main/README.md
 $ head -n 2 guide_wget.md
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{-O} は保存名の指定であり、\code{curl} の小文字 \code{-o} とは異なる。\code{-c} は、途中まで保存したファイルの続きから取得を試みる指定である。再開できるかはサーバーの対応にも依存する。
 
@@ -869,13 +759,11 @@ $ head -n 2 guide_wget.md
 
 \code{\textasciitilde/shell\_practice} で \code{mkdir -p raw} を実行する。\code{nano raw/events.csv} を開き、次を保存する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, title={raw/events.csv}]
 detector,signal
 A,12.4
 B,9.8
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{nano notes.txt} も開き、\code{compression practice} と書いて保存する。次の例では、この CSV とメモを使う。\code{zip} や \code{unzip} が見つからない Ubuntu では、端末で \code{sudo apt install zip unzip} により導入できる。
 
@@ -883,14 +771,12 @@ B,9.8
 
 \code{gzip}\index{gzip@\code{gzip}|textbf} は、1 つのファイルを gzip 形式の 1 つの圧縮ファイルへ変換する。ディレクトリ構造や複数のファイルを一つにまとめる機能は持たない。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ gzip -k raw/events.csv
 $ ls -lh raw/events.csv*
 $ gzip -cd raw/events.csv.gz | head -n 2
 $ gzip -cd raw/events.csv.gz > events_restored.csv
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目の \code{-k} は元ファイルを残す指定である。付けない場合は、通常 \code{events.csv} が \code{events.csv.gz} に置き換わる。2 行目では圧縮前後のサイズを見比べている。3 行目の \code{-cd} は、展開した内容をファイルへ戻さず標準出力へ流す指定であり、\code{head} や \code{grep} と組み合わせられる。4 行目は同じ出力をリダイレクトし、元の \code{events.csv} を残したまま \code{events\_restored.csv} へ展開する。\code{gunzip events.csv.gz} で元の名前へ戻すには、同名の \code{events.csv} が存在しないことが必要である。
 
@@ -907,14 +793,12 @@ $ gzip -cd raw/events.csv.gz > events_restored.csv
 
 \code{tar}\index{tar@\code{tar}|textbf} は、複数のファイルやディレクトリ構造を一つのファイルへ格納する。この格納先を tar アーカイブという。\code{-z} を指定すると、作成した tar アーカイブを gzip で圧縮した \code{.tar.gz} ファイルを作る。ここで用いる \code{-c}、\code{-t}、\code{-x}、\code{-f}、\code{-z} の意味は GNU tar 公式マニュアル~\cite{gnu_tar_manual} に基づく。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ tar -czf archive.tar.gz raw/ notes.txt
 $ tar -tzf archive.tar.gz
 $ mkdir -p restored_tar
 $ tar -xzf archive.tar.gz -C restored_tar
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目は、\code{raw/} と \code{notes.txt} を \code{archive.tar.gz} へ格納し、gzip で圧縮する。2 行目の \code{-t} は、展開せずに収録項目を表示する。最後の行の \code{-x} は内容を展開し、\code{-C restored\_tar} は展開先を指定する。元ファイルの上書きを避けて別フォルダーへ戻している。
 \begin{description}
@@ -931,19 +815,16 @@ $ tar -xzf archive.tar.gz -C restored_tar
 
 \code{zip}\index{zip@\code{zip}|textbf} は、複数のファイルやディレクトリを圧縮し、1 つの ZIP アーカイブへ格納する。\code{tar} とはオプションと展開コマンドが異なるため、ファイル名の拡張子に対応するコマンドを選ぶ。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ zip -r archive.zip raw/ notes.txt
 $ unzip -l archive.zip
 $ unzip archive.zip -d restored_zip
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目の \code{-r} は、指定したディレクトリ以下を再帰的に格納する。2 行目の \code{unzip -l} は展開せずに収録項目を表示し、3 行目は \code{-d} で指定した \code{restored\_zip} へ展開する。形式に応じて、\code{.zip} には \code{unzip}、\code{.tar.gz} には \code{tar -xzf}、単一の \code{.gz} ファイルには \code{gunzip} または \code{gzip -d} を用いる。
 
 展開後のファイルが元と同じかを確認するには、\code{cmp} を使う。端末で次を実行すると、今展開した 3 ファイルをそれぞれ元の CSV と比較できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cmp raw/events.csv events_restored.csv
 $ echo $?
@@ -952,7 +833,6 @@ $ echo $?
 $ cmp raw/events.csv restored_zip/raw/events.csv
 $ echo $?
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{echo \$?} は直前の命令の終了ステータスを表示する。この例では 3 回とも 0 になる。例えば \code{cmp raw/events.csv restored\_tar/raw/events.csv} は 2 ファイルを全バイト比較する。一致すれば何も表示せず終了ステータス 0 を返し、不一致なら 1、読み込みなどのエラーなら 2 を返す。先頭数行が同じだけでは、ファイル全体の一致は確認できない。
 
@@ -962,40 +842,32 @@ $ echo $?
 
 シェルやプログラムには、「名前」と「値」の組として渡される設定がある。これが環境変数\index{かんきょうへんすう@環境変数|textbf}である。環境変数は、シェルの中だけで完結するものではなく、そこから起動した Python や各種コマンドにも引き継がれる。現在設定されている主な環境変数の値は、次のコマンドで表示できる。\code{echo} は後ろに書いた値を画面へ表示する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo $HOME
 $ echo $SHELL
 $ echo $PATH
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-実行結果は、たとえば次のようになる。
+実行結果は、例えば次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /Users/student
 /bin/zsh
 /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目はホームディレクトリ、2 行目はログインシェル、3 行目は実行ファイルを探索するディレクトリの一覧である。\code{PATH}\index{path@\code{PATH}|textbf} の値はコロン \code{:} で区切られ、シェルは左から順に同名の実行ファイルを探索する。\code{PYENV\_ROOT} や \code{DATA\_ROOT} も環境変数であり、起動するプログラムへ名前付きの値として引き継がれる。新たな環境変数は次の形で設定する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ export DATA_ROOT="$HOME/data/events"
 $ echo $DATA_ROOT
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 結果の例は次の通りである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /Users/student/data/events
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{export} 自体は成功しても通常は何も表示しない。続けて \code{echo \$DATA\_ROOT} を実行し、意図した値が入ったことを確認する。ここでは \code{\$HOME} が先に展開され、その結果として絶対パスが保存されている。
 
@@ -1005,7 +877,6 @@ $ echo $DATA_ROOT
 
 シェルはコマンドの実行前に、\code{\$HOME} のような変数展開と、\code{\$(pwd)} のようなコマンド置換を行う。展開の有無と、展開後の値を一つの引数として保つかどうかは引用符によって異なる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo $HOME
 $ echo "$HOME"
@@ -1016,55 +887,46 @@ $ echo "$name"
 $ echo "$(pwd)"
 $ echo "`pwd`"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目と 2 行目は、どちらも \code{\$HOME} を展開する。\code{HOME} に空白がなければ表示は同じになる。しかし、クォートなしの変数展開は、展開後にフィールド分割とファイル名展開の対象になる。\code{"\$HOME"} は展開結果を一つの引数として保つため、文字列として渡す変数は原則としてダブルクォートで囲む。
 
 3 行目のシングルクォート \code{'...'} 内では変数展開が行われないため、\code{\$HOME} という文字列がそのまま表示される。Bash では、\code{name="analysis result"} の後に引用符なしで \code{echo \$name} と書くと、既定の設定では空白によって 2 引数へ分割される。zsh の既定の変数展開では、この分割は起こらない~\cite{zsh_expansion}。シェルの設定に依存しないよう、変数の値を一つの引数として渡すときは引用符を付ける。\code{echo "\$name"} では空白を含む値が一つの引数として渡る。\code{\$(pwd)} とバッククォートは、いずれも \code{pwd} の標準出力によるコマンド置換を表す。\code{\$(...)} は入れ子を明示できるため、本書ではこちらを用いる。
 
-この違いは、設定ファイルへ 1 行追記するときに特に重要である。たとえば \code{echo 'export PATH="\$HOME/bin:\$PATH"' >> \textasciitilde/.zshrc} のようにシングルクォートで囲むと、\code{\$HOME} や \code{\$PATH} を展開せず、その文字列をそのまま \code{\textasciitilde/.zshrc} へ追記できる。もしダブルクォートで囲むと、その場で現在の値へ展開されて書き込まれるので、意図とずれることがある。
+この違いは、設定ファイルへ 1 行追記するときに特に重要である。例えば \code{echo 'export PATH="\$HOME/bin:\$PATH"' >> \textasciitilde/.zshrc} のようにシングルクォートで囲むと、\code{\$HOME} や \code{\$PATH} を展開せず、その文字列をそのまま \code{\textasciitilde/.zshrc} へ追記できる。もしダブルクォートで囲むと、その場で現在の値へ展開されて書き込まれるので、意図とずれることがある。
 
 また、空白と改行の扱いにも注意が必要である。クォートの外では、空白やタブや改行が単語の区切りになる。そのため、空白を含むファイル名を引用符で囲まないと、複数の引数に分かれてしまう。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p "analysis result"
 $ cp notes.txt "analysis result/notes.txt"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 つの長いコマンドを複数行へ分けたいときは、行末に \code{\textbackslash} を置いて次の行へ続ける。次は、上のコピーを 2 行で書く例である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cp notes.txt \
   "analysis result/notes_copy.txt"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 引用符や括弧の外にある改行は、通常はコマンドの終端として解釈される。行末の \code{\textbackslash} は直後の改行を除去し、次の物理行を同じコマンドとして継続する。
 
 \subsection{PATH と実行ファイル}
 
-シェルが \code{python3} や \code{ls} を実行できるのは、それらが実行ファイルとして保存されており、しかもシェルがその場所を知っているからである。その探索に使う環境変数が \code{\$PATH} である。実際にどの実行ファイルが使われるかを調べるには、次のコマンドを用いる。
+シェルは、\code{python3} や \code{ls} という名前を受け取ると、環境変数 \code{PATH} に並んだディレクトリから実行ファイルを探す。次のコマンドで、現在の探索先と、実際に使われるファイルの場所を確認する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ command -v python3
 $ command -v ls
 $ echo $PATH
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 出力の例は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /opt/homebrew/bin/python3
 /bin/ls
 /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{command -v python3} は、現在のシェルが \code{python3} という名前をどのコマンドに解決するかを表示する。例のようにパスが表示される場合もあれば、エイリアスやシェル関数として定義されている場合もある。\code{PATH} で \code{/opt/homebrew/bin} が \code{/usr/bin} より左にあるため、同名の実行ファイルが両方にあれば前者が優先される。Python 自身が認識する実行ファイルの確認方法は、次章で扱う。
 
@@ -1072,42 +934,34 @@ $ echo $PATH
 
 独自の実行ファイルを置く \code{\textasciitilde/my\_scripts} をコマンド探索の対象にする例を示す。既存の探索先を保持するために現在の \code{\$PATH} を右辺へ含め、新しいディレクトリを先頭へ追加する。対話シェルの起動時に同じ設定を適用する場合は、利用中のシェルが読み込む設定ファイルに記述する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ export PATH="$HOME/my_scripts:$PATH"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \subsection{補足：シェルの種類と設定ファイル}
 
 利用者がログインするときに起動するよう設定されたシェルを、ログインシェルという。その名前は、次のコマンドで確認できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo $SHELL
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この実行例で読者が入力するのは、\code{echo \$SHELL} の部分だけである。行頭の \code{\$} は入力しない。\code{echo} は後ろに続く値を表示し、\code{\$SHELL} はシェルの設定値を取り出す。このような、プログラムへ引き継がれる名前付きの設定値を環境変数という。
 
-\noindent\begin{minipage}{\linewidth}
 実行結果の例は次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /bin/zsh
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{zsh} と \code{bash} では、起動時に読む設定ファイルや一部のシェル構文は異なる。上の \code{/bin/zsh} は、ログインシェルとして \code{zsh} が設定されていることを表す。
 
 ただし、\code{SHELL} は現在実行中のシェルを必ず示すわけではない。別のシェルを起動した場合などは値が一致しない。現在コマンドを解釈しているシェルは、次のコマンドで確認できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ps -p $$ -o comm=
 zsh
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 設定ファイルは、シェル名だけでなく OS と起動方法によっても異なる。zsh の対話シェルでは通常 \code{\textasciitilde/.zshrc} を使う。bash では Linux の対話シェルなら \code{\textasciitilde/.bashrc}、macOS のログインシェルなら \code{\textasciitilde/.bash\_profile} が使われることが多い。
 
@@ -1115,13 +969,11 @@ zsh
 
 引き続き \code{\textasciitilde/shell\_practice} の端末で行う。通常の結果と診断情報を分ける練習には、次の短いスクリプトを使う。\code{nano emit.sh} で保存する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash, title={emit.sh}]
 #!/usr/bin/env bash
 echo "result: 5"
 echo "notice: practice message" >&2
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{bash emit.sh} で実行すると、2 行とも画面に出る。1 行目は標準出力、\code{>\&2} を付けた 2 行目は標準エラー出力へ送っている。次の例で保存先の違いを確認する。
 
@@ -1131,12 +983,10 @@ echo "notice: practice message" >&2
 
 \code{echo} は、引数として受け取った文字列を標準出力へ送る。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo "hello"
 $ echo "$HOME"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目は \code{hello}、2 行目は変数展開後の \code{\$HOME} の値を標準出力へ送る。端末上では標準出力が画面へ接続されているが、次節のリダイレクトによってファイルへ変更できる。
 
@@ -1144,19 +994,16 @@ $ echo "$HOME"
 
 \code{>} は標準出力をファイルへ書き出す。既存のファイルがあれば中身を上書きする。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo "alpha" > notes.txt
 $ cat notes.txt
 alpha
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この例では、\code{echo} の結果が画面ではなく \code{notes.txt} に保存される。\code{notes.txt} がすでに存在する場合、その内容は新しい出力で置き換えられる。既存ファイルを保持する必要がある場合は、出力先を確認してから実行する。
 
 \code{>>} は追記であり、既存の内容を残したまま末尾に足す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ echo "alpha" > notes.txt
 $ echo "beta" >> notes.txt
@@ -1164,7 +1011,6 @@ $ cat notes.txt
 alpha
 beta
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{>>} は既存ファイルを保持して末尾へ追記する。\code{>} は既存内容を置き換えるため、設定ファイルへ行を追加する操作には \code{>>} を用いる。いずれの場合も、実行前に対象パスを確認する。
 
@@ -1172,22 +1018,18 @@ beta
 
 \code{>} は実際には \code{1>} と同じ意味であり、標準出力だけをファイルへ送る。標準エラーを別ファイルへ分けたいときは \code{2>} を使う。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ bash emit.sh > output.log
 $ bash emit.sh 1> output.log 2> error.log
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目では通常の出力だけが \code{output.log} に入り、エラーメッセージは画面に残る。2 行目では、通常の出力を \code{output.log} に、エラーメッセージを \code{error.log} に分けて保存している。長時間の処理では、両者を分けると失敗原因を追跡しやすい。
 
 標準出力と標準エラーを同じファイルへまとめたいときは、\code{2>\&1} を使う。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ bash emit.sh > run.log 2>&1
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 リダイレクトは左から順に適用される~\cite{bash_manual}。\code{> run.log 2>\&1} では、まず標準出力をファイルへ接続し、次に標準エラー出力をその時点の標準出力と同じ行き先へ接続する。順序を逆にした \code{2>\&1 > run.log} では、標準エラー出力は先に元の標準出力、通常は端末へ接続されるため、ファイルに入るのは標準出力だけである。
 
@@ -1197,22 +1039,18 @@ $ bash emit.sh > run.log 2>&1
 
 \code{>} や \code{>>} で出力をファイルへ送ると、その出力は画面に表示されない。\code{tee}\index{tee@\code{tee}|textbf} は標準入力を標準出力へ複製すると同時に、指定したファイルへ保存する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ bash emit.sh | tee stdout.log
 $ bash emit.sh 2>&1 | tee combined.log
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目は標準出力だけを画面と \code{stdout.log} の両方へ流す。2 行目は標準エラーもまとめ、画面と \code{combined.log} へ同じ内容を出力する。二つの行は保存対象の違いを示す代替例である。
 
 \code{tee} に \code{-a} を付けると追記になる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ bash emit.sh 2>&1 | tee -a run.log
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この場合は、既存の \code{run.log} を消さずに末尾へ足していく。毎日の実行結果を 1 つのログへ蓄積したい場合に向く。
 
@@ -1220,13 +1058,11 @@ $ bash emit.sh 2>&1 | tee -a run.log
 \label{sec:exit-status}\index{しゅうりょうすてーたす@終了ステータス|textbf}
 
 コマンドは終了時に整数の終了ステータスを返す。通常は 0 が成功、0 以外が失敗などの状態を表す。直前の値は \code{\$?} で確認できる。
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 $ ls notes.txt
 $ echo "$?"
 0
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 この例では \code{notes.txt} が存在するため、0 が表示される。\code{echo} など別のコマンドを実行すると \code{\$?} も更新されるので、調べたいコマンドの直後に確認する。非零の意味はコマンドごとに異なり、\code{grep} の 1 は検索条件に一致する行がないことを表す。標準エラー出力に警告があっても成功するプログラムがあり、逆に何も表示せず失敗するものもある。
 
 Bash と zsh のパイプラインは、既定では最後のコマンドの終了ステータスを返す。\code{set -o pipefail} を設定すると、途中のコマンドの失敗も検出できる。ただし、\code{head} が必要な行だけ読んで終了すると、前段が書き込み先を失って非零になる場合がある。終了ステータスは、そのコマンドと処理手順の意味に沿って解釈する。
@@ -1237,13 +1073,11 @@ Bash と zsh のパイプラインは、既定では最後のコマンドの終�
 \label{subsec:mod}
 ファイルにはアクセス権\index{あくせすけん@アクセス権|textbf}がある。読み取れるか、書き込めるか、実行できるかを \code{rwx} で表す。\code{ls -l} を使うと確認しやすい。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 -rwxr-xr-x  1 user  staff  1234 Apr  8 10:00 run_analysis.sh
 -rw-r--r--  1 user  staff   411 Apr  8 10:05 notes.txt
 -rw-------  1 user  staff   411 Apr  8 10:05 id_ed25519
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 最初の 10 文字のうち、先頭 1 文字はファイル種別であり、残り 9 文字が権限である。3 文字ずつに区切って、所有者、グループ、その他の利用者に対する権限を表す。
 文字と権限の対応は表~\ref{table:mod}のとおりである。
@@ -1251,14 +1085,12 @@ Bash と zsh のパイプラインは、既定では最後のコマンドの終�
 次の権限の例は表示の読み方を示している。実際の変更は、今作った \code{emit.sh} と \code{notes.txt} で試す。権限の変更には、\code{chmod}\index{chmod@\code{chmod}|textbf} コマンドを用いる。
 所有者（\code{user}）に実行権限（\code{x}）を加える指定は \code{u+x} である。その他の利用者（\code{other}）から読み取り権限（\code{r}）と書き込み権限（\code{w}）を除く指定には \code{o-rw} を用いる。グループ（\code{group}）とその他の利用者の権限を読み取りだけにする指定は \code{go=r} である。\code{a+x} の \code{a}（\code{all}）は、すべての利用者を対象とする。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod u+x emit.sh
 $ chmod o-rw notes.txt
 $ chmod go=r notes.txt
 $ ls -l emit.sh notes.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{table}[hbtp]
 \centering
@@ -1275,51 +1107,43 @@ $ ls -l emit.sh notes.txt
 \end{tabular}
 \end{table}
 
-表~\ref{table:mod}に示すように、権限は数字でも指定できる。各桁は読み取りを 4、書き込みを 2、実行を 1 として合計した値である。たとえば \code{7} は \code{rwx}、\code{6} は \code{rw-}、\code{5} は \code{r-x} に対応する。したがって、\code{755} は所有者が \code{rwx}、グループとその他の利用者が \code{r-x}、\code{644} は所有者が \code{rw-}、グループとその他の利用者が \code{r--} である。SSH の秘密鍵には、所有者だけに読み書きを許可する \code{600} を指定する。秘密鍵を実際に作る手順は付録で扱う。ここでは練習用ファイルの権限を数字で設定する。
+表~\ref{table:mod}に示すように、権限は数字でも指定できる。各桁は読み取りを 4、書き込みを 2、実行を 1 として合計した値である。例えば \code{7} は \code{rwx}、\code{6} は \code{rw-}、\code{5} は \code{r-x} に対応する。したがって、\code{755} は所有者が \code{rwx}、グループとその他の利用者が \code{r-x}、\code{644} は所有者が \code{rw-}、グループとその他の利用者が \code{r--} である。SSH の秘密鍵には、所有者だけに読み書きを許可する \code{600} を指定する。秘密鍵を実際に作る手順は付録で扱う。ここでは練習用ファイルの権限を数字で設定する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod 755 emit.sh
 $ chmod 644 notes.txt
 $ ls -l emit.sh notes.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \subsection{スクリプトの直接実行}
 
 複数の命令を保存して実行するファイルをスクリプトという。ここでも作業場所は \code{\textasciitilde/shell\_practice} とする。端末で \code{nano hello.sh} を実行して編集画面を開き、次を入力する。Ctrl キーを押しながら O を押し、Enter で保存先を確定する。Ctrl+X で端末へ戻る。\code{hello.sh} は、そのとき端末で開いていたフォルダーに保存される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=bash]
 #!/usr/bin/env bash
 
 echo "hello"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{bash hello.sh} で実行すると \code{hello} が表示される。先頭の行は、このファイルを直接実行するときに使うプログラムを指定する行であり、シバンという。\code{/usr/bin/env bash} は \code{PATH} から Bash を探す指定である。
 
 ファイル名を指定して直接実行する場合は、実行権限も付ける。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod u+x hello.sh
 $ ./hello.sh
 hello
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{u+x} は所有者に実行権限を加える指定、\code{./} は現在のフォルダーを表す。引数や繰り返しを使うシェルスクリプトは付録~\ref{app:shell_scripting} で扱う。
 
-\clearpage
 \section{章末課題：データを取得し、圧縮形式を比較する}
 \label{sec:shell-exercises}
 
 この課題は、macOS のターミナル、または Windows の Ubuntu 端末で行う。ホームディレクトリの下に専用の作業フォルダーを作り、元の CSV と圧縮後のファイルを整理する。
 
 \begin{enumerate}
-\item \begin{minipage}[t]{\linewidth}
-\textbf{作業フォルダーを作り、現在位置を確認する。}
+\item \textbf{作業フォルダーを作り、現在位置を確認する。}
 端末に次を 1 行ずつ入力せよ。最後の \code{pwd} で作業場所を、\code{ls} で作成したフォルダーを確認する。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p ~/earthquake_practice
@@ -1342,10 +1166,8 @@ $ ls
 \bottomrule
 \end{tabular}
 \end{center}
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{地震データを取得し、内容を調べる。}
+\item \textbf{地震データを取得し、内容を調べる。}
 引き続き \code{earthquake\_practice} で次を実行し、2024 年 1 月の全球データと検索結果の総件数を保存せよ。CSV の \code{time} は発生時刻（UTC、協定世界時）、\code{place} は場所の説明、\code{mag} は地震規模を表すマグニチュードである。先頭の行は列名を表す。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ curl -fL -o raw/usgs_global_2024_01.csv \
@@ -1357,18 +1179,13 @@ $ cat results/usgs_count.txt
 \code{head}、\code{tail}、\code{wc -l}、\code{grep} を使い、データ行数、先頭と末尾の \code{time}、\code{place} に \code{Japan} を含む行の例を調べ、表にせよ。先頭の列名の行は件数から除く。取得日時も記す。
 
 URL の \code{starttime} と \code{endtime} は取得期間の初めと終わり、\code{format=csv} は CSV で受け取る指定である。条件は \code{?} の後ろに書き、\code{\&} でつなぐ。\code{count} の応答が 20000 件を超えると、CSV に全件は入らない。期間を分けて取得し、同じイベント ID を重複して数えないようにする~\cite{usgs_api}。通信できない場合は、第~\ref{chap:io}~章の人工 CSV を使い、その旨を記す。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{同じ CSV を 3 種類の形式で圧縮する。}
+\item \textbf{同じ CSV を 3 種類の形式で圧縮する。}
 2 問目で保存した CSV を使い、gzip、tar.gz、zip のファイルを \code{compressed/} に一つずつ作れ。元ファイルは残す。元のバイト数、圧縮後のバイト数、容量比（圧縮後／元）を表にせよ。
 
 各ファイルを別の展開先へ戻し、\code{cmp} で元の CSV と比較せよ。実行した命令と終了ステータスを示し、最も小さかった形式、複数ファイルを格納できる形式を述べよ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{発展：取得期間や地域を変える。}
+\item \textbf{発展：取得期間や地域を変える。}
 2 問目の URL のうち、サーバー名、\code{/fdsnws/event/1/query}、\code{?} 以降の検索条件を区別して示せ。期間または地域の条件を一つ変えて別名の CSV を取得し、変更した指定と取得件数を表にせよ。
-\end{minipage}
 
 \end{enumerate}

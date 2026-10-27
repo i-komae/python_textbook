@@ -7,6 +7,7 @@ import os
 os.makedirs("../assets/figures", exist_ok=True)
 
 plt.style.use("my_style.mplstyle")
+plt.rcParams.update({"font.size": 14})
 
 # Same 600,000 synthetic points as the textbook listing.
 rng = np.random.default_rng(19)

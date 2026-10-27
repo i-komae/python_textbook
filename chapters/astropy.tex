@@ -5,13 +5,11 @@ Astropy\index{astropy@Astropy|textbf} は、単位や時刻、天体の座標を
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/astropy
 $ cd ~/analysis_practice/astropy
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。本文の Python コードは、別のファイル名を指定した例と章末課題を除き、\code{units\_example.py} へ先頭から順に追記する。保存後、端末で \code{python units\_example.py} を実行し、追加した処理の結果を表示例と比べる。
 
@@ -21,7 +19,6 @@ $ cd ~/analysis_practice/astropy
 
 Astropy の中心的な発想は、「数値そのもの」ではなく「何の単位で、どの時刻系で、どの座標系なのか」までオブジェクトへ持たせることである。例えば 100 という値だけでは、100 ns なのか 100 ms なのか分からない。数値と単位を一組にした \code{Quantity}\index{quantity@\code{Quantity}|textbf} を使えば、この曖昧さを減らせる。ns（ナノ秒）は 1 秒の 10 億分の 1、ms（ミリ秒）は 1 秒の 1000 分の 1 である。次を \code{units\_example.py} へ保存し、端末で \code{python units\_example.py} を実行する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import astropy.units as u
 
@@ -39,7 +36,6 @@ print(f"{distance.to_value(u.km):.10f} km")
 74.9481145 m
 0.0749481145 km
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この例では、\code{250 * u.ns} という時点で「250 ns」という意味が値に埋め込まれている。\code{u} は単位を使うための短い名前であり、\code{u.ns} はナノ秒、\code{u.m} はメートル、\code{u.s} は秒を表す。\code{.to(u.m)} は単位付きのままメートルへ換算し、\code{.to\_value(u.m)} はメートルへ換算した数値だけを取り出す。式の途中で単位を落とさない限り、単位換算はライブラリが引き受ける。
 
@@ -61,7 +57,6 @@ UTC（協定世界時）、TAI（国際原子時）、TT（地球時）は時刻
 
 単位付き計算の基本は \code{Quantity} である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import astropy.units as u
 
@@ -72,16 +67,13 @@ velocity = length / time
 print(velocity)
 print(f"{velocity.to_value(u.m / u.s):.1f} m / s")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 単位変換の結果は次の通りである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 0.256 m / ns
 256000000.0 m / s
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{to()} は、指定した単位へ換算した \code{Quantity} を返す。\code{.value} は単位情報を除いた数値を返すため、単位を受け取らない関数へ渡す直前など、数値だけが必要な箇所に使用を限定する。
 
@@ -101,18 +93,15 @@ v = \frac{3.2\ \mathrm{m}}{12.5\ \mathrm{ns}}
 
 Astropy には物理定数も入っている。SciPy の \code{constants} と似ているが、Astropy では値が単位付きで返る。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from astropy.constants import c, k_B
 
 print(c)
 print(k_B)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 Astropy の定数オブジェクトを表示すると、値だけでなく単位と参照元も確認できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
   Name   = Speed of light in vacuum
   Value  = 299792458.0
@@ -125,7 +114,6 @@ Astropy の定数オブジェクトを表示すると、値だけでなく単位
   Unit  = J / K
   Reference = CODATA 2022
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この表示から、定数の値、単位、不確かさ、参照する定数体系を確認できる。
 
@@ -133,7 +121,6 @@ Astropy の定数オブジェクトを表示すると、値だけでなく単位
 
 Astropy の \code{Time}\index{time@\code{Time}|textbf} は、複数の時刻形式と時刻系を扱い、相互に変換できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from astropy.time import Time
 
@@ -143,21 +130,18 @@ print(t.mjd)
 print(t.unix)
 print(t.tai.iso)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 同じ時刻を複数の表現へ変換すると、次の値が得られる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 61142.52426068816
 1775997296.1234567
 2026-04-12 12:35:33.123
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{format="iso"} は入力形式、\code{scale="utc"} は時刻系を表す。\code{mjd} と \code{unix} は同じ時刻の別形式を返し、\code{tai.iso} は時刻系を TAI へ変換して ISO 形式で返す。
 
-たとえば、修正ユリウス日 MJD は
+例えば、修正ユリウス日 MJD は
 \[
 \mathrm{MJD} = \mathrm{JD} - 2400000.5
 \]
@@ -167,7 +151,6 @@ print(t.tai.iso)
 
 差分計算も \code{Time} のまま行える。\code{TimeDelta}\index{timedelta@\code{TimeDelta}|textbf} によって、差分の単位変換も一貫して扱える。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from astropy.time import Time
 
@@ -178,16 +161,13 @@ dt = t2 - t1
 print(f"{dt.to_value('s'):.9e}")
 print(f"{dt.to_value('ns'):.3f}")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 時刻差を秒と ns へ変換した結果は次の通りである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 2.200000182e-07
 220.000
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{TimeDelta} の既定の内部形式や表示は、入力形式と同じ単位とは限らない。そのため、出力では \code{to\_value("s")} や \code{to\_value("ns")} によって単位を明示する。秒境界や日付境界をまたぐ場合も、文字列を分解せずに差を計算できる。
 
@@ -203,7 +183,6 @@ Astropy の \code{Time} は内部で時刻を二つの浮動小数点数に分�
 
 地上の位置を経度と緯度で示すように、空の方向も二つの角度で表せる。赤経は天の赤道に沿って測る角度、赤緯は天の赤道から南北へ測る角度である。次の例では赤経 150 度、赤緯 20 度の方向を指定する。\code{SkyCoord}\index{skycoord@\code{SkyCoord}|textbf} は、この二つの角度と、その基準となる座標系をまとめて保持する。\code{frame="icrs"} は国際天球基準座標系（ICRS）を使う指定である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from astropy.coordinates import SkyCoord
 import astropy.units as u
@@ -214,16 +193,13 @@ gal = coord.galactic
 print(f"{gal.l.deg:.6f}")
 print(f"{gal.b.deg:.6f}")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 同じ空の方向を、銀河面を基準とした銀河座標へ表し直す。変換後の銀河経度と銀河緯度は次の通りである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 213.800977
 50.263718
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{ra} は赤経（right ascension）、\code{dec} は赤緯（declination）を表し、\code{icrs} は国際天球基準座標系を指定する。\code{ra} と \code{dec} には単位を付ける。これにより、入力角度が度またはラジアンのどちらで与えられたかが \code{SkyCoord} に保持される。
 
@@ -233,7 +209,6 @@ print(f"{gal.b.deg:.6f}")
 
 Astropy には表処理のために \code{Table}\index{table@\code{Table}|textbf} と \code{QTable}\index{qtable@\code{QTable}|textbf} がある。\code{Table} も列の単位をメタデータとして保持できるが、\code{QTable} は単位付きの列を \code{Quantity} として保持し、単位を考慮した演算に使える。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from astropy.table import QTable
 import astropy.units as u
@@ -245,9 +220,7 @@ table["detector"] = ["A", "A", "B"]
 
 print(table)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\noindent\begin{minipage}{\linewidth}
 \code{QTable} を表示すると、列名だけでなく単位も一緒に確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
@@ -258,28 +231,24 @@ time signal detector
 1.0   10.1        A
 2.0   14.8        B
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\code{QTable} は \code{Quantity} 列を保持するため、単位付きの列をそのまま演算できる。一方、複雑な groupby、join、列演算を中心とする処理には pandas や Polars の機能を利用できる。単位とメタデータの保持、および必要な表操作の双方から中心となる表形式を選ぶ。
+単位付きの列を演算に使うときは、\code{Quantity} 列を保持する \code{QTable} が適する。一方、行のグループ化や結合などを中心とする処理には、pandas や Polars も選択肢になる。必要な表操作に加え、単位とメタデータを保持できるかを確かめて選ぶ。
 
 \subsection{Astropy Table と pandas の行き来}
 
 Astropy の表と pandas の DataFrame は相互変換できるが、単位や時刻の情報が完全には残らないことがある。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 df = table.to_pandas()
 print(df)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{to\_pandas()} で得た通常の pandas 列には、\code{Quantity} の単位属性はそのまま保持されない。変換前に列単位を記録し、変換後の数値へどの単位を対応させるかを明示する。マスク付き列と時刻列についても、欠損表現と型が変換前後で一致するかを確認する。
 
 \subsection{\code{astropy.io.fits} による FITS の読み書き}
 
-天文データでは FITS（Flexible Image Transport System）\index{fits@FITS|textbf} が広く用いられる。HDU（Header/Data Unit）はヘッダとデータをまとめた単位であり、一つの FITS ファイルは複数の HDU を持てる。Astropy なら NumPy 配列やヘッダをそのまま扱える。
+天文データでは FITS（Flexible Image Transport System）\index{fits@FITS|textbf} が広く用いられる。HDU（Header/Data Unit）はヘッダーとデータをまとめた単位であり、一つの FITS ファイルは複数の HDU を持てる。Astropy なら NumPy 配列やヘッダーをそのまま扱える。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 from astropy.io import fits
@@ -296,16 +265,13 @@ with fits.open("image.fits") as hdul:
 print(data.shape)
 print(header["OBJECT"])
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\noindent\begin{minipage}{\linewidth}
-FITS を書いてから読み直すと、配列形状とヘッダ値は次のように確認できる。
+FITS を書いてから読み直すと、配列形状とヘッダー値は次のように確認できる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 (3, 3)
 test
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{fits.open()} は HDU のリストを返す。画像は \code{PrimaryHDU}、表は \code{BinTableHDU} などに格納される。\code{hdul.info()} で各 HDU の型、名前、次元を確認してから、対象のデータを読み込む。
 
@@ -313,7 +279,6 @@ test
 
 Astropy の表入出力は FITS だけではない。\code{Table.read()} は ASCII、CSV、ECSV などにも対応している。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from astropy.table import Table
 
@@ -322,7 +287,6 @@ tbl = Table.read("events.ecsv", format="ascii.ecsv")
 print(tbl.colnames)
 print(len(tbl))
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{Table.read()} の第 1 引数は入力パス、\code{format="ascii.ecsv"} は ECSV として解釈する指定である。上で作った 3 行・3 列の表を保存して読み直すと、\code{['time', 'signal', 'detector']} と \code{3} が表示される。ECSV は、列の単位、データ型、表のメタデータをテキストとともに保存できるため、中間生成物の受け渡しに利用できる。保存時は \code{table.write("events.ecsv", format="ascii.ecsv", overwrite=True)} と書く。\code{overwrite=True} は同名ファイルの置換を許可する指定である。
 
@@ -358,37 +322,26 @@ Astropy を使うべき場面は、数値とともに単位、時刻系、座標
 
 大規模表の集計や複雑な join では、pandas や Polars が必要な API と性能を備えている場合がある。その場合は、Astropy で単位と時刻を解釈し、変換時に失われる情報を記録してから必要な列だけを表処理ライブラリへ渡す。集計結果を Matplotlib や SciPy へ渡すときも、数値に対応する単位と時刻系を併記する。
 
-全体の導入は Getting Started~\cite{astropy_getting_started} と User Guide~\cite{astropy_user_guide}、単位は Units and Quantities~\cite{astropy_units}、時刻は Time and Dates~\cite{astropy_time}、座標は Coordinates~\cite{astropy_coordinates}、表は Tables~\cite{astropy_table}、FITS は FITS File Handling~\cite{astropy_fits} に記載されている。本章は、そのうち観測データ解析で用いる機能を扱った。
+全体の導入は Getting Started~\cite{astropy_getting_started} と User Guide~\cite{astropy_user_guide}、単位は Units and Quantities~\cite{astropy_units}、時刻は Time and Dates~\cite{astropy_time}、座標は Coordinates~\cite{astropy_coordinates}、表は Tables~\cite{astropy_table}、FITS は FITS File Handling~\cite{astropy_fits} で確認できる。
 
-\clearpage
 \section{章末課題：単位と時刻の意味を保って計算する}
 
 本章の作業フォルダー \code{\textasciitilde/analysis\_practice/astropy} に \code{astropy\_exercises.py} を作り、各問のコードを保存する。端末では \code{python astropy\_exercises.py} で実行する。ファイルを保存する 4 問目も、このフォルダーで行う。
 
 \begin{enumerate}
-\item \begin{minipage}[t]{\linewidth}
-\textbf{単位を変えても同じ値が選ばれるか確かめる。}
+\item \textbf{単位を変えても同じ値が選ばれるか確かめる。}
 \code{[120, 220, 250, 251, 800]} に ns の単位を付け、250 ns 以下を取り出せ。次に配列と境界値を秒へ換算して同じ比較をする。選ばれた値と個数を表にし、どちらも 250 ns を含む 3 個になることを示せ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{秒の境界をまたぐ時刻差を求める。}
+\item \textbf{秒の境界をまたぐ時刻差を求める。}
 \code{2026-04-12T11:59:59.999999900} と \code{2026-04-12T12:00:00.000000120} を、\code{format="isot", scale="utc"} を指定した \code{Time} で作れ。後の時刻から前の時刻を引き、差を ns で表示せよ。約 220 ns になることと、250 ns 以内かどうかを示す。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{同じ瞬間を UTC と TAI で表す。}
+\item \textbf{同じ瞬間を UTC と TAI で表す。}
 2 問目の最初の時刻を \code{t} とし、\code{t.precision = 9} で小数点以下 9 桁を表示する。\code{t.iso} と \code{t.tai.iso} を表示せよ。さらに \code{t.tai - t} を秒で表示する。二つの日時の文字列と時刻差を並べ、表示が違っても同じ瞬間を表すことを説明せよ。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{単位付きの表と信号配列を保存する。}
-時刻 \code{[0, 120, 250]} ns、信号 \code{[12.4, 9.8, 15.1]} mV、検出器 \code{["A", "B", "A"]} の \code{QTable} を \code{events.ecsv} に保存せよ。同じ 3 個の信号値を \code{signal.fits} の画像データに保存し、ヘッダへ \code{BUNIT="mV"} を書く。読み戻して、表の行数、画像の要素数、信号値、単位を保存前と照合せよ。再実行して置き換える場合は \code{overwrite=True} を指定する。
-\end{minipage}
+\item \textbf{単位付きの表と信号配列を保存する。}
+時刻 \code{[0, 120, 250]} ns、信号 \code{[12.4, 9.8, 15.1]} mV、検出器 \code{["A", "B", "A"]} の \code{QTable} を \code{events.ecsv} に保存せよ。同じ 3 個の信号値を \code{signal.fits} の画像データに保存し、ヘッダーへ \code{BUNIT="mV"} を書く。読み戻して、表の行数、画像の要素数、信号値、単位を保存前と照合せよ。再実行して置き換える場合は \code{overwrite=True} を指定する。
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{天体の座標を変換する。}
+\item \textbf{天体の座標を変換する。}
 赤経 150 度、赤緯 20 度を ICRS の \code{SkyCoord} とし、銀河座標へ変換せよ。変換前後の座標系と角度を表にし、銀河経度約 213.801 度、銀河緯度約 50.264 度と照合する。地平座標へ変換する際に、観測地点と観測時刻が必要になる理由も述べよ。
-\end{minipage}
 
 \end{enumerate}

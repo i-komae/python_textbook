@@ -16,19 +16,15 @@ SSH（Secure Shell）は、離れた計算機との通信を暗号化し、そ�
 
 最も基本的な形は次である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh user@server.example.jp
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{user} はサーバー上の自分のユーザー名、\code{server.example.jp} はホスト名である。ポート番号が既定の 22 でないなら \code{-p} を付ける。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh -p 2222 user@server.example.jp
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 接続後に入力したコマンドは、原則として接続先の計算機上で実行される。表示されるファイルも接続先にあるため、ローカルファイルとの取り違えは意図しない変更や削除につながる。作業を始める前に \code{hostname}、\code{whoami}、\code{pwd} を実行すれば、接続先、利用者名、作業ディレクトリを確認できる。
 
@@ -39,48 +35,38 @@ $ ssh -p 2222 user@server.example.jp
 
 サーバーへ接続中なら \code{exit} で接続を終了し、自分のコンピュータの端末へ戻ってから行う。公開鍵認証では、公開鍵と秘密鍵の対を使用する。鍵を保存する際に既存ファイルの上書きを尋ねられたら上書きせず、新しいファイル名を指定して作り直す。公開鍵をサーバーへ登録し、秘密鍵は接続元の計算機から外部へ渡さない。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh-keygen -t ed25519 -C "your_email@example.com"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 保存先の質問では Enter を押すと既定の場所になる。続くパスフレーズの質問では鍵を保護する文字列を入力し、確認のためもう一度同じ文字列を入力する。入力中に画面へ文字が出なくても受け付けている。既定の保存先を選ぶと、\code{\textasciitilde/.ssh/id\_ed25519} が秘密鍵、\code{\textasciitilde/.ssh/id\_ed25519.pub} が公開鍵になる。サーバーへ登録するのは \code{.pub} が付いた公開鍵だけである。\code{.pub} が付かない秘密鍵は共有しない。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -l ~/.ssh
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 秘密鍵を他の利用者も読める設定にしていると、SSH 接続が拒否されることがある。その場合は次のように直す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod 700 ~/.ssh
 $ chmod 600 ~/.ssh/id_ed25519
 $ chmod 644 ~/.ssh/id_ed25519.pub
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \subsection{サーバーへの公開鍵登録}
 \index{ssh-copy-id@\code{ssh-copy-id}|textbf}
 
 \code{ssh-copy-id} は、公開鍵を接続先の \code{authorized\_keys} へ追加するコマンドである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh-copy-id user@server.example.jp
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 特定の公開鍵を使いたいなら \code{-i} で指定できる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh-copy-id -i ~/.ssh/id_ed25519.pub user@server.example.jp
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{ssh-copy-id} は、指定した公開鍵をサーバー側の \code{\textasciitilde/.ssh/authorized\_keys} へ追加する。公開鍵の転送と追記を一つのコマンドで実行できる。
 
@@ -88,11 +74,9 @@ $ ssh-copy-id -i ~/.ssh/id_ed25519.pub user@server.example.jp
 
 \code{ssh-copy-id} が使えない環境では、公開鍵を手動で登録する。登録対象は、次のコマンドで表示される 1 行全体である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cat ~/.ssh/id_ed25519.pub
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 表示された 1 行全体を、サーバー側の \code{\textasciitilde/.ssh/authorized\_keys} へ追記する。通常のパスワードで \code{ssh user@server.example.jp} に接続できる場合は、接続先で \code{mkdir -p \textasciitilde/.ssh}、\code{chmod 700 \textasciitilde/.ssh} を実行する。\code{nano \textasciitilde/.ssh/authorized\_keys} を開き、既存の内容を残して末尾へ公開鍵の 1 行を追加する。保存後に \code{chmod 600 \textasciitilde/.ssh/authorized\_keys} を実行し、\code{exit} で手元へ戻る。再接続できることを確かめる。
 
@@ -101,12 +85,10 @@ $ cat ~/.ssh/id_ed25519.pub
 
 パスフレーズ付きの鍵を使う場合は、\code{ssh-agent} に読み込ませておくと毎回の入力を減らせる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ eval "$(ssh-agent -s)"
 $ ssh-add ~/.ssh/id_ed25519
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \section{接続設定と GitHub 連携}
 
@@ -115,7 +97,6 @@ $ ssh-add ~/.ssh/id_ed25519
 
 \code{\textasciitilde/.ssh/config} には、接続先ごとのホスト名、利用者名、ポート番号、秘密鍵ファイルを記録できる。次の設定では、これらの接続条件に \code{labserver} という名前を付ける。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={\textasciitilde/.ssh/config}]
 Host labserver
     HostName server.example.jp
@@ -123,39 +104,32 @@ Host labserver
     Port 2222
     IdentityFile ~/.ssh/id_ed25519
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{HostName}、\code{User}、\code{Port} は管理者から得た値へ置き換える。\code{IdentityFile} は実際に作った秘密鍵の保存先とする。この設定を保存すると、次のコマンドが同じ接続条件を参照する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ssh labserver
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 接続を確認したら \code{exit} で手元の端末へ戻ってから、以下の権限設定と GitHub への登録を行う。
 
 この設定ファイルには接続先、利用者名、秘密鍵ファイルの場所が記録されるが、秘密鍵そのものは含まれない。ただし、第三者による書き換えを防ぐため、所有者だけが読み書きできる権限を設定する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod 600 ~/.ssh/config
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \subsection{GitHub への SSH 鍵登録}
 
 通常のサーバーとは違って、GitHub には \code{ssh-copy-id} を使わない。GitHub はシェル接続先ではなく、アカウント設定に公開鍵を登録する相手だからである。
 
-GitHub の設定画面にある \code{SSH and GPG keys} へ公開鍵を登録する。GitHub CLI \code{gh} を使う場合は、認証手順の中で既存鍵の登録または新規鍵の作成を選択できる。
+GitHub の設定画面にある \code{SSH and GPG keys} へ公開鍵を登録する。GitHub CLI \code{gh} を使う場合は、次のコマンドで認証を始める。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ gh auth login --git-protocol ssh --web
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-GitHub CLI を使う場合は、既存の鍵を検出してアップロードするか、新しい鍵を作るかを対話的に選べる。GitHub CLI を使わない場合は、\code{cat ~/.ssh/id\_ed25519.pub} で表示した公開鍵を Web 画面へ貼り付ければよい。
+GitHub CLI を使う場合は、既存の鍵を検出してアップロードするか、新しい鍵を作るかを対話的に選べる。GitHub CLI を使わない場合は、\code{cat \textasciitilde/.ssh/id\_ed25519.pub} で表示した公開鍵を Web 画面へ貼り付ければよい。
 
 \section{\code{scp}・\code{rsync} によるファイル転送}
 
@@ -168,14 +142,12 @@ GitHub CLI を使う場合は、既存の鍵を検出してアップロードす
 
 \code{scp} では、ローカルとリモートのどちらを送信元に書くかによって転送方向が決まる。両方向の最小例を次に示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ scp result.csv labserver:~/work/
 $ scp labserver:~/work/result.csv received.csv
 $ cmp result.csv received.csv
 $ echo $?
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目は手元からサーバーへ送信し、2 行目は別名の \code{received.csv} として受信する。最後の比較が 0 なら内容が一致する。ディレクトリ全体を転送する場合は \code{-r} を付ける。
 
@@ -184,11 +156,9 @@ $ echo $?
 
 同じ手元のフォルダーで \code{mkdir -p analysis}、\code{cp result.csv analysis/} を実行してから試す。\code{rsync} は、送信元と転送先の差分を転送し、\code{--partial} で中断時の部分ファイルを保持し、\code{--exclude} で転送対象を除外できる。解析用ディレクトリやコード一式を反復同期する場合は、変更のないファイルも再転送する \code{scp} より転送量を抑えられる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rsync -aP ./analysis/ labserver:~/work/analysis/
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 主なオプションの意味を次に示す。
 
@@ -202,7 +172,6 @@ $ rsync -aP ./analysis/ labserver:~/work/analysis/
 
 次の例では、アーカイブモードと進捗表示を有効にし、転送先で再作成できる仮想環境、キャッシュ、ビルド成果物を除外する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rsync -aPv \
   --exclude='.venv/' \
@@ -211,7 +180,6 @@ $ rsync -aPv \
   --exclude='.mypy_cache/' \
   ./analysis/ labserver:~/work/analysis/
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この例では、依存関係の定義やソースコードから転送先で再生成できる仮想環境、キャッシュ、ビルド成果物を除外し、転送量を減らしている。
 
@@ -220,12 +188,10 @@ $ rsync -aPv \
 
 \code{rsync} では、送信元パスの末尾に \code{/} を付けるかどうかで意味が変わる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rsync -aP analysis labserver:~/work/
 $ rsync -aP analysis/ labserver:~/work/
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 1 行目は \code{analysis} というディレクトリごと送り、2 行目は \code{analysis} の中身を送る。末尾のスラッシュを取り違えると転送先の階層が 1 段ずれる。初回の転送前には、\code{--dry-run} を加えた実行で転送対象を確認できる。
 

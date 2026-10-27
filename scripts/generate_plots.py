@@ -8,6 +8,8 @@ import os
 os.makedirs("../assets/figures", exist_ok=True)
 
 plt.style.use("my_style.mplstyle")
+# Keep labels readable after the figures are fitted to the textbook's text width.
+plt.rcParams.update({"font.size": 14})
 
 def gaussian_pdf(x, mean, sigma):
     return (1.0 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-0.5 * ((x - mean) / sigma)**2)
@@ -15,126 +17,45 @@ def gaussian_pdf(x, mean, sigma):
 def exponential_pdf(x, tau):
     return (1.0 / tau) * np.exp(-x / tau)
 
-# 0. Anatomy example
-from matplotlib.patches import Circle
+# 0. Figure, Axes, Axis, and Artist, with labels outside the data
+from matplotlib.patches import Rectangle
 
-# -----------------------------
-# データ
-# -----------------------------
 x = np.linspace(0.4, 3.6, 300)
-
-# 緩やかな2本の曲線
 y1 = 3.8 - 0.7 * x + 0.15 * (x - 3.2) ** 2
 y2 = 0.9 + 0.35 * x - 0.25 * np.sin(1.2 * x)
-
-# 散布図用
 pts_x = np.array([0.7, 0.9, 1.1, 1.3, 1.5, 1.8, 2.0, 2.2, 2.5, 2.8, 3.1, 3.3])
 pts_y = np.array([2.8, 2.1, 1.9, 2.5, 2.2, 1.7, 2.3, 1.6, 1.9, 1.5, 1.8, 2.0])
-
-# -----------------------------
-# 図
-# -----------------------------
-fig, ax = plt.subplots(figsize=(10, 10), dpi=160)
-fig.patch.set_facecolor("white")
-ax.set_facecolor("white")
-
+fig, ax = plt.subplots(figsize=(10, 8))
+fig.subplots_adjust(left=0.24, right=0.90, bottom=0.25, top=0.80)
+fig.add_artist(Rectangle((0.015, 0.015), 0.97, 0.97, transform=fig.transFigure,
+                         fill=False, edgecolor="0.6", linestyle="--", linewidth=1))
 ax.plot(x, y1, lw=2.5, label="Blue signal")
 ax.plot(x, y2, lw=2.5, label="Orange signal")
-ax.scatter(
-    pts_x, pts_y,
-    s=90, marker="s",
-    facecolors="none", edgecolors="mediumpurple", linewidths=2
-)
-
-ax.set_xlim(0, 4)
-ax.set_ylim(0, 4)
-ax.set_title("Anatomy of a figure", fontsize=22, pad=14)
-ax.set_xlabel("x axis label", fontsize=15)
-ax.set_ylabel("y axis label", fontsize=15)
-
-ax.grid(True, linestyle="--", linewidth=0.7, alpha=0.6)
+ax.scatter(pts_x, pts_y, s=90, marker="s", facecolors="none",
+           edgecolors="mediumpurple", linewidths=2)
+ax.set(xlim=(0, 4), ylim=(0, 4), xlabel="x axis label", ylabel="y axis label")
+ax.set_title("Anatomy of a figure", fontsize=18, pad=10)
 ax.legend(loc="upper right", fontsize=14, frameon=True)
-
-# -----------------------------
-# 座標変換
-# -----------------------------
-def data_to_fig(x, y):
-    """data座標をfigure座標へ変換"""
-    disp = ax.transData.transform((x, y))
-    return fig.transFigure.inverted().transform(disp)
-
-def axes_to_fig(x, y):
-    """axes座標をfigure座標へ変換"""
-    disp = ax.transAxes.transform((x, y))
-    return fig.transFigure.inverted().transform(disp)
-
-# -----------------------------
-# figure上に注釈を置く関数
-# -----------------------------
-def add_circle_label(fig_xy, title, subtitle=None, radius=0.025):
-    # 丸
-    c = Circle(
-        fig_xy, radius=radius,
-        transform=fig.transFigure,
-        fill=False, lw=2.2, ec="#6b79a8"
-    )
-    fig.add_artist(c)
-
-    # タイトル
-    fig.text(
-        fig_xy[0], fig_xy[1] - radius - 0.012,
-        title,
-        ha="center", va="top",
-        fontsize=13, fontstyle="italic", fontweight="bold",
-        color="#0b1e66", backgroundcolor='w'
-    )
-
-    # サブタイトル
-    if subtitle is not None:
-        fig.text(
-            fig_xy[0], fig_xy[1] - radius - 0.036,
-            subtitle,
-            ha="center", va="top",
-            fontsize=11, family="monospace", color="black", backgroundcolor='w'
-        )
-
-# -----------------------------
-# 各要素の位置
-# -----------------------------
-
-# Figure全体の要素
-add_circle_label((0.9, 0.93), "Figure", "plt.figure")
-
-# title の近く
-add_circle_label((0.47, 0.91), "Title", "ax.set_title")
-
-# legend の近く
-add_circle_label((0.81, 0.84), "Legend", "ax.legend")
-
-# grid の中央付近
-add_circle_label(data_to_fig(3.0, 3.0), "Grid", "ax.grid")
-
-# line 上
-add_circle_label(data_to_fig(1.8, np.interp(1.8, x, y1)), "Line", "ax.plot")
-
-# scatter の代表点
-add_circle_label(data_to_fig(2.2, 1.6), "Markers", "ax.scatter")
-
-# x axis label の近く
-add_circle_label((0.50, 0.076), "xlabel", "ax.set_xlabel")
-add_circle_label((0.27, 0.11), "x Axis", "ax.xaxis")
-
-# y axis label の近く
-add_circle_label((0.076, 0.48), "ylabel", "ax.set_ylabel")
-add_circle_label((0.125, 0.25), "y Axis", "ax.yaxis")
-
-# axes 全体
-add_circle_label((0.65, 0.25), "Axes", "fig.subplots")
-
-# spine の右側
-add_circle_label((0.9, 0.24), "Spine", "ax.spines")
-
-fig.savefig("../assets/figures/anatomy_example.pdf")
+ax.grid(True, linestyle="--", linewidth=0.7, alpha=0.6)
+arrow = {"arrowstyle": "->", "color": "0.3", "linewidth": 1.2}
+box = {"facecolor": "white", "edgecolor": "none", "pad": 3}
+ax.annotate("Figure\nplt.figure", xy=(0.025, 0.98), xycoords="figure fraction",
+            xytext=(0.16, 0.94), textcoords="figure fraction", ha="center",
+            va="center", fontsize=14, arrowprops=arrow, bbox=box)
+ax.annotate("Axes\nfig.subplots", xy=(1, 1), xycoords="axes fraction",
+            xytext=(0.82, 0.94), textcoords="figure fraction", ha="center",
+            va="center", fontsize=14, arrowprops=arrow, bbox=box)
+ax.annotate("y Axis\nax.yaxis", xy=(0, 0.25), xycoords="axes fraction",
+            xytext=(0.09, 0.47), textcoords="figure fraction", ha="center",
+            va="center", fontsize=14, arrowprops=arrow, bbox=box)
+ax.annotate("x Axis\nax.xaxis", xy=(0.75, 0), xycoords="axes fraction",
+            xytext=(0.58, 0.08), textcoords="figure fraction", ha="center",
+            va="center", fontsize=14, arrowprops=arrow, bbox=box)
+ax.annotate("Artist (line)\nax.plot", xy=(1.8, np.interp(1.8, x, y1)),
+            xytext=(0.15, 3.3), fontsize=14, arrowprops=arrow, bbox=box)
+ax.annotate("Artist (markers)\nax.scatter", xy=(2.2, 1.6), xytext=(2.4, 0.5),
+            fontsize=14, arrowprops=arrow, bbox=box)
+fig.savefig("../assets/figures/anatomy_example.pdf", bbox_inches="tight", pad_inches=0.1)
 plt.close(fig)
 
 # 1. Basic histogram example
@@ -216,21 +137,21 @@ gauss_data = rng.normal(loc=3.0, scale=0.8, size=3000)
 exp_data = rng.exponential(scale=2.5, size=3000)
 mean, sigma = stats.norm.fit(gauss_data)
 _, tau = stats.expon.fit(exp_data, floc=0)
-fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
 axes[0].hist(gauss_data, bins=40, density=True, alpha=0.7, label="sample")
 x_g = np.linspace(gauss_data.min(), gauss_data.max(), 300)
 axes[0].plot(x_g, stats.norm.pdf(x_g, loc=mean, scale=sigma),
              label=fr"Normal fit: $\mu={mean:.2f},\ \sigma={sigma:.2f}$")
 axes[0].set_xlabel("value")
 axes[0].set_ylabel("Probability density")
-axes[0].legend(loc="upper right", fontsize=10)
+axes[0].legend(loc="lower center", bbox_to_anchor=(0.5, 1.02), fontsize=14)
 axes[1].hist(exp_data, bins=40, density=True, alpha=0.7, label="sample")
 x_e = np.linspace(0, exp_data.max(), 300)
 axes[1].plot(x_e, stats.expon.pdf(x_e, scale=tau),
              label=fr"Exponential fit: $\tau={tau:.2f}$")
 axes[1].set_xlabel("Waiting time [s]")
 axes[1].set_ylabel("Probability density [1/s]")
-axes[1].legend(loc="upper right", fontsize=10)
+axes[1].legend(loc="lower center", bbox_to_anchor=(0.5, 1.02), fontsize=14)
 fig.tight_layout()
 fig.savefig("../assets/figures/distribution_examples.pdf")
 plt.close(fig)
@@ -332,7 +253,7 @@ ax.plot(
 )
 ax.set_xlabel("x")
 ax.set_ylabel("y")
-ax.legend(loc="upper left", fontsize=10)
+ax.legend(loc="upper left", fontsize=12)
 ax.grid(True, alpha=0.3)
 fig.tight_layout()
 fig.savefig("../assets/figures/fit_sigma_comparison.pdf")
@@ -421,12 +342,75 @@ ax1.scatter(lon, lat, s=8)
 ax2.scatter(lon, lat, s=8)
 ax1.set_title("Hammer")
 ax2.set_title("Mollweide")
-ax1.tick_params(labelsize=8)
-ax2.tick_params(labelsize=8)
+ax1.tick_params(labelsize=14)
+ax2.tick_params(labelsize=14)
+ax1.set_longitude_grid(60)
+ax2.set_longitude_grid(60)
+ax1.set_latitude_grid(30)
+ax2.set_latitude_grid(30)
 ax1.grid(True)
 ax2.grid(True)
 fig.tight_layout()
 fig.savefig("../assets/figures/projection_examples.pdf")
+plt.close(fig)
+
+# 9. Basic drawing functions (same arrays as the textbook)
+rng = np.random.default_rng(1234)
+t = np.linspace(0.0, 10.0, 80)
+y = np.sin(t) * np.exp(-t / 12.0)
+y_noise = y + 0.12 * rng.normal(size=t.size)
+y_err = 0.10 + 0.03 * np.cos(t / 2.0) ** 2
+fig, axes = plt.subplots(2, 2, figsize=(10, 7))
+axes[0, 0].plot(t, y, marker="o")
+axes[0, 1].scatter(t, y_noise, c=t, cmap="viridis")
+axes[1, 0].plot(t, y_noise)
+axes[1, 0].axvline(3.0, linestyle="--")
+axes[1, 0].axhline(0.0, linestyle=":")
+axes[1, 1].errorbar(t[::4], y_noise[::4], yerr=y_err[::4], fmt="o")
+for ax, title in zip(axes.flat, ["plot", "scatter", "axvline / axhline", "errorbar"]):
+    ax.set_title(title)
+fig.tight_layout()
+fig.savefig("../assets/figures/basic_plot_types_example.pdf")
+plt.close(fig)
+
+# 10. Mosaic layout (same arrays and panel names as the textbook)
+values = np.random.default_rng(42).normal(size=2000)
+x = np.linspace(0.0, 10.0, 150)
+y_top = np.exp(-x / 5.0) * np.cos(2.0 * x)
+x_sc = np.linspace(0.0, 1.0, 25)
+y_sc = x_sc**2 + 0.05 * np.sin(20.0 * x_sc)
+layout = [["A", "A"], ["B", "C"]]
+fig, axes = plt.subplot_mosaic(layout, figsize=(10, 6))
+axes["A"].plot(x, y_top)
+axes["B"].hist(values, bins=40)
+axes["C"].scatter(x_sc, y_sc)
+for key, title in [("A", "line plot"), ("B", "histogram"), ("C", "scatter")]:
+    axes[key].set_title(f"{key}: {title}")
+fig.tight_layout()
+fig.savefig("../assets/figures/subplot_mosaic_example.pdf")
+plt.close(fig)
+
+# 11. Reference chart for the markers, line styles, and colors in the text
+fig, axes = plt.subplots(1, 3, figsize=(10, 4.8))
+groups = [(["o", "s", "^", "D", "x"], "Markers"),
+          (["-", "--", ":", "-."], "Line styles"),
+          ([f"C{i}" for i in range(6)], "Default colors")]
+for column, (labels, title) in enumerate(groups):
+    ax = axes[column]
+    for row, label in enumerate(labels):
+        if column == 0:
+            ax.plot([0.5], [row], marker=label, markersize=9)
+        elif column == 1:
+            ax.plot([0.1, 0.9], [row, row], linestyle=label, color="C0", linewidth=2)
+        else:
+            ax.plot([0.1, 0.9], [row, row], color=label, linewidth=3)
+    ax.set(xlim=(0, 1), ylim=(len(labels) - 0.5, -0.5), title=title)
+    ax.set_xticks([])
+    ax.set_yticks(range(len(labels)), labels)
+    ax.tick_params(axis="y", length=0)
+    ax.grid(False)
+fig.tight_layout()
+fig.savefig("../assets/figures/style_reference_example.pdf")
 plt.close(fig)
 
 print("Figures generated successfully.")

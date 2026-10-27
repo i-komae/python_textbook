@@ -5,13 +5,11 @@
 
 本章の例を試すには、第~\ref{chap:setup}~章で用意した仮想環境を使う。ターミナル（Windows では Ubuntu の端末）で次を入力し、本章用のフォルダーへ移動する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ source ~/analysis_practice/.venv/bin/activate
 $ mkdir -p ~/analysis_practice/io
 $ cd ~/analysis_practice/io
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 以降、ファイル名だけで指定した保存先や入力元は、このフォルダー内を指す。本文の Python コードは、別のファイル名を指定した例と章末課題を除き、\code{read\_sample.py} へ先頭から順に追記する。保存後、端末で \code{python read\_sample.py} を実行し、追加した処理の結果を表示例と比べる。
 
@@ -21,15 +19,12 @@ $ cd ~/analysis_practice/io
 
 Python でテキストファイルを読むときの基本は \code{open}\index{open@\code{open}|textbf} である。さらに \code{with} を組み合わせると、処理が正常に終わった場合だけでなく、途中で例外が発生した場合にもファイルが閉じられる。まず、次の 3 行をテキストファイル \code{sample.txt} として保存する。保存先は、端末で \code{pwd} を実行して表示される作業フォルダーとする。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={sample.txt}]
 run 1: 12.4
 run 2: 10.1
 run 3: 14.8
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
-\noindent\begin{minipage}{\linewidth}
 次を同じ作業フォルダーの \code{read\_sample.py} へ保存し、端末で \code{python read\_sample.py} を実行する。
 
 \begin{lstlisting}[language=Python]
@@ -47,7 +42,6 @@ run 1: 12.4
 run 2: 10.1
 run 3: 14.8
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 第 1 引数の \code{path} は開くファイルの場所、\code{"r"} は読み込みモード、\code{encoding="utf-8"} は文字を UTF-8 として解釈する指定である。\code{as f} によって、開いたファイルを表すオブジェクトを変数 \code{f} で参照する。\code{for line in f} は全行を一度にメモリへ置かず、1 行ずつ取り出す。
 
@@ -59,7 +53,6 @@ run 3: 14.8
 
 \code{pathlib.Path}\index{pathlib@\code{pathlib}|textbf} は、パス要素の結合、存在確認、名前や拡張子の取得をメソッドと演算子で提供する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from pathlib import Path
 
@@ -69,28 +62,23 @@ path = root / "sample.txt"
 print(path.exists())
 print(path.name)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 この例でファイルが存在する場合、出力は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 True
 sample.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{exists()} はパスが存在するかを真偽値で返し、\code{name} は末尾のファイル名だけを返す。\code{root / "sample.txt"} の \code{/} は除算ではなく、\code{Path} オブジェクトに対してパス要素を結合する演算子である。例えば \code{Path("data") / "2026" / "04" / "sample.txt"} とすれば、複数階層のパスも同じ方法で組み立てられる。
 
 \code{Path} の \code{/} 演算子は、OS ごとの区切り文字を直接記述せずにパス要素を結合する。\code{name}、\code{parent}、\code{with\_suffix()} は、それぞれ末尾名、親ディレクトリ、拡張子の置換を表す。\code{pathlib} を用いて出力ディレクトリとファイルパスを作る例を次に示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 outdir = Path("output")
 outdir.mkdir(parents=True, exist_ok=True)
 outfile = outdir / "summary.txt"
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{parents=True} は \code{output} より上位の未作成ディレクトリも必要に応じて作る指定であり、\code{exist\_ok=True} は既存のディレクトリをエラーにしない指定である。ただし、同名の通常ファイルが存在する場合はエラーになる。
 
@@ -100,7 +88,6 @@ outfile = outdir / "summary.txt"
 
 ファイルオブジェクトは、\code{read}、\code{readline}、\code{write} などのメソッドを持つ。ファイル全体を文字列として取得する処理と、現在位置から 1 行を取得する処理を区別する。Python 公式チュートリアル~\cite{python_tutorial} に基づく最小例を次に示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 with open(path, "r", encoding="utf-8") as f:
     first_line = f.readline()
@@ -108,7 +95,6 @@ with open(path, "r", encoding="utf-8") as f:
 with open("out.txt", "w", encoding="utf-8") as f:
     f.write("hello\n")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{"w"} は書き込みモードであり、同名ファイルがあれば内容を置き換える。この例は実習用の \code{out.txt} を作る。\code{readline()} の返り値には末尾の改行が含まれる。\code{write()} は書き込んだ文字数を返すが、改行を自動では補わないため、行末が必要なら \verb|"\n"| を明示する。この例を実行すると、\code{out.txt} の内容は \code{hello} と改行になる。
 
@@ -118,7 +104,6 @@ with open("out.txt", "w", encoding="utf-8") as f:
 
 複数のフォルダーに分かれたファイルをまとめて探すには、\code{glob.glob}\index{glob@\code{glob}|textbf} を使う。次を \code{find\_files.py} に保存し、\code{python find\_files.py} で実行する。前半で練習用の 3 ファイルを作り、後半でその名前を探して表示する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import glob
 from pathlib import Path
@@ -133,18 +118,15 @@ print(f"count = {len(paths)}")
 for path in paths[:3]:
     print(path)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 このコードで作った 3 ファイルについて、出力は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 count = 3
 data/2025/run01.txt
 data/2026/run01.txt
 data/2026/run02.txt
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 パターン中の \code{*} は同じ階層の任意の文字列、\code{**} は \code{recursive=True} と組み合わせたときに複数階層へ一致する。\code{paths[:3]} は確認のために先頭 3 件だけを表示するスライスであり、処理対象を 3 件へ制限しているわけではない。
 
@@ -155,7 +137,6 @@ data/2026/run02.txt
 \subsection{Python での標準入出力}
 \index{sys@\code{sys}|textbf}\index{ひょうじゅんにゅうりょく@標準入力!Python}\index{ひょうじゅんしゅつりょく@標準出力!Python}\index{ひょうじゅんえらーしゅつりょく@標準エラー出力!Python}
 Python では、\code{sys.stdin}、\code{sys.stdout}、\code{sys.stderr} が三つの標準的な経路に対応する~\cite{python_sys}。\code{print()} は既定で標準出力へ書き込み、\code{file=} で別の経路を指定できる。次の内容を \code{uppercase.py} に保存する。
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import sys
 
@@ -165,13 +146,10 @@ for line in sys.stdin:
     n_lines += 1
 print(f"Processed {n_lines} lines", file=sys.stderr)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 端末で次を実行する。
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python uppercase.py < sample.txt > converted.txt 2> conversion.log
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 変換した本文は \code{converted.txt} に、処理行数は \code{conversion.log} に保存される。\code{input()} は標準入力から 1 行を読み、末尾の改行を除いた文字列を返す関数である。引数に案内文を渡すと標準出力へ表示するため、データをパイプで受け渡すプログラムでは案内文の混入に注意する。
 
 \section{文字列データの解析と整形}
@@ -182,17 +160,14 @@ CSV\index{csv@CSV|textbf} は、列をカンマで区切って保存する表の
 
 次の内容を、現在の作業フォルダーへ \code{events.csv} という名前で保存する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={events.csv}]
 time,mag,place
 2026-04-04T12:00:00Z,3.2,"Offshore, Japan"
 2026-04-04T12:05:00Z,2.8,Tokyo
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 次のコードは別のファイル \code{read\_csv.py} へ保存し、\code{python read\_csv.py} で実行する。その後の本文の例は再び \code{read\_sample.py} へ追記する。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import csv
 from pathlib import Path
@@ -206,16 +181,13 @@ with path.open("r", encoding="utf-8", newline="") as f:
 print(first_row["time"])
 print(first_row["mag"])
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 先頭データ行の \code{time} と \code{mag} が文字列として読み込まれるため、実行結果は次の通りである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 2026-04-04T12:00:00Z
 3.2
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{DictReader}\index{dictreader@\code{DictReader}|textbf} は 1 行目を列名として読み、その後の各行を辞書として返す。\code{next(reader)} は次のデータ行を 1 件取り出す。この例では最初のデータ行を \code{first\_row} に入れる。したがって \code{first\_row["mag"]} のように列名で値を取り出せる。\code{newline=""} は、テキスト層で改行変換を行わず、CSV モジュールに改行処理を任せる指定である。
 
@@ -223,9 +195,8 @@ print(first_row["mag"])
 
 \subsection{文字列から値への変換と結果の出力}
 
-多くの表形式データは、1 行の中に複数の列が並ぶ形で保存されている。テキストとして読んだだけでは、まだ単なる文字列である。そこから列に分け、整数や浮動小数点数へ変換して初めて解析に使える。たとえば空白区切りの 1 行を分解する例は次のようになる。
+表形式のテキストでは、1 行の中に複数の列が並ぶ。数値計算を行うには、その行を列に分け、必要な項目を文字列から整数や浮動小数点数へ変換する。次は、空白区切りの 1 行から値を取り出す例である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 line = "17 2026-04-04 12:34:56 15.2 OK"
 columns = line.split()
@@ -238,15 +209,12 @@ status = columns[4]
 
 print(record_id, date_text, time_text, value, status)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{split()} は引数を省略すると連続する空白を一つの区切りとして扱う。\code{int()} と \code{float()} が文字列を数値へ変換するため、出力は次のようになる。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 17 2026-04-04 12:34:56 15.2 OK
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 入力仕様に基づいて、各列の型と単位を決める。識別子の先頭の 0 や、日時文字列の元表現を保持する必要がある場合は、数値へ変換せず文字列として扱う。変換処理を読み込み直後の一か所にまとめると、文字列と数値が混在する範囲を限定できる。
 
@@ -254,7 +222,6 @@ print(record_id, date_text, time_text, value, status)
 
 複数行のテキストを出力ファイルへ順に書き込む例を示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 lines = ["run_id count mean", "1 120 3.42", "2 118 3.37"]
 
@@ -262,15 +229,13 @@ with open("summary.txt", "w", encoding="utf-8") as f:
     for line in lines:
         f.write(line + "\n")
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 このコードの実行後、\code{summary.txt} には \code{lines} の 3 要素が 1 行ずつ保存される。\code{"w"} は、ファイルが存在すれば内容を空にしてから書き、存在しなければ新しく作るモードである。これに対して \code{"a"} は既存内容の末尾へ追記する。既存ファイルを上書きしてよいのか、別名で保存すべきかは、実験ノートやレポートの再現性にも関わる。出力ファイル名の設計も解析手順に含まれる。
 
 \subsubsection{文字列整形}
 
-f-string（フォーマット済み文字列リテラル）は、文字列内に値と表示書式を埋め込む。
+f文字列（f-string）は、文字列内に値と表示書式を埋め込む書き方である。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 mean = 3.14159
 sigma = 0.27182
@@ -278,7 +243,6 @@ sigma = 0.27182
 text = f"mean = {mean:.3f}, sigma = {sigma:.3f}"
 print(text)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 実行結果は \code{mean = 3.142, sigma = 0.272} となる。\code{f} は固定小数点形式、\code{.3} は小数点以下の桁数を指定する。これは表示上の丸めであり、変数 \code{mean} と \code{sigma} に保存された値そのものは変化しない。
 
@@ -292,7 +256,6 @@ Python 公式チュートリアル~\cite{python_tutorial} では、f-string の�
 
 結果や設定を構造化して保存したいときは、JSON\index{json@JSON|textbf} を利用できる。テキストとして内容を確認でき、Python では標準ライブラリ \code{json} で扱える。保存と読み込みの基本形を次に示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import json
 
@@ -306,15 +269,12 @@ with open("config.json", "r", encoding="utf-8") as f:
 
 print(loaded_config)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{indent=2} は、入れ子の階層ごとに 2 個の空白で字下げし、要素ごとに改行した JSON を保存する指定である。読み戻した結果は次のように表示される。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 {'threshold': 3.5, 'bins': 40}
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 JSON のオブジェクトは Python では辞書として復元される。
 
@@ -324,7 +284,6 @@ JSON は、キーと値、配列、入れ子構造をテキストとして保持
 
 Python オブジェクトをそのまま保存する形式として、\code{pickle}\index{pickle@\code{pickle}|textbf} がある。拡張子には慣習的に \code{.pkl} が使われる。辞書、リスト、NumPy 配列、学習済みモデル、中間集計結果などを作業用に一時保存する例を次に示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 import pickle
 
@@ -339,16 +298,13 @@ with open("result.pkl", "rb") as f:
 print(loaded_result["mean"])
 print(loaded_result["values"])
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 復元後の出力は次の通りである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 3.14
 [1.0, 2.0, 3.0]
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{"wb"} と \code{"rb"} の \code{b} はバイナリモードを意味する。JSON と違って内容をテキストとして確認できないが、Python オブジェクトの構造を保存できる。ただし、Python やライブラリのバージョンが異なると復元できるとは限らず、他言語との交換にも向かない。長期保存や共同研究の交換形式ではなく、生成環境と入力を記録したローカルな作業用キャッシュとして用いる。
 
@@ -362,7 +318,6 @@ UTC（協定世界時）は、世界共通の時刻の基準である。地域�
 
 日付や時刻を比較し、差を計算する場合は、文字列を時刻オブジェクトまたは数値表現へ変換する。標準ライブラリの \code{datetime}\index{datetime@\code{datetime}|textbf} を用いた例を次に示す。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[language=Python]
 from datetime import datetime, timezone
 
@@ -374,7 +329,6 @@ unix_time = dt.timestamp()
 print(dt)
 print(unix_time)
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \code{strptime()} の第 1 引数は変換する文字列、第 2 引数は文字列の形式である。\code{\%Y}、\code{\%m}、\code{\%d} は年、月、日を表し、\code{\%H}、\code{\%M}、\code{\%S} は時、分、秒、\code{\%f} はマイクロ秒を表す。この例では、日時と \code{1775306096.123456} が表示される。\code{timestamp()} は Unix epoch（1970 年 1 月 1 日 00:00:00 UTC）からの秒数を返すが、タイムゾーン情報を持たない \code{datetime} の解釈は実行環境のローカルタイムゾーンに依存する。UTC のログでは、タイムゾーンを明示するか、後述する Astropy の \code{Time} を使う必要がある。
 
@@ -410,36 +364,27 @@ CSV はテキストとして内容を確認できる一方、読み込み時に�
 
 Parquet は保存形式の名前であり、\code{pyarrow} は pandas が Parquet の読み書きに利用できる実装の一つである。\code{read\_parquet()} と \code{to\_parquet()} の実行には、pandas が対応するエンジンを利用できる環境が必要となる。
 
-\clearpage
 \section{章末課題：CSV を読み、要約を保存する}
 
 端末で \code{mkdir -p \textasciitilde/earthquake\_practice}、\code{cd \textasciitilde/earthquake\_practice}、\code{mkdir -p raw scripts results} の順に実行する。コードは \code{scripts/io\_exercises.py} へ保存し、\code{earthquake\_practice} から \code{python scripts/io\_exercises.py} で実行する。仮想環境は本章冒頭と同じものを有効にしておく。
 
 入力は、第~\ref{chap:shell}~章で取得した \code{raw/usgs\_global\_2024\_01.csv}、または次を保存した \code{raw/usgs\_example.csv} とする。後者は動作確認用の人工データである。
 
-\par\addvspace{6pt}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={raw/usgs\_example.csv}]
 time,latitude,longitude,mag,place
 2024-01-01T00:00:00.000Z,35.0,140.0,3.2,"Offshore, Japan"
 2024-01-01T00:05:00.000Z,36.0,141.0,,Japan
 2024-01-01T00:12:30.000Z,34.5,139.5,2.8,Tokyo
 \end{lstlisting}
-\end{minipage}\par\addvspace{6pt}
 
 \begin{enumerate}
-\item \begin{minipage}[t]{\linewidth}
-\textbf{CSV の要約を JSON へ保存する。}
+\item \textbf{CSV の要約を JSON へ保存する。}
 入力 CSV を \code{csv.DictReader} で読み、データ件数、先頭と末尾の \code{time}、\code{mag} の空欄数と空欄以外の最小値・最大値を求めよ。数値は \code{float} に変換し、有効な値がなければ最小値と最大値を \code{None} にする。\code{results/usgs\_summary.json} に保存して読み戻し、項目と値を表にせよ。人工データでは 3 件、最小 2.8、最大 3.2、空欄 1 件となる。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{途中結果を保存して読み戻す。}
+\item \textbf{途中結果を保存して読み戻す。}
 同じ入力の先頭 200 件までを読み、\code{time}、\code{latitude}、\code{longitude}、\code{mag} を持つ辞書のリストを作れ。列名の行は件数に含めない。\code{results/usgs\_preview.pkl} へ保存し、読み戻した件数と先頭の辞書を示せ。保存前との一致も確かめる。人工データでは 3 件となる。Pickle は自分で作ったファイルだけを読む。
-\end{minipage}
 
-\item \begin{minipage}[t]{\linewidth}
-\textbf{発展：数値として使えない行を記録する。}
+\item \textbf{発展：数値として使えない行を記録する。}
 人工 CSV のコピーに、\code{mag} だけを \code{abc}、\code{NaN}、\code{inf} とした行を一つずつ追加せよ。空欄、\code{float} に変換できない値、変換できても有限でない値を \code{math.isfinite()} で判定して別々に数え、\code{results/skipped\_rows.txt} へ保存する。有限な値だけで 1 問目の最小値・最大値を再計算し、追加前後で比較せよ。
-\end{minipage}
 
 \end{enumerate}
