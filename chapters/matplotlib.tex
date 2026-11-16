@@ -174,7 +174,7 @@ fig.savefig("heatmap_colorbar_example.pdf")
 plt.close(fig)
 \end{lstlisting}
 
-\code{meshgrid(x, y)} は、横方向の座標 \code{x} と縦方向の座標 \code{y} を格子状に組み合わせる。ここでは、その格子上に中央ほど値が大きい配列 \code{image} を作っている。\code{imshow()} の軸には、既定では座標 \code{x}、\code{y} の値ではなく、配列の列番号と行番号が表示される。
+\code{meshgrid(x, y)} は、横方向の座標 \code{x} と縦方向の座標 \code{y} を格子状に組み合わせる。ここでは、その格子上に中央ほど値が大きい配列 \code{image} を作っている。\code{imshow()} の軸には、既定では座標 \code{x}、\code{y} の値ではなく、配列の列番号と行番号が表示される。\code{hist2d()} は度数配列やビン境界など 4 要素のタプルを返すため、4 番目の要素 \code{h[3]}（描画オブジェクト）を \code{colorbar()} へ渡している。
 
 図~\ref{fig:heatmap-colorbar-example} の左は \code{imshow()} によるヒートマップ、右は \code{hist2d()} と \code{LogNorm} を使った 2 次元ヒストグラムである。\code{cmap=} は値から色への対応\index{からーまっぷ@カラーマップ}を定め、\code{fig.colorbar(...)} は色に対応する値と、その量の名前を図中に示す。
 
@@ -528,12 +528,12 @@ Matplotlib では、\code{Figure}、\code{Axes}、\code{Axis} が異なる階層
 \item[\code{Figure}] 図全体である。1 つの PDF や PNG、1 つの表示ウィンドウに相当する。\code{savefig}、\code{suptitle}、図全体の凡例や colorbar などは Figure のメソッドまたは構成要素である。
 \item[\code{Axes}] データを描く 1 つのパネルである。\code{plot}、\code{hist}、\code{scatter}、\code{set\_xlabel}、\code{legend} などは Axes のメソッドとして呼び出す。
 \item[\code{Axis} (\code{x Axis, y Axis})] 目盛り、目盛りラベル、スケールを管理する部品である。通常は \code{ax.set\_xscale("log")} や \code{ax.set\_xlim(...)} のように Axes のメソッドで設定するが、内部には \code{ax.xaxis} と \code{ax.yaxis} がある。
-\item[\code{Artist}] 図の中に描かれる要素の総称である。線は \code{Line2D}、文字は \code{Text}、凡例は \code{Legend}、ヒストグラムの棒は \code{Rectangle} という Artist として管理される。代表的な要素を次に示す。
+\item[\code{Artist}] 図の中に描かれる要素の総称である。線は \code{Line2D}、文字は \code{Text}、凡例は \code{Legend}、ヒストグラムの棒は \code{Rectangle} という Artist クラスで管理される。図中の主な役割（要素）を次に示す。
   \begin{itemize}
-    \item \code{Title}, \code{Legend}: 図のタイトル、および各系列を示す凡例。
-    \item \code{Grid}, \code{Spine}: グリッド線と、座標系を囲む枠線。
-    \item \code{Line}, \code{Markers}: 折れ線や散布図の点。
-    \item \code{xlabel}, \code{ylabel}: x軸・y軸のラベル。
+    \item タイトル・凡例（Title, Legend）: 図のタイトル、および各系列を示す凡例。
+    \item グリッド線・枠線（Grid, Spine）: グリッド線と、座標系を囲む枠線。
+    \item 線・点（Line, Markers）: 折れ線や散布図の点。
+    \item 軸ラベル（xlabel, ylabel）: x軸・y軸のラベル。
   \end{itemize}
 \end{description}
 
@@ -595,9 +595,9 @@ Legend
 1
 \end{lstlisting}
 
-最後の \code{1} は、この Figure の中に Axes が 1 枚だけ入っていることを表す。もし \code{plt.subplots(2, 2)} と書けば、Figure は 1 つのままで、Axes が 4 枚入る。
+最後の \code{1} は、この Figure の中に Axes が 1 枚だけ入っていることを表す。もし \code{plt.subplots(2, 2)} と書けば、Figure は 1 つのままで、Axes が 4 枚入る。なお、\code{ax.plot()} は線のリストを返すため、\code{line,} とカンマを付けて先頭の 1 本だけを取り出している。
 
-\code{Artist} は線だけを指す名称ではない。タイトルや軸ラベルは \code{Text}、ヒストグラムの各棒は \code{Rectangle} として管理される。次のコードは、それぞれの返り値の型を表示する。
+\code{Artist} は線だけを指す名称ではない。タイトルや軸ラベルは \code{Text}、ヒストグラムの各棒は \code{Rectangle} として管理される。\code{ax.hist()} は（度数配列, ビン境界, 棒のコンテナ）の 3 要素のタプルを返すため、次のコードでは \code{[2]} で棒のコンテナを取り出している。それぞれの返り値の型を表示する例を示す。
 
 \begin{lstlisting}[language=Python]
 import matplotlib.pyplot as plt
@@ -823,7 +823,7 @@ plt.close(fig)
 \midrule
 \code{"C0"} など & \code{"C3"} & 既定の color cycle を順に使う \\
 名前付き色 & \code{"black"}, \code{"tab:blue"} & 手早く書ける \\
-16 進数 & \code{"\#d62728"} & RGB の色を明示的に固定する場合 \\
+16 進数 & \code{"\#d62728"} & 赤(R)・緑(G)・青(B)の強さを各 2 桁の 16 進数（00～FF）で固定する場合 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -889,7 +889,7 @@ Categorical & \code{tab10} & 離散的な系列の識別 \\
 
 解析テーマごとに作図スクリプトが増えると、各 Python ファイルの先頭へ同じ設定辞書をコピーする方法は保守しにくい。Matplotlib では、共通の描画設定を \code{.mplstyle} 形式のスタイル設定ファイルへ分離し、まとめて読み込める。
 
-作業ディレクトリに置く \code{my\_style.mplstyle} の記述例を次に示す。
+作業ディレクトリに置く \code{my\_style.mplstyle} の記述例を次に示す。次の内容を作業フォルダーの \code{my\_style.mplstyle} へ保存してから、後のコードを実行する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 font.family: serif
@@ -991,6 +991,7 @@ y = [1.0, 4.0, 2.0, 5.0]
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.plot(x_str, y, marker="o")
 fig.savefig("string_axis.pdf")
+plt.close(fig)
 
 fig, ax = plt.subplots(figsize=(6, 4))
 ax.plot([float(value) for value in x_str], y, marker="o")
@@ -1043,7 +1044,7 @@ dt = np.array([1.0, 4.0, 12.0, 60.0, 180.0, 900.0, 3600.0])
 横軸を経度、縦軸を緯度、点の色をマグニチュードとする散布図を作れ。軸ラベル、カラーバー、「人工データ 5 件」と分かるタイトルを付け、\code{figures/usgs\_global\_scatter.pdf} に保存する。図を開き、最も規模の大きい地震の位置を色から読み取って述べよ。実カタログを使う場合は、タイトルに実際の対象期間・地域を記す。
 
 \item \textbf{同じ発生間隔を二つの目盛りで描く。}
-\code{dt} のヒストグラムを 2 枚並べよ。左は 0～3600 秒の 600 秒幅ビンと線形の横軸、右は \code{np.logspace(0, np.log10(3600), 15)} が作る 14 個の対数ビンと対数の横軸を使う。境界配列の最後の値は 3600.0 に設定する。縦軸はいずれも件数の対数表示とし、単位、ビンの決め方、表示範囲を記す。0 以下と範囲外の値は別に数え、図を \code{figures/interval\_comparison.pdf} に保存せよ。短い間隔と長い間隔が、それぞれどちらの図で区別しやすいかを述べよ。
+\code{dt} のヒストグラムを 2 枚並べよ。左は 0～3600 秒の 600 秒幅ビンと線形の横軸、右は \code{np.logspace(0, np.log10(3600), 15)} が作る 14 個の対数ビンと対数の横軸を使う。対数計算の浮動小数点誤差で \code{3600.0} が最後のビンから漏れないよう、境界配列の最後の値は \code{3600.0} に設定する。縦軸はいずれも件数の対数表示とし、単位、ビンの決め方、表示範囲を記す。0 以下と範囲外の値は別に数え、図を \code{figures/interval\_comparison.pdf} に保存せよ。短い間隔と長い間隔が、それぞれどちらの図で区別しやすいかを述べよ。
 
 \item \textbf{発展：地震の位置へ海岸線を重ねる。}
 Cartopy を使える環境では、下のコードを同じファイルへ追記せよ。\code{figures/usgs\_map.pdf} を開き、点と海岸線の位置関係を示す。\code{projection} が地図側、\code{transform} が入力した経度・緯度側の座標系を指定することを確認せよ。初回は海岸線データの取得に通信が必要な場合がある。
@@ -1063,8 +1064,8 @@ ax.set_extent([122, 154, 20, 50], crs=ccrs.PlateCarree())
 ax.coastlines()
 points = ax.scatter(longitude, latitude, c=magnitude,
                     transform=ccrs.PlateCarree())
-ax.set_xlabel("longitude [deg]")
-ax.set_ylabel("latitude [deg]")
+# GeoAxes では既定で通常の軸ラベルが描画されないため、目盛りラベルを出す場合は gridlines を使う
+ax.gridlines(draw_labels=True)
 fig.colorbar(points, ax=ax, label="magnitude")
 fig.savefig("figures/usgs_map.pdf")
 plt.close(fig)

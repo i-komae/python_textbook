@@ -9,7 +9,7 @@ Python のプロファイル結果から計算量の多い関数を特定した�
 
 プロファイルによって少数の関数が処理時間を支配すると確認でき、NumPy などの既存実装では置き換えられない場合に、その関数を C++ で実装することを検討する。入出力、可視化、ワークフロー制御を Python に残し、計算量の多い関数だけを pybind11 で公開すれば、C++ との境界を限定できる。
 
-具体例として、時刻列 \code{times} に対して、差の絶対値が \code{window} 以下となる全ペアの数を C++ で数える。この二重ループの計算量は、時刻数を \(N\) とすると \(O(N^2)\) である。
+具体例として、時刻列 \code{times} に対して、差の絶対値が \code{window} 以下となる全ペアの数を C++ で数える（アルゴリズム比較や複雑な条件への拡張を見据えた最小例として、単純な二重ループを C++ で実装する）。この二重ループの計算量は、時刻数を \(N\) とすると \(O(N^2)\) である。
 
 \section{pybind11 パッケージの最小構成}
 \index{scikit-build-core@scikit-build-core|textbf}
@@ -17,7 +17,7 @@ Python のプロファイル結果から計算量の多い関数を特定した�
 
 C++ のコンパイル環境がある端末で行う。ターミナルで \code{c++ --version} を実行して確認する。macOS で未導入の場合は、付録~\ref{app:environment}~で説明した Xcode Command Line Tools を用意する。
 
-仮想環境が有効な端末では \code{deactivate} で解除する。この付録には Python に加えて C++ の基本的な知識を使う。次の命令で作業フォルダーへ移動する。以降は、この場所を基準に各ファイルを作る。
+仮想環境が有効な端末では \code{deactivate} で解除する。この付録では Python に加えて C++ の基本的な知識を使う。次の命令で作業フォルダーへ移動する。以降は、この場所を基準に各ファイルを作る。
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ mkdir -p ~/fastcount_cpp/cpp ~/fastcount_cpp/src/fastcount_cpp
 $ cd ~/fastcount_cpp
@@ -127,7 +127,7 @@ PYBIND11_MODULE(_core, m) {
 }
 \end{lstlisting}
 
-\code{pybind11/stl.h} をインクルードすると、Python の list から \code{std::vector<double>} への変換が有効になる。したがって、この関数の呼び出し側に明示的な変換コードは不要である。負の時間窓は定義に反するため、C++ 側で \code{std::invalid\_argument} を送出する。この例の時刻は浮動小数点数で表せる範囲の相対時刻である。総合課題の Unix 時刻付近で ns の差を扱う場合は、整数ナノ秒による API と検出器の条件を別に実装する。\code{double} へ変換してから差を取る方法では、元の時間分解能を失い得る。
+\code{pybind11/stl.h} をインクルードすると、Python の list から \code{std::vector<double>} への変換が有効になる。したがって、この関数の呼び出し側に明示的な変換コードは不要である。負の時間窓は定義に反するため、C++ 側で \code{std::invalid\_argument} を送出する。この例の時刻は浮動小数点数で表せる範囲の相対時刻である。総合課題の Unix 時刻付近で ns の差を扱う場合は、整数ナノ秒による API と検出器の条件を別に実装する。\code{double} へ変換してから差を取る方法では、有効桁数（約 15～17 桁）の限界により元の時間分解能を失い得る。
 
 \subsection{Python から公開する API}
 
@@ -151,7 +151,6 @@ __all__ = ["count_pairs_within_window"]
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv python pin 3.12
 $ uv sync
-$ uv pip install -e .
 $ uv run python -c "from fastcount_cpp import count_pairs_within_window; print(count_pairs_within_window([0.0, 0.1, 0.4], 0.25))"
 \end{lstlisting}
 
@@ -163,7 +162,7 @@ $ uv run python -c "from fastcount_cpp import count_pairs_within_window; print(c
 
 これは、\code{(0.0, 0.1)} だけが窓 \code{0.25} の中に入っていることを表している。
 
-純粋な Python ファイルとは異なり、C++ ソースの変更はコンパイル済み拡張へ自動では反映されない。\code{bindings.cpp} を編集した後は、\code{uv pip install -e .} を再実行して拡張モジュールを再ビルドする。
+純粋な Python ファイルとは異なり、C++ ソースの変更はコンパイル済み拡張へ自動では反映されない。\code{bindings.cpp} を編集した後は、\code{uv sync --reinstall-package fastcount\_cpp} を再実行して拡張モジュールを再ビルドする。
 
 \section{Python からの C++ 関数の呼び出し}
 

@@ -11,7 +11,7 @@ SSH（Secure Shell）は、離れた計算機との通信を暗号化し、そ�
 
 \subsection{サーバーへの接続}
 
-初回の SSH 接続では、接続先のホスト鍵の指紋（fingerprint）を確認することがある。これは接続先サーバーを識別するためのもので、自分の認証用公開鍵とは異なる。管理者など信頼できる経路から得た指紋と照合して登録する。ホスト鍵が変わったという警告では、再構築などの理由を確認してから更新する。詳細は OpenSSH の資料~\cite{openssh_manual} を参照する。
+初回の SSH 接続では、\code{Are you sure you want to continue connecting (yes/no/[fingerprint])?} のように接続先のホスト鍵の指紋（fingerprint）を確認する表示が出ることがある。これは接続先サーバーを識別するためのもので、自分の認証用公開鍵とは異なる。管理者など信頼できる経路から得た指紋と照合し、正しければ \code{yes} を入力して登録する。ホスト鍵が変わったという警告では、再構築などの理由を確認してから更新する。詳細は OpenSSH の資料~\cite{openssh_manual} を参照する。
 \index{ssh command@\code{ssh}|textbf}
 
 最も基本的な形は次である。
@@ -39,13 +39,13 @@ $ ssh -p 2222 user@server.example.jp
 $ ssh-keygen -t ed25519 -C "your_email@example.com"
 \end{lstlisting}
 
-保存先の質問では Enter を押すと既定の場所になる。続くパスフレーズの質問では鍵を保護する文字列を入力し、確認のためもう一度同じ文字列を入力する。入力中に画面へ文字が出なくても受け付けている。既定の保存先を選ぶと、\code{\textasciitilde/.ssh/id\_ed25519} が秘密鍵、\code{\textasciitilde/.ssh/id\_ed25519.pub} が公開鍵になる。サーバーへ登録するのは \code{.pub} が付いた公開鍵だけである。\code{.pub} が付かない秘密鍵は共有しない。
+\code{-t ed25519} は鍵の暗号方式（Ed25519）の指定、\code{-C} は鍵の末尾に付ける識別用コメントである。保存先の質問では Enter を押すと既定の場所になる。続くパスフレーズの質問では鍵を保護する文字列を入力し、確認のためもう一度同じ文字列を入力する。入力中に画面へ文字が出なくても受け付けている。既定の保存先を選ぶと、\code{\textasciitilde/.ssh/id\_ed25519} が秘密鍵、\code{\textasciitilde/.ssh/id\_ed25519.pub} が公開鍵になる。サーバーへ登録するのは \code{.pub} が付いた公開鍵だけである。\code{.pub} が付かない秘密鍵は共有しない。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -l ~/.ssh
 \end{lstlisting}
 
-秘密鍵を他の利用者も読める設定にしていると、SSH 接続が拒否されることがある。その場合は次のように直す。
+秘密鍵を他の利用者も読める設定にしていると、SSH 接続が拒否されることがある。正しく設定されていれば \code{.ssh} は \code{drwx------}（所有者のみ読み書き・移動可）、秘密鍵は \code{-rw-------}（所有者のみ読み書き可）となる。異なる場合は次のように直す（\code{700}・\code{600}・\code{644} はそれぞれ所有者・グループ・その他の権限を 3 桁の数値で表したもの）。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ chmod 700 ~/.ssh
@@ -83,7 +83,7 @@ $ cat ~/.ssh/id_ed25519.pub
 \subsection{\code{ssh-agent} による秘密鍵の管理}
 \index{ssh-agent@\code{ssh-agent}|textbf}
 
-パスフレーズ付きの鍵を使う場合は、\code{ssh-agent} に読み込ませておくと毎回の入力を減らせる。
+パスフレーズ付きの鍵を使う場合は、\code{ssh-agent} に読み込ませておくと毎回の入力を減らせる。1 行目の \code{eval "\$(ssh-agent -s)"} は、\code{ssh-agent} を起動して接続に必要な環境変数を現在のシェルへ反映する命令である。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ eval "$(ssh-agent -s)"
@@ -149,7 +149,7 @@ $ cmp result.csv received.csv
 $ echo $?
 \end{lstlisting}
 
-1 行目は手元からサーバーへ送信し、2 行目は別名の \code{received.csv} として受信する。最後の比較が 0 なら内容が一致する。ディレクトリ全体を転送する場合は \code{-r} を付ける。
+1 行目は手元からサーバーへ送信し、2 行目は別名の \code{received.csv} として受信する。\code{cmp} は 2 つのファイルをバイト単位で比較し、\code{\$?} は直前のコマンドの終了ステータスを返す。最後の比較結果が 0 なら内容が一致する。ディレクトリ全体を転送する場合は \code{-r} を付ける。
 
 \subsection{差分同期に \code{rsync} を用いる理由}
 \index{rsync@\code{rsync}|textbf}
@@ -193,6 +193,6 @@ $ rsync -aP analysis labserver:~/work/
 $ rsync -aP analysis/ labserver:~/work/
 \end{lstlisting}
 
-1 行目は \code{analysis} というディレクトリごと送り、2 行目は \code{analysis} の中身を送る。末尾のスラッシュを取り違えると転送先の階層が 1 段ずれる。初回の転送前には、\code{--dry-run} を加えた実行で転送対象を確認できる。
+1 行目は \code{analysis} というディレクトリごと送るため転送先に \code{\textasciitilde/work/analysis/result.csv} が作られ、2 行目は \code{analysis} の中身だけを送るため \code{\textasciitilde/work/result.csv} が作られる。末尾のスラッシュを取り違えると転送先の階層が 1 段ずれる。初回の転送前には、\code{--dry-run} を加えた実行で転送対象を確認できる。
 
 転送条件やオプションの詳細は rsync の公式マニュアル~\cite{rsync_manual} で確認できる。

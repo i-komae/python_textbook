@@ -10,7 +10,7 @@
 
 ターミナルで \code{mkdir -p \textasciitilde/regex\_practice} を実行し、\code{cd \textasciitilde/regex\_practice} で移動する。
 
-\code{source \textasciitilde/analysis\_practice/.venv/bin/activate} で、第~\ref{chap:setup}~章の仮想環境を有効にする。
+\code{source \textasciitilde/analysis\_practice/.venv/bin/activate} で、第~\ref{chap:setup}~章の仮想環境を有効にする（標準ライブラリの \code{re} のみを使うため、他の Python 3 環境でも実行できる）。
 
 次のコードを \code{prepare\_regex.py} へ保存する。端末で \code{python prepare\_regex.py} を実行すると、本付録の検索例で使う短いファイルができる。
 
@@ -32,7 +32,7 @@ for name, content in files.items():
     Path(name).write_text(content, encoding="utf-8")
 \end{lstlisting}
 
-以下の \code{grep} と \code{awk} は、このフォルダーの端末で実行する。Python の例は、同じ場所の \code{regex\_example.py} へ先頭から順に追記し、\code{python regex\_example.py} で試す。
+以下の \code{grep} と \code{awk} は、このフォルダーの端末で実行する。Python の例は、同じ場所の \code{regex\_example.py} へ試したい例を記述し、\code{python regex\_example.py} で試す。
 
 \section{文字列パターンを表す正規表現}
 
@@ -80,7 +80,7 @@ $
 \end{tabular}
 \end{table}
 
-表~\ref{tab:wildcard-vs-regex} は、二つの記法における \code{*} の意味を比較している。\code{grep "*.txt"} では、引用符内の \code{*} をシェルではなく \code{grep} の正規表現エンジンが解釈する。正規表現の \code{*} は直前の要素の 0 回以上の反復を表すため、この位置では「任意の文字列」にならず、エラーとなる場合もある。シェルによるファイル名展開にはワイルドカード、文字列内容の照合には正規表現を用いる。
+表~\ref{tab:wildcard-vs-regex} は、二つの記法における \code{*} の意味を比較している。\code{grep "*.txt" filelist.txt} のように指定すると、引用符内の \code{*} をシェルではなく \code{grep} の正規表現エンジンが解釈する。正規表現の \code{*} は直前の要素の 0 回以上の反復を表すため、この位置では「任意の文字列」にならず、エラーとなる場合もある。シェルによるファイル名展開にはワイルドカード、文字列内容の照合には正規表現を用いる。
 
 正規表現は文字列の形を検査する。日付や時刻のパターンに一致しても、2 月 30 日や 99 時などが有効な日時になるとは限らない。暦や時刻の値域は \code{datetime} などでも検証する。
 
@@ -140,7 +140,9 @@ colou?r
 量指定子を使うと、1 個以上の空白、任意指定の符号、任意指定の小数部など、要素の出現回数をパターンに記述できる。
 
 \begin{lstlisting}[language=Python]
-pattern = re.compile(r"^[+-]?\d+(\.\d+)?$")
+import re
+
+pattern = re.compile(r"[+-]?\d+(\.\d+)?")
 
 for text in ["12", "-3.5", "+0.25", "1.2.3"]:
     print(text, bool(pattern.fullmatch(text)))
@@ -169,6 +171,8 @@ $ grep -E '^(WARN|ERROR)' run.log
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ grep '^det_[AB]$' detector_ids.txt
 $ awk '$1 ~ /^det_[AB]$/ {print $1, $3}' summary.txt
+det_A 12.4
+det_B 9.8
 \end{lstlisting}
 
 \code{awk} の \code{\$1 \textasciitilde\ /.../} は、第 1 列が正規表現に一致するかを判定する。列ごとに異なる照合条件や出力列を指定する場合は、列を直接参照できる \code{awk} を用いる。

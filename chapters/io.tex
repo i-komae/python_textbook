@@ -278,7 +278,7 @@ print(loaded_config)
 
 JSON のオブジェクトは Python では辞書として復元される。
 
-JSON は、キーと値、配列、入れ子構造をテキストとして保持する。一方、列ごとの型や圧縮方式を持たないため、大規模な表の反復読み込みには Parquet などの列指向形式も検討する。
+JSON は、キーと値、配列、入れ子構造をテキストとして保持する。一方、列ごとの型や圧縮方式を持たないため、大規模な表の反復読み込みには後述する Parquet などの列指向形式も検討する。
 
 \subsubsection{Pickle / PKL}
 
@@ -330,7 +330,7 @@ print(dt)
 print(unix_time)
 \end{lstlisting}
 
-\code{strptime()} の第 1 引数は変換する文字列、第 2 引数は文字列の形式である。\code{\%Y}、\code{\%m}、\code{\%d} は年、月、日を表し、\code{\%H}、\code{\%M}、\code{\%S} は時、分、秒、\code{\%f} はマイクロ秒を表す。この例では、日時と \code{1775306096.123456} が表示される。\code{timestamp()} は Unix epoch（1970 年 1 月 1 日 00:00:00 UTC）からの秒数を返すが、タイムゾーン情報を持たない \code{datetime} の解釈は実行環境のローカルタイムゾーンに依存する。UTC のログでは、タイムゾーンを明示するか、後述する Astropy の \code{Time} を使う必要がある。
+\code{strptime()} の第 1 引数は変換する文字列、第 2 引数は文字列の形式である。\code{\%Y}、\code{\%m}、\code{\%d} は年、月、日を表し、\code{\%H}、\code{\%M}、\code{\%S} は時、分、秒、\code{\%f} はマイクロ秒を表す。この例では、日時と \code{1775306096.123456} が表示される。\code{timestamp()} は Unix epoch（1970 年 1 月 1 日 00:00:00 UTC）からの秒数を返すが、タイムゾーン情報を持たない \code{datetime} の解釈は実行環境のローカルタイムゾーンに依存する。UTC のログでは、タイムゾーンを明示する。天文分野などの特殊な時刻系を扱う場合は、後述する Astropy の \code{Time} を使うこともできる。
 
 時刻差を保持する単位は、必要な時間分解能と値域に基づいて選ぶ。別の表現へ変換する場合は、基準時刻、時刻系、単位、丸め方法を記録する。
 
@@ -382,9 +382,9 @@ time,latitude,longitude,mag,place
 入力 CSV を \code{csv.DictReader} で読み、データ件数、先頭と末尾の \code{time}、\code{mag} の空欄数と空欄以外の最小値・最大値を求めよ。数値は \code{float} に変換し、有効な値がなければ最小値と最大値を \code{None} にする。\code{results/usgs\_summary.json} に保存して読み戻し、項目と値を表にせよ。人工データでは 3 件、最小 2.8、最大 3.2、空欄 1 件となる。
 
 \item \textbf{途中結果を保存して読み戻す。}
-同じ入力の先頭 200 件までを読み、\code{time}、\code{latitude}、\code{longitude}、\code{mag} を持つ辞書のリストを作れ。列名の行は件数に含めない。\code{results/usgs\_preview.pkl} へ保存し、読み戻した件数と先頭の辞書を示せ。保存前との一致も確かめる。人工データでは 3 件となる。Pickle は自分で作ったファイルだけを読む。
+同じ入力の先頭 200 件までを読み、\code{time}、\code{latitude}、\code{longitude}、\code{mag} を持つ辞書のリストを作れ（\code{latitude}、\code{longitude}、\code{mag} は 1 問目と同様に \code{float} へ変換し、空欄の \code{mag} は \code{None} とする）。列名の行は件数に含めない。\code{results/usgs\_preview.pkl} へ保存し、読み戻した件数と先頭の辞書を示せ。保存前との一致も確かめる。人工データでは 3 件となる。Pickle は自分で作ったファイルだけを読む。
 
 \item \textbf{発展：数値として使えない行を記録する。}
-人工 CSV のコピーに、\code{mag} だけを \code{abc}、\code{NaN}、\code{inf} とした行を一つずつ追加せよ。空欄、\code{float} に変換できない値、変換できても有限でない値を \code{math.isfinite()} で判定して別々に数え、\code{results/skipped\_rows.txt} へ保存する。有限な値だけで 1 問目の最小値・最大値を再計算し、追加前後で比較せよ。
+人工 CSV のコピーに、\code{mag} だけを \code{abc}、\code{NaN}、\code{inf} とした行を一つずつ追加せよ。空欄、\code{float} に変換できない値、変換できても有限でない値（\code{import math} して \code{math.isfinite()} で判定する）を別々に数え、各区分の件数を \code{results/skipped\_rows.txt} へ保存する。有限な値だけで 1 問目の最小値・最大値を再計算し、追加前後で比較せよ。
 
 \end{enumerate}

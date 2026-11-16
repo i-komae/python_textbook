@@ -28,7 +28,7 @@ $ less uv-install.sh
 $ sh uv-install.sh
 \end{lstlisting}
 
-導入後は、新しい端末を開いて \code{uv --version} を実行する。\code{uv 0.x.y} のように番号が出れば、次へ進める。番号自体は導入時期によって変わる。新しい端末でも見つからない場合は、\code{source "\$HOME/.local/bin/env"} を実行して、もう一度確認する。導入時に別の保存先が案内された場合は、その案内に従う。
+導入後は、新しい端末を開いて \code{uv --version} を実行する。\code{uv 0.x.y} のように番号が出れば、次へ進める。番号自体は導入時期によって変わる。新しい端末でも見つからない場合は、\code{source "\$HOME/.local/bin/env"} をその端末で実行して、もう一度確認する（設定ファイルへの追記が未反映のときの確認用であり、永続化の方法はインストール時の案内に従う）。導入時に別の保存先が案内された場合は、その案内に従う。確認後、作業に使った \code{uv-install.sh} は \code{rm uv-install.sh} で削除してよい。
 
 \subsection{作業用フォルダーと Python を用意する}
 
@@ -43,7 +43,7 @@ $ source .venv/bin/activate
 $ python --version
 \end{lstlisting}
 
-\code{uv venv} は、使用する Python と追加ライブラリをまとめる作業用の環境を \code{.venv} に作る。指定した Python が手元になければ、uv が取得する。\code{--seed} は後で使う pip もこの環境へ入れる指定である。\code{source} の行は、この端末でその環境を使い始める命令である。
+\code{uv venv} は、使用する Python と追加ライブラリをまとめる作業用の環境を \code{.venv} に作る。指定した Python が手元になければ、uv が取得する。\code{--seed} は後で使う pip もこの環境へ入れる指定である。\code{source} の行は、この端末でその環境を使い始める命令である。有効になると、通常はプロンプトの先頭に \code{(.venv)} と表示される。
 
 最後に \code{Python 3.12.x} と表示されることを確認する。\code{x} の部分は更新によって変わる。このように作業ごとに用意する環境を「仮想環境」\index{かそうかんきょう@仮想環境|textbf}という。
 
@@ -131,7 +131,7 @@ tqdm & 処理の進み具合の表示 \\
 $ python -m pip install numpy pandas polars matplotlib scipy astropy tqdm
 \end{lstlisting}
 
-途中には取得状況やライブラリ名が表示される。最後にエラーが出ずに入力待ちへ戻ったら、次の命令で、導入した機能を Python から読み込めるか確認する。\code{import} はライブラリを使うための読み込み命令である。
+途中には取得状況やライブラリ名が表示され、回線や環境によっては完了まで数分かかることがある。最後にエラーが出ずに入力待ちへ戻ったら、次の命令で、導入した機能を Python から読み込めるか確認する。\code{import} はライブラリを使うための読み込み命令である。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python -c "import numpy, pandas, polars, matplotlib, scipy, astropy, tqdm; print('OK')"

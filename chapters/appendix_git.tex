@@ -81,7 +81,7 @@ $ git init
 $ git status
 \end{lstlisting}
 
-\code{git status} は、未追跡、変更済み、コミット待ちのファイルを一覧できる。編集やコミットの前後で実行すると、各変更がどの段階にあるかを確認できる。
+\code{git status} は、未追跡、変更済み、コミット予定のファイルを一覧できる。編集やコミットの前後で実行すると、各変更がどの段階にあるかを確認できる。
 
 \subsection{編集、確認、記録の流れ}
 \index{git status@\code{git status}|textbf}
@@ -109,9 +109,9 @@ $ git log --oneline
 \code{git status} の表示では、少なくとも次の 3 種類を区別する。
 
 \begin{itemize}
-\item 未追跡（untracked）: まだ Git が追跡していない新規ファイル
-\item 変更済み（modified）: 追跡中だが、変更内容をまだ \code{add} していないファイル
-\item コミット予定（changes to be committed）: \code{add} 済みで、次のコミットへ入る変更
+\item 未追跡（\code{Untracked files:}）: まだ Git が追跡していない新規ファイル
+\item 変更済み（\code{Changes not staged for commit:}）: 追跡中だが、変更内容をまだ \code{add} していないファイル
+\item コミット予定（\code{Changes to be committed:}）: \code{add} 済みで、次のコミットへ入る変更
 \end{itemize}
 
 \code{git status} の出力から、各ファイルが未追跡、変更済み、コミット予定のいずれに該当するかを判別できる。
@@ -151,7 +151,7 @@ dist/
 \subsubsection{すでに追跡済みなら \code{git rm --cached} が必要}
 \index{git rm cached@\code{git rm --cached}|textbf}
 
-\code{.gitignore} は「これから追跡しない」ための設定である。すでに一度コミットしたファイルには、そのままでは効かない。次の命令は、列挙した生成物を既に追跡している場合の例である。まだ追跡していなければ実行する必要はない。
+\code{.gitignore} は「これから追跡しない」ための設定である。すでに一度コミットしたファイルには、そのままでは効かない。次の命令は、列挙した生成物を既に追跡している場合の例である（まだ追跡していないパスが含まれるとエラーになるため、実際に追跡されている対象だけを指定するか \code{--ignore-unmatch} を付ける）。まだ追跡していなければ実行する必要はない。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git rm --cached -r .venv __pycache__ build
@@ -209,7 +209,7 @@ $ git push -u origin main
 
 \subsubsection{接続先の登録と最初の push}
 
-以下は、空のリポジトリを作った場合の手順である。直前の補足の命令を既に実行した場合は、接続先の確認だけを行う。作業場所は \code{\textasciitilde/analysis\_work} とし、\code{.gitignore} を作った場合は、先に \code{git add .gitignore} と \code{git commit -m "Add ignore rules"} で記録する。
+以下は、空のリポジトリを作った場合の手順である。直前の補足の命令を既に実行した場合は、接続先の確認だけを行う。作業場所は \code{\textasciitilde/analysis\_work} とし、\code{git push} する前に少なくとも 1 回は \code{git commit} が済んでいる状態にする（\code{.gitignore} を作った場合は、先に \code{git add .gitignore} と \code{git commit -m "Add ignore rules"} で記録する）。
 
 対象のローカルリポジトリの一番上へ移動し、GitHub が表示する URL を \code{origin} という名前で登録する。例の \code{owner/project.git} は、自分が作成したリポジトリの URL に置き換える。既定ブランチを \code{main} とする例を次に示す。
 
@@ -246,7 +246,7 @@ $ git remote -v
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ git pull --ff-only
-$ git push origin main
+$ git push
 \end{lstlisting}
 
 \code{git pull --ff-only} は、ローカルブランチをリモートブランチまで早送りできる場合にだけ更新する。ローカルとリモートの両方に異なるコミットがあり履歴が分岐している場合は停止するため、意図しないマージコミットを作らない。

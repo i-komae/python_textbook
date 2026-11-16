@@ -154,7 +154,7 @@ Python では、\code{"} や \code{'} で挟まれたものを文字列として
 
 文字列では、\code{split()}\index{もじれつ@文字列!split@\code{split()}|textbf}、\code{replace()}\index{もじれつ@文字列!replace@\code{replace()}|textbf}、\code{strip()}\index{もじれつ@文字列!strip@\code{strip()}|textbf} のような操作が、ファイル読み込みの前処理で頻繁に現れる。\code{split("\_")} は \code{\_} の位置で文字列を分ける。\code{strip()} は、行末の改行と前後の空白を取り除く。カンマ区切りの表には引用符の規則もあるため、ファイルを読む章では \code{csv} を使う。
 
-f文字列\index{もじれつ@文字列!fもじれつ@f文字列|textbf}を用いると、変数の値と書式指定を文字列へ埋め込める。解析コードでは、ログ、図の保存名、結果ファイル名、単位付きの数値表示などに利用する。
+f文字列\index{もじれつ@文字列!fもじれつ@f文字列|textbf}を用いると、変数の値と書式指定（例えば小数点以下 2 桁にする \code{f"\{3.1415:.2f\}"} の結果 \code{'3.14'}）を文字列へ埋め込める。解析コードでは、ログ、図の保存名、結果ファイル名、単位付きの数値表示などに利用する。
 
 \section{リスト・タプル・辞書・集合}
 
@@ -231,7 +231,7 @@ c = a.copy()
 c.append(4)
 print(a)                       # [1, 2, 3]
 \end{lstlisting}
-\code{copy()} は外側のリストを複製する浅いコピーである。例えば、リストの中にさらにリストを入れたものを「入れ子のリスト」という。入れ子になったリストなどの要素は共有される。タプルは要素の差し替えができないが、その中にあるリスト自体の変更までは禁止しない。
+\code{copy()} は外側のリストを複製する浅いコピーである。例えば、\code{[[1, 2], [3, 4]]} のようにリストの中にさらにリストを入れたものを「入れ子のリスト」という。\code{copy()} だけでは内側のリストまでは複製されず、元のリストと要素を共有する（タプルも要素の差し替えはできないが、要素として入っているリスト自体の変更までは禁止しない）。
 
 \subsection{リストのメソッド}\index{めそっど@メソッド|textbf}\index{append@\code{append()}|textbf}\index{sort@\code{sort()}|textbf}\index{sorted@\code{sorted()}|textbf}\index{pop@\code{pop()}|textbf}
 
@@ -280,7 +280,7 @@ None
 
 \subsection{インデックスとスライス}\index{いんでっくす@インデックス|textbf}\index{そえじ@添字|see{インデックス}}\index{すらいす@スライス|textbf}\index{ふのそえじ@負の添字}
 
-解析では、配列や文字列の一部を取り出す操作が頻出する。Python では、\code{[]} の中に位置を指定して要素を取り出す。この位置を表す整数をインデックスと呼ぶ。\code{:} を用いて範囲を切り出す操作はスライスと呼ばれる。
+解析では、配列や文字列の一部を取り出す操作が頻出する。Python では、\code{[]} の中に位置を指定して要素を取り出す。この位置を表す整数をインデックス（添字）と呼ぶ。\code{:} を用いて範囲を切り出す操作はスライスと呼ばれる。
 
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
 >>> values = [10, 20, 30, 40, 50]
@@ -387,6 +387,7 @@ True
 \code{for} 文は、複数の値を順に取り出して同じ処理を適用する構文である。
 
 \begin{lstlisting}[language=Python, numbers=none, xleftmargin=2\zw]
+>>> labels = ["A", "B_detector", "C", "D"]
 >>> for label in labels:
 ...     print(label)
 ...
@@ -489,7 +490,7 @@ def hhmmss_to_seconds(hhmmss):
     return hour * 3600 + minute * 60 + second
 \end{lstlisting}
 
-この関数は短いが、「文字列で与えられた時刻を秒へ変換する」という役割が明確である。ここから先は、複数行の処理をファイルへ保存して実行する。対話モードを使っていた場合は \code{exit()} で終了し、端末に戻る。例えば次の内容を \code{time\_conversion.py} という名前で保存すれば、ターミナルで \code{python3 time\_conversion.py} と実行できる。
+この関数は短いが、「文字列で与えられた時刻を秒へ変換する」という役割が明確である。ここから先は、複数行の処理をファイルへ保存して実行する。対話モードを使っていた場合は \code{exit()} で終了し、端末に戻る。例えば次の内容を \code{time\_conversion.py} という名前で保存すれば、ターミナルで \code{python time\_conversion.py} と実行できる。
 
 \begin{lstlisting}[language=Python, title=time\_conversion.py]
 def hhmmss_to_seconds(hhmmss):
@@ -502,7 +503,7 @@ print(hhmmss_to_seconds("013015"))
 \end{lstlisting}
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
-$ python3 time_conversion.py
+$ python time_conversion.py
 5415
 \end{lstlisting}
 
@@ -645,9 +646,9 @@ import した場合は関数定義だけが読み込まれ、\code{main()} は�
 \subsection{実行時に入力先や出力先を指定する}
 \label{sec:command-line-args}
 
-入力ディレクトリや出力先が実行ごとに変わる解析スクリプトでは、それらをコードへ埋め込まず、コマンドライン引数として受け取る。Python 標準ライブラリの \code{argparse} を用いた最小構成を次に示す。
+入力ディレクトリや出力先が実行ごとに変わる解析スクリプトでは、それらをコードへ埋め込まず、コマンドライン引数として受け取る。Python 標準ライブラリの \code{argparse} を用いた最小構成を次に示す。このコードは \code{analyze.py} として保存する。
 
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, title=analyze.py]
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -658,7 +659,7 @@ args = parser.parse_args()
 print(args.input_dir, args.outdir)
 \end{lstlisting}
 
-このコードは \code{analyze.py} として保存する。ここでは受け取った文字列を表示するだけなので、入力フォルダーの作成やファイルの読み込みは行わない。実行例を次に示す。
+ここでは受け取った文字列を表示するだけなので、入力フォルダーの作成やファイルの読み込みは行わない（数値として受け取りたい引数には \code{add\_argument(..., type=float)} のように型を指定できる）。実行例を次に示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python analyze.py data/run001
@@ -671,7 +672,6 @@ data/run001 results/figures
 
 \subsection{短い関数と値の展開}
 \index{lambda@\code{lambda}|textbf}\index{あんぱっく@アンパック|textbf}
-この例の \code{key=} は、並べ替えに使う値を取り出す関数を指定する。\code{lambda row: row[1]} は各組の 2 番目の数値を返すため、1.0 の組、3.0 の組の順に並ぶ。\code{lambda 引数: 式} は、式の値を返す名前のない短い関数を作る。複数の処理が必要な場合は \code{def} で名前付きの関数を定義する。
 \begin{lstlisting}[language=Python]
 rows = [("A", 3.0), ("B", 1.0)]
 print(sorted(rows, key=lambda row: row[1]))
@@ -679,7 +679,7 @@ print(sorted(rows, key=lambda row: row[1]))
 name, value = rows[0]
 print(name, value)                  # A 3.0
 \end{lstlisting}
-\code{name, value = rows[0]} は、二つの要素を二つの変数へ分けるアンパックである。また、関数呼び出しの \code{f(*params)} は、リストやタプルの要素を位置引数として展開する。例えば \code{params = (2, 3)} なら \code{f(*params)} は \code{f(2, 3)} と同じ呼び出しになる。
+この例の \code{key=} は、並べ替えに使う値を取り出す関数を指定する。\code{lambda row: row[1]} は各組の 2 番目の数値を返すため、1.0 の組、3.0 の組の順に並ぶ。\code{lambda 引数: 式} は、式の値を返す名前のない短い関数を作る。複数の処理が必要な場合は \code{def} で名前付きの関数を定義する。\code{name, value = rows[0]} は、二つの要素を二つの変数へ分けるアンパックである。また、関数呼び出しの \code{f(*params)} は、リストやタプルの要素を位置引数として展開する。例えば \code{def add(a, b): return a + b} に対して \code{params = (2, 3)} とすると、\code{add(*params)} は \code{add(2, 3)} と同じ呼び出しになる。
 
 \section{例外・docstring・命名・設定値}
 
@@ -717,7 +717,7 @@ def read_table(path):
 
 この例の \code{...} は処理を省略した印であり、表を読む機能はまだ実装していない。ここでは関数の説明を表示する方法だけを確認する。
 
-\code{help(read\_table)} を実行すると、この説明を後から確認できる。例えば要約だけの docstring なら、次のように表示される。
+\code{help(read\_table)} を実行すると、この説明を後から確認できる（端末環境によってはページャで表示されるため、その場合は \code{q} キーで戻る）。例えば要約だけの docstring なら、次のように表示される。
 
 \begin{lstlisting}[language=Python]
 help(read_table)
@@ -730,7 +730,7 @@ read_table(path)
     空白区切りの表を読み、各行を辞書として返す。
 \end{lstlisting}
 
-docstring はコメントと異なり、実行時に \code{help()} から参照できる。\code{関数名.\_\_doc\_\_} でも読み取れる。このように、値や関数に付随し、ドットと項目名で取り出す情報を属性という。公開関数には、入力、返り値、例外条件を記録する。
+docstring はコメントと異なり、実行時に \code{help()} から参照できる。\code{関数名.\_\_doc\_\_} でも読み取れる。このように、値や関数に付随し、ドットと項目名で取り出す情報を属性という。他のファイルからも使う公開関数には、入力、返り値、例外条件を記録する。
 
 1 行の要約だけでは使い方を説明できない関数では、引数、返り値、例外条件を複数行の docstring に記述する。
 
@@ -770,7 +770,7 @@ PEP 8 のうち、本書の例で一貫して用いる規則を次に示す。
 
 \begin{itemize}
 \item タブではなく 4 スペースによるインデント
-\item 関数名・変数名には \code{snake\_case}、クラス名には \code{CamelCase}、定数には \code{UPPER\_CASE} という命名規則
+\item 関数名・変数名には \code{snake\_case}、データや処理をひとまとめにした型（クラス）の名前には \code{CamelCase}、定数には \code{UPPER\_CASE} という命名規則
 \item 演算子（\code{=}, \code{+}, \code{-} など）の前後と、カンマの後ろの空白
 \item トップレベルの関数定義・クラス定義を区切る空行
 \item 過度に長い行の回避（PEP 8 の目安は 79 文字）
@@ -811,7 +811,7 @@ except ValueError:
     print("数値へ変換できませんでした")
 \end{lstlisting}
 
-例えば \code{text = "abc"} のような文字列に対して \code{float(text)} を呼ぶと、\code{ValueError} が起きる。すべての例外を \code{except:} で捕捉すると、本来停止すべき不具合まで隠れる。捕捉する例外を明示し、失敗した入力の記録、処理を中止する条件、除外して継続する条件をあらかじめ定める。
+例えば \code{text = "abc"} のような文字列に対して \code{float(text)} を呼ぶと、\code{ValueError} が起きる。例外の種類を書かずに \code{except:} と書くとすべての例外を捕捉してしまい、本来停止すべき不具合まで隠れる。捕捉する例外を明示し、失敗した入力の記録、処理を中止する条件、除外して継続する条件をあらかじめ定める。
 
 入力が関数の条件を満たさない場合は、\code{raise} で例外を発生させる。
 \begin{lstlisting}[language=Python]
@@ -841,12 +841,12 @@ events = [
 \code{for} で 4 件を調べ、\code{if} で信号値が \code{None} でない記録を選べ。「検出器名、時刻、信号値」の順で表示し、残った 3 件と除いた 1 件を示せ。
 
 \item \textbf{検出器ごとの平均を求める。}
-指定した検出器の信号値の平均を返す関数 \code{mean\_signal(events, detector)} を作れ。欠測は除き、有効な値が一つもない場合は \code{ValueError} を出す。A と B について、使った件数と平均を表にせよ。平均は A が 13.75、B が 9.8 となる。引数、返り値、例外条件を docstring に書く。
+指定した検出器の信号値の平均を返す関数 \code{mean\_signal(events, detector)} を作れ。欠測は除き、有効な値が一つもない場合は \code{ValueError} を出す。A と B について、使った件数（データまたは出力側で別途数えた値）と平均を表にせよ。平均は A が 13.75、B が 9.8 となる。引数、返り値、例外条件を docstring に書く。
 
 \item \textbf{隣り合う記録の時刻差を求める。}
 信号の欠測の有無にかかわらず、4 件すべての \code{time\_ns} を取り出せ。小さい順に並べ、後の時刻から直前の時刻を引く。結果 \code{[180, 120, 210]} を ns 単位で示し、記録が 4 件でも差は 3 個になる理由を述べよ。
 
 \item \textbf{端末から選ぶ条件を指定する。}
-同じフォルダーに \code{filter\_events.py} を作り、上のデータも入れる。検出器名を位置引数、信号値の下限を \code{--min-signal}（既定値 0.0）で受け取り、欠測を除いて条件に合う記録を表示せよ。\code{python filter\_events.py A --min-signal 13} では時刻 1300 の 1 件だけが残る。下限 0 と 13 で実行し、命令、件数、残った記録を表にせよ。
+同じフォルダーに \code{filter\_events.py} を作り、上のデータも入れる。検出器名を位置引数、信号値の下限を \code{--min-signal}（\code{type=float}、既定値 0.0）で受け取り、欠測を除いて条件に合う記録を表示せよ。\code{python filter\_events.py A --min-signal 13} では時刻 1300 の 1 件だけが残る。下限 0 と 13 で実行し、命令、件数、残った記録を表にせよ。
 
 \end{enumerate}

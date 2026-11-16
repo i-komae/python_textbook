@@ -6,7 +6,7 @@
 \section{既存の Python から仮想環境を作る}
 \index{venv@\code{venv}|textbf}
 
-使いたい Python が既に入っている場合は、その Python から標準ライブラリの venv でもプロジェクト専用の仮想環境\index{かそうかんきょう@仮想環境|textbf}を作れる。ここでは別の作業用フォルダーを作り、第~\ref{chap:setup}~章の環境と区別する。仮想環境が有効な場合は、\code{deactivate} で解除してから進める。
+使いたい Python が既に入っている場合は、第~\ref{chap:setup}~章で扱った \code{uv} だけでなく、標準ライブラリの \code{venv} でもプロジェクト専用の仮想環境\index{かそうかんきょう@仮想環境|textbf}を作れる。ここでは別の作業用フォルダーを作り、第~\ref{chap:setup}~章の環境と区別する。仮想環境が有効な場合は、\code{deactivate} で解除してから進める。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ cd ~
@@ -35,7 +35,7 @@ Python 3.11.11
 pip 25.0 from /Users/student/analysis_venv/.venv/lib/python3.11/site-packages/pip
 \end{lstlisting}
 
-\code{command -v} の結果から、\code{python} と \code{pip} が \code{.venv/bin} で見つかることが分かる。これは、\code{source .venv/bin/activate} が \code{\$PATH} の先頭に \code{.venv/bin} を追加するためである。Python 本体の確認には、\code{python -c "import sys; print(sys.executable)"} も利用できる。表示したバージョンとパスは説明用の例である。
+\code{command -v}（指定したコマンドの実体パスを調べる命令）の結果から、\code{python} と \code{pip} が \code{.venv/bin} で見つかることが分かる。これは、\code{source .venv/bin/activate} が、シェルがコマンドを探すディレクトリ一覧である \code{\$PATH} の先頭に \code{.venv/bin} を追加するためである。Python 本体の確認には、\code{python -c "import sys; print(sys.executable)"} も利用できる。表示したバージョンとパスは説明用の例である。
 
 この方式で作った環境にも、第~\ref{sec:setup-libraries}~節の \code{python -m pip install ...} でライブラリを追加できる。作業を終えたら \code{deactivate} で環境の利用を終える。
 
@@ -58,7 +58,7 @@ $ cd analysis_uv
 $ uv init --package --python 3.11
 \end{lstlisting}
 
-上の \code{--package} の指定では、コマンドラインアプリケーションとして配布できる構成を作る。\code{ls -a} と \code{find src -maxdepth 2 -type f} で確認できる主要な項目を次に示す。外側に既存の Git リポジトリがある場合など、Git 関連項目の有無は実行場所によって異なる。
+上の \code{--package} の指定では、コマンドラインアプリケーションとして配布できる構成を作る。\code{ls -a} と \code{find src -maxdepth 2 -type f} で確認できる主要な項目をツリー形式で整理すると、次のようになる。外側に既存の Git リポジトリがある場合など、Git 関連項目の有無は実行場所によって異なる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={analysis\_uv/ の初期構成}]
 .git/
@@ -93,7 +93,7 @@ src/
 $ uv add numpy pandas polars matplotlib scipy astropy tqdm
 \end{lstlisting}
 
-\code{uv add} を実行すると、依存関係の解決結果が要約表示される。例えば次のようになる。
+\code{uv add} を実行すると、依存関係の解決結果が要約表示される。出力の一部を省略した説明用の例は次のようになる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 Resolved 18 packages in 0.42s
@@ -105,7 +105,7 @@ Installed 7 packages in 0.31s
 
 \code{Resolved ... packages} は、直接指定したライブラリだけでなく、その依存先も含めて必要な集合を決めたことを表す。\code{Installed ... packages} は実際に環境へ追加した数であり、その下の \code{+} 付き行は今回入った主なパッケージ名とバージョンである。
 
-\code{uv sync} は、\code{pyproject.toml} とロックファイルに基づいて環境をそろえる。\code{uv init} 後にまだ環境を同期していなければ、この実行時に \code{.venv} と \code{uv.lock} が作られる。
+\code{uv sync} は、\code{pyproject.toml} とロックファイルに基づいて環境をそろえる。他の計算機から取得した直後など、\code{uv init} 後にまだ環境を同期していなければ、この実行時に \code{.venv} と \code{uv.lock} が作られる。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ uv sync
@@ -261,7 +261,7 @@ $ exec "$SHELL"
 
 \code{pyenv init --install} は、実行中のシェルを判別し、推奨される初期化コードを対応する起動時設定ファイルへ追加する。実行前に変更内容が表示された場合は、対象のファイルと追記内容を確認する。bash で環境変数 \code{BASH\_ENV} が \code{.bashrc} を指している特殊な構成では自動設定を避け、pyenv の公式文書にある手動設定を用いる。
 
-\code{exec "\$SHELL"} は、いま動いているシェルを、\code{\$SHELL} が示すシェルプログラムで置き換えるコマンドである。\code{SHELL} には通常、ログインシェルとして設定されたプログラムのパスが入り、\code{zsh} なら \code{/bin/zsh}、\code{bash} なら \code{/bin/bash} となる。ただし、\code{SHELL} と現在実行中の対話シェルが常に一致するとは限らない。現在のシェルは \code{ps -p \$\$ -o comm=} でも確認できる。ここでは \code{\textasciitilde/.zshrc} に追記した内容をすぐ反映させるために実行している。ターミナルをいったん閉じて開き直しても同じ目的は果たせる。
+\code{exec "\$SHELL"} は、いま動いているシェルを、\code{\$SHELL} が示すシェルプログラムで置き換えるコマンドである。\code{SHELL} には通常、ログインシェルとして設定されたプログラムのパスが入り、\code{zsh} なら \code{/bin/zsh}、\code{bash} なら \code{/bin/bash} となる。ただし、\code{SHELL} と現在実行中の対話シェルが常に一致するとは限らない。現在のシェルは \code{ps -p \$\$ -o comm=} でも確認できる。ここでは \code{\textasciitilde/.zshrc} や \code{\textasciitilde/.bashrc} などの設定ファイルに追記した内容をすぐ反映させるために実行している。ターミナルをいったん閉じて開き直しても同じ目的は果たせる。
 
 シェルを起動し直した後、次の 2 コマンドで \code{pyenv} のバージョンと、シェルが解決したコマンドを確認する。
 
@@ -292,7 +292,7 @@ $ pyenv versions
   3.12.10
 \end{lstlisting}
 
-\code{system} は、pyenv の shim より後ろにある \code{PATH} から選ばれる実行ファイルを表す。OS に付属する Python とは限らず、Homebrew などで導入した Python が先に見つかる場合もある。\code{3.11.11} と \code{3.12.10} が一覧にあれば、そのバージョンは pyenv の管理下に導入されている。先頭の \code{*} は現在選ばれている設定を示す。
+\code{system} は、pyenv の shim（後述する中継用プログラム）より後ろにある \code{PATH} から選ばれる実行ファイルを表す。OS に付属する Python とは限らず、Homebrew などで導入した Python が先に見つかる場合もある。\code{3.11.11} と \code{3.12.10} が一覧にあれば、そのバージョンは pyenv の管理下に導入されている。先頭の \code{*} は現在選ばれている設定を示す。
 
 その利用者がディレクトリ固有の設定を持たない場合に使う既定バージョンは、\code{pyenv global} で指定する。他の利用者や OS 全体の設定は変更しない。
 
@@ -339,7 +339,7 @@ Python 3.11.11
 
 コードと説明、結果や図を一つの文書に保存したいときは、Notebook（ノートブック）という形式も使える。これは任意の補助環境であり、本書の基本例と課題は Python スクリプトで実行できる。Notebook を使う場合は、その編集・実行用アプリケーションである JupyterLab\index{jupyterlab@JupyterLab|textbf} を導入する。
 
-端末で \code{cd \textasciitilde/analysis\_practice}、\code{source .venv/bin/activate} の順に実行してから、次を入力する。
+端末で \code{cd \textasciitilde/analysis\_practice}、\code{source .venv/bin/activate} の順に実行して第~\ref{chap:setup}~章の環境を有効にしてから、次を入力する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ python -m pip install jupyterlab
@@ -363,7 +363,7 @@ Jupyter の \code{\%timeit}\index{timeit@\code{\%timeit}|textbf} と \code{\%\%t
 result = array * 2
 \end{lstlisting}
 
-ただし、\code{\%timeit} はノートブックや IPython で短い処理を測定する機能であり、スクリプト全体の読み込みや入出力を含めた時間の測定には適さない。短い式や関数には \code{\%timeit}、解析全体には \code{perf\_counter} を使う。
+ただし、\code{\%timeit} はノートブックや IPython で短い処理を測定する機能であり、スクリプト全体の読み込みや入出力を含めた時間の測定には適さない。短い式や関数には \code{\%timeit}、解析全体には第~\ref{chap:performance}~章で扱った \code{time.perf\_counter} を使う。
 
 \section{演習：環境の作成方法と切り替えを比較する}
 
@@ -371,11 +371,11 @@ result = array * 2
 
 \begin{enumerate}
 \item \textbf{uv で環境を記録する。}
-端末で \code{cd \textasciitilde/earthquake\_practice} と入力し、\code{uv init --package usgs\_project}、\code{cd usgs\_project} を実行せよ。NumPy、Matplotlib、SciPy を \code{uv add} で追加せよ。生成ファイルの役割と、\code{uv run python} が使う版・場所を表にせよ。
+端末で \code{mkdir -p \textasciitilde/earthquake\_practice}、\code{cd \textasciitilde/earthquake\_practice} と入力し、\code{uv init --package usgs\_project}、\code{cd usgs\_project} を実行せよ。NumPy、Matplotlib、SciPy を \code{uv add} で追加せよ。生成ファイルの役割と、\code{uv run python} が使う版・場所（\code{uv run python -c "import sys; print(sys.executable)"}）を表にせよ。
 
 \item \textbf{venv と比較する。}
-端末で \code{cd \textasciitilde/earthquake\_practice} と入力し、\code{mkdir -p usgs\_venv}、\code{cd usgs\_venv}、\code{python3 -m venv .venv} を実行せよ。有効化の前後と解除後の Python の版・場所、pip の場所を表にし、uv の方式との違いを説明せよ。
+端末で \code{cd \textasciitilde/earthquake\_practice} と入力し、\code{mkdir -p usgs\_venv}、\code{cd usgs\_venv}、\code{python3 -m venv .venv} を実行せよ。有効化の前後と解除後の Python の版・場所、pip の場所（環境外で \code{python} がない環境では \code{python3} と \code{pip3}）を表にし、uv の方式との違いを説明せよ。
 
 \item \textbf{発展：Python の版を切り替える。}
-2 系統の Python が使える場合は、別々のフォルダーに \code{pyenv local} を設定せよ。\code{command -v python}、\code{pyenv which python}、\code{sys.executable} を比較し、中継プログラムと Python 本体の違いを説明せよ。uv の環境での結果も併記する。
+2 系統の Python が使える場合は、別々のフォルダーに \code{pyenv local} を設定せよ。\code{command -v python}、\code{pyenv which python}、\code{sys.executable} を比較し、中継プログラムと Python 本体の違いを説明せよ。1 問目で作った \code{uv} の環境（\code{usgs\_project}）での結果も併記する。
 \end{enumerate}

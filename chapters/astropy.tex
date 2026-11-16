@@ -139,7 +139,7 @@ print(t.tai.iso)
 2026-04-12 12:35:33.123
 \end{lstlisting}
 
-\code{format="iso"} は入力形式、\code{scale="utc"} は時刻系を表す。\code{mjd} と \code{unix} は同じ時刻の別形式を返し、\code{tai.iso} は時刻系を TAI へ変換して ISO 形式で返す。
+\code{format="iso"} は入力形式、\code{scale="utc"} は時刻系を表す。\code{mjd} と \code{unix} は同じ時刻の別形式を返し、\code{tai.iso} は時刻系を TAI へ変換して ISO 形式で返す。UTC と TAI にはうるう秒による 37 秒の差があるため時刻が 37 秒進み、また ISO 文字列の表示は既定で小数点以下 3 桁（\code{precision=3}）に丸められる。
 
 例えば、修正ユリウス日 MJD は
 \[
@@ -169,7 +169,7 @@ print(f"{dt.to_value('ns'):.3f}")
 220.000
 \end{lstlisting}
 
-\code{TimeDelta} の既定の内部形式や表示は、入力形式と同じ単位とは限らない。そのため、出力では \code{to\_value("s")} や \code{to\_value("ns")} によって単位を明示する。秒境界や日付境界をまたぐ場合も、文字列を分解せずに差を計算できる。
+\code{TimeDelta} の既定の内部形式や表示は、入力形式と同じ単位とは限らない。そのため、出力では \code{to\_value("s")} や \code{to\_value("ns")} によって単位を明示する。秒境界や日付境界をまたぐ場合も、文字列を分解せずに差を計算できる（\code{2.200000182e-07} 末尾のわずかな端数は、\code{Time} が内部で時刻を「日」単位の 2 つの倍精度浮動小数点数として保持する際の微小な丸め誤差である）。
 
 ここで計算している時刻差は
 \[
@@ -243,7 +243,7 @@ df = table.to_pandas()
 print(df)
 \end{lstlisting}
 
-\code{to\_pandas()} で得た通常の pandas 列には、\code{Quantity} の単位属性はそのまま保持されない。変換前に列単位を記録し、変換後の数値へどの単位を対応させるかを明示する。マスク付き列と時刻列についても、欠損表現と型が変換前後で一致するかを確認する。
+\code{to\_pandas()} で得た通常の pandas 列には、\code{Quantity} の単位属性はそのまま保持されない。変換前に列単位を記録し、変換後の数値へどの単位を対応させるかを明示する。欠損値にフラグを付けたマスク付き列と時刻列についても、欠損表現と型が変換前後で一致するかを確認する。
 
 \subsection{\code{astropy.io.fits} による FITS の読み書き}
 

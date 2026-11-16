@@ -29,7 +29,7 @@ $ ./run.sh
 Hello, Shell Scripting!
 \end{lstlisting}
 
-\code{chmod u+x} はファイル所有者に実行権限を追加し、\code{./run.sh} は現在のディレクトリにあるファイルを実行する。最後の行がスクリプトの標準出力である。
+\code{chmod u+x} はファイル所有者に実行権限を追加し、\code{./run.sh} は現在のディレクトリにあるファイルを実行する。最後の行がスクリプトの標準出力である（次節以降では実行権限を付けずに \code{bash run.sh} として直接 \code{bash} へ渡す実行方法も使う）。
 
 \subsection{コマンドライン引数}
 \index{こまんどらいんひきすう@コマンドライン引数|textbf}
@@ -43,7 +43,7 @@ Hello, Shell Scripting!
     \item \code{\$@}: 渡されたすべての引数。個々の引数を保ったまま展開する場合は \code{"\$@"} と書く
 \end{itemize}
 
-次のスクリプトは、二つの位置引数を検査してから入力名と出力名を表示する。
+次のスクリプトは、二つの位置引数を検査してから入力名と出力名を表示する（\code{>\&2} は、メッセージを標準出力ではなく標準エラー出力へ出す指定である）。
 
 \begin{lstlisting}[language=bash]
 #!/usr/bin/env bash
@@ -73,7 +73,7 @@ COUNT=100
 NAME="data_analysis"
 
 echo "The count is $COUNT."       # 展開される
-echo 'The count is $COUNT.'       # シングルクォートでは展開されず "$COUNT" と表示される
+echo 'The count is $COUNT.'       # シングルクォートでは展開されず、文字どおり $COUNT と表示される
 \end{lstlisting}
 
 Bash では、要素を空白で区切って括弧 \code{()} で囲むと配列を定義できる。各要素を引用符で囲めば、要素内の空白やワイルドカードが意図せず展開されることを防げる。
@@ -101,7 +101,7 @@ Bash で整数の加減乗除を行う場合は、算術式展開 \code{\$((...)
 A=10
 B=5
 
-# 計算式は (( )) を用いる
+# 計算結果を取り出すには $(( )) を用いる
 SUM=$((A + B))
 MUL=$((A * B))
 
@@ -130,7 +130,7 @@ echo "$SUM $MUL $A $B"  # 15 50 11 25
 
 \textbf{文字列の比較:}
 \begin{itemize}
-    \item \code{=}, \code{==}: 一致する
+    \item \code{=}, \code{==}: 一致する（POSIX \code{sh} でも動く標準の記法は \code{=} であり、\code{==} は Bash 拡張）
     \item \code{!=}: 一致しない
     \item \code{-z "\$STR"}: 文字列が空である
 \end{itemize}
@@ -142,7 +142,7 @@ echo "$SUM $MUL $A $B"  # 15 50 11 25
     \item \code{-d "\$DIR"}: ディレクトリとして存在する
 \end{itemize}
 
-これらの条件式は、後述する \code{if} 文の \code{[]} の中身として頻繁に登場する。
+これらの条件式は、後述する \code{if} 文の \code{[ ]} の中身として頻繁に登場する。
 
 \section{条件分岐 (\code{if}, \code{case})}
 
@@ -178,6 +178,8 @@ fi
 \end{lstlisting}
 
 \code{bash run.sh run.sh} ではファイルを発見した表示、\code{bash run.sh missing.csv} では存在しないという表示になる。後者の直後に \code{echo \$?} を実行すると、失敗を表す 1 が出る。
+
+\code{if} は直後のコマンドの終了ステータスが 0 なら条件成立とする。\code{[ ... ]} も条件を調べるコマンドであり、括弧の内側の空白が必要である。\code{command1 \&\& command2} は前段が成功した場合だけ、\code{command1 || command2} は失敗した場合だけ後段を実行する。エラーを表示するだけでは処理は止まらないため、必要な箇所で \code{exit 1} を使う。詳細は Bash の公式資料~\cite{bash_manual} を参照する。
 
 \subsection{\code{case} 文による分岐}
 \index{bash@Bash!case@\code{case} 文}
@@ -233,8 +235,6 @@ for num in 10 20 30; do
     echo "Number is $num"
 done
 \end{lstlisting}
-
-\code{if} は直後のコマンドの終了ステータスが 0 なら条件成立とする。\code{[ ... ]} も条件を調べるコマンドであり、括弧の内側の空白が必要である。\code{command1 \&\& command2} は前段が成功した場合だけ、\code{command1 || command2} は失敗した場合だけ後段を実行する。エラーを表示するだけでは処理は止まらないため、必要な箇所で \code{exit 1} を使う。詳細は Bash の公式資料~\cite{bash_manual} を参照する。
 
 \subsection{複数ファイルの入出力パス生成と一括処理}
 \index{ばっちしょり@バッチ処理|textbf}

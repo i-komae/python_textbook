@@ -56,7 +56,7 @@ $ python analyze.py
 \item フィット関数やモデル関数
 \end{itemize}
 
-同じ処理を複数のスクリプトへコピーすると、それぞれが独立した実装となり、修正内容が一致しなくなる場合がある。自作モジュールから \code{from histfit\_tools import save\_histogram\_with\_fit} のように import すれば、処理のコードを複製せずに一つの実装を共有できる。
+同じ処理を複数のスクリプトへコピーすると、それぞれが独立した実装となり、修正内容が一致しなくなる場合がある。後の節で作る \code{histfit\_tools} のように、自作モジュールから \code{from histfit\_tools import save\_histogram\_with\_fit} のように import すれば、処理のコードを複製せずに一つの実装を共有できる。
 
 \section{引数・設定ファイルとコードを分ける}
 
@@ -114,7 +114,7 @@ print(window_ns)
 \subsection{作業用プロジェクトの作成}
 \index{src layout@src レイアウト|textbf}
 
-本書では、他のコードから \code{import} するライブラリを作るため、\code{uv init --lib} を用いる。ここからは \code{modules} の下に \code{histfit\_tools} という別のフォルダーを作る。次のコマンドで、ライブラリの初期構成と依存関係を用意する。
+本書では、他のコードから \code{import} するライブラリを作るため、\code{uv init --lib} を用いる。ここからは \code{uv} がプロジェクトごとに作る専用の仮想環境を使うため、章冒頭で有効化した仮想環境を \code{deactivate} で一度終了し、\code{modules} の下に \code{histfit\_tools} という別のフォルダーを作る。次のコマンドで、ライブラリの初期構成と依存関係を用意する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ deactivate
@@ -129,7 +129,7 @@ $ uv sync
 
 依存関係とは、そのパッケージを使うために必要な別のライブラリのことである。\code{uv add} で追加した \code{numpy}、\code{matplotlib}、\code{scipy} は、このパッケージの実行時依存関係である。\code{pytest} と \code{ruff} は開発時にだけ使うため、\code{--dev} 付きで追加する。\code{pytest} は公開関数の返り値と例外を検証し、\code{ruff} は \code{uv run ruff check .} によって未使用 import や規則違反を変更記録前に検出する。本章では、公開関数のテストをパッケージ構成の一部として扱う。
 
-以降の作業場所は \code{histfit\_tools} とし、パスもこの場所を基準に指定する。次に示すのは完成時の構成であり、\code{models.py}、\code{plotting.py}、\code{tests/} は以下の手順で自分で作る。
+以降の作業場所は \code{histfit\_tools} とし、パスもこの場所を基準に指定する。次に示すのは完成時の構成であり、\code{\_\_init\_\_.py} と \code{py.typed} は \code{uv init --lib} によって自動生成され、\code{models.py}、\code{plotting.py}、\code{tests/} は以下の手順で自分で作る。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw, title={histfit\_tools/ の例}]
 .gitignore
@@ -661,7 +661,7 @@ $ .venv/bin/python -c "import histfit_tools; print(histfit_tools.__file__)"
 
 \section{補足：Git リポジトリによるパッケージの共有}
 
-GitHub で他の人と共有する場合に使う手順である。Git の基本操作は付録~\ref{app:git}、接続用の鍵の準備は付録~\ref{app:ssh}~を先に参照する。
+GitHub で他の人と共有する場合に使う手順である。Git の基本操作は付録~\ref{app:git}、接続用の鍵の準備は付録~\ref{app:ssh} を先に参照する。
 
 研究室内や共同研究で共有する場合は、Git リポジトリによってソース、テスト、設定の変更履歴を管理できる。\code{uv init --lib} は、外側に既存の Git リポジトリがなく、\code{--vcs none} も指定していなければ、初期化対象に \code{.git/} を作る。
 
@@ -728,7 +728,7 @@ $ mkdir -p tests
 \code{src/signal\_tools/statistics.py} に \code{mean\_signal(values)} を作れ。\code{src/signal\_tools/\_\_init\_\_.py} から公開し、\code{from signal\_tools import mean\_signal} で使えるようにする。\code{tests/test\_statistics.py} に、\code{[1.0, 2.0, 3.0]} では 2.0、空のリストでは \code{ValueError} となる 2 件のテストを書け。\code{uv run pytest} を実行し、関数・テストのコードと \code{2 passed} の結果を示せ。
 
 \item \textbf{関数の使い方を説明する。}
-平均の関数に型ヒントと docstring を付け、引数、返り値、空のリストの扱いを書け。\code{usage\_example.py} に、パッケージを import して \code{help(mean\_signal)} と平均の計算結果を表示するコードを書け。\code{uv run python usage\_example.py} で実行し、説明文と使用例の結果を示せ。
+平均の関数に型ヒントと docstring を付け、引数、返り値、空のリストの扱いを書け。\code{usage\_example.py} に、パッケージを import して \code{print(mean\_signal.\_\_doc\_\_)} と平均の計算結果を表示するコードを書け（\code{help(mean\_signal)} でも確認できるが、環境によってはページャが開くため \code{q} で閉じる）。\code{uv run python usage\_example.py} で実行し、説明文と使用例の結果を示せ。
 
 \item \textbf{発展：二つのインストール方法を比べる。}
 \code{signal\_tools} の中で、次を実行して比較用の環境を二つ作れ。

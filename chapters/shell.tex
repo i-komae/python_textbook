@@ -26,13 +26,13 @@ student@host ~ $
 
 \subsection{Windows における WSL の利用}
 
-本書のコマンド例は macOS や Linux のシェルを前提にしている。Windows では、WSL\index{wsl@WSL|textbf} (Windows Subsystem for Linux) 上の Ubuntu などを利用すると、同じコマンド例を実行しやすい。WSL は、管理者権限で開いた PowerShell から次のコマンドで導入できる。PowerShell のプロンプトは、本書の UNIX シェル用プロンプトと区別して示す。
+本書のコマンド例は macOS や Linux のシェルを前提にしている。Windows では、WSL\index{wsl@WSL|textbf} (Windows Subsystem for Linux) 上の Ubuntu などを利用すると、同じコマンド例を実行しやすい。WSL は、Windows のスタートメニューから PowerShell を右クリックして「管理者として実行」で開き、次のコマンドで導入できる。PowerShell のプロンプトは、本書の UNIX シェル用プロンプトと区別して示す。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 PS C:\> wsl --install
 \end{lstlisting}
 
-導入時に再起動を求められたら、再起動して Ubuntu を開き、画面の案内に従って利用者名とパスワードを設定する。その後の本書のコマンドは Ubuntu の端末へ入力する。
+導入時に再起動を求められたら、再起動してスタートメニューから Ubuntu を開き、画面の案内に従って利用者名とパスワードを設定する。その後の本書のコマンドは Ubuntu の端末へ入力する。
 
 WSL 上では、本書の Linux 用コマンドとディレクトリ構造を Windows 上で利用できる。また、後半で扱う並列処理や周辺ツールには Linux 系環境を前提とするものがあるため、Windows のコマンドプロンプトや PowerShell とは実行環境を分けて説明する。
 
@@ -75,7 +75,7 @@ $ ls -a
 $ ls -lah
 \end{lstlisting}
 
-\code{pwd}\index{pwd@\code{pwd}|textbf} は、現在のカレントディレクトリの絶対パスを表示する。\code{ls}\index{ls@\code{ls}|textbf} は、そのディレクトリにあるファイルやディレクトリの一覧を表示する。例えば \code{pwd} の結果が次のようであれば、
+\code{pwd}\index{pwd@\code{pwd}|textbf} は、現在のカレントディレクトリの絶対パスを表示する。\code{ls}\index{ls@\code{ls}|textbf} は、そのディレクトリにあるファイルやディレクトリの一覧を表示する。以下は、次小節で作成する \code{shell\_practice} を用意した場合の表示例である。例えば \code{pwd} の結果が次のようであれば、
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 /Users/student/shell_practice
@@ -126,7 +126,7 @@ drwxr-xr-x  3 student  staff    96B  4月 12 23:19 data
 drwxr-xr-x  3 student  staff    96B  4月 12 23:19 scripts
 \end{lstlisting}
 
-この例の \code{96B} はディレクトリ項目そのものの大きさであり、配下のファイルサイズの合計ではない。中のファイルの容量は、そのファイル自体を指定して確認する。
+この例の \code{96B} はディレクトリ項目そのものの大きさであり、配下のファイルサイズの合計ではない。中のファイルの容量は、そのファイル自体を指定して確認する。なお、サイズ欄の \code{B} の有無、ディレクトリの基準サイズ（Linux では \code{4.0K} など）、日時の表記形式は OS や言語設定によって異なる。
 
 通常のファイルに対して \code{ls -lh} を使うと、バイト数は \code{12K} や \code{3.4M} のように SI 接頭語に似た接尾辞付きで表示される。正確なバイト数が必要な場合は、後で扱う \code{wc -c} で確認できる。
 
@@ -134,10 +134,10 @@ drwxr-xr-x  3 student  staff    96B  4月 12 23:19 scripts
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls -a
-.	..	.config	data	scripts
+.	..	.bashrc	data	scripts
 \end{lstlisting}
 
-名前が \code{.}（ドット）で始まるファイルやディレクトリは隠し項目として扱われ、通常の \code{ls} では表示されない。例えば \code{.config}、\code{.gitignore}、\code{.bashrc} などがこれにあたる。設定ファイルなど、通常の一覧に常時表示する必要のない項目にこの命名が用いられる。
+名前が \code{.}（ドット）で始まるファイルやディレクトリは隠し項目として扱われ、通常の \code{ls} では表示されない。例えば \code{.bashrc}、\code{.gitignore}、\code{.config} などがこれにあたる。設定ファイルなど、通常の一覧に常時表示する必要のない項目にこの命名が用いられる。
 
 上の \code{ls -a} に現れる \code{.} と \code{..} にも意味がある。\code{.} は現在のディレクトリ自身を表し、\code{..} は1つ上の親ディレクトリを表す。これらは後でディレクトリ移動をするときにも重要になる。
 
@@ -148,12 +148,12 @@ $ ls -lah
 total 96
 drwxr-xr-x  5 student  staff   160B  4月 12 23:20 .
 drwxr-xr-x  5 student  staff   160B  4月 12 23:18 ..
--rw-r--r--  1 student  staff    47K  4月 12 23:22 .config
+-rw-r--r--  1 student  staff    47K  4月 12 23:22 .bashrc
 drwxr-xr-x  3 student  staff    96B  4月 12 23:19 data
 drwxr-xr-x  3 student  staff    96B  4月 12 23:19 scripts
 \end{lstlisting}
 
-この例では \code{.config} という通常のファイルも表示されており、\code{ls -l} の場合とは \code{total} の値が異なる。\code{total} は各行のサイズ欄の合計ではなく、表示対象へ割り当てられたファイルシステムブロック数に基づく。
+この例では \code{.bashrc} という通常のファイルも表示されており、\code{ls -l} の場合とは \code{total} の値が異なる。\code{total} は各行のサイズ欄の合計ではなく、表示対象へ割り当てられたファイルシステムブロック数に基づく。
 
 \code{pwd} は現在位置、\code{ls} は項目名、\code{ls -l} は権限や更新時刻を含む詳細、\code{ls -a} は隠し項目を含む一覧を表示する。\code{-h} を \code{-l} と組み合わせると、ファイル容量が単位付きで表示される。必要な情報に応じて、これらのオプションを選択する。
 
@@ -175,9 +175,13 @@ det_B 2 9.8
 det_A 3 15.1
 \end{lstlisting}
 
-Ctrl キーを押しながら O を押し、Enter で保存先を確定する。Ctrl+X で端末へ戻る。以後も \code{nano ファイル名} で同じ手順を使える。\code{nano scripts/plot.py} も開き、\code{\# drawing script} と 1 行書いて保存する。このファイルは、今は移動先を確認するための目印として使う。
+Ctrl キーを押しながら O を押し、Enter で保存先を確定する。Ctrl+X で端末へ戻る（macOS でも Command キーではなく control キーを使う）。続けて次のコマンドで \code{scripts/plot.py} も開き、\code{\# drawing script} と 1 行書いて保存する。このファイルは、今は移動先を確認するための目印として使う。
 
-以下の表示例の \code{/Users/student} は、手元のホームディレクトリのパスに読み替える。例えば Ubuntu では \code{/home/利用者名} となる。自分の場所は \code{cd}、\code{pwd} の順に実行すると分かる。練習を再開するときは \code{cd \textasciitilde/shell\_practice} で戻る。
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+$ nano scripts/plot.py
+\end{lstlisting}
+
+以下の表示例の \code{/Users/student} は、手元のホームディレクトリのパスに読み替える。例えば Ubuntu では \code{/home/利用者名} となる。自分のホームディレクトリの場所は \code{pwd}（または後述する引数なしの \code{cd} の後に \code{pwd}）で確認できる。練習を再開するときは \code{cd \textasciitilde/shell\_practice} で戻る。
 
 \subsection{ディレクトリの移動: \code{cd}}
 
@@ -293,7 +297,7 @@ $ cat data/events.txt
 $ cat ~/shell_practice/data/events.txt
 \end{lstlisting}
 
-1 つ目の指定は、現在の作業場所を基準にした相対パスである。2 つ目はホームディレクトリから指定しており、シェルが絶対パスへ展開する。この状態では両者は同じファイルを指すが、2 つ目の指定はカレントディレクトリが変わっても同じ場所を指す。
+1 つ目の指定は、現在の作業場所を基準にした相対パスである（\code{cat} はファイルの内容を表示するコマンドで、詳細は後述する）。2 つ目はホームディレクトリから指定しており、シェルが絶対パスへ展開する。この状態では両者は同じファイルを指すが、2 つ目の指定はカレントディレクトリが変わっても同じ場所を指す。
 
 一方で、現在位置が \code{/Users/student/shell\_practice/scripts} に変わると、同じ相対パスでも意味が変わる。
 
@@ -471,14 +475,14 @@ work/
 `-- result_old.txt
 \end{lstlisting}
 
-ここで使う基本形は次の通りである。
+ここで使う基本形は次の通りである。以下は別々の初期状態に対する代替例であり、同じ対象に順番に実行するものではない。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ rm -i result_old.txt
 $ rm -ri old_output
 \end{lstlisting}
 
-\code{rm -i result\_old.txt} は通常のファイルを削除する前に確認を表示する。\code{rm -ri old\_output} は、ディレクトリの内部を再帰的にたどり、各対象の削除前に確認する。削除してよい場合は \code{y}、残す場合は \code{n} を入力し、Enter を押す。確認が不要で対象を確定できている場合は、それぞれ \code{-i} を外した \code{rm result\_old.txt} または \code{rm -r old\_output} を用いる。これらは別々の初期状態に対する代替例であり、同じ対象に順番に実行するものではない。
+\code{rm -i result\_old.txt} は通常のファイルを削除する前に確認を表示する。\code{rm -ri old\_output} は、ディレクトリの内部を再帰的にたどり、各対象の削除前に確認する。削除してよい場合は \code{y}、残す場合は \code{n} を入力し、Enter を押す。確認が不要で対象を確定できている場合は、それぞれ \code{-i} を外した \code{rm result\_old.txt} または \code{rm -r old\_output} を用いる。
 
 \code{rm -r} は、指定したディレクトリ以下を再帰的に削除する。対象パスの誤指定による削除範囲の拡大を防ぐため、実行前に \code{ls old\_output} や \code{ls result\_old.txt} で対象を確認する。内容を個別に確認する場合は \code{rm -ri} を用いる。
 
@@ -568,7 +572,7 @@ INFO end
 \index{ひょうじゅんにゅうりょく@標準入力|textbf}\index{ひょうじゅんしゅつりょく@標準出力|textbf}\index{ひょうじゅんえらーしゅつりょく@標準エラー出力|textbf}
 \index{stdin|see{標準入力}}\index{stdout|see{標準出力}}\index{stderr|see{標準エラー出力}}
 
-コマンドには、データを受け渡すための三つの標準的な経路がある。標準入力（standard input, stdin）は入力データを受け取る経路、標準出力（standard output, stdout）は通常の結果を送る経路、標準エラー出力（standard error, stderr）はエラーや警告、進捗などの診断情報を送る経路である。Unix 系の OS では、これらをそれぞれファイル記述子という番号 0、1、2 で識別する。
+コマンドには、データを受け渡すための三つの標準的な経路がある。標準入力（standard input, stdin）は入力データを受け取る経路、標準出力（standard output, stdout）は通常の結果を送る経路、標準エラー出力（standard error, stderr）はエラーや警告、進捗などの診断情報を送る経路である。Unix 系の OS では、これらをそれぞれファイル記述子（プログラムが入出力先を識別するために割り当てる番号）0、1、2 で識別する。
 
 端末で通常どおり実行すると、標準入力はキーボードからの入力に、二つの出力は端末の画面に接続される。このため、画面の表示だけでは stdout と stderr を区別できない。経路はファイルや別のコマンドにも接続でき、必ずしもキーボードや画面を意味しない。結果と診断情報を分けておけば、数値データのファイルに警告文が混入するのを防げる。
 
@@ -650,7 +654,7 @@ $ wc -c data/events.txt
 \end{lstlisting}
 
 \begin{description}
-\item[\code{-l}] 改行の数を行数として表示する。末尾に改行がない最終行の扱いに注意する。
+\item[\code{-l}] 改行の数を行数として表示する。末尾に改行がない最終行は 1 行として数えられないため、実際の行数より 1 少なくなる点に注意する。
 \item[\code{-w}] 空白で区切られた単語数を表示する。
 \item[\code{-c}] 入力のバイト数を表示する。
 \end{description}
@@ -677,7 +681,7 @@ $ grep -rn "det_A" data/
 \item[\code{-r}] 指定したディレクトリ以下を再帰的に検索する。\code{grep -rn "det\_A" data/} は、\code{data/} 以下で \code{det\_A} を含む行を、ファイル名と行番号付きで表示する。
 \end{description}
 
-\code{grep} では正規表現も使用できる。\verb|^| は行頭、\verb|$| は行末を表すため、\verb|grep "^#" data/events.txt| は \code{\#} で始まる行だけを抽出する。\code{grep -r "ERROR" log/} は、\code{log/} 以下を再帰的に検索する。\verb|[]|、\verb|.|、\verb|*| を含む正規表現の記法は、付録~\ref{app:regex} で説明する。
+\code{grep} では正規表現も使用できる。\verb|^| は行頭、\verb|$| は行末を表すため、\verb|grep "^#" data/events.txt| は \code{\#} で始まる行だけを抽出する（練習用の \code{data/events.txt} には \code{\#} 行がないため出力は空になる）。例えば \code{log/} ディレクトリがあるとき、\code{grep -r "ERROR" log/} は \code{log/} 以下を再帰的に検索する。\verb|[]|、\verb|.|、\verb|*| を含む正規表現の記法は、付録~\ref{app:regex} で説明する。
 
 \subsection{\code{awk}}
 
@@ -856,7 +860,7 @@ $ echo $PATH
 /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 \end{lstlisting}
 
-1 行目はホームディレクトリ、2 行目はログインシェル、3 行目は実行ファイルを探索するディレクトリの一覧である。\code{PATH}\index{path@\code{PATH}|textbf} の値はコロン \code{:} で区切られ、シェルは左から順に同名の実行ファイルを探索する。\code{PYENV\_ROOT} や \code{DATA\_ROOT} も環境変数であり、起動するプログラムへ名前付きの値として引き継がれる。新たな環境変数は次の形で設定する。
+1 行目はホームディレクトリ、2 行目はログインシェル、3 行目は実行ファイルを探索するディレクトリの一覧である。\code{PATH}\index{path@\code{PATH}|textbf} の値はコロン \code{:} で区切られ、シェルは左から順に同名の実行ファイルを探索する。後の付録で扱うツールが使う \code{PYENV\_ROOT} や、作業用に自分で決める \code{DATA\_ROOT} も環境変数であり、起動するプログラムへ名前付きの値として引き継がれる。新たな環境変数は次の形で設定する。
 
 \begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ export DATA_ROOT="$HOME/data/events"
@@ -871,7 +875,7 @@ $ echo $DATA_ROOT
 
 \code{export} 自体は成功しても通常は何も表示しない。続けて \code{echo \$DATA\_ROOT} を実行し、意図した値が入ったことを確認する。ここでは \code{\$HOME} が先に展開され、その結果として絶対パスが保存されている。
 
-ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値なら、対話シェルが読み込む設定ファイルに \code{export ...} を書いておく。第~\ref{SEC:shell}~節で述べたように、\code{echo \$SHELL} でログインシェルを、\code{ps -p \$\$ -o comm=} で現在のシェルを確認できる。zsh では通常 \code{\textasciitilde/.zshrc}、bash では環境に応じて \code{\textasciitilde/.bashrc} または \code{\textasciitilde/.bash\_profile} に追記する。
+ただし、この設定は通常そのターミナルを閉じると消える。毎回使う値なら、対話シェルが読み込む設定ファイルに \code{export ...} を書いておく。本節末尾の補足（第~\ref{subsec:shell-kind}~節）で述べるように、\code{echo \$SHELL} でログインシェルを、\code{ps -p \$\$ -o comm=} で現在のシェルを確認できる。zsh では通常 \code{\textasciitilde/.zshrc}、bash では環境に応じて \code{\textasciitilde/.bashrc} または \code{\textasciitilde/.bash\_profile} に追記する。
 
 \subsection{展開と引用}
 
@@ -939,6 +943,7 @@ $ export PATH="$HOME/my_scripts:$PATH"
 \end{lstlisting}
 
 \subsection{補足：シェルの種類と設定ファイル}
+\label{subsec:shell-kind}
 
 利用者がログインするときに起動するよう設定されたシェルを、ログインシェルという。その名前は、次のコマンドで確認できる。
 
@@ -1058,7 +1063,7 @@ $ bash emit.sh 2>&1 | tee -a run.log
 \label{sec:exit-status}\index{しゅうりょうすてーたす@終了ステータス|textbf}
 
 コマンドは終了時に整数の終了ステータスを返す。通常は 0 が成功、0 以外が失敗などの状態を表す。直前の値は \code{\$?} で確認できる。
-\begin{lstlisting}[language=bash]
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
 $ ls notes.txt
 $ echo "$?"
 0
@@ -1181,7 +1186,7 @@ $ cat results/usgs_count.txt
 URL の \code{starttime} と \code{endtime} は取得期間の初めと終わり、\code{format=csv} は CSV で受け取る指定である。条件は \code{?} の後ろに書き、\code{\&} でつなぐ。\code{count} の応答が 20000 件を超えると、CSV に全件は入らない。期間を分けて取得し、同じイベント ID を重複して数えないようにする~\cite{usgs_api}。通信できない場合は、第~\ref{chap:io}~章の人工 CSV を使い、その旨を記す。
 
 \item \textbf{同じ CSV を 3 種類の形式で圧縮する。}
-2 問目で保存した CSV を使い、gzip、tar.gz、zip のファイルを \code{compressed/} に一つずつ作れ。元ファイルは残す。元のバイト数、圧縮後のバイト数、容量比（圧縮後／元）を表にせよ。
+2 問目で保存した CSV を使い、gzip、tar.gz、zip のファイルを \code{compressed/} に一つずつ作れ。元ファイルは残す（\code{gzip -k} は元のファイルと同じ場所に出力するため、\code{compressed/} へ移動するか \code{gzip -c 元ファイル > compressed/出力.gz} を使う）。元のバイト数、圧縮後のバイト数、容量比（圧縮後／元）を表にせよ。
 
 各ファイルを別の展開先へ戻し、\code{cmp} で元の CSV と比較せよ。実行した命令と終了ステータスを示し、最も小さかった形式、複数ファイルを格納できる形式を述べよ。
 

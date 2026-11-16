@@ -282,7 +282,7 @@ null    true     null
 NaN     false    true
 \end{lstlisting}
 
-\code{null} は値が存在しないこと、\code{NaN} は浮動小数点の特殊値である。\code{is\_nan()} へ \code{null} を渡した結果も \code{null} になる点に注意する。両方を除くなら、例えば \code{pl.col("signal").is\_not\_null() \& pl.col("signal").is\_finite()} をフィルタ条件にする。どちらを除くかによって使う式が変わる。
+\code{null} は値が存在しないこと、\code{NaN} は浮動小数点の特殊値である。\code{is\_nan()} へ \code{null} を渡した結果も \code{null} になる点に注意する。\code{null} と \code{NaN} の両方を除くなら \code{pl.col("signal").is\_not\_null() \& pl.col("signal").is\_not\_nan()} を使う（無限大 \code{inf} や \code{-inf} も同時に除く場合は \code{is\_finite()} を使う）。どちらを除くかによって使う式が変わる。
 
 \subsection{文字列と条件分岐}
 
@@ -332,9 +332,9 @@ test_B_001  14.8    null    high
 from pathlib import Path
 
 Path("events").mkdir(exist_ok=True)
-df = pl.DataFrame({"detector": ["A", "B", "A"],
-                   "signal": [12.4, 9.8, 15.1]})
-df.write_parquet("events/sample.parquet")
+sample_df = pl.DataFrame({"detector": ["A", "B", "A"],
+                          "signal": [12.4, 9.8, 15.1]})
+sample_df.write_parquet("events/sample.parquet")
 
 lf = (
     pl.scan_parquet("events/*.parquet")
@@ -346,6 +346,20 @@ lf = (
 
 result = lf.collect()
 print(result)
+\end{lstlisting}
+
+出力の例は次のようになる（\code{group\_by()} の行順は実行ごとに変わる場合がある）。
+
+\begin{lstlisting}[numbers=none, xleftmargin=2\zw]
+shape: (2, 2)
+┌──────────┬─────────────┐
+│ detector ┆ mean_signal │
+│ ---      ┆ ---         │
+│ str      ┆ f64         │
+╞══════════╪═════════════╡
+│ A        ┆ 13.75       │
+│ B        ┆ 9.8         │
+└──────────┴─────────────┘
 \end{lstlisting}
 
 \code{scan\_parquet()} の引数 \code{"events/*.parquet"} は、一致する複数の Parquet ファイルを入力にする。返り値は \code{LazyFrame} であり、この時点ではデータを実体化しない。\code{collect()} を呼ぶとクエリが実行され、返り値として DataFrame が得られる。実行時には、\code{select()} で使う列だけを読む列射影や、\code{filter()} を早い段階へ移す最適化が適用されることがある。最適化内容を確認したい場合は、実行前に \code{print(lf.explain())} として計画を表示できる。
@@ -429,9 +443,9 @@ $ mkdir -p results
 \code{pl.scan\_csv("events.csv")} を使い、\code{detector} と \code{signal} の選択、信号の欠損行の除去、検出器別平均の計算を一つの処理として書け。\code{explain()} の表示と \code{collect()} の結果を示し、結果の数値を得るのはどちらの呼び出しかを述べよ。
 
 \item \textbf{元の表へ係数を結合し、件数表も作る。}
-A: 1.02、B: 0.97 の係数表を作り、検出器名をキーに元の 6 行へ \code{join()} で結合せよ。各信号値に係数を掛けた列を追加し、結果を示す。別に \code{pivot()} を使い、行を検出器、列を \code{valid} の真偽、値を記録の件数とする表を作れ。信号が欠損している行も、この件数には含める。
+A: 1.02、B: 0.97 の係数表を作り、検出器名をキーに元の 6 行へ \code{join()} で結合せよ。各信号値に係数を掛けた列を追加し、結果を示す。別に \code{pivot()} を使い、行を検出器、列を \code{valid} の真偽、値を記録の件数とする表を作れ（\code{values} に \code{"signal"} などの列を指定しても、\code{aggregate\_function="len"} では \code{null} を含むグループ内の全行数が数えられる）。
 
 \item \textbf{pandas と結果を照合する。}
-前章の 3 問目と同じ有効条件で件数、平均、標準偏差（\code{ddof=1}）を求め、\code{results/polars\_summary.csv} へ保存せよ。前章の \code{../pandas/results/summary.csv} と検出器名で対応付け、行順に頼らずに比べる。数値の比較には許容誤差を設け、両方の値と一致・不一致を表にせよ。欠損の位置も確認する。
+前章の 3 問目と同じ有効条件で件数、平均、標準偏差（\code{ddof=1}）を求め、\code{results/polars\_summary.csv} へ保存せよ。前章の \code{../pandas/results/summary.csv} と検出器名で対応付け、行順に頼らずに比べる。数値の比較には許容誤差（例：\code{np.isclose} や差の絶対値 \code{< 1e-6}）を設け、両方の値と一致・不一致を表にせよ。欠損が含まれないことも確認する。
 
 \end{enumerate}
